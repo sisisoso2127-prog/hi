@@ -39,7 +39,7 @@ cost per MILP. Pass --drici to reproduce the literal (flat) protocol.
 USAGE ON COLAB
     !pip install gurobipy -q
     !python3 warmstart_experiment.py --smoke      # validate first, ~2 min
-    !python3 warmstart_experiment.py              # full run, ~10-20 min
+    !python3 warmstart_experiment.py              # full run, ~18 min (measured, 1 core)
     from google.colab import files; files.download('warmstart_raw.csv')
 
 RUN --smoke FIRST. It checks all four configurations against exhaustive
@@ -47,8 +47,10 @@ enumeration on tiny instances, under both RHS protocols. If it does not print
 'VALIDATION PASSED', do not trust any timing that follows -- send me the output
 instead.
 
-A NOTE ON WHAT THE TIMINGS ARE WORTH. Every subproblem carries a TimeLimit, and
-the outer loop carries max_rounds. A run that hits either has NOT proved
+A NOTE ON WHAT THE TIMINGS ARE WORTH. Every subproblem carries a TimeLimit, each
+run carries a wall budget (hardness has a heavy tail, so one instance would
+otherwise swallow the sweep), and the outer loop carries max_rounds. A run that
+hits any of them has NOT proved
 optimality, and a configuration that gives up early would otherwise look FAST in
 the timing table -- the failure inverts the result it is supposed to inform. So
 truncation is tracked per run ('truncated', 'rounds_exhausted') and the summary
@@ -98,10 +100,15 @@ def generate_instance(rng, n, m, r, ub, rho=None):
 class Method:
     """Algorithm 1 of the paper, instrumented, with two optional levers."""
 
-    def __init__(self, inst, warm=False, tight_m=False, time_limit=300):
+    def __init__(self, inst, warm=False, tight_m=False, time_limit=300,
+                 wall_budget=None):
         self.I = inst
         self.warm, self.tight_m = warm, tight_m
         self.t_limit = time_limit
+        # Hardness has a heavy tail: one instance can otherwise swallow the whole
+        # sweep.  The budget bounds a run and marks it truncated -- never silently.
+        self.wall_budget = wall_budget
+        self.t_deadline = (time.perf_counter() + wall_budget) if wall_budget else None
         self.milps = 0          # subproblems solved
         self.t_milp = 0.0       # seconds inside optimize()
         self.cuts = 0
@@ -147,12 +154,22 @@ class Method:
         m.update()
         return m, x
 
+    def _budget_left(self):
+        """Seconds this solve may use; 0 means the wall budget is spent."""
+        if self.t_deadline is None:
+            return self.t_limit
+        return min(self.t_limit, self.t_deadline - time.perf_counter())
+
     def _run(self, m, start=None):
         """One counted, timed solve.  Sets self.proven for the caller."""
+        if self._budget_left() <= 0.0:
+            self.proven = False
+            self.truncated = True
+            return None
         if self.warm and start is not None:
             for j, v in enumerate(start):
                 m.getVarByName(f"x[{j}]").Start = float(v)
-        m.Params.TimeLimit = max(1.0, self.t_limit)
+        m.Params.TimeLimit = max(1.0, self._budget_left())
         t0 = time.perf_counter()
         m.optimize()
         self.t_milp += time.perf_counter() - t0
@@ -188,9 +205,9 @@ class Method:
         self.Lo = None
         if self.tight_m:
             mb, xb = self._new_model()
-            mb.Params.TimeLimit = max(1.0, self.t_limit)   # these bypass _run
             self.Lo = np.empty(r)
             for i in range(r):
+                mb.Params.TimeLimit = max(1.0, self._budget_left())  # bypasses _run
                 mb.setObjective(gp.quicksum(int(C[i, j]) * xb[j]
                                             for j in range(self.n)), GRB.MINIMIZE)
                 mb.reset()
@@ -326,9 +343,10 @@ class Method:
                     loose_bounds=self.loose_bounds)
 
 
-def run_once(inst, warm, tight_m, time_limit=300):
+def run_once(inst, warm, tight_m, time_limit=300, wall_budget=None):
     """Solve and release the Gurobi environment."""
-    M = Method(inst, warm=warm, tight_m=tight_m, time_limit=time_limit)
+    M = Method(inst, warm=warm, tight_m=tight_m, time_limit=time_limit,
+               wall_budget=wall_budget)
     try:
         return M.solve()
     finally:
@@ -397,9 +415,10 @@ DRICI_GRID = [(25, 20, 3, None), (30, 20, 3, None), (30, 25, 3, None),
               (35, 20, 3, None), (35, 25, 5, None), (40, 25, 3, None),
               (40, 25, 5, None)]
 REPLICATES = 8
+WALL_BUDGET = 30.0      # seconds per configuration per instance; see Method
 
 
-def full(grid=None, reps=REPLICATES, time_limit=300):
+def full(grid=None, reps=REPLICATES, time_limit=300, wall_budget=WALL_BUDGET):
     grid = GRID if grid is None else grid
     rng = np.random.default_rng(RNG_SEED)
     rows = []
@@ -409,7 +428,7 @@ def full(grid=None, reps=REPLICATES, time_limit=300):
             rec = dict(n=n, m=m, r=r, rho=rho, rep=k)
             ref = None
             for name, w, t in CONFIGS:
-                res = run_once(inst, w, t, time_limit)
+                res = run_once(inst, w, t, time_limit, wall_budget)
                 rec[f"{name}_t"] = res["t_milp"]
                 rec[f"{name}_milps"] = res["milps"]
                 rec[f"{name}_cuts"] = res["cuts"]
@@ -433,6 +452,10 @@ def full(grid=None, reps=REPLICATES, time_limit=300):
     print("AGREEMENT (every configuration must return base's optimum)")
     for name, _, _ in CONFIGS[1:]:            # base vs base is vacuous
         print(f"  {name:<7} agrees with base in {int(df[name+'_agree'].sum())}/{len(df)}")
+    clean = df[~df[[c + "_trunc" for c, _, _ in CONFIGS]].any(axis=1)]
+    clean_ok = int(clean[[c + "_agree" for c, _, _ in CONFIGS[1:]]].all(axis=1).sum())
+    print(f"  among the {len(clean)} instances where nothing truncated: "
+          f"all four agree in {clean_ok}/{len(clean)}")
     print(f"  truncated runs: {n_trunc}/{4*len(df)}")
     if n_trunc:
         print("  !! Truncated runs did NOT prove optimality.  A configuration that")
@@ -483,9 +506,13 @@ if __name__ == "__main__":
     ap.add_argument("--drici", action="store_true",
                     help="literal Drici RHS grid (flat hardness; see module docstring)")
     ap.add_argument("--reps", type=int, default=REPLICATES)
-    ap.add_argument("--time-limit", type=float, default=300.0)
+    ap.add_argument("--time-limit", type=float, default=300.0,
+                    help="cap per subproblem (s)")
+    ap.add_argument("--wall-budget", type=float, default=WALL_BUDGET,
+                    help="cap per configuration per instance (s); 0 disables")
     a = ap.parse_args()
     if a.smoke:
         smoke()
     else:
-        full(DRICI_GRID if a.drici else GRID, a.reps, a.time_limit)
+        full(DRICI_GRID if a.drici else GRID, a.reps, a.time_limit,
+             a.wall_budget or None)

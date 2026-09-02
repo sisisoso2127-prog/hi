@@ -1,2 +1,4 @@
 __pycache__/
 *.py[cod]
+fullrun.log
+warmstart_raw.csv
