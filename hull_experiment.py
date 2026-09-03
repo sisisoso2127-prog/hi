@@ -70,6 +70,34 @@ from gurobipy import GRB
 from warmstart_experiment import (Method, generate_instance, brute_force,
                                   RNG_SEED)
 
+
+def _require_fixed_warmstart():
+    """hull/diagnose depend on the FIXED warmstart_experiment.py.
+
+    The original has neither a wall budget nor the rho tightness knob, and
+    importing it here fails deep inside a run with a bare TypeError. Say which
+    file is stale instead.
+    """
+    import inspect
+    import warmstart_experiment as _w
+    missing = []
+    if "wall_budget" not in inspect.signature(_w.Method.__init__).parameters:
+        missing.append("Method(..., wall_budget=)")
+    if "rho" not in inspect.signature(_w.generate_instance).parameters:
+        missing.append("generate_instance(..., rho=)")
+    if missing:
+        raise SystemExit(
+            "warmstart_experiment.py in this directory is the ORIGINAL version.\n"
+            "  missing: " + ", ".join(missing) + "\n"
+            "  This script needs the fixed one, from the same place you got this "
+            "file.\n"
+            "  On Colab:  !wget -O warmstart_experiment.py <raw URL of the fixed "
+            "file>\n"
+            "  Then re-run.  Nothing below this point can work until you do.")
+
+
+_require_fixed_warmstart()
+
 SMALL = dict(n=20, m=10, r=3)      # stays inside the size-limited licence
 BIG = dict(n=40, m=25, r=5)        # needs a full licence
 
