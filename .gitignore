@@ -1,4 +1,6 @@
-__pycache__/
+*.csv
+*.log
 *.py[cod]
+__pycache__/
 fullrun.log
 warmstart_raw.csv
