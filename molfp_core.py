@@ -46,6 +46,11 @@ from molfp_instance import MOILFP, FracObj
 
 INF = np.inf
 
+# Plancher de la limite de temps transmise a HiGHS : une limite nulle ou
+# negative serait refusee, et une limite minuscule ne rend meme pas la
+# relaxation racine, donc aucune borne duale exploitable.
+_MIN_TIME_LIMIT = 0.05
+
 
 # ----------------------------------------------------------------------------
 # Couche solveur (unique point a remplacer pour changer de solveur)
@@ -53,9 +58,20 @@ INF = np.inf
 
 @dataclass
 class ILPResult:
-    status: str                    # 'optimal' | 'infeasible' | 'unbounded' | 'error'
+    """
+    Resultat d'un appel au solveur.
+
+    `obj`   valeur de l'incumbent : une borne du cote PESSIMISTE (minorant en
+            maximisation, majorant en minimisation). None si aucun incumbent.
+    `bound` borne du cote OPTIMISTE, toujours VALIDE : majorant en
+            maximisation, minorant en minimisation. Egale a `obj` quand le
+            statut est 'optimal'. C'est elle qui rend un ILP interrompu
+            exploitable au lieu d'etre perdu.
+    """
+    status: str          # 'optimal' | 'infeasible' | 'unbounded' | 'limit' | 'error'
     x: Optional[np.ndarray]
     obj: Optional[float]
+    bound: Optional[float] = None
     n_calls: int = 1
 
     @property
@@ -79,10 +95,12 @@ def solve_ilp(obj: np.ndarray,
               rows: Sequence[Tuple[np.ndarray, float, float]],
               var_ub: np.ndarray,
               maximize: bool = True,
-              obj_const: float = 0.0) -> ILPResult:
+              obj_const: float = 0.0,
+              time_limit: Optional[float] = None) -> ILPResult:
     """Cas particulier : variables x uniquement, 0 <= x <= var_ub, entieres."""
     return solve_milp(obj, rows, np.zeros(len(obj)), var_ub,
-                      maximize=maximize, obj_const=obj_const)
+                      maximize=maximize, obj_const=obj_const,
+                      time_limit=time_limit)
 
 
 def solve_milp(obj: np.ndarray,
@@ -91,7 +109,8 @@ def solve_milp(obj: np.ndarray,
                var_ub: np.ndarray,
                integrality: Optional[np.ndarray] = None,
                maximize: bool = True,
-               obj_const: float = 0.0) -> ILPResult:
+               obj_const: float = 0.0,
+               time_limit: Optional[float] = None) -> ILPResult:
     """
     Version generale de solve_ilp acceptant des bornes et une integralite par
     variable. Necessaire pour les coupes de dominance, qui introduisent des
@@ -99,6 +118,13 @@ def solve_milp(obj: np.ndarray,
 
     integrality = None  ->  toutes les variables sont entieres (cas courant
     ici : x entier et les auxiliaires u binaires).
+
+    `time_limit` (secondes) est transmis a HiGHS. Sans lui, un seul ILP peut
+    depasser a lui seul le budget de l'algorithme appelant, qui ne verifie
+    l'heure qu'ENTRE deux appels : la limite de temps d'un schema anytime
+    n'en serait pas une. Interrompu, le solveur rend tout de meme
+    `mip_dual_bound`, borne optimiste VALIDE : c'est elle que l'on remonte
+    dans `bound`. Un ILP interrompu informe donc encore, au lieu d'etre perdu.
     """
     ORACLE_CALLS["ilp"] += 1
     cost = -np.asarray(obj, dtype=float) if maximize else np.asarray(obj, dtype=float)
@@ -112,19 +138,41 @@ def solve_milp(obj: np.ndarray,
         ubs = np.array([r[2] for r in rows], dtype=float)
         cons.append(LinearConstraint(Amat, lbs, ubs))
 
+    options = None
+    if time_limit is not None and np.isfinite(time_limit):
+        options = {"time_limit": max(_MIN_TIME_LIMIT, float(time_limit))}
+
     res = milp(c=cost, constraints=cons,
                integrality=np.asarray(integrality, dtype=float),
                bounds=Bounds(np.asarray(var_lb, dtype=float),
-                             np.asarray(var_ub, dtype=float)))
+                             np.asarray(var_ub, dtype=float)),
+               options=options)
 
     if res.status == 0:
         x = np.rint(res.x).astype(int)
-        return ILPResult("optimal", x, float(obj @ x) + obj_const)
+        val = float(obj @ x) + obj_const
+        return ILPResult("optimal", x, val, val)
+
+    if res.status == 1:                     # limite de temps ou d'iterations
+        dual = getattr(res, "mip_dual_bound", None)
+        bound = None
+        if dual is not None and np.isfinite(dual):
+            # HiGHS minimise `cost` ; on repasse dans le sens de `obj`
+            bound = (-float(dual) if maximize else float(dual)) + obj_const
+        x = None
+        if res.x is not None:
+            cand = np.asarray(res.x, dtype=float)
+            # un incumbent non entier ne serait pas une solution : on l'ignore
+            if np.allclose(cand, np.rint(cand), atol=1e-6):
+                x = np.rint(cand).astype(int)
+        obj_val = float(obj @ x) + obj_const if x is not None else None
+        return ILPResult("limit", x, obj_val, bound)
+
     if res.status == 2:
-        return ILPResult("infeasible", None, None)
+        return ILPResult("infeasible", None, None, None)
     if res.status == 3:
-        return ILPResult("unbounded", None, None)
-    return ILPResult("error", None, None)
+        return ILPResult("unbounded", None, None, None)
+    return ILPResult("error", None, None, None)
 
 
 # ----------------------------------------------------------------------------
@@ -215,15 +263,34 @@ def feasibility_rows(inst: MOILFP) -> List[Tuple[np.ndarray, float, float]]:
 
 @dataclass
 class EfficiencyResult:
-    efficient: bool
+    """
+    `efficient` vaut True/False quand le test CONCLUT, et None quand l'ILP a
+    ete interrompu sans permettre de trancher. Ne jamais lire None comme
+    "non efficace" : le seul certificat d'efficacite du projet passe par ce
+    test, et un incumbent declare efficace a tort rendrait le LB optimiste,
+    c'est-a-dire la matheuristique inutilisable.
+    """
+    efficient: Optional[bool]
     theta: Optional[int]           # entier ; 0 <=> efficace
     dominator: Optional[np.ndarray]  # solution dominante trouvee si non efficace
+    status: str = "proved"         # 'proved' | 'limit'
+
+    @property
+    def conclusive(self) -> bool:
+        return self.efficient is not None
 
 
-def efficiency_test(inst: MOILFP, xbar: np.ndarray) -> EfficiencyResult:
+def efficiency_test(inst: MOILFP, xbar: np.ndarray,
+                    time_limit: Optional[float] = None) -> EfficiencyResult:
     """
     Test d'efficacite integral de xbar pour (MOILFP).  Un seul ILP.
     Renvoie theta et, si xbar n'est pas efficace, une solution qui le domine.
+
+    Si l'ILP est interrompu, deux cas seulement :
+      * l'incumbent donne theta >= 1 : xbar est PROUVE non efficace et le
+        certificat de dominance est valide -- un incumbent realisable suffit ;
+      * l'incumbent donne theta = 0 : on ne sait rien, car theta n'est
+        minore que par 0. Le resultat est alors non concluant.
     """
     if not inst.is_feasible(xbar):
         raise ValueError("xbar n'est pas realisable.")
@@ -242,7 +309,17 @@ def efficiency_test(inst: MOILFP, xbar: np.ndarray) -> EfficiencyResult:
         obj += coef
         const += float(Dk * Zk.a - Nk * Zk.b)
 
-    res = solve_ilp(obj, rows, ub, maximize=True, obj_const=const)
+    res = solve_ilp(obj, rows, ub, maximize=True, obj_const=const,
+                    time_limit=time_limit)
+
+    if res.status == "limit":
+        theta_lb = int(round(res.obj)) if res.obj is not None else 0
+        if theta_lb > 0 and res.x is not None:
+            # un point qui domine strictement suffit a conclure : pas besoin
+            # de connaitre le maximum de theta
+            return EfficiencyResult(False, theta_lb, res.x, status="limit")
+        return EfficiencyResult(None, None, None, status="limit")
+
     if not res.ok:
         # xbar est toujours realisable pour ce programme : infaisable = bug
         raise RuntimeError(f"Test d'efficacite : statut {res.status}")

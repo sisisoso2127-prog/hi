@@ -4,10 +4,10 @@ PARTIE A - VALIDATION CONTRE LA VERITE TERRAIN
 instance                     |E|   V8   V9  V10  exact  ecart reel  ecart garanti   couv%
 ------------------------------------------------------------------------------------------------
 molfp_n7_m4_p4_c000_s3       218   ok   ok   ok    oui       0.00 %         0.00 %    28.4
-molfp_n7_m4_p4_c025_s3       198   ok   ok   ok    oui       0.00 %        17.52 %    16.7
+molfp_n7_m4_p4_c025_s3       198   ok   ok   ok    oui       0.00 %        17.15 %    17.2
 molfp_n6_m4_p4_c000_s3       185   ok   ok   ok    oui       0.00 %         0.00 %    16.8
 molfp_n7_m4_p3_c025_s1       112   ok   ok   ok    oui       0.00 %         0.00 %    22.3
-molfp_n5_m3_p4_c000_s2        54   ok   ok   ok    oui       0.00 %         8.50 %    42.6
+molfp_n5_m3_p4_c000_s2        54   ok   ok   ok    oui       0.00 %         7.54 %    42.6
 molfp_n8_m5_p3_c000_s1        46   ok   ok   ok    oui       0.00 %         0.00 %    30.4
 molfp_n7_m4_p4_c050_s3        30   ok   ok   ok    oui       0.00 %         0.00 %    63.3
 molfp_n6_m4_p2_c025_s1        26   ok   ok   ok    oui       0.00 %         0.00 %    30.8
@@ -21,10 +21,10 @@ instance                     |E|  q* (verite)               exact        matheur
                                                   valeur   statut     valeurecart garanti
 ------------------------------------------------------------------------------------------------
 molfp_n7_m4_p4_c000_s3       218      8.87500    1.73684    limit    8.87500     0.00 %
-molfp_n7_m4_p4_c025_s3       198      4.73333    3.92308    limit    4.73333    20.22 %
-molfp_n6_m4_p4_c000_s3       185      5.41667    5.41667    limit    5.41667     0.00 %
+molfp_n7_m4_p4_c025_s3       198      4.73333    3.92308    limit    4.73333    17.52 %
+molfp_n6_m4_p4_c000_s3       185      5.41667    5.41667  optimal    5.41667     0.00 %
 molfp_n7_m4_p3_c025_s1       112      4.75000    3.96296    limit    4.75000     0.00 %
-molfp_n5_m3_p4_c000_s2        54      3.30612    3.18519    limit    3.30612     8.80 %
+molfp_n5_m3_p4_c000_s2        54      3.30612    3.18519    limit    3.30612     8.50 %
 molfp_n8_m5_p3_c000_s1        46      3.17391    2.84000    limit    3.17391     0.00 %
 molfp_n7_m4_p4_c050_s3        30      4.73333    2.27586    limit    4.73333     0.00 %
 molfp_n6_m4_p2_c025_s1        26      2.38462    1.94444    limit    2.38462     0.00 %

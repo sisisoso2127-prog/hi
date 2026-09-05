@@ -3,12 +3,12 @@ VALIDATION V5-V8 - ORACLE SUR E, HYBRIDE EXACT-EXACT, BIG-M
 ========================================================================================================
 instance                    |S|   |E|   V5   V6   V7   V8   statut  Dink.  coupes    ILP   t(s)  archive  couv%  M box/M lp
 --------------------------------------------------------------------------------------------------------
-molfp_n4_m3_p2_c000_s1      407     4   ok   ok   ok   ok  optimal      2      91    671   18.3        2    50%        1.0x
+molfp_n4_m3_p2_c000_s1      407     4   ok   ok   ok   ok  optimal      2      91    671   15.1        2    50%        1.0x
 molfp_n4_m3_p3_c000_s2      203    27   ok   ok   ok   ok  optimal      2       2     54    0.3        3    11%        1.0x
-molfp_n5_m3_p3_c000_s1     1562    17   ok   ok   ok   ok  optimal      2      45   1387   53.7        6    35%        1.0x
+molfp_n5_m3_p3_c000_s1     1562    17   ok   ok   ok   ok  optimal      2      45   1387   46.4        6    35%        1.0x
 molfp_n5_m4_p4_c000_s3     1561    29   ok   ok   ok   ok  optimal      3       0     20    0.2        3    10%        1.2x
-molfp_n6_m4_p3_c000_s1     5580   240   ok   ok   ok   ok  optimal      2       2    174    8.0        4     2%        1.2x
-molfp_n8_m4_p3_c000_s1   170936   194   ok   ok   ok   ok    limit      0       0    867  146.8        0     0%        1.8x
+molfp_n6_m4_p3_c000_s1     5580   240   ok   ok   ok   ok  optimal      2       2    174    7.0        4     2%        1.2x
+molfp_n8_m4_p3_c000_s1   170936   194   ok   ok   ok   ok    limit      0       0    894  128.6        0     0%        1.8x
 --------------------------------------------------------------------------------------------------------
 V5-V8 : TOUT VALIDE
 Lecture : 'M box/M lp' est le facteur de resserrement du big-M apporte par la relaxation continue.

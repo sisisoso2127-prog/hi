@@ -178,7 +178,8 @@ class ECutModel:
 
     # -- resolution --------------------------------------------------------
     def optimize(self, g_coef: np.ndarray, g_const: float = 0.0,
-                 maximize: bool = True, extra_rows=None):
+                 maximize: bool = True, extra_rows=None,
+                 time_limit: Optional[float] = None):
         """
         Optimise g sur R (= S prive des zones coupees), avec d'eventuelles
         contraintes supplementaires en espace x. Renvoie un ILPResult dont
@@ -193,11 +194,13 @@ class ECutModel:
             rows.append(self._pad_to(r, nvar))
         lb, ub = self._bounds()
         return solve_milp(obj, rows, lb, ub, maximize=maximize,
-                          obj_const=g_const)
+                          obj_const=g_const, time_limit=time_limit)
 
-    def maximize_linear(self, g_coef: np.ndarray, g_const: float = 0.0):
+    def maximize_linear(self, g_coef: np.ndarray, g_const: float = 0.0,
+                        time_limit: Optional[float] = None):
         """max g sur R. Renvoie ILPResult ; res.x est en espace etendu."""
-        return self.optimize(g_coef, g_const, maximize=True)
+        return self.optimize(g_coef, g_const, maximize=True,
+                             time_limit=time_limit)
 
 
 # ----------------------------------------------------------------------------
@@ -206,7 +209,8 @@ class ECutModel:
 
 def repair_to_efficient(inst: MOILFP, x: np.ndarray,
                         max_steps: int = 100,
-                        dominated_out: Optional[list] = None) -> np.ndarray:
+                        dominated_out: Optional[list] = None,
+                        deadline: Optional[float] = None) -> Optional[np.ndarray]:
     """
     Suit la chaine de dominance jusqu'a atteindre un point efficace certifie.
 
@@ -217,10 +221,24 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
     traverses y sont ajoutes. Ils sont exactement les points sur lesquels le
     Th. 4 autorise une coupe de dominance ; les jeter serait gaspiller une
     information deja payee.
+
+    `deadline` : instant (time.time()) au-dela duquel on renonce. Renvoie
+    alors None -- JAMAIS le dernier point atteint. Ce point n'a pas ete
+    certifie efficace, et le rendre comme s'il l'etait rendrait le LB
+    optimiste : c'est la seule propriete que la matheuristique ne peut pas
+    perdre. Les points domines deja traverses restent acquis dans
+    `dominated_out`.
     """
     cur = x
     for _ in range(max_steps):
-        r = efficiency_test(inst, cur)
+        tl = None
+        if deadline is not None:
+            tl = deadline - time.time()
+            if tl <= 0:
+                return None
+        r = efficiency_test(inst, cur, time_limit=tl)
+        if not r.conclusive:
+            return None
         if r.efficient:
             return cur
         if dominated_out is not None:
@@ -261,6 +279,7 @@ def max_linear_over_E(inst: MOILFP,
                       time_limit: float = 300.0,
                       model: Optional[ECutModel] = None,
                       collect: bool = True,
+                      ilp_grace: float = 1.0,
                       verbose: bool = False) -> OracleResult:
     """
     Maximise  g(x) = g_coef^T x + g_const  sur l'ensemble efficace E.
@@ -269,6 +288,10 @@ def max_linear_over_E(inst: MOILFP,
     model : un ECutModel deja garni de coupes peut etre passe pour etre
             reutilise d'un appel a l'autre (crucial dans Dinkelbach : les
             coupes restent valides puisqu'elles ne dependent que de E).
+    ilp_grace : sursis accorde a un ILP demarre pres de l'echeance, en
+            fraction de `time_limit`. Majore le depassement total ; a 0 on
+            coupe pile a l'echeance, ce qui respecte le budget a la seconde
+            mais degrade la borne (cf. commentaire dans la boucle).
     """
     t0 = time.time()
     calls0 = ORACLE_CALLS["ilp"]
@@ -286,8 +309,25 @@ def max_linear_over_E(inst: MOILFP,
                                 UB, it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
                                 time.time() - t0, incumbents)
 
-        res = R.maximize_linear(g_coef, g_const)
-        if not res.ok:
+        deadline = t0 + time_limit
+        # POLITIQUE DE COUPURE. Couper l'ILP pile a l'echeance est perdant :
+        # une relaxation resolue a l'optimum donne l'argmax, donc une COUPE,
+        # alors qu'une resolution interrompue ne donne qu'une borne duale, et
+        # la coupe vaut bien plus que la borne (mesure : UB 369 contre 474 a
+        # 10 s sur n5 m3 p4). On laisse donc l'ILP en cours finir, dans la
+        # limite d'un sursis borne : le depassement total reste majore par
+        # `grace`, et aucun ILP ne peut s'emballer indefiniment -- ce qui
+        # etait le vrai risque, un appel unique n'ayant aucune limite.
+        # Le sursis vaut pour TOUTE l'iteration -- relaxation, test
+        # d'efficacite et chaine de reparation. Le donner a la seule
+        # relaxation revient a laisser l'iteration s'interrompre juste apres,
+        # donc a perdre la coupe qu'elle allait produire : le meme gaspillage,
+        # deplace d'un cran.
+        slack = deadline + ilp_grace * time_limit
+        res = R.maximize_linear(g_coef, g_const,
+                                time_limit=slack - time.time())
+
+        if res.status == "infeasible":
             # R vide : plus aucun candidat non coupe
             status = "optimal" if x_best is not None else "empty"
             return OracleResult(status, x_best,
@@ -296,20 +336,75 @@ def max_linear_over_E(inst: MOILFP,
                                 it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
                                 time.time() - t0, incumbents)
 
-        xbar = res.x[:inst.n]
-        UB = res.obj
+        if res.status == "limit":
+            # La relaxation n'a pas ete resolue a l'optimum. `res.bound` reste
+            # une borne superieure VALIDE de max_R g, donc de max_E g : c'est
+            # tout ce qu'il faut au schema anytime. En revanche res.x n'est
+            # plus l'argmax sur R : on ne peut ni conclure a l'optimalite si
+            # ce point est efficace, ni couper si l'incumbent manque.
+            if res.bound is not None and np.isfinite(res.bound):
+                UB = min(UB, res.bound)
+            if res.x is None:
+                return OracleResult("limit", x_best,
+                                    LB if x_best is not None else None,
+                                    UB if np.isfinite(UB) else None,
+                                    it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
+                                    time.time() - t0, incumbents)
+            xbar = res.x[:inst.n]
+            truncated = True
+        elif not res.ok:
+            return OracleResult("limit", x_best,
+                                LB if x_best is not None else None,
+                                UB if np.isfinite(UB) else None,
+                                it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
+                                time.time() - t0, incumbents)
+        else:
+            xbar = res.x[:inst.n]
+            UB = res.obj
+            truncated = False
 
-        eff = efficiency_test(inst, xbar)
+        eff = efficiency_test(inst, xbar, time_limit=slack - time.time())
+        if not eff.conclusive:
+            # sans certificat on ne peut ni couper ni archiver : on rend les
+            # bornes acquises, qui restent valides
+            return OracleResult("limit", x_best,
+                                LB if x_best is not None else None,
+                                UB if np.isfinite(UB) else None,
+                                it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
+                                time.time() - t0, incumbents)
+
         if eff.efficient:
-            # optimal : xbar maximise g sur R qui contient E
             if collect:
                 incumbents.append(xbar)
+            if truncated:
+                # xbar est efficace mais n'est PAS prouve argmax sur R :
+                # il ne borne que par en dessous. Si la borne superieure le
+                # rejoint tout de meme, l'optimalite est acquise malgre tout.
+                if g_of(xbar) > LB:
+                    LB, x_best = g_of(xbar), xbar
+                proved = np.isfinite(UB) and \
+                    (UB - LB) / max(1e-12, abs(UB)) <= 1e-9
+                return OracleResult("optimal" if proved else "limit",
+                                    x_best, LB,
+                                    UB if np.isfinite(UB) else None,
+                                    it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
+                                    time.time() - t0, incumbents)
+            # optimal : xbar maximise g sur R qui contient E
             return OracleResult("optimal", xbar, g_of(xbar), UB, it, R.n_cuts,
                                 ORACLE_CALLS["ilp"] - calls0,
                                 time.time() - t0, incumbents)
 
         # xbar domine : on en tire quand meme un point efficace (borne inf)
-        x_eff = repair_to_efficient(inst, eff.dominator)
+        x_eff = repair_to_efficient(inst, eff.dominator, deadline=slack)
+        if x_eff is None:
+            # la chaine n'a pas abouti dans le temps : la coupe sur xbar reste
+            # licite (xbar est prouve domine), mais aucun LB nouveau
+            R.add_dominance_cut(xbar)
+            return OracleResult("limit", x_best,
+                                LB if x_best is not None else None,
+                                UB if np.isfinite(UB) else None,
+                                it, R.n_cuts, ORACLE_CALLS["ilp"] - calls0,
+                                time.time() - t0, incumbents)
         if collect:
             incumbents.append(x_eff)
         if g_of(x_eff) > LB:

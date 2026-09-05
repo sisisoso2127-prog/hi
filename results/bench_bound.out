@@ -1,14 +1,14 @@
 instance                  |E|  ecart reel      Th.5     Th.5p  valide  coupes   Dmin     D+
 --------------------------------------------------------------------------------------------
 molfp_n7_m4_p4_c000_s3    218        0.0%      0.0%      0.0%      ok      40   None   None
-molfp_n7_m4_p4_c025_s3    198        0.0%     51.8%     27.3%      ok      70      5     11
-molfp_n6_m4_p4_c000_s3    185        0.0%     16.2%      0.0%      ok      50      7     23
-molfp_n7_m4_p3_c025_s1    112        0.0%     66.7%      0.9%      ok      86      1     12
-molfp_n5_m3_p4_c000_s2     54        0.0%     74.5%      5.1%      ok      38      1     27
-molfp_n8_m5_p3_c000_s1     46        0.0%     48.2%      0.0%      ok      59      6     14
+molfp_n7_m4_p4_c025_s3    198        0.0%     50.3%     26.9%      ok      72      5     11
+molfp_n6_m4_p4_c000_s3    185        0.0%     15.2%      0.0%      ok      50      7     23
+molfp_n7_m4_p3_c025_s1    112        0.0%     64.8%      0.0%      ok      88      1     12
+molfp_n5_m3_p4_c000_s2     54        0.0%     74.1%      2.1%      ok      38      1     27
+molfp_n8_m5_p3_c000_s1     46        0.0%     47.5%      0.0%      ok      61      6     16
 molfp_n7_m4_p4_c050_s3     30        0.0%      0.0%      0.0%      ok      34   None   None
-molfp_n6_m4_p2_c025_s1     26        0.0%     12.3%      0.0%      ok      22   None   None
+molfp_n6_m4_p2_c025_s1     26        0.0%      0.0%      0.0%      ok      22   None   None
 --------------------------------------------------------------------------------------------
-ecart garanti median : Th.5 = 32.2 %   Th.5' = 0.0 %   (ecart reel median 0.0 %)
+ecart garanti median : Th.5 = 31.4 %   Th.5' = 0.0 %   (ecart reel median 0.0 %)
 reduction mediane de l'ecart garanti : 100.0 %
 VALIDITE (q_ub >= q*) : TOUT VALIDE

@@ -693,10 +693,14 @@ dispersion entre graines, que la version precedente laissait monter jusqu'a
 
 ### Ce qui reste ouvert
 
-* **`n7 m4 p4 c0.25` (`|E| = 198`) : 19.4 % d'ecart garanti pour un ecart
-  reel nul, et 0/10 preuves.** L'optimum est trouve a tous les coups sans
-  jamais etre prouve. C'est l'instance ou `U` reste grand : la borne du
-  Th. 5' y bute sur la qualite de la relaxation, pas sur le budget.
+* **`n7 m4 p4 c0.25` (`|E| = 198`) : ~19 % d'ecart garanti pour un ecart reel
+  nul, et 0/10 preuves.** L'optimum est trouve a tous les coups sans jamais
+  etre prouve. Mesure directe du blocage : au point `q*`, `F(q*)` vaut 0 sur
+  `E` mais **959** sur `S` sans coupe, et prouver `F(q*) <= 0` demande
+  **433 s, 177 coupes et 533 ILP** — soit 43 fois le budget de certification.
+  Ce n'est donc ni un reglage ni une graine malheureuse : c'est le prix
+  reel de la certification sur cette instance, et il tient a la qualite de
+  la relaxation, pas au budget.
 * **`n8 m5 p3 c0.00` : une graine sur dix a 52 % d'ecart garanti** alors que
   les neuf autres sont a 0. Une seule graine defavorable subsiste ; la
   variance est reduite, pas eliminee.
@@ -705,12 +709,99 @@ dispersion entre graines, que la version precedente laissait monter jusqu'a
   disjonction, ou remplacer le schema de type Sylva-Crema, conditionne tout
   gain supplementaire sur `U`.
 
+## La limite de temps en etait-elle une ? — une premisse mesuree, puis dementie
+
+`solve_milp` ne transmettait aucune limite de temps a HiGHS. Chaque ILP
+tournait donc jusqu'a l'optimum, et l'heure n'etait verifiee qu'**entre**
+deux appels : en principe, un seul ILP pouvait absorber tout le budget d'un
+schema qui se presente comme anytime.
+
+### Ce que la mesure a dementi
+
+Le depassement reel, mesure sur quatre instances a deux budgets, plafonne a
+**+1.3 s** — les ILP de cette famille sont trop rapides pour que le probleme
+morde. La premisse etait donc surestimee.
+
+Pire, couper l'ILP pile a l'echeance **degrade** la borne : une relaxation
+resolue a l'optimum livre l'argmax donc une **coupe**, alors qu'une
+resolution interrompue ne livre qu'une borne duale, et la coupe vaut
+davantage. Mesure sur `n5 m3 p4` a 10 s : `UB` = 474 en coupant, contre 369
+en laissant finir. Le meme gaspillage se reproduit si le sursis n'est accorde
+qu'a la relaxation et pas au test d'efficacite ni a la chaine de reparation
+qui la suivent : l'iteration s'interrompt un cran plus loin et la coupe est
+perdue quand meme.
+
+### Ce qui a ete retenu
+
+La limite est transmise, mais avec un sursis (`ilp_grace`, defaut 1.0)
+couvrant **toute l'iteration**. Autrement dit : on ne coupe jamais un calcul
+en cours pour respecter l'horloge, mais aucun ILP ne peut s'emballer. Le
+depassement total est majore par `ilp_grace x budget` au lieu d'etre non
+majore.
+
+Deux proprietes en decoulent, toutes deux de correction et non de
+performance :
+
+* un ILP interrompu rend desormais `mip_dual_bound`, borne optimiste
+  **valide** : il informe encore au lieu d'etre perdu ;
+* le test d'efficacite distingue « prouve efficace », « prouve non efficace »
+  et « non concluant ». Un incumbent non certifie n'entre ni dans l'archive
+  ni dans le LB. `repair_to_efficient` renvoie `None` plutot que le dernier
+  point atteint : le LB ne peut pas devenir optimiste, et c'est la seule
+  propriete que la matheuristique n'a pas le droit de perdre.
+
+### Effet mesure : aucun
+
+8 instances x 10 graines, budget identique, avant / apres :
+
+| | sans limite ILP | avec limite ILP |
+|---|---|---|
+| ecart garanti median | 0.00 % | 0.00 % |
+| optimum atteint | 78/80 | 78/80 |
+| optimalite prouvee | 58/80 | 58/80 |
+| validite `q_lb <= q* <= q_ub` | 80/80 | 80/80 |
+
+Strictement rien. Le changement est une **assurance**, pas un resultat : il
+ne se paie pas, et il borne un risque qui n'existe pas encore sur ce lot mais
+qui apparaitra des que `n` grandira — c'est-a-dire sur la faiblesse n°1
+ci-dessous. Le rapporter comme un gain serait malhonnete.
+
+Portee exacte : la borne concerne la boucle de l'oracle. `d_min` et `d_plus`
+restent des ILP uniques sans limite.
+
+## Les vraies faiblesses, par ordre de gravite
+
+Elles ne sont pas des reglages ; les nommer vaut mieux que les laisser
+trouver par un rapporteur.
+
+1. **Le calibre est minuscule.** `n` de 5 a 8, `m` de 3 a 5, `|S|` de 1300 a
+   5300. La cause est structurelle : la verite terrain vient d'une
+   enumeration exhaustive, qui devient impraticable au-dela de `n = 8`. Rien
+   ici ne dit ce qui se passe a `n = 30`. C'est la faiblesse dominante, et
+   elle impose un choix : renoncer a l'enumeration comme reference et se
+   contenter de verifier la VALIDITE des bornes (verifiable sans connaitre
+   `q*`) au lieu de leur exactitude.
+2. **Le lot de 8 est choisi, pas echantillonne.** Ces instances ont ete
+   retenues *parce que* la methode exacte y echouait. « La matheuristique bat
+   l'exact » y est donc presque tautologique. La formulation defendable est
+   plus etroite : *sur le regime ou l'exact ne conclut pas, elle transforme
+   une absence de resultat en resultat certifie*.
+3. **Aucun temoin issu de la litterature.** Ni Zerdani & Moulai (2011) ni
+   Drici et al. (2018) ne sont implementes. La seule comparaison disponible
+   est avec une version anterieure du meme code.
+4. **Le budget de 12 s est arbitraire.** Et la mesure du point precedent le
+   situe deux ordres de grandeur sous le cout d'une certification exacte.
+
 ## Prochaines etapes
 
 Les trois premiers points de la liste precedente sont traites et mesures
 ci-dessus (allocation du budget et plafond adaptatif, variance, big-M). Ce
 qui reste :
 
+0. **Monter en taille** (faiblesse n°1 ci-dessus) : abandonner l'enumeration
+   comme reference et ne verifier que la validite des bornes, ce qui est
+   possible sans connaitre `q*`. C'est le prealable a toute affirmation
+   au-dela de `n = 8`.
 1. **Desagreger la coupe de dominance.** Le contre-resultat mesure plus haut
    est net : au-dela d'une quarantaine de coupes, les `p` binaires par coupe
    coutent plus qu'elles ne rapportent. Tant que ce cout n'est pas reduit,
