@@ -1,0 +1,17 @@
+================================================================================================================
+VALIDATION A L'ECHELLE - AUCUNE ENUMERATION, AUCUNE VERITE TERRAIN
+budget par execution : 8 s + 6 s   |   3 executions independantes par instance
+================================================================================================================
+instance                 n   m  W1  W2  W3  W4  W5  W6  max_r q_lb  min_r q_ub    max_S f   ecart%    ILP   t(s)
+----------------------------------------------------------------------------------------------------------------
+molfp_n10_m6_p3_c000_s1  10   6  ok  ok  ok  ok  ok  ok     37.6667     37.6667    39.3333     0.0%    552    2.2
+molfp_n15_m8_p3_c000_s1  15   8  ok  ok  ok  ok  ok  ok     32.1667     32.1667    32.1667     0.0%    719    4.3
+molfp_n20_m11_p3_c000_s1  20  11  ok  ok  ok  ok  ok  ok      3.7317     31.5819   268.0000    88.2%   1345   45.5
+molfp_n25_m13_p3_c000_s1  25  13  ok  ok  ok  ok  ok  ok      6.4091     28.5833    71.0000    77.6%   2120   44.9
+molfp_n30_m16_p3_c000_s1  30  16  ok  ok  ok  ok  ok  ok      4.3871     38.7912    87.0000    88.7%    865   44.7
+molfp_n40_m21_p3_c000_s1  40  21  ok  ok  ok  ok  ok  ok      4.7037     64.7500   105.5000    92.7%    598   46.0
+----------------------------------------------------------------------------------------------------------------
+W1-W6 : TOUT VALIDE
+Lecture : W1-W6 etablissent la VALIDITE des bornes, pas leur
+finesse. La colonne 'ecart%' se lit contre min(q_ub, max_S f),
+c'est-a-dire contre la meilleure borne superieure disponible.

@@ -101,6 +101,12 @@ class ECutModel:
         self._cut_rows: List[Row] = []                     # espace etendu
         self.n_cuts = 0
         self.tight_big_m = TIGHT_BIG_M if tight_big_m is None else tight_big_m
+        # points de base des coupes posees. Les conserver permet de verifier
+        # l'invariant E inclus dans R sans connaitre E : tout point EFFICACE
+        # certifie doit satisfaire la disjonction de chaque coupe. C'est le
+        # seul controle de surete des coupes qui reste possible quand
+        # l'enumeration exhaustive n'est plus praticable.
+        self.cut_points: List[np.ndarray] = []
         # diagnostic : big-M boite vs big-M relaxation continue, pour mesurer
         # le resserrement au lieu de le postuler
         self.big_m_box: List[float] = []
@@ -134,6 +140,8 @@ class ECutModel:
 
         # les coupes deja posees doivent etre re-elargies au nouvel espace
         self._cut_rows = [self._pad_to(r, nvar) for r in self._cut_rows]
+
+        self.cut_points.append(np.array(xbar, dtype=int))
 
         sum_row = np.zeros(nvar)
         for k in range(self.p):

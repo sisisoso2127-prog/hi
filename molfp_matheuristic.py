@@ -169,6 +169,7 @@ class CertResult:
     q_lb: Optional[Fraction] = None     # incumbent, eventuellement AMELIORE
     x_best: Optional[np.ndarray] = None
     info: dict = field(default_factory=dict)
+    cut_points: List[np.ndarray] = field(default_factory=list)
 
 
 def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
@@ -288,7 +289,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     if best_ub is not None and best_ub <= float(q) + 1e-12:
         proved = True
         best_ub = float(q)
-    return CertResult(best_ub, proved, q, x_cur, info)
+    return CertResult(best_ub, proved, q, x_cur, info,
+                      cut_points=list(model.cut_points))
 
 
 def e_row(inst: MOILFP, xbar: np.ndarray, k: int) -> Tuple[np.ndarray, float]:
@@ -402,6 +404,7 @@ class MatheurResult:
     proved_optimal: bool = False
     status: str = "heuristic"
     cert: dict = field(default_factory=dict)   # diagnostic du Th. 5'
+    cut_points: List[np.ndarray] = field(default_factory=list)
 
     @property
     def gap(self) -> Optional[float]:
@@ -580,11 +583,13 @@ def matheuristic_P(inst: MOILFP,
         budget += max(0.0, time_budget - search_time)
 
     q_ub, proved, cert_info = None, False, {}
+    cut_points: List[np.ndarray] = []
     if certify_bound and budget > 0:
         c = certify(inst, q, x_best, dominated, budget,
                     use_tightened=tightened, archive=arch,
                     cut_batch=cut_batch, max_rounds=cert_rounds)
         q_ub, proved, cert_info = c.q_ub, c.proved, c.info
+        cut_points = c.cut_points
         if c.q_lb is not None and c.q_lb > q:
             q, x_best = c.q_lb, c.x_best      # pas de Dinkelbach offert
     cert_info["search_time"] = search_time
@@ -598,4 +603,5 @@ def matheuristic_P(inst: MOILFP,
         ilp_calls=ORACLE_CALLS["ilp"] - calls0, time=time.time() - t0,
         rounds=rounds, proved_optimal=proved,
         status="optimal" if proved else "heuristic", cert=cert_info,
+        cut_points=cut_points,
     )

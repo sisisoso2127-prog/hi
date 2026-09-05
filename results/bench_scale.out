@@ -1,0 +1,32 @@
+==================================================================================================================
+PASSAGE A L'ECHELLE - budget identique 30 s par methode, aucune enumeration
+==================================================================================================================
+instance                 n   m                 exact                    matheuristique         gagnant
+                                    valeur    statut        q_lb        q_ubecart garanti    ILP                
+------------------------------------------------------------------------------------------------------------------
+molfp_n10_m6_p3_c000_s1  10   6     37.6667   optimal     37.6667     37.6667      0.0%    175  exact (prouve)
+molfp_n10_m6_p3_c000_s2  10   6      4.7222   optimal      4.7222      4.7222      0.0%    272  exact (prouve)
+molfp_n12_m7_p3_c000_s1  12   7      2.4865     limit      3.0938     14.9330     79.3%    342  matheuristique
+molfp_n12_m7_p3_c000_s2  12   7      2.9000     limit      5.6667      5.6667      0.0%    416  matheuristique
+molfp_n15_m8_p3_c000_s1  15   8     32.1667   optimal     32.1667     32.1667      0.0%    195  exact (prouve)
+molfp_n15_m8_p3_c000_s2  15   8      3.7209     limit      4.1538     16.2788     74.5%    548  matheuristique
+molfp_n20_m11_p3_c000_s1  20  11      2.3509     limit      3.7317    221.3415     98.3%    758  matheuristique
+molfp_n20_m11_p3_c000_s2  20  11      7.5556     limit     15.5000     21.6250     28.3%    892  matheuristique
+molfp_n25_m13_p3_c000_s1  25  13      3.5556     limit      5.7381     52.0794     89.0%    735  matheuristique
+molfp_n25_m13_p3_c000_s2  25  13     11.3529     limit     27.6250     27.6250      0.0%    320  matheuristique
+molfp_n30_m16_p3_c000_s1  30  16      1.0676     limit      2.5385     87.0000     97.1%    589  matheuristique
+molfp_n30_m16_p3_c000_s2  30  16      9.6522     limit     21.8750     55.7500     60.8%    495  matheuristique
+molfp_n40_m21_p3_c000_s1  40  21      1.5921     limit      5.3200     95.3300     94.4%    584  matheuristique
+molfp_n40_m21_p3_c000_s2  40  21      2.9074     limit      5.6562     59.6205     90.5%    673  matheuristique
+------------------------------------------------------------------------------------------------------------------
+exact prouve l'optimalite   : 3/14 instances
+matheuristique strictement meilleure : 11/14
+
+    n   exact prouve    ecart garanti median
+   10       2/2                         0.0%
+   12       0/2                        39.6%
+   15       1/2                        37.2%
+   20       0/2                        63.3%
+   25       0/2                        44.5%
+   30       0/2                        78.9%
+   40       0/2                        92.5%

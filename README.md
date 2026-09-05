@@ -28,6 +28,8 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `verify_math.py` | Validation V8-V11 de la matheuristique + comparaison a budget egal |
 | `bench_bound.py` | Th. 5 (temoin) vs Th. 5' (resserre), a budget identique |
 | `bench_improve.py` | Mesure multi-graines sur le regime cible ; sert aussi de temoin d'A/B |
+| `verify_scale.py` | Validation W1-W6 SANS verite terrain, jusqu'a `n = 40` |
+| `bench_scale.py` | Passage a l'echelle : exact contre matheuristique, sans enumeration |
 | `legacy/` | Prototype initial a deux variables, conserve pour tracabilite |
 
 Lancer : `python verify.py` puis `python verify_oracle.py`
@@ -776,11 +778,9 @@ trouver par un rapporteur.
 
 1. **Le calibre est minuscule.** `n` de 5 a 8, `m` de 3 a 5, `|S|` de 1300 a
    5300. La cause est structurelle : la verite terrain vient d'une
-   enumeration exhaustive, qui devient impraticable au-dela de `n = 8`. Rien
-   ici ne dit ce qui se passe a `n = 30`. C'est la faiblesse dominante, et
-   elle impose un choix : renoncer a l'enumeration comme reference et se
-   contenter de verifier la VALIDITE des bornes (verifiable sans connaitre
-   `q*`) au lieu de leur exactitude.
+   enumeration exhaustive, qui devient impraticable au-dela de `n = 8`.
+   **Traitee** : voir « Sortir du calibre minuscule » ci-dessous. Les
+   garanties sont verifiees jusqu'a `n = 40` sans aucune enumeration.
 2. **Le lot de 8 est choisi, pas echantillonne.** Ces instances ont ete
    retenues *parce que* la methode exacte y echouait. « La matheuristique bat
    l'exact » y est donc presque tautologique. La formulation defendable est
@@ -792,34 +792,145 @@ trouver par un rapporteur.
 4. **Le budget de 12 s est arbitraire.** Et la mesure du point precedent le
    situe deux ordres de grandeur sous le cout d'une certification exacte.
 
+## Sortir du calibre minuscule : changer de reference
+
+C'est la faiblesse n°1 ci-dessus. Elle ne se corrige pas par un reglage : la
+verite terrain vient d'une enumeration exhaustive, qui devient impraticable
+vers `n = 8`. Tant qu'elle sert de reference, rien ne peut etre affirme
+au-dela.
+
+### Ce qui reste verifiable quand la verite terrain disparait
+
+Les garanties de la methode sont **auto-certifiantes** : chacune se controle
+sans connaitre `q*`. `verify_scale.py` les applique.
+
+| | propriete | comment elle se verifie sans `q*` |
+|---|---|---|
+| **W1** | `q_lb <= q*` | `x_best` passe le test d'efficacite (Th. 2, ILP exact) |
+| **W2** | archive saine | meme test sur un echantillon de l'archive |
+| **W3** | encadrement coherent | `q_lb <= q_ub` |
+| **W4** | coupes sures | tout point efficace certifie satisfait la disjonction de chaque coupe posee : c'est `E ⊆ R` restreint a la partie CONNUE de `E`, en arithmetique entiere pure |
+| **W5** | encadrements concordants | plusieurs executions independantes encadrent le meme `q*`, donc `max_r q_lb <= min_r q_ub` ; une violation **prouve** un bug |
+| **W6** | temoin independant | `max_S f` est une borne superieure valide et EXACTE, obtenue par un seul Dinkelbach sur `S` (Th. 3), sans aucune enumeration |
+
+W4 et W5 sont les deux qui portent : W4 remplace le controle de surete des
+coupes que l'enumeration assurait, et W5 transforme la simple repetition
+d'executions en test de coherence rigoureux.
+
+Ce que le protocole n'etablit **pas** : la finesse des bornes. Une borne
+superieure correcte mais inutile passe W1-W6 sans broncher. C'est
+`bench_scale.py` qui la mesure, contre `max_S f` et contre la methode exacte.
+
+### Resultat : W1-W6 valides jusqu'a `n = 40`
+
+3 executions independantes par instance, `p = 3`, `m = n/2 + 1`, aucune
+enumeration (`results/verify_scale.out`) :
+
+| `n` | W1-W6 | `max_r q_lb` | meilleure borne sup | ecart garanti |
+|---|---|---|---|---|
+| 10 | ok | 37.6667 | 37.6667 | **0.0 %** |
+| 15 | ok | 32.1667 | 32.1667 | **0.0 %** |
+| 20 | ok | 3.7317 | 31.58 | 88.2 % |
+| 25 | ok | 6.4091 | 28.58 | 77.6 % |
+| 30 | ok | 4.3871 | 38.79 | 88.7 % |
+| 40 | ok | 4.7037 | 64.75 | 92.7 % |
+
+A noter : prendre le **max des `q_lb`** sur les executions independantes
+ameliore reellement le LB certifie (`n = 30` : 2.54 sur une execution,
+**4.39** sur trois). C'est gratuit et sur : le max de plusieurs minorants
+valides est un minorant valide.
+
+### Ce que le passage a l'echelle revele
+
+`bench_scale.py`, budget identique de 30 s par methode, deux instances par
+taille (`results/bench_scale.out`) :
+
+| `n` | exact prouve | ecart garanti median |
+|---|---|---|
+| 10 | 2/2 | 0.0 % |
+| 12 | 0/2 | 39.6 % |
+| 15 | 1/2 | 37.2 % |
+| 20 | 0/2 | 63.3 % |
+| 25 | 0/2 | 44.5 % |
+| 30 | 0/2 | 78.9 % |
+| 40 | 0/2 | 92.5 % |
+
+**La methode exacte decroche des `n = 12`** : 3 preuves sur 14 instances. Et
+sur **11 instances sur 14** la matheuristique rend une valeur strictement
+MEILLEURE que celle de la methode exacte — laquelle, en statut `limit`, ne
+borne rien.
+
+Mais la colonne de droite est le vrai resultat : **c'est la borne superieure
+qui se degrade avec `n`**, pas le LB. Verification directe a `n = 20` et
+`n = 25`, methode exacte lancee 400 s :
+
+| | exact (400 s) | matheuristique (18 s) |
+|---|---|---|
+| `n = 15` | **prouve** 32.1667 en 0.1 s | 32.1667, ecart 0 % |
+| `n = 20` | `limit`, 2.71154 non prouve | **3.7317** certifie |
+| `n = 25` | `limit`, 3.62500 non prouve | **5.7381** certifie |
+
+Le LB de la matheuristique bat donc ce que la methode exacte trouve en
+vingt fois plus de temps. La recherche n'est pas le goulot : **la borne
+superieure l'est**, exactement comme sur `n7 m4 p4 c0.25` a petite taille.
+Le diagnostic converge de deux directions independantes.
+
+### Une fausse piste, mesuree puis abandonnee
+
+Diagnostic intermediaire errone, conserve ici parce qu'il est instructif. En
+mesurant `f` avant et apres la chaine de reparation, on constate une perte de
+**74 a 82 %** : le mouvement trouve `f = 31.75`, la reparation rend `f = 1.77`.
+`efficiency_test` maximise `theta = somme_k e_k`, donc choisit le dominateur
+qui maximise l'amelioration des CRITERES, en ignorant `f`. Conclusion
+apparente : la recherche proposait de bons points et la reparation les jetait.
+
+Deux corrections ont ete implementees et mesurees :
+
+| reparation guidee par | n = 20 | n = 30 | cout |
+|---|---|---|---|
+| `theta` (existant) | reference | reference | 2-3 ILP |
+| substitut lineaire `w` | 1.2x | **0.6x** | 2-3 ILP |
+| `f` exactement (Dinkelbach sur la region dominante) | 1.1x | **0.6x** | **54-82 ILP** |
+
+Aucune des deux ne fait mieux, et la seconde coute trente fois plus cher.
+La raison de fond est apparue avec la comparaison a la methode exacte
+ci-dessus : les points a `f` eleve sont **domines**, donc hors de `E`, et
+leurs voisins efficaces ont reellement un `f` faible. La perte de 74-82 %
+n'etait pas un defaut de la reparation, c'etait la structure du probleme.
+Le diagnostic etait faux ; le code correspondant a ete retire.
+
+Lecon de methode : une mesure locale spectaculaire ne vaut pas diagnostic
+tant qu'un temoin independant ne l'a pas confirmee.
+
 ## Prochaines etapes
 
 Les trois premiers points de la liste precedente sont traites et mesures
 ci-dessus (allocation du budget et plafond adaptatif, variance, big-M). Ce
 qui reste :
 
-0. **Monter en taille** (faiblesse n°1 ci-dessus) : abandonner l'enumeration
-   comme reference et ne verifier que la validite des bornes, ce qui est
-   possible sans connaitre `q*`. C'est le prealable a toute affirmation
-   au-dela de `n = 8`.
-1. **Desagreger la coupe de dominance.** Le contre-resultat mesure plus haut
+1. **Resserrer la borne superieure a grande taille.** C'est desormais LE
+   verrou, etabli de deux cotes independants : a petite taille sur
+   `n7 m4 p4 c0.25`, et a grande taille par `bench_scale.py`, ou l'ecart
+   garanti passe de 0 % a `n = 10` a 92.5 % a `n = 40` alors que le LB, lui,
+   bat la methode exacte. Tout le reste en depend.
+2. **Desagreger la coupe de dominance.** Le contre-resultat mesure plus haut
    est net : au-dela d'une quarantaine de coupes, les `p` binaires par coupe
    coutent plus qu'elles ne rapportent. Tant que ce cout n'est pas reduit,
    aucune strategie de coupes ne fera mieux — c'est le verrou suivant, et il
    commande le gain restant sur `U`.
-2. **Fermer la borne sur `n7 m4 p4 c0.25`.** Optimum trouve 10 fois sur 10,
+3. **Fermer la borne sur `n7 m4 p4 c0.25`.** Optimum trouve 10 fois sur 10,
    jamais prouve. C'est le cas ou `U` reste grand independamment du budget :
    il isole ce que la relaxation courante ne sait pas faire.
-3. **Campagne complete de la matheuristique** — les 216 instances, au moins
+4. **Campagne complete de la matheuristique** — les 216 instances, au moins
    10 graines chacune, mediane et dispersion. Le lot mesure ici n'en couvre
    que 8, choisies parce que la methode exacte y echouait ; ce choix est
    assume mais il n'est pas un echantillon.
-4. **Remettre `campaign.py`, `analyze.py` et `scaling.py` dans le depot.**
+5. **Remettre `campaign.py` et `analyze.py` dans le depot.**
    Les tableaux de la section « Campagne de difficulte » ne sont pas
    reproductibles en l'etat.
-5. **Comparaison avec la litterature** — reimplementer Zerdani & Moulai
+6. **Comparaison avec la litterature** — reimplementer Zerdani & Moulai
    (2011) et Drici et al. (2018) sur le meme lot. Point 4 du plan de these.
-6. **Protocole** — stratifier par `corr` : a `(n,m,p)` fixe, `|E|` varie d'un
+7. **Protocole** — stratifier par `corr` : a `(n,m,p)` fixe, `|E|` varie d'un
    facteur 40 selon ce parametre.
 
 ## Note sur le solveur
