@@ -683,10 +683,13 @@ qui mesure la variance) :
 
 *(entre parentheses : la version precedente, quand elle differe)*
 
-La version actuelle n'est en retrait sur **aucune** instance et sur aucun des
-quatre indicateurs. Le gain le plus net n'est pas la mediane, c'est la
-colonne `max` : la dispersion entre graines, que la version precedente
-laissait monter jusqu'a 60 %, disparait presque entierement.
+La version actuelle ameliore les quatre indicateurs agreges et la mediane de
+chaque instance. **Une** case sur trente-deux est en retrait : sur
+`n8 m5 p3 c0.00`, la pire graine donne 52.1 % d'ecart garanti contre 45.8 %
+avant — la meme graine isolee que signale la section suivante. Partout
+ailleurs le gain le plus net n'est pas la mediane mais la colonne `max` : la
+dispersion entre graines, que la version precedente laissait monter jusqu'a
+60 %, disparait presque entierement.
 
 ### Ce qui reste ouvert
 
