@@ -7,13 +7,14 @@ establish what it claims. This script reproduces three issues.
 Run:  python3 diagnostics.py
 """
 
+import os
 import time
 
 import numpy as np
 
 
 # Load hybrid_validation.py without executing its module-level MAIN block.
-_SRC = open("hybrid_validation.py").read().split("# MAIN - COLAB VERSION")[0]
+_SRC = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "hybrid_validation.py")).read().split("# MAIN - COLAB VERSION")[0]
 _HV = {}
 exec(compile(_SRC, "hybrid_validation.py", "exec"), _HV)
 
