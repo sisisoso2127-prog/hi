@@ -139,72 +139,156 @@ def d_plus(inst: MOILFP, model: ECutModel,
         return None
     return max(1, int(round(res.obj)))
 
-
-def build_certification_model(inst: MOILFP, dominated: Sequence[np.ndarray],
-                              w: np.ndarray, max_cuts: int = 40) -> ECutModel:
+def rank_dominated(dominated: Sequence[np.ndarray],
+                   w: np.ndarray) -> List[np.ndarray]:
     """
-    Construit R en recyclant les points DOMINES rencontres pendant la phase
-    heuristique (Th. 5', gain 3).
+    Points DOMINES uniques, tries par valeur decroissante du substitut w.
 
-    Priorite aux points de plus grande valeur du substitut w : ce sont eux qui
-    tirent U vers le haut, donc les couper est ce qui resserre le plus la
-    borne. Le nombre de coupes est plafonne, chacune ajoutant p binaires.
+    Ce sont exactement les points sur lesquels le Th. 4 autorise une coupe, et
+    ils ont deja ete payes par les chaines de reparation de la phase de
+    recherche. L'ordre compte : ceux de plus grande valeur du substitut sont
+    ceux qui tirent U vers le haut, donc les couper est ce qui resserre le
+    plus la borne du Th. 5'.
     """
-    model = ECutModel(inst)
-    seen = set()
-    uniq = []
+    seen, uniq = set(), []
     for x in dominated:
         key = tuple(int(v) for v in x)
         if key not in seen:
             seen.add(key)
-            uniq.append(x)
-    uniq.sort(key=lambda x: -float(np.asarray(w, dtype=float) @ x))
-    for x in uniq[:max_cuts]:
-        model.add_dominance_cut(x)
-    return model
+            uniq.append(np.asarray(x, dtype=int))
+    wv = np.asarray(w, dtype=float)
+    uniq.sort(key=lambda x: -float(wv @ x))
+    return uniq
 
 
-def certify(inst: MOILFP, q: Fraction, dominated: Sequence[np.ndarray],
-            budget: float, use_tightened: bool = True
-            ) -> Tuple[Optional[float], bool, dict]:
+@dataclass
+class CertResult:
+    """Sortie de la phase de certification."""
+    q_ub: Optional[float] = None        # meilleure borne sup VALIDE sur q*
+    proved: bool = False
+    q_lb: Optional[Fraction] = None     # incumbent, eventuellement AMELIORE
+    x_best: Optional[np.ndarray] = None
+    info: dict = field(default_factory=dict)
+
+
+def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
+            dominated: Sequence[np.ndarray],
+            budget: float,
+            use_tightened: bool = True,
+            archive: Optional["Archive"] = None,
+            cut_batch: int = 10,
+            max_rounds: int = 6) -> CertResult:
     """
-    Convertit un budget de calcul en borne superieure valide sur q*.
+    Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
-    Renvoie (q_ub, optimalite_prouvee, diagnostic).
-    `use_tightened=False` applique le Th. 5 d'origine : sert de temoin pour
-    mesurer le gain apporte par le Th. 5'.
+    Deux differences avec la version a plafond de coupes fige :
+
+    1. PLAFOND DE COUPES ADAPTATIF. Les coupes recyclees sont ajoutees par
+       lots (`cut_batch`), et un lot n'est ajoute que si le budget reste et
+       que la borne n'a pas ferme. Un plafond fixe se trompe des deux cotes :
+       trop bas il laisse U inutilement grand, trop haut il alourdit chaque
+       ILP (p binaires par coupe) au point que l'oracle n'a plus le temps de
+       conclure. Le budget arbitre a la place du reglage.
+
+    2. LA CERTIFICATION AMELIORE AUSSI L'INCUMBENT. L'oracle interne renvoie
+       des points efficaces certifies ; s'ils battent q, c'est un vrai pas de
+       Dinkelbach (Th. 3) offert par la phase de certification. On relance
+       alors sur le nouveau substitut : le LB monte pendant que l'UB descend.
+
+    VALIDITE. Chaque tour produit une borne valide sur q* pour le q de ce
+    tour ; comme q* ne depend pas de q, le MINIMUM des bornes obtenues reste
+    une borne valide. Un q ameliore ne peut donc pas invalider une borne
+    posee plus tot.
     """
-    w, w0, P, Q = surrogate(inst, q)
-    info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None}
+    t0 = time.time()
+    info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
+                  "rounds": 0, "q_improved": False}
 
-    model = build_certification_model(inst, dominated, w) if use_tightened \
-        else ECutModel(inst)
-    info["n_cuts"] = model.n_cuts
+    best_ub: Optional[float] = None
+    proved = False
+    Dm: Optional[int] = None
 
-    r = max_linear_over_E(inst, w, w0, time_limit=budget, model=model,
-                          collect=False)
-
-    # optimalite prouvee : le sous-probleme est resolu et F(q) <= 0
-    if r.status == "optimal" and r.value is not None and r.value <= 1e-9:
-        return float(q), True, info
-
-    if r.ub is None:
-        return None, False, info
-    U = max(0.0, float(r.ub))
-    info["U"] = U
-    if U <= 1e-9:
-        return float(q), True, info
-
-    Dm = d_min(inst)
-    info["Dmin"] = Dm
-    denom = Dm
+    model = ECutModel(inst)
+    pending: List[np.ndarray] = []
     if use_tightened:
-        Dp = d_plus(inst, model, w, w0)
-        info["Dplus"] = Dp
-        if Dp is not None:
-            denom = max(Dm, Dp)          # D+ >= Dmin par construction
+        w0_coef, _, _, _ = surrogate(inst, q)
+        pending = rank_dominated(dominated, w0_coef)
 
-    return float(q) + U / (Q * denom), False, info
+    for rnd in range(1, max_rounds + 1):
+        left = budget - (time.time() - t0)
+        if left <= 0.05:
+            break
+        info["rounds"] = rnd
+
+        # q_ref : le q qui engendre le substitut de ce tour. La borne du
+        # Th. 5' se lit sur CE q -- si la certification ameliore l'incumbent
+        # en cours de tour, lire la borne sur le nouveau q resterait valide
+        # mais la relacherait pour rien.
+        q_ref = q
+        w, w0, P, Q = surrogate(inst, q_ref)
+
+        # --- plafond adaptatif : un lot de coupes de plus a chaque tour ----
+        if pending:
+            for x in pending[:cut_batch]:
+                model.add_dominance_cut(x)
+            pending = pending[cut_batch:]
+        info["n_cuts"] = model.n_cuts
+
+        # le dernier tour recoit tout le reste : inutile de garder du budget
+        # pour un tour qu'on ne fera pas
+        slice_ = left if (rnd == max_rounds or not pending) else left / 2.0
+        r = max_linear_over_E(inst, w, w0, time_limit=slice_, model=model,
+                              collect=True)
+
+        # -- l'oracle a-t-il produit un meilleur point efficace ? -----------
+        improved = False
+        for y in r.incumbents:
+            if archive is not None:
+                archive.add(y)
+            fy = inst.f.value(y)
+            if fy > q:
+                q, x_cur, improved = fy, y, True
+        if improved:
+            info["q_improved"] = True
+
+        # -- optimalite prouvee : F(q) resolu et <= 0 ----------------------
+        if r.status == "optimal" and r.value is not None and r.value <= 1e-9 \
+                and not improved:
+            return CertResult(float(q), True, q, x_cur, info)
+
+        # -- borne du Th. 5 / 5' -------------------------------------------
+        # une UB infinie (oracle interrompu avant sa premiere relaxation)
+        # n'est pas une borne : mieux vaut ne rien annoncer qu'annoncer inf.
+        if r.ub is not None and np.isfinite(r.ub):
+            U = max(0.0, float(r.ub))
+            info["U"] = U
+            if U <= 1e-9 and not improved:
+                return CertResult(float(q_ref), True, q, x_cur, info)
+
+            if Dm is None:
+                Dm = d_min(inst)
+                info["Dmin"] = Dm
+            denom = Dm
+            if use_tightened:
+                Dp = d_plus(inst, model, w, w0)
+                info["Dplus"] = Dp
+                if Dp is not None:
+                    denom = max(Dm, Dp)      # D+ >= Dmin par construction
+            cand = float(q_ref) + U / (Q * denom)
+            best_ub = cand if best_ub is None else min(best_ub, cand)
+
+        # Un tour sans amelioration, sans coupe en reserve ET dont l'oracle
+        # a conclu se repeterait a l'identique : on s'arrete.
+        # En revanche un oracle INTERROMPU ('limit') laisse du travail : il a
+        # pose ses propres coupes dans `model`, donc R s'est resserre et le
+        # tour suivant repart d'une relaxation strictement meilleure.
+        if not improved and not pending and r.status != "limit":
+            break
+
+    if best_ub is not None and best_ub <= float(q) + 1e-12:
+        proved = True
+        best_ub = float(q)
+    return CertResult(best_ub, proved, q, x_cur, info)
 
 
 def e_row(inst: MOILFP, xbar: np.ndarray, k: int) -> Tuple[np.ndarray, float]:
@@ -326,6 +410,34 @@ class MatheurResult:
         lb = float(self.q_lb)
         return (self.q_ub - lb) / max(1e-12, abs(self.q_ub))
 
+def _select_pool(arch: "Archive", usage: Dict[Tuple[int, ...], int],
+                 rng: np.random.Generator, inst: MOILFP,
+                 diversify: bool, k_elite: int = 8, k_rand: int = 4
+                 ) -> List[np.ndarray]:
+    """
+    Choisit les points de depart du tour.
+
+    Regime normal : intensification autour des meilleurs points pour f.
+    Regime DIVERSIFICATION (declenche par la stagnation) : on repart des
+    points de l'archive les MOINS souvent utilises comme base. Un redemarrage
+    aleatoire jetterait le travail deja fait ; l'archive, elle, ne contient
+    que des points efficaces certifies, donc des bases legitimes et
+    gratuites. C'est ce qui remplace le redemarrage aveugle.
+    """
+    pool = arch.points()
+    if not pool:
+        return []
+    if diversify:
+        pool.sort(key=lambda x: (usage.get(tuple(int(v) for v in x), 0),
+                                 -float(inst.f.value(x))))
+    else:
+        pool.sort(key=lambda x: -float(inst.f.value(x)))
+    base = pool[:k_elite]
+    if len(pool) > k_elite:
+        idx = rng.choice(len(pool), size=min(k_rand, len(pool)), replace=False)
+        base += [pool[i] for i in idx]
+    return base
+
 
 def matheuristic_P(inst: MOILFP,
                    time_budget: float = 20.0,
@@ -333,17 +445,31 @@ def matheuristic_P(inst: MOILFP,
                    seed: int = 0,
                    certify_bound: bool = True,
                    tightened: bool = True,
+                   max_stall: int = 3,
+                   reallocate: bool = True,
+                   cut_batch: int = 10,
                    verbose: bool = False) -> MatheurResult:
     """
-    Phase 1 (heuristique) : VNS dans l'espace des criteres, sous-problemes
-                            exacts sur chaque voisinage V_k. Produit un
-                            incumbent EFFICACE certifie (Th. 2) donc un LB sur.
-    Phase 2 (certification) : oracle exact lance avec un budget borne au point
-                            q obtenu ; sa borne superieure U sur F(q) est
-                            convertie en borne sur q* par le Th. 5.
+    Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
+                          exacts sur chaque voisinage. L'incumbent est
+                          toujours certifie efficace (Th. 2), donc le LB
+                          n'est JAMAIS optimiste, meme interrompu.
+    Phase 2 (certification) : oracle exact a budget borne, dont la borne
+                          superieure U sur F(q) devient une borne sur q*
+                          par le Th. 5'.
 
-    L'incumbent est toujours un vrai point efficace : le LB n'est jamais
-    optimiste, meme si la recherche est interrompue.
+    Trois reglages remplacent des constantes qui etaient figees :
+
+    `max_stall`  la recherche ne s'arrete plus au premier tour sans
+                 amelioration ; elle redemarre depuis les points les moins
+                 exploites de l'archive, et n'abandonne qu'apres `max_stall`
+                 tours steriles consecutifs.
+    `reallocate` le budget que la recherche n'a pas consomme (arret sur
+                 stagnation) est REVERSE a la certification au lieu d'etre
+                 perdu. C'est du temps deja alloue, et la certification est
+                 precisement ce qui manquait de budget.
+    `cut_batch`  taille des lots de coupes recyclees ; le plafond n'est plus
+                 fixe, il est arbitre par le budget (cf. `certify`).
     """
     t0 = time.time()
     calls0 = ORACLE_CALLS["ilp"]
@@ -363,6 +489,9 @@ def matheuristic_P(inst: MOILFP,
     ideal, nadir = ideal_nadir_estimates(inst)
 
     rounds = 0
+    stall = 0
+    n_restarts = 0
+    usage: Dict[Tuple[int, ...], int] = {}
     n_moves = {"A": 0, "B": 0, "C": 0}
     n_hits = {"A": 0, "B": 0, "C": 0}
 
@@ -371,19 +500,21 @@ def matheuristic_P(inst: MOILFP,
         rounds += 1
         w, w0, _, _ = surrogate(inst, q)
         improved = False
+        diversify = stall > 0
+        if diversify:
+            n_restarts += 1
 
-        pool = arch.points()
-        pool.sort(key=lambda x: -float(inst.f.value(x)))
-        base_pool = pool[:8]
-        if len(pool) > 8:
-            idx = rng.choice(len(pool), size=min(4, len(pool)), replace=False)
-            base_pool += [pool[i] for i in idx]
+        # en diversification on tire davantage vers B (plancher absolu) et C
+        # (LNS) : A reste ancre sur le point de base, donc explore peu
+        menu = ["B", "B", "C", "A"] if diversify else ["A", "A", "B", "C"]
 
-        for xr in base_pool:
+        for xr in _select_pool(arch, usage, rng, inst, diversify):
+            usage[tuple(int(v) for v in xr)] = \
+                usage.get(tuple(int(v) for v in xr), 0) + 1
             for k in rng.permutation(inst.p):
                 if time.time() - t0 >= time_budget:
                     break
-                mv = rng.choice(["A", "A", "B", "C"])   # A privilegie
+                mv = str(rng.choice(menu))
                 k = int(k)
 
                 if mv == "A":
@@ -398,11 +529,13 @@ def matheuristic_P(inst: MOILFP,
                     t = rng.random(inst.p)
                     eps = [nadir[j] + Fraction(float(t[j])).limit_denominator(64)
                            * (ideal[j] - nadir[j]) for j in range(inst.p)]
-                    eps = [eps[j] if rng.random() < 0.6 else None
+                    keep_prob = 0.4 if diversify else 0.6
+                    eps = [eps[j] if rng.random() < keep_prob else None
                            for j in range(inst.p)]
                     y = move_epsilon_absolute(inst, eps, w, w0)
                 else:
-                    n_free = max(1, int(0.4 * inst.n))
+                    frac = 0.6 if diversify else 0.4
+                    n_free = max(1, int(frac * inst.n))
                     free = rng.choice(inst.n, size=n_free, replace=False)
                     y = move_lns(inst, xr, free, w, w0)
 
@@ -420,19 +553,38 @@ def matheuristic_P(inst: MOILFP,
             if time.time() - t0 >= time_budget:
                 break
 
+        stall = 0 if improved else stall + 1
+
         if verbose:
             print(f"  tour {rounds}: q = {float(q):.6f}  |archive| = {len(arch)}"
-                  f"  mouvements {n_moves} succes {n_hits}"
+                  f"  stagnation {stall}  mouvements {n_moves} succes {n_hits}"
                   f"  ({time.time()-t0:.1f}s)")
 
-        if not improved and rounds > 2:
-            break            # optimum local en espace des criteres
+        if stall >= max_stall:
+            break            # optimum local confirme sur plusieurs tours
+
+    search_time = time.time() - t0
 
     # --- phase 2 : certification (Th. 5') --------------------------------
+    # le budget de recherche non consomme est reverse ici : la recherche a
+    # conclu, la certification non.
+    budget = bound_budget
+    if reallocate:
+        budget += max(0.0, time_budget - search_time)
+
     q_ub, proved, cert_info = None, False, {}
-    if certify_bound and bound_budget > 0:
-        q_ub, proved, cert_info = certify(inst, q, dominated, bound_budget,
-                                          use_tightened=tightened)
+    if certify_bound and budget > 0:
+        c = certify(inst, q, x_best, dominated, budget,
+                    use_tightened=tightened, archive=arch,
+                    cut_batch=cut_batch)
+        q_ub, proved, cert_info = c.q_ub, c.proved, c.info
+        if c.q_lb is not None and c.q_lb > q:
+            q, x_best = c.q_lb, c.x_best      # pas de Dinkelbach offert
+    cert_info["search_time"] = search_time
+    cert_info["cert_budget"] = budget
+    cert_info["restarts"] = n_restarts
+    cert_info["moves"] = dict(n_moves)
+    cert_info["hits"] = dict(n_hits)
 
     return MatheurResult(
         q_lb=q, x_best=x_best, q_ub=q_ub, archive=arch.points(),

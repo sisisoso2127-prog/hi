@@ -74,10 +74,15 @@ from typing import List, Optional, Sequence, Tuple
 import numpy as np
 
 from molfp_core import (INF, ORACLE_CALLS, efficiency_test, feasibility_rows,
-                        solve_milp)
+                        min_over_relaxation, solve_milp)
 from molfp_instance import MOILFP
 
 Row = Tuple[np.ndarray, float, float]
+
+# Renforcement du big-M des coupes par relaxation continue (cf. ECutModel).
+# Drapeau de module pour que les etudes d'ablation puissent le desactiver
+# globalement sans avoir a passer l'option de main en main.
+TIGHT_BIG_M = True
 
 
 # ----------------------------------------------------------------------------
@@ -87,7 +92,7 @@ Row = Tuple[np.ndarray, float, float]
 class ECutModel:
     """Relaxation R de E, enrichie de coupes de dominance exactes."""
 
-    def __init__(self, inst: MOILFP):
+    def __init__(self, inst: MOILFP, tight_big_m: Optional[bool] = None):
         self.inst = inst
         self.n = inst.n
         self.p = inst.p
@@ -95,6 +100,11 @@ class ECutModel:
         self._rows_x: List[Row] = feasibility_rows(inst)   # espace x
         self._cut_rows: List[Row] = []                     # espace etendu
         self.n_cuts = 0
+        self.tight_big_m = TIGHT_BIG_M if tight_big_m is None else tight_big_m
+        # diagnostic : big-M boite vs big-M relaxation continue, pour mesurer
+        # le resserrement au lieu de le postuler
+        self.big_m_box: List[float] = []
+        self.big_m_used: List[float] = []
 
     # -- dimensions --------------------------------------------------------
     @property
@@ -133,9 +143,19 @@ class ECutModel:
             a = (Dbar * Zk.num - Nbar * Zk.den).astype(float)   # entiers
             b = float(Dbar * Zk.a - Nbar * Zk.b)
 
-            # big-M valide : M_k >= 1 - min_boite e_k(x)
-            e_min = float(np.sum(np.minimum(a, 0.0) * self.ub_x)) + b
+            # big-M valide : M_k >= 1 - min_{x in S} e_k(x).
+            # La boite seule ignore A x <= b et donne un M tres lache ; le
+            # minorant par relaxation continue est valide (la relaxation
+            # contient S) et plus fin (elle est contenue dans la boite).
+            e_min_box = float(np.sum(np.minimum(a, 0.0) * self.ub_x)) + b
+            e_min = e_min_box
+            if self.tight_big_m:
+                e_min_lp = min_over_relaxation(a, b, self._rows_x, self.ub_x)
+                if np.isfinite(e_min_lp):
+                    e_min = max(e_min_box, e_min_lp)
             M = max(1.0, 1.0 - e_min)
+            self.big_m_box.append(max(1.0, 1.0 - e_min_box))
+            self.big_m_used.append(M)
 
             #  a^T x - M u_k >= 1 - M - b
             row = np.zeros(nvar)

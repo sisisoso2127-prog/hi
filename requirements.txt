@@ -1,0 +1,4 @@
+# Socle exact : seules dependances de tout le projet.
+# scipy >= 1.9 est requis pour scipy.optimize.milp (HiGHS).
+numpy>=1.23
+scipy>=1.9

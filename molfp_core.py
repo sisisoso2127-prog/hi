@@ -40,7 +40,7 @@ from fractions import Fraction
 from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
-from scipy.optimize import Bounds, LinearConstraint, milp
+from scipy.optimize import Bounds, LinearConstraint, linprog, milp
 
 from molfp_instance import MOILFP, FracObj
 
@@ -63,55 +63,16 @@ class ILPResult:
         return self.status == "optimal"
 
 
-# compteur global d'appels au solveur : l'unite de cout a rapporter dans
-# les experiences (bien plus reproductible que les secondes CPU)
-ORACLE_CALLS = {"ilp": 0}
+# compteurs globaux d'appels au solveur : l'unite de cout a rapporter dans
+# les experiences (bien plus reproductible que les secondes CPU). Les LP de
+# renforcement du big-M sont comptes a part : ils sont d'un ordre de grandeur
+# moins chers qu'un ILP et les melanger fausserait la comparaison.
+ORACLE_CALLS = {"ilp": 0, "lp": 0}
 
 
 def reset_oracle_counter() -> None:
     ORACLE_CALLS["ilp"] = 0
-
-
-def solve_milp(obj: np.ndarray,
-               rows: Sequence[Tuple[np.ndarray, float, float]],
-               var_lb: np.ndarray,
-               var_ub: np.ndarray,
-               maximize: bool = True,
-               obj_const: float = 0.0) -> ILPResult:
-    """
-    max/min  obj^T w + obj_const
-    s.c.     lb_i <= row_i^T w <= ub_i
-             var_lb <= w <= var_ub,  w entier
-
-    Forme generale : w peut contenir les variables de decision x ET des
-    variables binaires auxiliaires (contraintes disjonctives des coupes de
-    dominance). Toutes les variables sont entieres ici ; les binaires sont
-    simplement bornees dans [0, 1].
-    """
-    ORACLE_CALLS["ilp"] += 1
-    nvar = len(obj)
-    cost = -np.asarray(obj, dtype=float) if maximize else np.asarray(obj, dtype=float)
-
-    cons = []
-    if rows:
-        Amat = np.array([r[0] for r in rows], dtype=float)
-        lbs = np.array([r[1] for r in rows], dtype=float)
-        ubs = np.array([r[2] for r in rows], dtype=float)
-        cons.append(LinearConstraint(Amat, lbs, ubs))
-
-    res = milp(c=cost, constraints=cons,
-               integrality=np.ones(nvar),
-               bounds=Bounds(np.asarray(var_lb, dtype=float),
-                             np.asarray(var_ub, dtype=float)))
-
-    if res.status == 0:
-        w = np.rint(res.x).astype(int)
-        return ILPResult("optimal", w, float(obj @ w) + obj_const)
-    if res.status == 2:
-        return ILPResult("infeasible", None, None)
-    if res.status == 3:
-        return ILPResult("unbounded", None, None)
-    return ILPResult("error", None, None)
+    ORACLE_CALLS["lp"] = 0
 
 
 def solve_ilp(obj: np.ndarray,
@@ -164,6 +125,59 @@ def solve_milp(obj: np.ndarray,
     if res.status == 3:
         return ILPResult("unbounded", None, None)
     return ILPResult("error", None, None)
+
+
+# ----------------------------------------------------------------------------
+# Minorant lineaire par relaxation continue (renforcement du big-M)
+# ----------------------------------------------------------------------------
+
+def min_over_relaxation(coef: np.ndarray,
+                        const: float,
+                        rows: Sequence[Tuple[np.ndarray, float, float]],
+                        var_ub: np.ndarray) -> float:
+    """
+    Minorant VALIDE de  min { coef^T x + const : x in S }  obtenu sur la
+    relaxation continue de S = { x entier, 0 <= x <= var_ub, rows }.
+
+    Sert a renforcer le big-M des coupes de dominance. Deux raisons de le
+    prendre ici plutot que sur la boite seule :
+
+    * la relaxation continue contient S, donc son minimum minore celui sur S :
+      la borne reste valide ;
+    * elle est contenue dans la boite, donc son minimum est >= celui sur la
+      boite : la borne est mecaniquement plus fine, et souvent de beaucoup
+      des que A x <= b mord.
+
+    Les coefficients etant ENTIERS et x entier, coef^T x + const est entier :
+    on remonte donc au plafond entier du minorant continu, ce qui resserre
+    encore sans rien supposer. La marge 1e-6 absorbe l'erreur du simplexe --
+    elle ne peut que relacher la borne, donc pas invalider le big-M.
+
+    Renvoie -inf si le LP echoue : l'appelant retombe alors sur la boite.
+    """
+    ORACLE_CALLS["lp"] += 1
+    bounds = [(0.0, float(u)) for u in var_ub]
+    A_ub, b_ub = [], []
+    for r_coef, lo, hi in rows:
+        r = np.asarray(r_coef, dtype=float)
+        if np.isfinite(hi):
+            A_ub.append(r)
+            b_ub.append(float(hi))
+        if np.isfinite(lo):
+            A_ub.append(-r)
+            b_ub.append(-float(lo))
+
+    res = linprog(c=np.asarray(coef, dtype=float),
+                  A_ub=np.array(A_ub) if A_ub else None,
+                  b_ub=np.array(b_ub) if b_ub else None,
+                  bounds=bounds, method="highs")
+    if not res.success:
+        return -np.inf
+
+    c = np.asarray(coef, dtype=float)
+    integral = bool(np.all(c == np.rint(c)))     # coef^T x entier pour x entier
+    val = float(np.ceil(res.fun - 1e-6)) if integral else float(res.fun)
+    return val + const
 
 
 # ----------------------------------------------------------------------------
