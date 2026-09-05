@@ -1,0 +1,22 @@
+============================================================================================================
+MATHEURISTIQUE SUR LE REGIME CIBLE - 10 graines par instance   [variante : baseline]
+budget : 7 s recherche + 5 s certification
+============================================================================================================
+instance                  |E|        q*              ecart reel %           ecart garanti %   opt  prouve  valide
+                                             med     min      max      med     min      max    /n      /n        
+------------------------------------------------------------------------------------------------------------
+molfp_n7_m4_p4_c000_s3    218   8.87500      0.0     0.0     49.0      0.0     0.0     60.6   8/10     8/10      ok
+molfp_n7_m4_p4_c025_s3    198   4.73333      0.0     0.0      0.0     31.3    22.7     34.1  10/10     0/10      ok
+molfp_n6_m4_p4_c000_s3    185   5.41667      3.0     3.0     17.1      4.0     3.0     35.7   0/10     0/10      ok
+molfp_n7_m4_p3_c025_s1    112   4.75000      0.0     0.0      2.6      1.3     0.0     39.8   8/10     5/10      ok
+molfp_n5_m3_p4_c000_s2     54   3.30612      0.0     0.0      0.0     15.0     9.7     21.0  10/10     0/10      ok
+molfp_n8_m5_p3_c000_s1     46   3.17391      0.0     0.0     18.1      1.9     0.0     45.8   6/10     5/10      ok
+molfp_n7_m4_p4_c050_s3     30   4.73333      0.0     0.0     61.5      7.0     0.0     65.7   8/10     4/10      ok
+molfp_n6_m4_p2_c025_s1     26   2.38462      0.0     0.0     18.7      0.0     0.0     29.9   9/10     9/10      ok
+------------------------------------------------------------------------------------------------------------
+ecart reel median (sur les medianes d'instance)     : 0.00 %
+ecart garanti median (sur les medianes d'instance)  : 2.94 %
+optimum atteint       : 59/80 runs
+optimalite PROUVEE    : 31/80 runs
+VALIDITE q_lb <= q* <= q_ub : TOUT VALIDE
+detail par run : results/bench_improve_baseline.json

@@ -1,0 +1,22 @@
+============================================================================================================
+MATHEURISTIQUE SUR LE REGIME CIBLE - 10 graines par instance   [variante : ameliore]
+budget : 7 s recherche + 5 s certification
+============================================================================================================
+instance                  |E|        q*              ecart reel %           ecart garanti %   opt  prouve  valide
+                                             med     min      max      med     min      max    /n      /n        
+------------------------------------------------------------------------------------------------------------
+molfp_n7_m4_p4_c000_s3    218   8.87500      0.0     0.0      0.0      0.0     0.0      0.0  10/10    10/10      ok
+molfp_n7_m4_p4_c025_s3    198   4.73333      0.0     0.0      0.0     19.4    15.2     27.0  10/10     0/10      ok
+molfp_n6_m4_p4_c000_s3    185   5.41667      0.0     0.0      0.0      0.0     0.0      0.0  10/10    10/10      ok
+molfp_n7_m4_p3_c025_s1    112   4.75000      0.0     0.0      0.0      0.0     0.0      0.9  10/10     9/10      ok
+molfp_n5_m3_p4_c000_s2     54   3.30612      0.0     0.0      0.0      5.4     0.7      9.8  10/10     0/10      ok
+molfp_n8_m5_p3_c000_s1     46   3.17391      0.0     0.0     10.5      0.0     0.0     52.1   8/10     8/10      ok
+molfp_n7_m4_p4_c050_s3     30   4.73333      0.0     0.0      0.0      0.0     0.0      0.0  10/10    10/10      ok
+molfp_n6_m4_p2_c025_s1     26   2.38462      0.0     0.0      0.0      0.0     0.0      0.0  10/10    10/10      ok
+------------------------------------------------------------------------------------------------------------
+ecart reel median (sur les medianes d'instance)     : 0.00 %
+ecart garanti median (sur les medianes d'instance)  : 0.00 %
+optimum atteint       : 78/80 runs
+optimalite PROUVEE    : 57/80 runs
+VALIDITE q_lb <= q* <= q_ub : TOUT VALIDE
+detail par run : results/bench_improve_ameliore.json

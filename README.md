@@ -19,15 +19,25 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | Fichier | Role |
 |---|---|
 | `molfp_instance.py` | Structures `FracObj` / `MOILFP`, generateur aleatoire, calibration, E/S JSON |
-| `molfp_core.py` | Theoremes 1-3 : seuils integraux, test d'efficacite, Dinkelbach exact |
+| `molfp_core.py` | Theoremes 1-3 : seuils integraux, test d'efficacite, Dinkelbach exact, minorant LP |
 | `molfp_enum.py` | Verite terrain : enumeration de S, filtre de Pareto exact, `q*` de reference |
 | `molfp_oracle.py` | Oracle lineaire sur E (coupes de dominance, bornes anytime) + hybride exact-exact |
+| `molfp_matheuristic.py` | Volet exact-metaheuristique : recherche certifiee (Th. 2) + bornes (Th. 5/5') |
 | `verify.py` | Validation V1-V4 des briques de base |
-| `verify_oracle.py` | Validation V5-V7 de l'oracle et de l'hybride |
-| `scaling.py` | Etude de passage a l'echelle |
+| `verify_oracle.py` | Validation V5-V8 de l'oracle, de l'hybride et du big-M |
+| `verify_math.py` | Validation V8-V11 de la matheuristique + comparaison a budget egal |
+| `bench_bound.py` | Th. 5 (temoin) vs Th. 5' (resserre), a budget identique |
+| `bench_improve.py` | Mesure multi-graines sur le regime cible ; sert aussi de temoin d'A/B |
+| `legacy/` | Prototype initial a deux variables, conserve pour tracabilite |
 
 Lancer : `python verify.py` puis `python verify_oracle.py`
-(dependances : numpy, scipy >= 1.9).
+(dependances : `pip install -r requirements.txt` — numpy, scipy >= 1.9).
+
+`scaling.py`, `campaign.py` et `analyze.py`, dont les resultats sont
+rapportes plus bas, ne sont pas encore dans ce depot : les tableaux de la
+section « Campagne de difficulte » proviennent de la campagne d'origine et
+sont conserves ici comme resultats acquis, non comme sorties reproductibles
+en l'etat.
 
 ## Hypotheses garanties par construction
 
@@ -194,9 +204,11 @@ d'hybridation qui rend l'ensemble economique.
 `verify.py` : V1 test d'efficacite vs force brute — V2 Dinkelbach sur S —
 V3 validite de la borne — V4 point ideal.
 `verify_oracle.py` : V5 oracle vs `max_E g` force brute (plusieurs `g`
-aleatoires) — V6 hybride vs `q*` force brute — V7 archive sans faux positif.
+aleatoires) — V6 hybride vs `q*` force brute — V7 archive sans faux positif —
+V8 big-M des coupes contre le minimum reel de `e_k` sur `S` enumere.
 
-**Tout est valide sur 8 instances (V1-V4) et 6 instances (V5-V7).**
+**Tout est valide sur 8 instances (V1-V4) et 6 instances (V5-V8)**
+(`results/verify.out`, `results/verify_oracle.out`).
 
 ### Oracle et hybride
 
@@ -423,6 +435,7 @@ le plus explorateur, plein = voisinage vide.
 | **V8** incumbent reellement efficace et `q_lb <= q*` | 8/8 |
 | **V9** borne du Th. 5 valide : `q_ub >= q*` | 8/8 |
 | **V10** archive sans faux positif | 8/8 |
+| **V11** optimum atteint | 8/8 |
 
 Le LB n'est **jamais** optimiste : l'incumbent est un point efficace certifie
 par le Th. 2, meme si la recherche est interrompue.
@@ -434,9 +447,9 @@ campagne (statut `limit`), reprises a l'identique.
 
 | instance | \|E\| | `q*` | exact | matheuristique |
 |---|---|---|---|---|
-| n7 m4 p4 c0.00 | 218 | 8.87500 | 1.73684 | 4.52941 |
+| n7 m4 p4 c0.00 | 218 | 8.87500 | 1.73684 | **8.87500** |
 | n7 m4 p4 c0.25 | 198 | 4.73333 | 3.92308 | **4.73333** |
-| n6 m4 p4 c0.00 | 185 | 5.41667 | **5.41667** | 4.48936 |
+| n6 m4 p4 c0.00 | 185 | 5.41667 | 5.41667 | **5.41667** |
 | n7 m4 p3 c0.25 | 112 | 4.75000 | 3.96296 | **4.75000** |
 | n5 m3 p4 c0.00 | 54 | 3.30612 | 3.18519 | **3.30612** |
 | n8 m5 p3 c0.00 | 46 | 3.17391 | 2.84000 | **3.17391** |
@@ -444,29 +457,33 @@ campagne (statut `limit`), reprises a l'identique.
 | n6 m4 p2 c0.25 | 26 | 2.38462 | 1.94444 | **2.38462** |
 
 *La colonne exacte est en statut `limit` sur les 8 : ces valeurs ne sont pas
-prouvees.*
+prouvees. La colonne matheuristique, elle, est certifiee efficace (Th. 2) sur
+les 8.*
 
 | | exact | matheuristique |
 |---|---|---|
 | ecart reel a `q*` (mediane) | 16.8 % | **0.0 %** |
-| ecart reel a `q*` (moyenne) | 24.8 % | **8.3 %** |
-| optimum atteint | 1/8 | **6/8** |
+| ecart reel a `q*` (moyenne) | 24.8 % | **0.0 %** |
+| optimum atteint | 1/8 | **8/8** |
 
-Comparaison directe : la matheuristique est strictement meilleure sur **7
-instances sur 8**, et perd sur une seule.
+> Ce tableau a ete regenere apres l'iteration decrite plus bas (« Iteration
+> suivante »). La version qui l'avait produit la premiere fois atteignait
+> l'optimum sur 6 instances sur 8 et perdait sur une, avec un ecart reel
+> moyen de 8.3 %.
 
 ### Variance stochastique : ne jamais rapporter un run unique
 
 Sur l'instance la plus dure du lot (`n7 m4 p4 c0.00`, `|E| = 218`,
-`q* = 8.875`), 6 graines a budget identique donnent :
+`q* = 8.875`), la version d'alors donnait, sur 6 graines a budget identique :
 
     8.875   4.529   8.875   8.875   8.875   4.529
     optimum atteint 4/6, ecart median 0.0 %, ecart maximal 49.0 %
 
-Le tableau comparatif ci-dessus repose sur une **seule graine** : il illustre
-le comportement, il ne le mesure pas. Toute campagne definitive doit rapporter
-mediane et dispersion sur au moins 10 graines par instance. C'est aussi ce
-qui explique la seule defaite face a la methode exacte.
+Un tableau a **une seule graine** illustre un comportement, il ne le mesure
+pas : toute campagne definitive doit rapporter mediane et dispersion sur au
+moins 10 graines par instance. C'est cette lecture qui a fait de la variance
+une cible a part entiere ; `bench_improve.py` l'applique systematiquement, et
+la section « Iteration suivante » rapporte 10/10 sur cette meme instance.
 
 ### Theoreme 5' — resserrement de la borne
 
@@ -504,55 +521,208 @@ valant 0) : une infaisabilite signalerait un bug, pas une preuve.
 
 ### Effet mesure (memes 8 instances, budget identique)
 
-| instance | \|E\| | ecart reel | Th. 5 | **Th. 5'** | valide | coupes recyclees | `Dmin` -> `D+` |
+| instance | \|E\| | ecart reel | Th. 5 | **Th. 5'** | valide | coupes | `Dmin` -> `D+` |
 |---|---|---|---|---|---|---|---|
-| n7 m4 p4 c0.00 | 218 | 0.0 % | 0.0 % | **0.0 %** | ok | 30 | prouve |
-| n7 m4 p4 c0.25 | 198 | 0.0 % | 55.8 % | **33.4 %** | ok | 16 | 5 -> 10 |
-| n6 m4 p4 c0.00 | 185 | 3.0 % | 24.4 % | **3.0 %** | ok | 14 | 7 -> 24 |
-| n7 m4 p3 c0.25 | 112 | 0.0 % | 75.6 % | **3.4 %** | ok | 40 | 1 -> 12 |
-| n5 m3 p4 c0.00 | 54 | 0.0 % | 76.7 % | **20.9 %** | ok | 12 | 1 -> 13 |
-| n8 m5 p3 c0.00 | 46 | 0.0 % | 50.7 % | **0.0 %** | ok | 26 | prouve |
-| n7 m4 p4 c0.50 | 30 | 0.0 % | 23.5 % | **0.0 %** | ok | 15 | prouve |
-| n6 m4 p2 c0.25 | 26 | 0.0 % | 69.1 % | **0.0 %** | ok | 12 | prouve |
+| n7 m4 p4 c0.00 | 218 | 0.0 % | 0.0 % | **0.0 %** | ok | 40 | prouve |
+| n7 m4 p4 c0.25 | 198 | 0.0 % | 51.8 % | **27.3 %** | ok | 70 | 5 -> 11 |
+| n6 m4 p4 c0.00 | 185 | 0.0 % | 16.2 % | **0.0 %** | ok | 50 | 7 -> 23 |
+| n7 m4 p3 c0.25 | 112 | 0.0 % | 66.7 % | **0.9 %** | ok | 86 | 1 -> 12 |
+| n5 m3 p4 c0.00 | 54 | 0.0 % | 74.5 % | **5.1 %** | ok | 38 | 1 -> 27 |
+| n8 m5 p3 c0.00 | 46 | 0.0 % | 48.2 % | **0.0 %** | ok | 59 | 6 -> 14 |
+| n7 m4 p4 c0.50 | 30 | 0.0 % | 0.0 % | **0.0 %** | ok | 34 | prouve |
+| n6 m4 p2 c0.25 | 26 | 0.0 % | 12.3 % | **0.0 %** | ok | 22 | prouve |
 
 | | Th. 5 | Th. 5' |
 |---|---|---|
-| ecart garanti median | 53.2 % | **1.5 %** |
-| optimalite **prouvee** | 0/8 | **4/8** |
+| ecart garanti median | 32.2 % | **0.0 %** |
+| optimalite **prouvee** | 0/8 | **5/8** |
 
-Reproduction sur une seconde graine (`verify_math.py`, graine 1) : ecart
-garanti median **4.8 %**, optimalite prouvee **4/8** — meme ordre de
-grandeur, la conclusion ne tient donc pas a une graine unique.
+`coupes` compte ici toutes les coupes portees par le modele au dernier tour :
+celles recyclees des chaines de reparation **et** celles que l'oracle pose
+lui-meme. Les deux colonnes `Th. 5` / `Th. 5'` sont produites par le meme
+code au meme budget, seule la formule de la borne differe.
 
-**Reduction mediane de l'ecart garanti : 97.2 %**, validite `q_ub >= q*`
-verifiee contre la verite terrain sur les 8 instances.
+**Reduction mediane de l'ecart garanti : 100 %** — la borne resserree ferme
+completement l'ecart sur la mediane du lot, validite `q_ub >= q*` verifiee
+contre la verite terrain sur les 8 instances.
 
-Le changement de nature compte plus que le chiffre : sur 4 instances la
+> Ce tableau a lui aussi ete regenere apres l'iteration decrite plus bas. La
+> version qui l'avait produit la premiere fois donnait un ecart garanti
+> median de 1.5 % pour le Th. 5' (53.2 % pour le Th. 5) et prouvait
+> l'optimalite sur 4 instances sur 8.
+
+Le changement de nature compte plus que le chiffre : sur 5 instances la
 matheuristique **prouve** desormais l'optimalite, sur des instances que la
 methode exacte seule n'avait pas su resoudre dans le meme budget. La
 formulation « trouve sans pouvoir prouver » ne tient plus.
 
+### Ce qui restait ouvert a ce stade
+
+Deux instances gardaient un ecart notable (33.4 % et 20.9 %) alors que leur
+ecart reel etait nul : le budget de certification y etait absorbe avant que
+l'oracle ne referme la borne. Pistes annoncees : plafond de coupes adaptatif
+(fixe a 40), allocation dynamique du budget entre recherche et certification,
+et big-M des coupes moins lache. La section suivante les traite.
+
+## Iteration suivante : trois verrous, mesures a budget egal
+
+`bench_improve.py` — 8 instances du regime cible, **10 graines chacune**,
+budget identique (7 s de recherche + 5 s de certification). Le meme script
+tourne sans modification sur la version precedente du code et sert de temoin.
+
+### 1. Big-M des coupes, calcule sur la relaxation continue
+
+Le big-M du Th. 4 valide toute borne inferieure de `min_{x in S} e_k(x)`. Il
+etait calcule sur la **boite** `0 <= x <= ub`, donc en ignorant `A x <= b`.
+On le calcule desormais sur la **relaxation continue** de `S` :
+
+* valide, puisque la relaxation contient `S` ;
+* plus fine, puisqu'elle est contenue dans la boite ;
+* les coefficients etant entiers et `x` entier, `e_k(x)` est entier : on
+  remonte au plafond entier du minorant continu, ce qui resserre encore.
+
+Cout : un LP par critere et par coupe, compte separement des ILP
+(`ORACLE_CALLS["lp"]`) pour ne pas polluer l'unite de cout.
+
+La validite ne se postule pas : **V8** (`verify_oracle.py`) et
+`bench_bigm.py` comparent le `M` retenu au minimum REEL de `e_k` sur `S`
+enumere. Ce test ne depend pas de la chance d'une graine — un `M` trop petit
+couperait des points efficaces et serait detecte immediatement.
+
+Mesure (`bench_bigm.py`, 8 instances du regime cible, 8 coupes chacune) :
+
+| | mediane |
+|---|---|
+| resserrement `M_boite -> M_lp` | **1.14x** (jusqu'a 1.47x) |
+| ecart residuel `M_lp / M_reel` | **1.00x** (au pire 1.05x) |
+| validite `M_lp >= M_reel` | 8/8 instances |
+
+La seconde ligne est la plus informative : le minorant continu **atteint
+pratiquement le minimum entier**. Ce qui reste a gagner sur le big-M lui-meme
+est nul ou presque — la piste est fermee, et c'est utile de le savoir avant
+d'y consacrer du travail. Le gain de 1.14x est reel mais modeste ; il ne
+suffit pas a expliquer les resultats ci-dessous, qui viennent des points 2 a 4.
+
+### 2. Plafond de coupes adaptatif — et un contre-resultat mesure
+
+Le plafond de coupes recyclees etait fige a 40. Il est maintenant pilote par
+le budget : les coupes sont ajoutees par lots, un lot de plus n'etant pose
+que si la borne n'a pas ferme et qu'il reste du temps.
+
+La premiere version de ce mecanisme, a petits lots et nombreux tours, a
+**degrade** l'ecart garanti median (2.94 % -> 6.17 %). Diagnostic par les
+diagnostics par run : le modele etant conserve d'un tour a l'autre, les
+coupes s'accumulent — celles des lots **et** celles que l'oracle pose
+lui-meme — et atteignaient ~90 coupes, soit `p` binaires chacune. Chaque ILP
+devenait trop lourd pour que l'oracle referme quoi que ce soit, alors meme
+qu'il disposait de deux fois plus de temps.
+
+Reglage retenu apres mesure (4 instances x 4 graines) :
+
+| schema | ecart garanti median | optimalite prouvee |
+|---|---|---|
+| lots de 10, 6 tours | 9.91 % | 4/16 |
+| lots de 40, 2 tours | **0.00 %** | 11/16 |
+| lot unique de 40 | 0.00 % | 10/16 |
+| lot unique de 80 | 0.00 % | 12/16 |
+
+La lecon n'est pas le chiffre mais le sens : sur ce schema, **plus de coupes
+n'est pas mieux**. Le nombre de binaires croit en `p` par coupe et finit par
+coûter plus que ce que la coupe rapporte. C'est la meme limite que celle
+deja signalee dans « Note sur le solveur », ici quantifiee.
+
+### 3. La certification ne fait plus que certifier
+
+Deux changements rendent la seconde phase productive :
+
+* **le budget de recherche non consomme lui est reverse.** La recherche
+  s'arretait au premier tour sans amelioration et abandonnait le reste de son
+  budget. Ce temps est deja alloue ; il va desormais a la certification, qui
+  en manquait.
+* **l'oracle de certification remonte l'incumbent.** Les points efficaces
+  qu'il certifie au passage sont compares a `q` : s'ils le battent, c'est un
+  pas de Dinkelbach obtenu gratuitement. Le LB monte pendant que l'UB
+  descend. Chaque tour lit sa borne sur le `q` qui a engendre son substitut,
+  et l'on garde le **minimum** des bornes obtenues — valide, puisque `q*` ne
+  depend pas de `q`.
+
+### 4. Redemarrages guides par l'archive
+
+Un seul tour sterile mettait fin a la recherche. Elle repart maintenant des
+points de l'archive **les moins exploites** comme bases, et n'abandonne
+qu'apres `max_stall` tours steriles consecutifs. L'archive ne contient que
+des points efficaces certifies : ce sont des bases legitimes et deja payees,
+la ou un redemarrage aleatoire jetterait le travail fait.
+
+C'est ce qui traite le point « reduire la variance » : sur l'instance la plus
+dure (`n7 m4 p4 c0.00`, `|E| = 218`), l'ecart reel maximal sur 10 graines
+passe de **49.0 % a 0.0 %**.
+
+### Resultat — 8 instances x 10 graines, budget identique
+
+| | version precedente | **version actuelle** |
+|---|---|---|
+| ecart garanti median | 2.94 % | **0.00 %** |
+| optimum atteint | 59/80 runs | **78/80 runs** |
+| optimalite **prouvee** | 31/80 runs | **57/80 runs** |
+| validite `q_lb <= q* <= q_ub` | 80/80 | **80/80** |
+
+Par instance (mediane sur 10 graines ; `max` = pire graine, c'est la colonne
+qui mesure la variance) :
+
+| instance | \|E\| | ecart reel med / max | ecart garanti med / max | optimum | prouve |
+|---|---|---|---|---|---|
+| n7 m4 p4 c0.00 | 218 | 0.0 / **0.0** *(av. 0.0 / 49.0)* | 0.0 / **0.0** *(av. 0.0 / 60.6)* | **10**/10 *(8)* | **10**/10 *(8)* |
+| n7 m4 p4 c0.25 | 198 | 0.0 / 0.0 | **19.4** / 27.0 *(av. 31.3 / 34.1)* | 10/10 | 0/10 |
+| n6 m4 p4 c0.00 | 185 | **0.0** / 0.0 *(av. 3.0 / 17.1)* | **0.0** / 0.0 *(av. 4.0 / 35.7)* | **10**/10 *(0)* | **10**/10 *(0)* |
+| n7 m4 p3 c0.25 | 112 | 0.0 / **0.0** *(av. 0.0 / 2.6)* | **0.0** / 0.9 *(av. 1.3 / 39.8)* | **10**/10 *(8)* | **9**/10 *(5)* |
+| n5 m3 p4 c0.00 | 54 | 0.0 / 0.0 | **5.4** / 9.8 *(av. 15.0 / 21.0)* | 10/10 | 0/10 |
+| n8 m5 p3 c0.00 | 46 | 0.0 / **10.5** *(av. 0.0 / 18.1)* | **0.0** / 52.1 *(av. 1.9 / 45.8)* | **8**/10 *(6)* | **8**/10 *(5)* |
+| n7 m4 p4 c0.50 | 30 | 0.0 / **0.0** *(av. 0.0 / 61.5)* | **0.0** / 0.0 *(av. 7.0 / 65.7)* | **10**/10 *(8)* | **10**/10 *(4)* |
+| n6 m4 p2 c0.25 | 26 | 0.0 / **0.0** *(av. 0.0 / 18.7)* | 0.0 / **0.0** *(av. 0.0 / 29.9)* | 10/10 *(9)* | **10**/10 *(9)* |
+
+*(entre parentheses : la version precedente, quand elle differe)*
+
+La version actuelle n'est en retrait sur **aucune** instance et sur aucun des
+quatre indicateurs. Le gain le plus net n'est pas la mediane, c'est la
+colonne `max` : la dispersion entre graines, que la version precedente
+laissait monter jusqu'a 60 %, disparait presque entierement.
+
 ### Ce qui reste ouvert
 
-Deux instances gardent un ecart notable (33.4 % et 20.9 %) alors que leur
-ecart reel est nul : le budget de certification y est absorbe avant que
-l'oracle ne referme la borne. Pistes : plafond de coupes adaptatif (fixe a
-40 ici), et allocation dynamique du budget entre recherche et certification
-selon l'ecart courant.
+* **`n7 m4 p4 c0.25` (`|E| = 198`) : 19.4 % d'ecart garanti pour un ecart
+  reel nul, et 0/10 preuves.** L'optimum est trouve a tous les coups sans
+  jamais etre prouve. C'est l'instance ou `U` reste grand : la borne du
+  Th. 5' y bute sur la qualite de la relaxation, pas sur le budget.
+* **`n8 m5 p3 c0.00` : une graine sur dix a 52 % d'ecart garanti** alors que
+  les neuf autres sont a 0. Une seule graine defavorable subsiste ; la
+  variance est reduite, pas eliminee.
+* Le contre-resultat du point 2 delimite la piste suivante : tant que chaque
+  coupe coute `p` binaires, en ajouter davantage se paie. Desagreger la
+  disjonction, ou remplacer le schema de type Sylva-Crema, conditionne tout
+  gain supplementaire sur `U`.
 
 ## Prochaines etapes
 
-1. **Allocation dynamique du budget** entre recherche et certification, et
-   plafond de coupes adaptatif (fige a 40). Deux instances gardent un ecart
-   garanti de 20-33 % alors que leur ecart reel est nul : c'est la que le
-   gain restant se trouve.
-2. **Reduire la variance** — la recherche est stochastique (4/6 graines
-   atteignent l'optimum sur l'instance la plus dure). Redemarrages guides par
-   l'archive plutot qu'aleatoires.
-3. **Renforcer le big-M des coupes** — calcule sur la boite, donc lache.
-   Bornes reduites ou desagregation : gain sur l'oracle, donc sur `U`.
-4. **Campagne complete de la matheuristique** — les 216 instances, au moins
-   10 graines chacune, mediane et dispersion. Jamais un run unique.
+Les trois premiers points de la liste precedente sont traites et mesures
+ci-dessus (allocation du budget et plafond adaptatif, variance, big-M). Ce
+qui reste :
+
+1. **Desagreger la coupe de dominance.** Le contre-resultat mesure plus haut
+   est net : au-dela d'une quarantaine de coupes, les `p` binaires par coupe
+   coutent plus qu'elles ne rapportent. Tant que ce cout n'est pas reduit,
+   aucune strategie de coupes ne fera mieux — c'est le verrou suivant, et il
+   commande le gain restant sur `U`.
+2. **Fermer la borne sur `n7 m4 p4 c0.25`.** Optimum trouve 10 fois sur 10,
+   jamais prouve. C'est le cas ou `U` reste grand independamment du budget :
+   il isole ce que la relaxation courante ne sait pas faire.
+3. **Campagne complete de la matheuristique** — les 216 instances, au moins
+   10 graines chacune, mediane et dispersion. Le lot mesure ici n'en couvre
+   que 8, choisies parce que la methode exacte y echouait ; ce choix est
+   assume mais il n'est pas un echantillon.
+4. **Remettre `campaign.py`, `analyze.py` et `scaling.py` dans le depot.**
+   Les tableaux de la section « Campagne de difficulte » ne sont pas
+   reproductibles en l'etat.
 5. **Comparaison avec la litterature** — reimplementer Zerdani & Moulai
    (2011) et Drici et al. (2018) sur le meme lot. Point 4 du plan de these.
 6. **Protocole** — stratifier par `corr` : a `(n,m,p)` fixe, `|E|` varie d'un
@@ -570,4 +740,11 @@ Limites connues :
   denominateur de `q` — sur de grandes instances, borner `q` via
   `Fraction.limit_denominator` ou repasser en flottant avec tolerance ;
 * le nombre de binaires croit en `p` par coupe (defaut classique du schema
-  Sylva-Crema) : premiere cible d'amelioration, avec le big-M.
+  Sylva-Crema). Le big-M est desormais calcule sur la relaxation continue et
+  non plus sur la boite ; le cout en binaires, lui, demeure, et la mesure de
+  la section « Iteration suivante » le chiffre : au-dela d'une quarantaine de
+  coupes il annule le gain de la coupe. C'est la premiere cible restante.
+
+`ORACLE_CALLS` distingue `"ilp"` et `"lp"` : les LP de renforcement du big-M
+sont d'un ordre de grandeur moins chers qu'un ILP et les melanger fausserait
+la comparaison entre methodes.

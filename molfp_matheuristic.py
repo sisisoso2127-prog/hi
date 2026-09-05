@@ -447,7 +447,8 @@ def matheuristic_P(inst: MOILFP,
                    tightened: bool = True,
                    max_stall: int = 3,
                    reallocate: bool = True,
-                   cut_batch: int = 10,
+                   cut_batch: int = 40,
+                   cert_rounds: int = 2,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -468,8 +469,9 @@ def matheuristic_P(inst: MOILFP,
                  stagnation) est REVERSE a la certification au lieu d'etre
                  perdu. C'est du temps deja alloue, et la certification est
                  precisement ce qui manquait de budget.
-    `cut_batch`  taille des lots de coupes recyclees ; le plafond n'est plus
-                 fixe, il est arbitre par le budget (cf. `certify`).
+    `cut_batch`  taille des lots de coupes recyclees et `cert_rounds` leur
+                 nombre : le plafond n'est plus fixe, il est arbitre par le
+                 budget (cf. `certify`).
     """
     t0 = time.time()
     calls0 = ORACLE_CALLS["ilp"]
@@ -576,7 +578,7 @@ def matheuristic_P(inst: MOILFP,
     if certify_bound and budget > 0:
         c = certify(inst, q, x_best, dominated, budget,
                     use_tightened=tightened, archive=arch,
-                    cut_batch=cut_batch)
+                    cut_batch=cut_batch, max_rounds=cert_rounds)
         q_ub, proved, cert_info = c.q_ub, c.proved, c.info
         if c.q_lb is not None and c.q_lb > q:
             q, x_best = c.q_lb, c.x_best      # pas de Dinkelbach offert
