@@ -238,7 +238,20 @@ rationnel $q$ est toujours écrit $q=P/Q$ sous forme irréductible avec $Q>0$.
 \noindent
 (A1) entraîne $\Dk(x)\ge 1>0$ sur tout le domaine : les dénominateurs ne
 s'annulent jamais et gardent un signe constant, ce qui est la condition de
-validité des théorèmes~\ref{th:eff} et~\ref{th:cut}. (A2) entraîne que
+validité des théorèmes~\ref{th:eff} et~\ref{th:cut}.
+
+\begin{remark}[(A1) est suffisante, non nécessaire]\label{rem:a1}
+Les démonstrations des théorèmes~\ref{th:seuil}, \ref{th:eff}
+et~\ref{th:cut} n'utilisent que $\Dk(x)>0$ sur le domaine, jamais
+$d_k\ge 0$. (A1) n'est donc qu'une condition suffisante, commode parce
+qu'elle se vérifie par inspection et qu'un générateur peut la garantir par
+construction. L'hypothèse réellement nécessaire -- positivité des
+dénominateurs sur le domaine -- est précisément celle
+de~\cite{zerdani2011}, et elle se vérifie par programmation linéaire. Cette
+distinction n'est pas cosmétique : elle conditionne la possibilité de lire
+les instances de la littérature, dont les coefficients peuvent être
+négatifs. Nous nous en servons à la section~\ref{sec:externe}.
+\end{remark} (A2) entraîne que
 $\Scal$ est non vide ($x=0$ est réalisable) et borné, avec les bornes
 explicites
 \[
@@ -1192,6 +1205,62 @@ pourquoi la méthode de~\cite{drici2018} ne se transpose pas directement à
 notre problème : son test d'efficacité, comme ses coupes, repose sur la
 linéarité des critères.
 
+\subsection{Validation externe sur un résultat publié}
+\label{sec:externe}
+
+Les niveaux~1 et~2 confrontent la méthode à elle-même et à une vérité terrain
+que nous calculons. Il reste à la confronter à un résultat \emph{publié par
+un tiers}. L'exemple numérique de~\cite[section~5]{zerdani2011} le permet, et
+il porte sur notre classe exacte de problème : une fonction linéaire sur
+l'ensemble efficace d'un MOILFP.
+
+\paragraph{L'instance publiée.}
+\[
+  Z_1=\frac{-x_1+4}{x_2+1},\qquad
+  Z_2=\frac{x_1-4}{-x_2+3},\qquad
+  Z_3=-x_1+x_2,
+\]
+\[
+  \Scal=\{x\in\mathbb{Z}^2_+\ :\ -x_1+4x_2\le 0,\ x_1-\tfrac{1}{2}x_2\le 4\},
+  \qquad (\mathrm{P_E})\ :\ \max\ \varphi=2x_1-3x_2 \ \text{ sur } \Ecal .
+\]
+
+\paragraph{Deux hypothèses violées, et pourquoi cela ne gêne pas.} La matrice
+$A$ comporte des coefficients \emph{négatifs}, donc (A2) ne tient pas et le
+calcul automatique des bornes n'a plus de sens ; on les fournit explicitement
+($x_1\le 4$, $x_2\le 1$, obtenus de $4x_2\le x_1\le 4+x_2/2$). Le
+dénominateur de $Z_2$ a lui aussi un coefficient négatif, donc (A1) ne tient
+pas. Mais, par la remarque~\ref{rem:a1}, seule importe la positivité des
+dénominateurs sur le domaine, que l'on vérifie ici par programmation
+linéaire. C'est exactement l'hypothèse des auteurs.
+
+\paragraph{Résultat.}
+
+\begin{table}[htbp]
+\centering
+\caption{Confrontation à~\cite[section~5]{zerdani2011}.}
+\label{tab:externe}
+\begin{tabular}{lll}
+\toprule
+& publié & calculé ici\\
+\midrule
+$\Ecal$ & $\{(0,0),(1,0),(2,0),(3,0),(4,1)\}$
+        & $\{(0,0),(1,0),(2,0),(3,0),(4,1)\}$\\
+$x_{\text{opt}}$ & $(3,0)$ & $(3,0)$\\
+$\varphi_{\text{opt}}$ & $6$ & $6$\\
+notre hybride & --- & \textsf{optimal}, $6$, 10 appels\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Concordance complète, y compris sur l'ensemble efficace lui-même et non
+seulement sur la valeur optimale. Il faut cependant dire ce que cette
+validation \emph{n'est pas} : elle confronte nos \emph{sorties} à un
+résultat publié sur une instance de six points, elle ne compare pas les
+\emph{algorithmes}. C'est néanmoins la seule validation externe dont ce
+travail dispose, et elle porte sur la bonne classe de problème.
+
 \subsection{Niveau 3 --- comparaison entre méthodes}
 
 Comparer suppose un lot d'instances identique, une interface commune, et
@@ -1532,10 +1601,13 @@ diagnostic tant qu'un témoin indépendant ne l'a pas confirmée.}
 Elles sont énoncées ici plutôt que laissées à découvrir.
 
 \begin{enumerate}[leftmargin=*,itemsep=3pt]
-\item \textbf{Aucun témoin complet issu de la littérature.} La
+\item \textbf{Aucun témoin complet issu de la littérature.} Deux
+      confrontations externes sont désormais acquises -- la
       proposition~\ref{prop:ecker} valide notre test d'efficacité contre
-      celui d'Ecker et Kouada, mais un \emph{composant} validé n'est pas une
-      méthode comparée : les algorithmes de~\cite{zerdani2011}
+      celui d'Ecker et Kouada, et la section~\ref{sec:externe} reproduit
+      exactement le résultat publié de~\cite{zerdani2011} sur son propre
+      exemple. Mais un composant validé et une instance de six points ne font
+      pas une méthode comparée : les algorithmes de~\cite{zerdani2011}
       et~\cite{drici2018} ne sont pas réimplémentés, et la seule comparaison
       de bout en bout disponible reste \emph{interne}. C'est la limite
       dominante pour la publication.

@@ -65,6 +65,7 @@ class MOILFP:
     f: FracObj               # fonction d'utilite a optimiser sur E
     name: str = "unnamed"
     seed: Optional[int] = None
+    ub: Optional[np.ndarray] = None   # bornes explicites, si A n'est pas >= 0
 
     # -- dimensions ---------------------------------------------------------
     @property
@@ -86,7 +87,14 @@ class MOILFP:
 
         Valide car A >= 0, b >= 0, x >= 0 : toute contrainte i active sur j
         majore x_j. (A2) garantit qu'au moins un A[i,j] > 0 par colonne.
+
+        Si des bornes explicites ont ete fournies (champ `ub`), elles priment :
+        c'est le cas des instances de la litterature, dont la matrice A peut
+        comporter des coefficients negatifs et pour lesquelles ce calcul
+        n'a plus de sens.
         """
+        if self.ub is not None:
+            return np.asarray(self.ub, dtype=int)
         ub = np.full(self.n, np.inf)
         for j in range(self.n):
             for i in range(self.m):
@@ -104,18 +112,50 @@ class MOILFP:
         """Vecteur EXACT (Z_1(x), ..., Z_p(x)) en Fractions."""
         return tuple(Zk.value(x) for Zk in self.Z)
 
-    def check_assumptions(self) -> None:
-        """Verifie (A1) et (A2). Leve une exception si violees."""
-        if np.any(self.A < 0):
-            raise ValueError("(A2) violee : A doit etre >= 0.")
-        if np.any(self.b < 0):
-            raise ValueError("(A2) violee : b doit etre >= 0.")
-        for k, Zk in enumerate(self.Z):
-            if np.any(Zk.den < 0) or Zk.b < 1:
-                raise ValueError(f"(A1) violee pour le critere {k}.")
-        if np.any(self.f.den < 0) or self.f.b < 1:
-            raise ValueError("(A1) violee pour la fonction d'utilite f.")
-        self.var_upper_bounds()  # leve si non borne
+    def check_assumptions(self, strict: bool = True) -> None:
+        """
+        Verifie les hypotheses. Leve une exception si elles sont violees.
+
+        `strict=True` (defaut) impose (A1) et (A2) sous leur forme
+        SUFFISANTE et facile a verifier : `d_k >= 0`, `b_k >= 1`, `A >= 0`.
+        C'est ce que garantit notre generateur.
+
+        `strict=False` impose la forme REELLEMENT NECESSAIRE aux theoremes :
+        le domaine est borne, et chaque denominateur reste strictement positif
+        sur le domaine. Les preuves des theoremes 1, 2 et 4 n'utilisent en
+        effet que `D_k(x) > 0`, jamais `d_k >= 0` : (A1) n'est qu'une
+        condition suffisante commode. Ce mode permet de lire les instances de
+        la litterature, dont les coefficients peuvent etre negatifs -- c'est
+        exactement l'hypothese de Zerdani et Moulai (2011), qui demandent
+        `q^i x + beta^i > 0` sur le domaine.
+        """
+        if strict:
+            if np.any(self.A < 0):
+                raise ValueError("(A2) violee : A doit etre >= 0.")
+            if np.any(self.b < 0):
+                raise ValueError("(A2) violee : b doit etre >= 0.")
+            for k, Zk in enumerate(self.Z):
+                if np.any(Zk.den < 0) or Zk.b < 1:
+                    raise ValueError(f"(A1) violee pour le critere {k}.")
+            if np.any(self.f.den < 0) or self.f.b < 1:
+                raise ValueError("(A1) violee pour la fonction d'utilite f.")
+            self.var_upper_bounds()  # leve si non borne
+            return
+
+        # --- mode non strict : positivite des denominateurs, verifiee ------
+        ub = self.var_upper_bounds()
+        if not np.all(np.isfinite(ub)):
+            raise ValueError("Domaine non borne.")
+        from molfp_core import min_over_relaxation, feasibility_rows
+        rows = feasibility_rows(self)
+        for k, obj in enumerate(list(self.Z) + [self.f]):
+            lo = min_over_relaxation(obj.den.astype(float), float(obj.b),
+                                     rows, ub)
+            if not (lo > 0):
+                who = f"critere {k}" if k < len(self.Z) else "la fonction f"
+                raise ValueError(
+                    f"Denominateur non strictement positif sur le domaine "
+                    f"pour {who} (minorant {lo}).")
 
     # -- serialisation ------------------------------------------------------
     def to_dict(self) -> dict:
@@ -127,6 +167,7 @@ class MOILFP:
             "n": self.n, "m": self.m, "p": self.p,
             "A": self.A.tolist(), "b": self.b.tolist(),
             "Z": [fo(z) for z in self.Z], "f": fo(self.f),
+            "ub": None if self.ub is None else np.asarray(self.ub).tolist(),
         }
 
     def save(self, path: str) -> None:
@@ -144,6 +185,8 @@ class MOILFP:
             A=np.array(d["A"], dtype=int), b=np.array(d["b"], dtype=int),
             Z=[fo(z) for z in d["Z"]], f=fo(d["f"]),
             name=d["name"], seed=d["seed"],
+            ub=(None if d.get("ub") is None
+                else np.array(d["ub"], dtype=int)),
         )
 
 

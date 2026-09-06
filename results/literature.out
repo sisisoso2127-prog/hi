@@ -13,6 +13,23 @@ lin_n7_m4_p3_s2         10849     7      47              oui        ok         o
 ------------------------------------------------------------------------------------
 RESULTAT : TOUT VALIDE
 
+====================================================================================
+EXEMPLE PUBLIE - Zerdani & Moulai (2011), section 5
+====================================================================================
+|S| = 6
+  E publie   : [(0, 0), (1, 0), (2, 0), (3, 0), (4, 1)]
+  E calcule  : [(0, 0), (1, 0), (2, 0), (3, 0), (4, 1)]
+  -> identique : OUI
+  x_opt publie (3, 0), calcule (3, 0)   -> OUI
+  phi_opt publie 6, calcule 6   -> OUI
+  notre hybride solve_P : statut optimal, valeur 6, 10 ILP   -> OUI
+
+VALIDATION EXTERNE : CONFORME AU PUBLIE
+Cette instance viole (A1) et (A2) -- coefficients negatifs dans A
+et dans un denominateur -- mais non l'hypothese reellement
+necessaire aux theoremes, D_k(x) > 0 sur le domaine, verifiee ici
+par `check_assumptions(strict=False)`.
+
 Lecture. Sur criteres lineaires, notre theta ne se contente pas de
 rendre le meme VERDICT que le test d'Ecker & Kouada : il en rend la
 meme VALEUR entiere. Le theoreme 2 est donc la generalisation

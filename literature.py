@@ -208,6 +208,92 @@ def cross_validate(inst: MOILFP, sample: int = 40, rng=None) -> dict:
             "ek_vs_truth_diff": n_truth_diff}
 
 
+# ----------------------------------------------------------------------------
+# L'exemple publie de Zerdani & Moulai (2011), section 5
+# ----------------------------------------------------------------------------
+
+def zerdani_moulai_example() -> MOILFP:
+    """
+    Instance de la section 5 de Zerdani & Moulai (2011), reproduite a
+    l'identique :
+
+        Z1 = (-x1 + 4) / (x2 + 1)
+        Z2 = ( x1 - 4) / (-x2 + 3)
+        Z3 = -x1 + x2
+        S  = { x entier >= 0 : -x1 + 4 x2 <= 0,  x1 - x2/2 <= 4 }
+        (P_E) : max  phi = 2 x1 - 3 x2   sur E(P)
+
+    Deux ecarts avec notre generateur, tous deux instructifs.
+
+    `A` comporte des coefficients NEGATIFS, donc (A2) ne tient pas et le
+    calcul automatique des bornes n'a plus de sens : on les fournit
+    explicitement. De -x1 + 4x2 <= 0 et x1 - x2/2 <= 4 on tire
+    4 x2 <= x1 <= 4 + x2/2, donc x2 <= 8/7, soit x2 <= 1 et x1 <= 4.
+
+    `Z2` a un denominateur a coefficient negatif, donc (A1) ne tient pas non
+    plus. Mais (A1) n'est qu'une condition SUFFISANTE : les theoremes
+    n'exigent que D_k(x) > 0 sur le domaine, ce que `check_assumptions(
+    strict=False)` verifie ici par programmation lineaire. C'est exactement
+    l'hypothese des auteurs.
+
+    La fonction d'utilite phi etant LINEAIRE, cette instance releve du
+    sous-probleme que resout notre oracle, pas de notre probleme (P) complet.
+    On l'ecrit donc comme la fraction phi / 1.
+    """
+    inst = MOILFP(
+        A=np.array([[-1, 4], [2, -1]]),          # -x1+4x2 <= 0 ; 2x1-x2 <= 8
+        b=np.array([0, 8]),
+        Z=[FracObj(np.array([-1, 0]), 4, np.array([0, 1]), 1),
+           FracObj(np.array([1, 0]), -4, np.array([0, -1]), 3),
+           FracObj(np.array([-1, 1]), 0, np.array([0, 0]), 1)],
+        f=FracObj(np.array([2, -3]), 0, np.array([0, 0]), 1),
+        name="zerdani_moulai_2011_sec5",
+        ub=np.array([4, 1]),
+    )
+    inst.check_assumptions(strict=False)
+    return inst
+
+
+# resultats PUBLIES, section 5 de l'article
+ZM_PUBLISHED_E = {(4, 1), (3, 0), (2, 0), (1, 0), (0, 0)}
+ZM_PUBLISHED_XOPT = (3, 0)
+ZM_PUBLISHED_PHIOPT = 6
+
+
+def check_published_example() -> dict:
+    """
+    Reproduit l'exemple publie et confronte nos resultats aux leurs.
+
+    C'est la seule validation EXTERNE actuellement disponible dans ce projet :
+    elle ne compare pas les algorithmes, mais elle confronte nos sorties a un
+    resultat publie, sur la classe de probleme exacte de l'article.
+    """
+    inst = zerdani_moulai_example()
+    gt = ground_truth(inst, limit=10_000)
+    ours_E = {tuple(int(v) for v in x) for x in gt.E}
+    ours_xopt = tuple(int(v) for v in gt.x_star)
+    ours_phi = gt.q_star
+
+    from molfp_oracle import solve_P
+    r = solve_P(inst, time_limit=60)
+
+    return {
+        "S": len(gt.S),
+        "E_ours": ours_E,
+        "E_published": ZM_PUBLISHED_E,
+        "E_match": ours_E == ZM_PUBLISHED_E,
+        "xopt_ours": ours_xopt,
+        "xopt_match": ours_xopt == ZM_PUBLISHED_XOPT,
+        "phi_ours": ours_phi,
+        "phi_match": ours_phi == ZM_PUBLISHED_PHIOPT,
+        "solve_P_status": r.status,
+        "solve_P_value": r.q_star,
+        "solve_P_match": (r.status == "optimal"
+                          and r.q_star == ZM_PUBLISHED_PHIOPT),
+        "solve_P_ilp": r.ilp_calls,
+    }
+
+
 def main() -> int:
     print("=" * 84)
     print("VALIDATION CROISEE - Th. 2 contre le test d'Ecker & Kouada (1975)")
@@ -233,6 +319,34 @@ def main() -> int:
 
     print("-" * 84)
     print("RESULTAT : " + ("TOUT VALIDE" if all_ok else "ECHEC"))
+
+    # ------------------------------------------------------------------
+    print()
+    print("=" * 84)
+    print("EXEMPLE PUBLIE - Zerdani & Moulai (2011), section 5")
+    print("=" * 84)
+    z = check_published_example()
+    print(f"|S| = {z['S']}")
+    print(f"  E publie   : {sorted(z['E_published'])}")
+    print(f"  E calcule  : {sorted(z['E_ours'])}")
+    print(f"  -> identique : {'OUI' if z['E_match'] else 'NON'}")
+    print(f"  x_opt publie {ZM_PUBLISHED_XOPT}, calcule {z['xopt_ours']}"
+          f"   -> {'OUI' if z['xopt_match'] else 'NON'}")
+    print(f"  phi_opt publie {ZM_PUBLISHED_PHIOPT}, calcule {z['phi_ours']}"
+          f"   -> {'OUI' if z['phi_match'] else 'NON'}")
+    print(f"  notre hybride solve_P : statut {z['solve_P_status']}, "
+          f"valeur {z['solve_P_value']}, {z['solve_P_ilp']} ILP"
+          f"   -> {'OUI' if z['solve_P_match'] else 'NON'}")
+    pub_ok = (z["E_match"] and z["xopt_match"] and z["phi_match"]
+              and z["solve_P_match"])
+    all_ok &= pub_ok
+    print()
+    print("VALIDATION EXTERNE : " + ("CONFORME AU PUBLIE" if pub_ok
+                                     else "DIVERGENCE"))
+    print("Cette instance viole (A1) et (A2) -- coefficients negatifs dans A")
+    print("et dans un denominateur -- mais non l'hypothese reellement")
+    print("necessaire aux theoremes, D_k(x) > 0 sur le domaine, verifiee ici")
+    print("par `check_assumptions(strict=False)`.")
     print()
     print("Lecture. Sur criteres lineaires, notre theta ne se contente pas de")
     print("rendre le meme VERDICT que le test d'Ecker & Kouada : il en rend la")
