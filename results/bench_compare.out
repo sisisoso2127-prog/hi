@@ -1,0 +1,105 @@
+========================================================================================================
+COMPARAISON SUR lot_v1 - budget 12 s par methode et par instance
+methodes : exact, matheuristic
+========================================================================================================
+instance                     |E|           exact              matheuristic          
+                                    valeurstatut   ILPt(s)    valeurstatut   ILPt(s)
+--------------------------------------------------------------------------------------------------------
+molfp_n5_m3_p2_c000_s1         8   13.2000 optim    32   0   13.2000 optim    45   0
+molfp_n5_m3_p2_c000_s2        27   10.5909 optim     5   0   10.5909 optim    29   0
+molfp_n5_m3_p2_c050_s1         6   13.2000 optim    33   0   13.2000 optim    34   0
+molfp_n5_m3_p2_c050_s2         1    4.6000 optim   141   2    4.6000 optim   156   2
+molfp_n5_m3_p2_c090_s1         1   13.2000 optim    34   0   13.2000 optim    36   0
+molfp_n5_m3_p2_c090_s2         1    4.6000 optim   137   1    4.6000 optim   151   1
+molfp_n5_m3_p3_c000_s1        17    4.7059 optim   139   3    4.7059 optim    82   1
+molfp_n5_m3_p3_c000_s2        42    7.1818 optim   214   8    7.1818 optim   202   1
+molfp_n5_m3_p3_c050_s1         6    4.7059 optim    94   1    4.7059 optim    96   1
+molfp_n5_m3_p3_c050_s2        17    7.0714 optim    62   1    7.0714 optim    96   0
+molfp_n5_m3_p3_c090_s1         1    3.2500 optim    71   1    3.2500 optim    38   0
+molfp_n5_m3_p3_c090_s2         1    6.4286 optim    41   0    6.4286 optim    61   0
+molfp_n5_m3_p4_c000_s1       111   12.8750 optim     7   0   12.8750 optim   212   1
+molfp_n5_m3_p4_c000_s2        54    3.1852 limit   162  13    3.3061 heuri   462  13
+molfp_n5_m3_p4_c050_s1        22    7.3125 optim    73   1    7.3125 optim   145   2
+molfp_n5_m3_p4_c050_s2        17    5.5294 optim    31   0    5.5294 optim    78   0
+molfp_n5_m3_p4_c090_s1         1    6.0000 optim    78   1    6.0000 optim    54   0
+molfp_n5_m3_p4_c090_s2         1    5.5294 optim    29   0    5.5294 optim    57   0
+molfp_n6_m4_p2_c000_s1        15    2.3846 optim   236   5    2.3846 optim    55   0
+molfp_n6_m4_p2_c000_s2        43    7.3125 optim    44   1    7.3125 optim    97   1
+molfp_n6_m4_p2_c050_s1        20    1.2963 limit   277  12    2.0000 optim   281   5
+molfp_n6_m4_p2_c050_s2        13    5.8333 optim    65   1    5.8333 optim   208   1
+molfp_n6_m4_p2_c090_s1         1    0.9286 optim   133   2    0.9286 optim    35   0
+molfp_n6_m4_p2_c090_s2         3    1.9615 optim    60   0    1.9615 optim    62   0
+molfp_n6_m4_p3_c000_s1        88    5.9444 optim    10   0    5.9444 optim   159   1
+molfp_n6_m4_p3_c000_s2       114   11.5000 optim    13   0   11.5000 optim   255   1
+molfp_n6_m4_p3_c050_s1        26    5.7778 optim    25   0    5.7778 optim   221   1
+molfp_n6_m4_p3_c050_s2        22    3.5385 optim   158   6    3.5385 optim   324   3
+molfp_n6_m4_p3_c090_s1         1    5.3125 optim    31   0    5.3125 optim    32   0
+molfp_n6_m4_p3_c090_s2         3    2.0625 optim    85   1    2.0625 optim    59   0
+molfp_n6_m4_p4_c000_s1       174   37.7500 optim     7   0   37.7500 optim   231   1
+molfp_n6_m4_p4_c000_s2       187   10.7143 optim    28   0   10.7143 optim   507   3
+molfp_n6_m4_p4_c050_s1        29   18.0000 optim   149   6   18.0000 optim   222   1
+molfp_n6_m4_p4_c050_s2       108   10.7143 optim    23   0   10.7143 optim   432   2
+molfp_n6_m4_p4_c090_s1         1    3.4583 optim    99   2    3.4583 optim    53   0
+molfp_n6_m4_p4_c090_s2         6    8.7273 optim    14   0    8.7273 optim   125   0
+molfp_n7_m4_p2_c000_s1         1    1.1034 optim   300  10    1.1034 optim   233   7
+molfp_n7_m4_p2_c000_s2         7    4.8333 optim   148   2    4.8333 optim   151   2
+molfp_n7_m4_p2_c050_s1        16    5.3333 optim    26   0    5.3333 optim   165   1
+molfp_n7_m4_p2_c050_s2        23    4.3913 limit   442  12    4.8333 heuri   157   3
+molfp_n7_m4_p2_c090_s1         1    3.0000 optim    56   0    3.0000 optim    29   0
+molfp_n7_m4_p2_c090_s2         1    1.4375 optim   359  11    1.4375 optim    44   0
+molfp_n7_m4_p3_c000_s1        27    2.6190 limit   321  12    4.6250 optim   203   1
+molfp_n7_m4_p3_c000_s2        32   32.6667 optim     5   0   32.6667 optim    54   0
+molfp_n7_m4_p3_c050_s1        17    4.7500 optim   263  11    4.7500 optim   253   2
+molfp_n7_m4_p3_c050_s2        25   32.6667 optim    57   1   32.6667 optim   181   1
+molfp_n7_m4_p3_c090_s1         1    4.6250 optim    65   0    4.6250 optim    41   0
+molfp_n7_m4_p3_c090_s2         1    2.6957 optim    58   1    2.6957 optim    46   0
+molfp_n7_m4_p4_c000_s1        62   16.5000 optim     6   0   16.5000 optim    59   0
+molfp_n7_m4_p4_c000_s2       881   34.6667 optim     7   0   34.6667 optim   251   1
+molfp_n7_m4_p4_c050_s1        23    6.0000 optim   250   9    6.0000 optim   249   1
+molfp_n7_m4_p4_c050_s2        30    5.0000 optim   258  11    5.0000 optim   144   2
+molfp_n7_m4_p4_c090_s1         4    6.0000 optim    66   1    6.0000 optim   105   0
+molfp_n7_m4_p4_c090_s2         1    5.0000 optim    63   1    5.0000 optim    88   1
+molfp_n8_m5_p2_c000_s1        11    4.2692 optim   162   4    4.2692 optim   266   2
+molfp_n8_m5_p2_c000_s2         9    4.0833 optim   194   5    4.0833 optim    99   1
+molfp_n8_m5_p2_c050_s1         6    3.2727 optim   188   5    3.2727 optim    53   1
+molfp_n8_m5_p2_c050_s2         5    1.4091 limit   231  12    2.4583 optim   116   4
+molfp_n8_m5_p2_c090_s1         1    1.8571 optim   122   2    1.8571 optim    35   0
+molfp_n8_m5_p2_c090_s2         1    0.8095 optim   192   4    0.8095 optim    42   0
+molfp_n8_m5_p3_c000_s1        46    2.8400 limit   222  12    3.1739 optim   353  10
+molfp_n8_m5_p3_c000_s2        11   10.5000 optim   116   3   10.5000 optim   123   0
+molfp_n8_m5_p3_c050_s1         7    3.9474 optim   108   2    3.9474 optim   107   1
+molfp_n8_m5_p3_c050_s2         8    6.7500 optim    55   0    6.7500 optim    82   0
+molfp_n8_m5_p3_c090_s1         1    0.4545 optim   132   3    0.4545 optim    44   0
+molfp_n8_m5_p3_c090_s2         1    6.7500 optim    69   0    6.7500 optim    38   0
+molfp_n8_m5_p4_c000_s1       221    6.4286 optim    26   0    6.4286 optim   400   2
+molfp_n8_m5_p4_c000_s2       152    3.2414 optim   154   8    3.2414 optim   541   4
+molfp_n8_m5_p4_c050_s1         9    3.0000 limit   215  12    3.0000 optim   163   5
+molfp_n8_m5_p4_c050_s2        11    2.9024 optim    91   3    2.9024 optim   117   1
+molfp_n8_m5_p4_c090_s1         1    1.5000 optim    92   2    1.5000 optim    50   0
+molfp_n8_m5_p4_c090_s2         1    2.6552 optim    44   0    2.6552 optim    50   0
+molfp_n10_m6_p3_c000_s1       -1   37.6667 optim    11   0   37.6667 optim   175   1
+molfp_n10_m6_p3_c000_s2       -1    4.7222 optim    63   2    4.7222 optim   272   2
+molfp_n10_m6_p3_c050_s1       -1   37.6667 optim    11   0   37.6667 optim   131   1
+molfp_n10_m6_p3_c050_s2       -1    4.6800 optim    17   0    4.6800 optim   252   2
+molfp_n10_m6_p3_c090_s1       -1    5.9474 optim    45   1    5.9474 optim    80   1
+molfp_n10_m6_p3_c090_s2       -1    3.0000 optim   133   4    3.0000 optim   209   1
+molfp_n15_m8_p3_c000_s1       -1   32.1667 optim    13   0   32.1667 optim   195   1
+molfp_n15_m8_p3_c000_s2       -1    3.7209 limit   208  12    4.1538 heuri   444  13
+molfp_n15_m8_p3_c050_s1       -1    6.8333 limit   209  12   12.6667 optim   290   1
+molfp_n15_m8_p3_c050_s2       -1    7.4118 limit   245  12   13.2500 optim   403   4
+molfp_n15_m8_p3_c090_s1       -1    2.1765 limit   267  12    2.1765 optim    54   0
+molfp_n15_m8_p3_c090_s2       -1    5.5667 optim   195   6    5.5667 optim    85   2
+molfp_n20_m11_p3_c000_s1      -1    2.3509 limit   124  12    3.7317 heuri   307  13
+molfp_n20_m11_p3_c000_s2      -1    7.5556 limit   144  12   12.4000 heuri   347  13
+molfp_n20_m11_p3_c050_s1      -1    1.9833 limit   120  13    2.1569 heuri   304  13
+molfp_n20_m11_p3_c050_s2      -1   13.7500 limit   179  12   17.0000 optim   456  10
+molfp_n20_m11_p3_c090_s1      -1    2.1569 limit   149  12    2.1569 optim    45   0
+molfp_n20_m11_p3_c090_s2      -1    9.8333 limit   212  12   11.9000 optim    87   1
+--------------------------------------------------------------------------------------------------------
+methode           optimalite prouvee   meilleure valeur   ILP median   t median   verifications KO
+exact                     73/90                76/90              92       1.5s                  0
+matheuristic              84/90                90/90             124       0.7s                  0
+
+VERIFICATION C1-C4 : TOUT VALIDE
+Un '!' accole a un statut signale un resultat qui n'a pas passe la
+verification : la valeur annoncee ne doit alors pas etre lue.

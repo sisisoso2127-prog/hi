@@ -32,6 +32,8 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `bench_scale.py` | Passage a l'echelle : exact contre matheuristique, sans enumeration |
 | `campaign.py` | Campagne de difficulte : plan controle sur 216 instances -> `campaign.csv` |
 | `analyze.py` | Analyse de `campaign.csv` : Q1-Q4, censure traitee separement |
+| `make_lot.py` | Ecrit le lot fige `instances/lot_v1` (JSON), format d'echange entre methodes |
+| `bench_compare.py` | Banc de comparaison entre methodes, avec verification independante C1-C4 |
 | `doc/pseudocode.tex` | Pseudo-code des dix algorithmes (LaTeX + PDF compile) |
 | `legacy/` | Prototype initial a deux variables, conserve pour tracabilite |
 
@@ -986,6 +988,93 @@ Le diagnostic etait faux ; le code correspondant a ete retire.
 Lecon de methode : une mesure locale spectaculaire ne vaut pas diagnostic
 tant qu'un temoin independant ne l'a pas confirmee.
 
+## Comparer a d'autres methodes : le banc, et ce qui manque encore
+
+Comparer suppose trois choses qui n'existaient pas dans ce depot.
+
+**1. Un lot d'instances identique pour toutes les methodes.** `make_lot.py`
+ecrit `instances/lot_v1` : 90 instances en JSON, avec manifeste. Deux strates,
+parce qu'elles ne se valident pas de la meme facon — 72 instances a `n <= 8`
+ou l'enumeration exhaustive donne la verite terrain, et 18 a `n` de 10 a 20
+ou elle ne la donne pas. Le lot est ecrit sur disque et non regenere a la
+volee : une methode concurrente reimplementee dans un autre langage doit
+pouvoir lire exactement les memes donnees, et le JSON est le format
+d'echange.
+
+**2. Une interface commune.** Une methode est une fonction
+`solve(inst, time_limit) -> (q, x, statut, ILP, secondes)`. Le statut
+`optimal` engage la methode : il signifie « optimalite prouvee », et il est
+verifie.
+
+**3. Une verification INDEPENDANTE de ce que chaque methode renvoie.** C'est
+le point qui compte le plus : on ne compare pas des nombres auto-declares.
+`bench_compare.py` recontrole tout resultat, y compris les notres :
+
+| | controle | pourquoi |
+|---|---|---|
+| **C1** | `x` realisable | prealable |
+| **C2** | `x` EFFICACE (Th. 2, ILP exact) | sans quoi `q` ne minore meme pas `q*` et la valeur ne veut rien dire |
+| **C3** | `q = f(x)` | la valeur annoncee est bien celle du point rendu |
+| **C4** | `q <= q*`, et `q = q*` des que le statut est `optimal` | un statut `optimal` faux est une faute, pas un ecart |
+
+Le banc est teste par un cas fautif delibere : une methode qui rend `x = 0`
+en se declarant `optimal` est rejetee par C2 et C4. Un mecanisme de controle
+qu'on n'a pas vu echouer ne prouve rien.
+
+Le cout est rapporte en appels ILP **et** en secondes. Les deux sont
+necessaires : une methode qui appelle peu mais resout des ILP enormes ne se
+lit que sur le temps.
+
+### Resultat sur le lot fige (90 instances, 12 s par methode)
+
+`results/bench_compare.out`. Contrairement au lot de 8 instances utilise plus
+haut, **celui-ci n'est pas choisi** : c'est une grille systematique
+`n` x `p` x `corr` x graine. L'argument cesse donc d'etre circulaire.
+
+| | optimalite **prouvee** | meilleure valeur | ILP median | t median | verifications KO |
+|---|---|---|---|---|---|
+| exact | 73/90 | 76/90 | 92 | 1.5 s | **0** |
+| **matheuristique** | **84/90** | **90/90** | 124 | **0.7 s** | **0** |
+
+Par strate :
+
+| | | exact | matheuristique |
+|---|---|---|---|
+| `n <= 8` (72 inst., verite terrain) | optimalite prouvee | 65/72 | **70/72** |
+| | meilleure valeur | 66/72 | **72/72** |
+| `n` = 10 a 20 (18 inst., sans) | optimalite prouvee | 8/18 | **14/18** |
+| | meilleure valeur | 10/18 | **18/18** |
+
+Trois lectures, dans l'ordre d'importance :
+
+1. **Les 90 resultats des deux methodes passent C1-C4.** C'est ce qui donne
+   son sens au reste : aucune valeur du tableau n'est auto-declaree.
+2. **La matheuristique rend la meilleure valeur sur les 90 instances**, et
+   pas seulement sur le regime ou l'exact echoue. Elle ne perd nulle part.
+3. **Elle prouve l'optimalite plus souvent que la methode exacte** (84 contre
+   73) — resultat contre-intuitif, et qui tient a la borne du Th. 5' : elle
+   certifie sans avoir a fermer le sous-probleme, la ou la methode exacte
+   doit le resoudre.
+
+Le cout median en ILP est plus eleve (124 contre 92) pour un temps median
+plus faible (0.7 s contre 1.5 s) : les ILP de la matheuristique sont plus
+nombreux mais individuellement plus petits. C'est exactement pourquoi les
+deux unites sont rapportees.
+
+### Ce qui manque : les temoins externes eux-memes
+
+`zerdani_moulai` (2011) et `drici` (2018) **ne sont pas implementes**, et les
+emplacements sont laisses vides dans `METHODS` plutot que remplis
+approximativement. Raison : les articles n'ont pas pu etre obtenus dans
+l'environnement de developpement, et reimplementer de memoire un algorithme
+qu'on n'a pas lu produit un **homme de paille** — que l'on battrait a coup
+sur, ce qui serait pire qu'aucun temoin.
+
+Il suffit de brancher dans `METHODS` une fonction respectant l'interface
+ci-dessus : la verification C1-C4, le lot, le comptage et les tableaux
+fonctionnent alors sans modification, et s'appliqueront au temoin exactement
+comme a nos methodes.
+
 ## Prochaines etapes
 
 Les trois premiers points de la liste precedente sont traites et mesures
@@ -1014,8 +1103,12 @@ qui reste :
    consequence sur les conclusions actuelles, mais l'archive est un argument
    annonce de la these : il faut savoir si la baisse est un effet des coupes
    renforcees ou du bruit.
-6. **Comparaison avec la litterature** — reimplementer Zerdani & Moulai
-   (2011) et Drici et al. (2018) sur le meme lot. Point 4 du plan de these.
+6. **Comparaison avec la litterature** — le banc, le lot fige et la
+   verification independante sont en place (`bench_compare.py`,
+   `instances/lot_v1`) ; il reste a implementer Zerdani & Moulai (2011) et
+   Drici et al. (2018) eux-memes, a partir des articles. C'est le nombre 1
+   des manques pour la publication : sans temoin externe, la seule
+   comparaison disponible reste interne au depot.
 7. **Protocole** — stratifier par `corr` : a `(n,m,p)` fixe, `|E|` varie d'un
    facteur 40 selon ce parametre.
 
