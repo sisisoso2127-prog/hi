@@ -1,0 +1,580 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem*{theorem}{Th\'eor\`eme 5$'$}
+\renewcommand{\algorithmcfname}{Algorithme}
+
+%% Mots-cles en francais. L'option [french] d'algorithm2e ne traduit que le
+%% titre dans cette version de TeX Live ; on force donc les mots-cles.
+\SetKwInput{KwIn}{Entr\'ees}
+\SetKwInput{KwOut}{Sorties}
+\SetKwFor{For}{pour}{faire}{fin pour}
+\SetKwFor{While}{tant que}{faire}{fin tant que}
+\SetKwFor{ForEach}{pour chaque}{faire}{fin pour chaque}
+\SetKwIF{If}{ElseIf}{Else}{si}{alors}{sinon si}{sinon}{fin si}
+\SetKwRepeat{Repeat}{r\'ep\'eter}{jusqu'\`a}
+\SetKwBlock{Loop}{boucler}{fin boucle}
+\SetKw{Return}{retourner}
+\SetKw{KwTo}{\`a}
+\SetKw{Break}{sortir}
+\SetKw{Continue}{continuer}
+\SetKwComment{Comment}{$\triangleright$\ }{}
+\SetKwProg{Fn}{Fonction}{\string:}{}
+\DontPrintSemicolon
+
+\newcommand{\Zk}{Z_k}
+\newcommand{\Nk}{N_k}
+\newcommand{\Dk}{D_k}
+\newcommand{\Ecal}{\mathcal{E}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\ILP}{\textsc{Ilp}}
+\newcommand{\LP}{\textsc{Lp}}
+
+\title{Matheuristique certifiée pour l'optimisation fractionnaire\\
+       sur l'ensemble efficace d'un MOILFP\\[4pt]
+       \large Pseudo-code des algorithmes}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2.2\baselineskip}
+
+\section{Problème et notations}
+
+\begin{align*}
+  \text{(MOILFP)}\quad & \max\ \Zk(x)=\frac{c_k^{\!\top}x+a_k}{d_k^{\!\top}x+b_k},
+    \quad k=1,\dots,p\\
+  & \text{s.c. } Ax\le b,\ x\in\mathbb{Z}^n_+\\[6pt]
+  \text{(P)}\quad & \max\ f(x)=\frac{c^{\!\top}x+a}{d^{\!\top}x+b}
+    \quad\text{s.c. } x\in\Ecal
+\end{align*}
+
+\noindent
+$\Scal=\{x\in\mathbb{Z}^n_+ : Ax\le b\}$ est le domaine réalisable et
+$\Ecal\subseteq\Scal$ l'ensemble des solutions efficaces de (MOILFP).
+On note $\Nk(x)=c_k^{\!\top}x+a_k$, $\Dk(x)=d_k^{\!\top}x+b_k$,
+$N(x)=c^{\!\top}x+a$, $D(x)=d^{\!\top}x+b$, et $q^\star=\max_{x\in\Ecal}f(x)$.
+
+\medskip\noindent
+\textbf{Hypothèses.}
+\textbf{(A1)} $d_k\ge 0$ et $b_k\ge 1$, donc $\Dk(x)\ge 1>0$ sur tout le domaine.
+\textbf{(A2)} $A\ge 0$ à colonnes non nulles, donc $\Scal$ est non vide
+($x=0$ réalisable) et borné, avec
+$\overline{x}_j=\min_{i:A_{ij}>0}\lfloor b_i/A_{ij}\rfloor$.
+
+\medskip\noindent
+\textbf{Convention.} Toutes les données étant entières, toutes les quantités
+$\theta$, $e_k$, $F(q)$ ci-dessous sont \emph{entières} : les tests d'arrêt
+sont exacts, sans tolérance numérique. Un paramètre $q$ rationnel est écrit
+$q=P/Q$ sous forme irréductible avec $Q>0$.
+
+\medskip\noindent
+$\ILP(\text{obj},\text{contraintes},\tau)$ désigne un appel au solveur en
+nombres entiers avec limite de temps $\tau$. Il rend un quadruplet
+$(\textsf{statut},x,v,\beta)$ où $\textsf{statut}\in\{\textsf{opt},
+\textsf{infaisable},\textsf{tronqué}\}$, $v$ la valeur de l'incumbent et
+$\beta$ une borne \emph{optimiste valide} ($\beta=v$ si $\textsf{statut}
+=\textsf{opt}$ ; sinon la borne duale du séparateur).
+
+\section{Briques exactes}
+
+\subsection{Théorème 2 --- test d'efficacité intégral}
+
+Un seul \ILP{}. Le terme $k$ de l'objectif vaut
+$\Dk(\bar x)\,\Dk(x)\,(\Zk(x)-\Zk(\bar x))$, de même signe que
+$\Zk(x)-\Zk(\bar x)$ puisque les dénominateurs sont strictement positifs
+sous (A1). Donc $\bar x$ est efficace si et seulement si $\theta(\bar x)=0$.
+
+\begin{algorithm}[H]
+\caption{\textsc{TestEfficacité}$(\bar x,\tau)$ --- Théorème 2}
+\KwIn{$\bar x\in\Scal$ ; limite de temps $\tau$ (éventuellement $+\infty$)}
+\KwOut{$(\textsf{verdict},\theta,y)$ avec
+       $\textsf{verdict}\in\{\textsf{efficace},\textsf{dominé},
+       \textsf{indéterminé}\}$ et $y$ un dominateur si $\textsf{dominé}$}
+$\text{obj}\gets 0$ ;\ $\text{cst}\gets 0$ ;\
+$\Gamma\gets\{Ax\le b,\ 0\le x\le\overline{x}\}$\;
+\For{$k\gets 1$ \KwTo $p$}{
+  $\bar N_k\gets \Nk(\bar x)$ ;\quad $\bar D_k\gets \Dk(\bar x)$
+    \Comment*[r]{$\bar D_k\ge 1$ par (A1)}
+  $\gamma_k\gets \bar D_k c_k-\bar N_k d_k$ ;\quad
+  $\delta_k\gets \bar D_k a_k-\bar N_k b_k$\;
+  $\Gamma\gets\Gamma\cup\{\gamma_k^{\!\top}x\ge-\delta_k\}$
+    \Comment*[r]{$\Zk(x)\ge\Zk(\bar x)$}
+  $\text{obj}\gets\text{obj}+\gamma_k$ ;\quad
+  $\text{cst}\gets\text{cst}+\delta_k$\;
+}
+$(\textsf{st},x^\ast,\theta,\beta)\gets
+  \ILP(\max\ \text{obj}^{\!\top}x+\text{cst},\ \Gamma,\ \tau)$\;
+\uIf{$\textsf{st}=\textsf{tronqué}$}{
+  \lIf{$\theta\ge 1$}{\Return $(\textsf{dominé},\theta,x^\ast)$
+    \Comment*[f]{un dominateur suffit à conclure}}
+  \Return $(\textsf{indéterminé},\bot,\bot)$
+    \Comment*[r]{$\theta$ n'est minoré que par $0$}
+}
+\lIf{$\theta=0$}{\Return $(\textsf{efficace},0,\bot)$}
+\Return $(\textsf{dominé},\theta,x^\ast)$\;
+\end{algorithm}
+
+\noindent
+\emph{Sûreté.} Le verdict \textsf{indéterminé} ne doit jamais être lu comme
+\textsf{dominé} : ce test est le seul certificat d'efficacité de la méthode,
+et un incumbent déclaré efficace à tort rendrait la borne inférieure
+optimiste.
+
+\subsection{Théorème 3 --- Dinkelbach à paramètre rationnel}
+
+$F(q)=\max_{x\in X}\{N(x)-qD(x)\}$ est le sup d'un nombre \emph{fini} de
+fonctions affines de $q$ : convexe, décroissante, de racine unique
+$q^\star=\max_X f$. $X$ étant fini, l'itération converge en un nombre fini
+d'étapes.
+
+\begin{algorithm}[H]
+\caption{\textsc{Dinkelbach}$(f,X)$ --- Théorème 3}
+\KwIn{fonction fractionnaire $f=(N,D)$ ; domaine entier $X$}
+\KwOut{$(q^\star,x^\star)$ ou \textsf{infaisable}}
+$x_0\gets$ un point quelconque de $X$ (un \ILP{} à objectif nul)\;
+\lIf{$X=\emptyset$}{\Return \textsf{infaisable}}
+$q\gets f(x_0)$ ;\quad $x^\star\gets x_0$\;
+\Loop{
+  $P/Q\gets q$ \Comment*[r]{forme irréductible, $Q>0$}
+  $(\textsf{st},x,F,\beta)\gets
+    \ILP\bigl(\max\ (Q c-P d)^{\!\top}x+(Qa-Pb),\ X,\ +\infty\bigr)$\;
+  \lIf{$\textsf{st}=\textsf{infaisable}$}{\Return \textsf{infaisable}}
+  \lIf{$F\le 0$}{\Return $(q,x^\star)$
+    \Comment*[f]{racine atteinte ; test EXACT car $F\in\mathbb{Z}$}}
+  $x^\star\gets x$ ;\quad $q\gets f(x^\star)$\;
+}
+\end{algorithm}
+
+\noindent
+Deux emplois : $X=\Scal$ donne la borne de relaxation
+$\max_{\Scal}f\ \ge q^\star$, exacte et sans énumération ;
+$X=\Ecal$ donnerait $q^\star$, mais $\Ecal$ n'est pas décrit explicitement ---
+c'est l'objet de l'oracle de la section \ref{sec:oracle}.
+
+\subsection{Théorème 4 --- coupe de dominance exacte}
+
+Pour $\bar x$ \emph{dominé}, posons
+$e_k(x)=\bar D_k\Nk(x)-\bar N_k\Dk(x)
+       =\gamma_k^{\!\top}x+\delta_k
+       =\bar D_k\Dk(x)\bigl(\Zk(x)-\Zk(\bar x)\bigr)$.
+Les $e_k$ étant \emph{entiers}, $\Zk(x)>\Zk(\bar x)\iff e_k(x)\ge 1$ :
+aucun pas minimal $\varepsilon$ n'est à estimer.
+
+\begin{algorithm}[H]
+\caption{\textsc{AjouterCoupe}$(\Rcal,\bar x)$ --- Théorème 4}
+\KwIn{modèle $\Rcal$ ; $\bar x$ \textbf{dominé} (prérequis de validité)}
+\KwOut{$\Rcal$ privé de $\{x : Z(x)\le Z(\bar x)\}$}
+introduire $u_1,\dots,u_p\in\{0,1\}$ (nouvelles variables)\;
+\For{$k\gets 1$ \KwTo $p$}{
+  $(\gamma_k,\delta_k)\gets$ coefficients de $e_k$ en $\bar x$\;
+  $\underline{e}_k\gets\bigl\lceil
+     \LP\bigl(\min\ \gamma_k^{\!\top}x,\ \{Ax\le b,\ 0\le x\le\overline{x}\}\bigr)
+     \bigr\rceil+\delta_k$
+    \Comment*[r]{minorant valide sur la relaxation continue}
+  $M_k\gets\max\bigl(1,\ 1-\underline{e}_k\bigr)$\;
+  $\Rcal\gets\Rcal\cup\bigl\{\gamma_k^{\!\top}x+\delta_k
+     \ \ge\ 1-M_k(1-u_k)\bigr\}$\;
+}
+$\Rcal\gets\Rcal\cup\bigl\{\textstyle\sum_{k=1}^p u_k\ge 1\bigr\}$\;
+\Return $\Rcal$\;
+\end{algorithm}
+
+\noindent
+\emph{Validité (lemme).} Si $\bar x$ est dominé, $\{x\in\Scal : Z(x)\le
+Z(\bar x)\}$ ne contient aucune solution efficace. Soit en effet $y$
+dominant $\bar x$ et $x$ tel que $Z(x)\le Z(\bar x)$ ; alors
+$Z(y)\ge Z(\bar x)\ge Z(x)$, et $Z(y)=Z(x)$ forcerait $Z(y)=Z(\bar x)$,
+contredisant que $y$ domine $\bar x$. Donc $y$ domine $x$. $\square$
+En $\bar x$ on a $e_k(\bar x)=0$ pour tout $k$ : $\bar x$ est bien exclu.
+
+\medskip\noindent
+\emph{Big-M.} Tout minorant de $\min_{x\in\Scal}e_k(x)$ convient. La boîte
+seule ignore $Ax\le b$ ; la relaxation continue contient $\Scal$ (donc reste
+valide) et est contenue dans la boîte (donc est plus fine). Les coefficients
+étant entiers, on remonte au plafond entier. Coût : un \LP{} par critère et
+par coupe.
+
+\subsection{Réparation par chaîne de dominance}
+
+\begin{algorithm}[H]
+\caption{\textsc{Réparer}$(x,\mathcal{D},\text{échéance})$}
+\KwIn{$x\in\Scal$ ; liste $\mathcal{D}$ où déposer les points dominés traversés}
+\KwOut{un point efficace \textbf{certifié}, ou $\bot$}
+$\text{cur}\gets x$\;
+\Loop{
+  $\tau\gets\text{échéance}-\textsc{maintenant}()$ ;\
+  \lIf{$\tau\le 0$}{\Return $\bot$}
+  $(\textsf{verdict},\theta,y)\gets\textsc{TestEfficacité}(\text{cur},\tau)$\;
+  \lIf{$\textsf{verdict}=\textsf{indéterminé}$}{\Return $\bot$
+    \Comment*[f]{ne rien certifier}}
+  \lIf{$\textsf{verdict}=\textsf{efficace}$}{\Return $\text{cur}$}
+  $\mathcal{D}\gets\mathcal{D}\cup\{\text{cur}\}$
+    \Comment*[r]{seuls points coupables (Th. 4)}
+  $\text{cur}\gets y$\;
+}
+\end{algorithm}
+
+\noindent
+\emph{Terminaison.} Chaque pas améliore strictement le vecteur critère au
+sens de Pareto et $\Scal$ est fini : pas de cycle.
+\emph{Sûreté.} Sur échéance on rend $\bot$, jamais le dernier point atteint :
+il n'est pas certifié efficace, et le rendre rendrait la borne inférieure
+optimiste.
+
+\section{Oracle linéaire sur \texorpdfstring{$\Ecal$}{E}}
+\label{sec:oracle}
+
+\begin{algorithm}[H]
+\caption{\textsc{MaxLinéaire}$(g,g_0,\Rcal,B,\rho)$ --- oracle \emph{anytime}}
+\KwIn{objectif linéaire $g^{\!\top}x+g_0$ ; modèle $\Rcal$ (coupes héritées) ;
+      budget $B$ ; sursis $\rho$}
+\KwOut{$(\textsf{statut},x_{\text{best}},\textsf{LB},\textsf{UB},\mathcal{A})$
+       avec $\textsf{LB}\le\max_{\Ecal}g\le\textsf{UB}$ à tout instant}
+$t_0\gets\textsc{maintenant}()$ ;\
+$\textsf{LB}\gets-\infty$ ;\ $\textsf{UB}\gets+\infty$ ;\
+$x_{\text{best}}\gets\bot$ ;\ $\mathcal{A}\gets\emptyset$\;
+\Loop{
+  \lIf{$\textsc{maintenant}()-t_0>B$}{\Return
+    $(\textsf{limite},x_{\text{best}},\textsf{LB},\textsf{UB},\mathcal{A})$}
+  $\sigma\gets t_0+B+\rho B$
+    \Comment*[r]{sursis couvrant TOUTE l'itération}
+  $(\textsf{st},w,v,\beta)\gets
+    \ILP(\max\ g^{\!\top}x+g_0,\ \Rcal,\ \sigma-\textsc{maintenant}())$\;
+  \uIf{$\textsf{st}=\textsf{infaisable}$}{
+    \Return $(\textsf{optimal},x_{\text{best}},\textsf{LB},\textsf{LB},
+              \mathcal{A})$
+      \Comment*[r]{$\Rcal$ vide : plus aucun candidat}
+  }
+  \uElseIf{$\textsf{st}=\textsf{tronqué}$}{
+    $\textsf{UB}\gets\min(\textsf{UB},\beta)$ ;\
+    \lIf{$w=\bot$}{\Return $(\textsf{limite},x_{\text{best}},\textsf{LB},
+       \textsf{UB},\mathcal{A})$}
+    $\bar x\gets w|_{1..n}$ ;\quad $\textsf{tronqué}\gets\textbf{vrai}$\;
+  }
+  \Else{
+    $\bar x\gets w|_{1..n}$ ;\quad $\textsf{UB}\gets v$ ;\quad
+    $\textsf{tronqué}\gets\textbf{faux}$\;
+  }
+  $(\textsf{verdict},\theta,y)\gets
+     \textsc{TestEfficacité}(\bar x,\ \sigma-\textsc{maintenant}())$\;
+  \lIf{$\textsf{verdict}=\textsf{indéterminé}$}{\Return
+    $(\textsf{limite},x_{\text{best}},\textsf{LB},\textsf{UB},\mathcal{A})$}
+  \If{$\textsf{verdict}=\textsf{efficace}$}{
+    $\mathcal{A}\gets\mathcal{A}\cup\{\bar x\}$\;
+    \lIf{$\neg\textsf{tronqué}$}{\Return
+      $(\textsf{optimal},\bar x,g(\bar x),\textsf{UB},\mathcal{A})$}
+    $\textsf{LB}\gets\max(\textsf{LB},g(\bar x))$\;
+    $\textsf{res}\gets\textsf{optimal}$ si $\textsf{UB}=\textsf{LB}$,
+      sinon $\textsf{limite}$
+      \Comment*[r]{$\bar x$ n'est pas prouvé argmax sur $\Rcal$}
+    \Return $(\textsf{res},x_{\text{best}},\textsf{LB},\textsf{UB},
+      \mathcal{A})$\;
+  }
+  $x_e\gets\textsc{Réparer}(y,\mathcal{D},\sigma)$\;
+  \lIf{$x_e=\bot$}{$\textsc{AjouterCoupe}(\Rcal,\bar x)$ ;\ \Return
+    $(\textsf{limite},x_{\text{best}},\textsf{LB},\textsf{UB},\mathcal{A})$}
+  $\mathcal{A}\gets\mathcal{A}\cup\{x_e\}$\;
+  \lIf{$g(x_e)>\textsf{LB}$}{$\textsf{LB}\gets g(x_e)$ ;\
+    $x_{\text{best}}\gets x_e$}
+  \lIf{$(\textsf{UB}-\textsf{LB})/|\textsf{UB}|\le 0$}{\Return
+    $(\textsf{optimal},x_{\text{best}},\textsf{LB},\textsf{UB},\mathcal{A})$}
+  $\textsc{AjouterCoupe}(\Rcal,\bar x)$
+    \Comment*[r]{licite : $\bar x$ est prouvé dominé}
+}
+\end{algorithm}
+
+\noindent
+\emph{Correction.} Invariant $\Ecal\subseteq\Rcal$ (lemme du Th. 4). À
+l'arrêt avec $\bar x$ efficace et non tronqué,
+$g(\bar x)=\max_{\Rcal}g\ge\max_{\Ecal}g$ et $\bar x\in\Ecal$ : $\bar x$ est
+optimal.
+\emph{Terminaison.} Chaque coupe retire au moins $\bar x$, et $\Scal$ est
+fini.
+\emph{Comportement anytime.} À chaque itération
+$\textsf{LB}\le\max_{\Ecal}g\le\textsf{UB}$ : l'arrêt peut survenir à tout
+instant avec un écart d'optimalité garanti, et survient souvent parce que
+\textsf{UB} rejoint \textsf{LB}, sans que la relaxation ait eu besoin de
+produire un point efficace.
+
+\medskip\noindent
+\emph{Politique de coupure.} Le sursis $\rho$ couvre l'itération entière ---
+relaxation, test d'efficacité et chaîne de réparation. Couper à l'échéance
+stricte fait perdre l'argmax donc la \emph{coupe}, alors qu'une résolution
+interrompue ne livre qu'une borne duale ; le sursis borne le dépassement
+total par $\rho B$ au lieu de le laisser non majoré.
+
+\section{Hybride exact--exact}
+
+\begin{algorithm}[H]
+\caption{\textsc{RésoudreP}$(B)$ --- Dinkelbach externe $+$ oracle interne}
+\KwIn{budget $B$}
+\KwOut{$(\textsf{statut},q,x)$ ; $\textsf{statut}=\textsf{optimal}
+       \Rightarrow q=q^\star$}
+$\Rcal\gets$ modèle vide
+  \Comment*[r]{coupes conservées d'une itération à l'autre}
+$r_0\gets\textsc{MaxLinéaire}(0,0,\Rcal,B,\rho)$ ;\quad
+$x\gets$ un point efficace de $r_0.\mathcal{A}$\;
+\lIf{$x=\bot$}{\Return $(\textsf{vide},\bot,\bot)$}
+$q\gets f(x)$\;
+\Loop{
+  \lIf{budget épuisé}{\Return $(\textsf{limite},q,x)$}
+  $P/Q\gets q$ ;\quad $g\gets Qc-Pd$ ;\quad $g_0\gets Qa-Pb$\;
+  $r\gets\textsc{MaxLinéaire}(g,g_0,\Rcal,\text{budget restant},\rho)$\;
+  \lIf{$r.x_{\text{best}}=\bot$}{\Return $(\textsf{vide},q,x)$}
+  \If{$r.\textsf{LB}>0$}{
+    $x\gets r.x_{\text{best}}$ ;\quad $q\gets f(x)$ ;\quad
+    \Continue
+      \Comment*[r]{valide quel que soit le statut : $F(q)\ge\textsf{LB}>0$}
+  }
+  \lIf{$r.\textsf{statut}=\textsf{optimal}$}{\Return
+    $(\textsf{optimal},q,x)$ \Comment*[f]{racine atteinte ET prouvée}}
+  \Return $(\textsf{limite},q,x)$
+    \Comment*[r]{$\textsf{LB}$ minore $F(q)$ : on ne conclut pas}
+}
+\end{algorithm}
+
+\noindent
+\emph{Point de sûreté.} $r.\textsf{LB}$ n'est la valeur exacte de $F(q)$ que
+si l'oracle a \emph{prouvé} l'optimalité. Conclure « $F(q)\le 0$ donc
+optimal » sur un oracle interrompu produit des optima faux affichés comme
+prouvés.
+
+\section{Certification : du budget à une garantie}
+
+\begin{theorem}
+Soit $q=P/Q$ atteinte par un point efficace (donc $q\le q^\star$),
+$\Rcal\supseteq\Ecal$ un relâché obtenu par accumulation de coupes,
+$U\ge F_{\Rcal}(q)=\max_{x\in\Rcal}\{QN(x)-PD(x)\}$ et
+$D^{+}=\min\{D(x) : x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$. Alors
+\[
+  q^\star\ \le\ q+\frac{U}{Q\,D^{+}},
+  \qquad\text{et si } U=0 \text{ alors } q^\star=q .
+\]
+\end{theorem}
+
+\begin{proof}
+Soit $x\in\Ecal\subseteq\Rcal$. Si $QN(x)-PD(x)<0$ alors $f(x)<q$. Sinon $x$
+appartient à la région définissant $D^{+}$, donc $D(x)\ge D^{+}$ et
+$f(x)-q=\bigl(QN(x)-PD(x)\bigr)/\bigl(QD(x)\bigr)\le U/(QD^{+})$. On passe au
+max sur $\Ecal$.
+\end{proof}
+
+\noindent
+La version d'origine (Th. 5) prend $\Rcal=\Scal$ et
+$D_{\min}=\min_{x\in\Scal}D(x)$ ; comme le minimum de $D^{+}$ porte sur un
+sous-ensemble, $D^{+}\ge D_{\min}$ et la borne est mécaniquement plus fine.
+
+\begin{algorithm}[H]
+\caption{\textsc{Certifier}$(q,\mathcal{D},B,\lambda,T)$ --- Théorème 5$'$}
+\KwIn{$q$ atteinte par un point efficace ; points dominés $\mathcal{D}$
+      déjà payés par les chaînes de réparation ; budget $B$ ;
+      taille de lot $\lambda$ ; nombre de tours $T$}
+\KwOut{$(q_{\text{ub}},\textsf{prouvé},q)$ avec $q\le q^\star\le q_{\text{ub}}$}
+$\Rcal\gets$ modèle vide ;\quad $q_{\text{ub}}\gets+\infty$ ;\quad
+$D_{\min}\gets\bot$\;
+$\mathcal{P}\gets$ $\mathcal{D}$ dédoublonné, trié par
+$\bigl(Qc-Pd\bigr)^{\!\top}x$ \emph{décroissant}
+  \Comment*[r]{ceux qui tirent $U$ vers le haut}
+\For{$t\gets 1$ \KwTo $T$}{
+  \lIf{budget épuisé}{\Break}
+  $q_{\text{ref}}\gets q$ ;\quad $P/Q\gets q_{\text{ref}}$ ;\quad
+  $g\gets Qc-Pd$ ;\quad $g_0\gets Qa-Pb$\;
+  ajouter à $\Rcal$ les $\lambda$ premières coupes restantes de $\mathcal{P}$
+    \Comment*[r]{plafond piloté par le budget}
+  $r\gets\textsc{MaxLinéaire}(g,g_0,\Rcal,\text{tranche du budget},\rho)$\;
+  $\textsf{amélioré}\gets\textbf{faux}$\;
+  \ForEach{$y\in r.\mathcal{A}$}{
+    \lIf{$f(y)>q$}{$q\gets f(y)$ ;\ $\textsf{amélioré}\gets\textbf{vrai}$
+      \Comment*[f]{pas de Dinkelbach offert}}
+  }
+  \lIf{$r.\textsf{statut}=\textsf{optimal}$ \textbf{et} $r.\textsf{LB}\le 0$
+       \textbf{et} $\neg\textsf{amélioré}$}{\Return
+       $(q,\textbf{vrai},q)$}
+  \If{$r.\textsf{UB}$ \emph{est finie}}{
+    $U\gets\max(0,r.\textsf{UB})$\;
+    \lIf{$U=0$ \textbf{et} $\neg\textsf{amélioré}$}{\Return
+      $(q_{\text{ref}},\textbf{vrai},q)$}
+    \lIf{$D_{\min}=\bot$}{$D_{\min}\gets
+      \ILP(\min\ d^{\!\top}x+b,\ \Scal,\ +\infty)$}
+    $D^{+}\gets\ILP\bigl(\min\ d^{\!\top}x+b,\
+       \Rcal\cap\{g^{\!\top}x+g_0\ge 0\},\ +\infty\bigr)$
+      \Comment*[r]{jamais vide : l'incumbent y est}
+    $q_{\text{ub}}\gets\min\Bigl(q_{\text{ub}},\
+      q_{\text{ref}}+\dfrac{U}{Q\max(D_{\min},D^{+})}\Bigr)$\;
+  }
+  \lIf{$\neg\textsf{amélioré}$ \textbf{et} $\mathcal{P}=\emptyset$
+       \textbf{et} $r.\textsf{statut}\ne\textsf{limite}$}{\Break}
+}
+\lIf{$q_{\text{ub}}\le q$}{\Return $(q,\textbf{vrai},q)$}
+\Return $(q_{\text{ub}},\textbf{faux},q)$\;
+\end{algorithm}
+
+\noindent
+\emph{Validité du minimum.} Chaque tour produit une borne valide sur
+$q^\star$ pour le $q_{\text{ref}}$ de ce tour ; $q^\star$ ne dépendant pas de
+$q$, le \emph{minimum} des bornes obtenues reste valide. Un $q$ amélioré ne
+peut donc pas invalider une borne posée plus tôt --- d'où la lecture de la
+borne sur $q_{\text{ref}}$ et non sur le $q$ courant.
+
+\medskip\noindent
+\emph{Plafond de coupes.} Mesure : au-delà d'une quarantaine de coupes, les
+$p$ binaires par coupe alourdissent chaque \ILP{} plus que la coupe ne
+rapporte. Le plafond doit donc être arbitré par le budget, et croître
+seulement tant que la borne ne s'est pas fermée.
+
+\section{Matheuristique certifiée}
+
+\begin{algorithm}[H]
+\caption{\textsc{Matheuristique}$(B_{\text{rech}},B_{\text{cert}},
+         s_{\max})$}
+\KwIn{budgets de recherche et de certification ; seuil de stagnation
+      $s_{\max}$}
+\KwOut{$(q_{\text{lb}},x_{\text{best}},q_{\text{ub}})$ avec
+       $q_{\text{lb}}\le q^\star\le q_{\text{ub}}$}
+$\mathcal{D}\gets\emptyset$ ;\quad
+$x_0\gets\textsc{Réparer}(0,\mathcal{D},+\infty)$ ;\quad
+$\mathcal{A}\gets\{x_0\}$ ;\quad $q\gets f(x_0)$ ;\quad
+$x_{\text{best}}\gets x_0$\;
+$(\text{idéal},\text{nadir})\gets$ estimations par Dinkelbach sur $\Scal$\;
+$s\gets 0$ ;\quad $\text{usage}\gets$ compteur vide\;
+\While{$\textsc{écoulé}()<B_{\text{rech}}$}{
+  $(w,w_0)\gets(Qc-Pd,\ Qa-Pb)$ où $P/Q=q$ ;\quad
+  $\textsf{amélioré}\gets\textbf{faux}$\;
+  $\text{div}\gets(s>0)$
+    \Comment*[r]{redémarrage guidé par l'archive}
+  $\mathcal{B}\gets\textsc{ChoisirBases}(\mathcal{A},\text{usage},\text{div})$\;
+  \ForEach{$x^r\in\mathcal{B}$}{
+    incrémenter $\text{usage}[x^r]$\;
+    \ForEach{$k\in$ \emph{permutation aléatoire de} $\{1,\dots,p\}$}{
+      \lIf{budget de recherche épuisé}{\Break}
+      $\textit{mv}\gets$ tirage dans le menu
+        ($A,A,B,C$ ; ou $B,B,C,A$ si $\text{div}$)\;
+      $y\gets\textsc{Mouvement}_{\textit{mv}}(x^r,k,w,w_0,\text{div})$\;
+      \lIf{$y=\bot$}{\Continue}
+      $y\gets\textsc{Réparer}(y,\mathcal{D},t_0+B_{\text{rech}})$
+        \Comment*[r]{certification Th. 2}
+      \lIf{$y=\bot$}{\Continue}
+      $\mathcal{A}\gets\mathcal{A}\cup\{y\}$\;
+      \If{$f(y)>q$}{
+        $q\gets f(y)$ ;\ $x_{\text{best}}\gets y$ ;\
+        $\textsf{amélioré}\gets\textbf{vrai}$ ;\
+        $(w,w_0)\gets$ substitut en $q$\;
+      }
+    }
+  }
+  $s\gets 0$ \textbf{si} $\textsf{amélioré}$ \textbf{sinon} $s+1$\;
+  \lIf{$s\ge s_{\max}$}{\Break}
+}
+$B\gets B_{\text{cert}}+\max\bigl(0,\ B_{\text{rech}}
+   -\textsc{écoulé}()\bigr)$
+  \Comment*[r]{réallocation du budget non consommé}
+$(q_{\text{ub}},\textsf{prouvé},q)\gets
+  \textsc{Certifier}(q,\mathcal{D},B,\lambda,T)$\;
+\Return $(q,x_{\text{best}},q_{\text{ub}})$\;
+\end{algorithm}
+
+\medskip
+\begin{algorithm}[H]
+\caption{Les trois mouvements --- sous-problèmes \ILP{} résolus exactement}
+\SetKwProg{Mv}{Mouvement}{ :}{}
+\Mv{$A$ --- $\varepsilon$ partiel}{
+  $J\gets$ sous-ensemble \textbf{strict} aléatoire de
+    $\{1,\dots,p\}\setminus\{k\}$
+    \Comment*[r]{$J$ plein $\Rightarrow$ voisinage vide}
+  \Return $\arg\max\bigl\{w^{\!\top}x+w_0 :\ x\in\Scal,\
+    e_k(x)\ge 1,\ e_j(x)\ge 0\ \forall j\in J\bigr\}$\;
+}
+\Mv{$B$ --- plancher absolu}{
+  tirer $\varepsilon_j$ entre nadir$_j$ et idéal$_j$ pour un sous-ensemble
+    de critères\;
+  \Return $\arg\max\bigl\{w^{\!\top}x+w_0 :\ x\in\Scal,\
+    Z_j(x)\ge\varepsilon_j\bigr\}$
+    \Comment*[r]{seuils linéarisés par le Th. 1}
+}
+\Mv{$C$ --- LNS \emph{fix-and-optimize}}{
+  $L\gets$ sous-ensemble aléatoire de variables, $|L|=\lceil\alpha n\rceil$\;
+  \Return $\arg\max\bigl\{w^{\!\top}x+w_0 :\ x\in\Scal,\
+    x_j=x^r_j\ \forall j\notin L\bigr\}$\;
+}
+\end{algorithm}
+
+\noindent
+\emph{Erreur de conception à ne pas refaire.} Prendre pour voisinage
+$V_k(x^r)=\{x : e_k(x)\ge 1,\ e_j(x)\ge 0\ \forall j\ne k\}$, c'est-à-dire
+« mieux sur $k$ sans rien perdre ailleurs », donne exactement l'ensemble des
+points qui \emph{dominent} $x^r$ : il est vide dès que $x^r$ est efficace. Un
+arbitrage sur les autres critères est indispensable, d'où le sous-ensemble
+\emph{strict} $J$ du mouvement $A$.
+
+\medskip\noindent
+\emph{Théorème 1 (linéarisation de seuil).} Sous (A1), pour $v=N/D$ avec
+$D>0$ entier, $\Zk(x)\ge v\iff (Dc_k-Nd_k)^{\!\top}x\ge Nb_k-Da_k$ : les
+contraintes de type $\varepsilon$ sont entièrement linéaires et à
+coefficients entiers.
+
+\section{Validation sans vérité terrain}
+
+L'énumération exhaustive plafonne vers $n=8$. Au-delà, les garanties se
+contrôlent sans connaître $q^\star$, car elles sont \emph{auto-certifiantes}.
+
+\begin{algorithm}[H]
+\caption{\textsc{ValiderÀLÉchelle}(instance, graines $s_1,\dots,s_R$)}
+\KwOut{verdicts $W_1,\dots,W_6$ ; aucun appel à l'énumération}
+$\overline{q}\gets\textsc{Dinkelbach}(f,\Scal).q^\star$
+  \Comment*[r]{$W_6$ : témoin exact et indépendant}
+$\underline{L}\gets\emptyset$ ;\quad $\overline{U}\gets\emptyset$\;
+\ForEach{graine $s_r$}{
+  $(q_{\text{lb}},x_{\text{best}},q_{\text{ub}})\gets
+     \textsc{Matheuristique}(\dots,s_r)$\;
+  $W_1\gets W_1\wedge\bigl[\textsc{TestEfficacité}(x_{\text{best}},+\infty)
+     =\textsf{efficace}\bigr]$
+     \Comment*[r]{$\Rightarrow q_{\text{lb}}\le q^\star$}
+  $W_2\gets W_2\wedge\bigl[\forall y\in\text{échantillon}(\mathcal{A}) :
+     y \text{ efficace}\bigr]$\;
+  $W_3\gets W_3\wedge\bigl[q_{\text{lb}}\le q_{\text{ub}}\bigr]$\;
+  \ForEach{coupe de base $\bar x$ posée, \emph{et} $y\in\mathcal{A}$}{
+    $W_4\gets W_4\wedge\bigl[\exists k :\ e_k(y)\ge 1\bigr]$
+      \Comment*[r]{$\Ecal\subseteq\Rcal$ sur la partie connue de $\Ecal$}
+  }
+  $\underline{L}\gets\underline{L}\cup\{q_{\text{lb}}\}$ ;\quad
+  $\overline{U}\gets\overline{U}\cup\{q_{\text{ub}}\}$\;
+}
+$W_5\gets\bigl[\max\underline{L}\le\min\overline{U}\bigr]$
+  \Comment*[r]{tous encadrent le MÊME $q^\star$}
+$W_6\gets\bigl[\max\underline{L}\le\overline{q}\bigr]$\;
+\Return $(W_1,\dots,W_6)$, et l'écart garanti
+  $\bigl(\min(\min\overline{U},\overline{q})-\max\underline{L}\bigr)
+   /\bigl|\min(\min\overline{U},\overline{q})\bigr|$\;
+\end{algorithm}
+
+\noindent
+$W_4$ remplace le contrôle de sûreté des coupes que l'énumération assurait ;
+$W_5$ transforme la simple répétition d'exécutions en test de cohérence
+rigoureux : une violation \emph{prouve} un bug sans qu'on ait besoin de
+$q^\star$. Le protocole établit la \textbf{validité} des bornes, non leur
+finesse : une borne correcte mais inutile passe $W_1$--$W_6$ sans broncher.
+
+\medskip\noindent
+\emph{Gain gratuit.} $\max_r q_{\text{lb}}^{\,r}$ est une borne inférieure
+valide meilleure que chacune : le max de plusieurs minorants valides est un
+minorant valide.
+
+\section{Unité de coût}
+
+Le compteur d'appels \ILP{} est l'unité à rapporter : reproductible,
+indépendante de la machine et du solveur. Les \LP{} de renforcement du big-M
+sont comptés séparément, étant d'un ordre de grandeur moins chers.
+
+\end{document}

@@ -30,6 +30,7 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `bench_improve.py` | Mesure multi-graines sur le regime cible ; sert aussi de temoin d'A/B |
 | `verify_scale.py` | Validation W1-W6 SANS verite terrain, jusqu'a `n = 40` |
 | `bench_scale.py` | Passage a l'echelle : exact contre matheuristique, sans enumeration |
+| `doc/pseudocode.tex` | Pseudo-code des dix algorithmes (LaTeX + PDF compile) |
 | `legacy/` | Prototype initial a deux variables, conserve pour tracabilite |
 
 Lancer : `python verify.py` puis `python verify_oracle.py`
