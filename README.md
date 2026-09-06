@@ -34,7 +34,7 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `analyze.py` | Analyse de `campaign.csv` : Q1-Q4, censure traitee separement |
 | `make_lot.py` | Ecrit le lot fige `instances/lot_v1` (JSON), format d'echange entre methodes |
 | `bench_compare.py` | Banc de comparaison entre methodes, avec verification independante C1-C4 |
-| `doc/article.tex` | Article complet sur la methode finale : theoremes, preuves, protocole, resultats (16 p.) |
+| `doc/article.tex` | Article complet : theoremes, preuves, illustrations a 2 et 3 variables avec figures, resultats (21 p.) |
 | `doc/pseudocode.tex` | Pseudo-code des dix algorithmes (LaTeX + PDF compile) |
 | `legacy/` | Prototype initial a deux variables, conserve pour tracabilite |
 

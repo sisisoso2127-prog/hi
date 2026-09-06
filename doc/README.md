@@ -3,7 +3,17 @@
 `article.tex` / `article.pdf` — article complet sur la methode finale (la
 matheuristique certifiee) : theoremes et preuves, algorithme, protocole de
 validation a trois niveaux, campagne de 216 instances, resultats sur le lot
-fige de 90 instances, resultats negatifs et limites. 16 pages.
+fige de 90 instances, resultats negatifs et limites.
+
+Contient une section d'ILLUSTRATIONS NUMERIQUES : deux exemples complets a 2
+et 3 variables, entierement calcules par le code (aucune valeur recalculee
+pour l'exposition), avec cinq figures TikZ/pgfplots dessinees a partir de ces
+memes donnees -- espace des decisions et chaine de dominance, espace des
+criteres et front de Pareto, enveloppe affine F(q) du Th. 3, decroissance
+anytime de la borne superieure, et schema d'architecture. 21 pages.
+
+Les figures sont dans le fichier .tex lui-meme (aucune image externe) :
+il suffit de `\usepackage{tikz}` + `pgfplots` pour les reprendre.
 
 `pseudocode.tex` / `pseudocode.pdf` — pseudo-code des dix algorithmes de la
 methode, en francais, pret a etre inclus dans le manuscrit.
