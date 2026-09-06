@@ -111,6 +111,18 @@ def m_matheuristic(inst: MOILFP, time_limit: float) -> MethodResult:
                         ORACLE_CALLS["ilp"], time.time() - t0, r.q_ub)
 
 
+def m_matheuristic_arch(inst: MOILFP, time_limit: float) -> MethodResult:
+    """Matheuristique + coupes d'efficacite issues de l'archive (Th. 6-7)."""
+    reset_oracle_counter()
+    t0 = time.time()
+    r = matheuristic_P(inst, time_budget=time_limit * 0.6,
+                       bound_budget=time_limit * 0.4, seed=0,
+                       archive_cuts=40)
+    return MethodResult(r.q_lb, r.x_best,
+                        "optimal" if r.proved_optimal else "heuristic",
+                        ORACLE_CALLS["ilp"], time.time() - t0, r.q_ub)
+
+
 def m_hybrid(inst: MOILFP, time_limit: float) -> MethodResult:
     """
     Hybride : la matheuristique amorce la methode exacte et lui transmet ses
@@ -129,6 +141,7 @@ METHODS: Dict[str, Callable[[MOILFP, float], MethodResult]] = {
     "enum": m_enum,
     "exact": m_exact,
     "matheuristic": m_matheuristic,
+    "matheuristic_arch": m_matheuristic_arch,
     "hybrid": m_hybrid,
     # "zerdani_moulai": ...,   <- a brancher, cf. en-tete du module
     # "drici": ...,

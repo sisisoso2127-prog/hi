@@ -140,6 +140,42 @@ def d_plus(inst: MOILFP, model: ECutModel,
         return None
     return max(1, int(round(res.obj)))
 
+def same_criteria_improves(inst: MOILFP, a: np.ndarray,
+                           q: Fraction) -> Optional[np.ndarray]:
+    """
+    UN SEUL ILP. Existe-t-il x de MEME vecteur criteres que `a` avec
+    f(x) > q ?
+
+        trouver x dans S  tel que  e_k^a(x) = 0 pour tout k
+                                   Q N(x) - P D(x) >= 1
+
+    Les e_k etant entieres, `e_k^a(x) = 0` equivaut a `Z_k(x) = Z_k(a)`, et
+    `Q N - P D >= 1` a `f(x) > q` (le membre de gauche est entier).
+
+    Deux usages, et c'est ce qui rend l'appel economique :
+
+      * INFAISABLE -> aucun point de meme vecteur criteres que `a` ne bat
+        l'incumbent : la condition de cloture du Th. 7 est etablie pour `a`,
+        et l'on peut couper en `a` sans risque ;
+      * FAISABLE -> le point rendu est efficace (meme vecteur criteres qu'un
+        point efficace) ET meilleur que l'incumbent : on l'empoche.
+
+    Poser la question comme une FAISABILITE plutot que comme un maximum
+    evite un Dinkelbach complet par point d'archive.
+    """
+    P, Q = q.numerator, q.denominator
+    rows = feasibility_rows(inst)
+    for k in range(inst.p):
+        coef, cst = e_row(inst, a, k)
+        rows.append((coef, -cst, -cst))            # e_k^a(x) = 0
+    w = (Q * inst.f.num - P * inst.f.den).astype(float)
+    w0 = float(Q * inst.f.a - P * inst.f.b)
+    rows.append((w, 1.0 - w0, INF))                # f(x) > q
+    res = solve_ilp(np.zeros(inst.n), rows, inst.var_upper_bounds(),
+                    maximize=True)
+    return None if not res.ok else res.x
+
+
 def rank_dominated(dominated: Sequence[np.ndarray],
                    w: np.ndarray) -> List[np.ndarray]:
     """
@@ -162,6 +198,48 @@ def rank_dominated(dominated: Sequence[np.ndarray],
     return uniq
 
 
+def build_cut_pool(dominated: Sequence[np.ndarray],
+                   archive: Sequence[np.ndarray],
+                   w: np.ndarray) -> List[tuple]:
+    """
+    UN SEUL vivier de coupes, alimente par DEUX sources.
+
+    Les deux coupes ont exactement la meme forme -- la disjonction
+    "il existe k tel que e_k(x) >= 1" -- donc le meme cout : p binaires
+    chacune. Seule leur precondition differe (Th. 4 pour un point domine,
+    Th. 6 pour un point efficace). Il n'y a donc aucune raison de leur
+    allouer des budgets separes, et une bonne raison de ne pas le faire : la
+    mesure du plafond de coupes montre qu'au-dela d'une quarantaine, chaque
+    coupe supplementaire coute plus qu'elle ne rapporte. Poser 40 coupes
+    d'archive EN PLUS des 40 de dominance a d'ailleurs fait chuter
+    l'optimalite prouvee de 84 a 57 sur 90 instances -- exactement l'effet de
+    saturation deja documente.
+
+    On classe donc les candidats des deux sources ensemble, par valeur
+    decroissante du substitut : ce sont ceux qui tirent U vers le haut, quelle
+    que soit leur origine. Le plafond global reste celui qui a ete regle.
+
+    Cette mise en commun a un effet automatique et souhaitable : la ou les
+    points domines abondent, ils occupent le vivier ; la ou ils sont rares --
+    le regime a E epais, ou la profondeur des chaines de reparation vaut 1 --
+    l'archive le remplit a leur place.
+
+    Renvoie une liste de couples (point, origine) avec origine dans
+    {"dom", "arch"}.
+    """
+    wv = np.asarray(w, dtype=float)
+    seen, pool = set(), []
+    for pts, kind in ((dominated, "dom"), (archive or [], "arch")):
+        for x in pts:
+            key = (kind, tuple(int(v) for v in x))
+            if key in seen:
+                continue
+            seen.add(key)
+            pool.append((np.asarray(x, dtype=int), kind))
+    pool.sort(key=lambda t: -float(wv @ t[0]))
+    return pool
+
+
 @dataclass
 class CertResult:
     """Sortie de la phase de certification."""
@@ -179,7 +257,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             use_tightened: bool = True,
             archive: Optional["Archive"] = None,
             cut_batch: int = 10,
-            max_rounds: int = 6) -> CertResult:
+            max_rounds: int = 6,
+            archive_cuts: bool = False) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -204,17 +283,20 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     """
     t0 = time.time()
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
-                  "rounds": 0, "q_improved": False}
+                  "rounds": 0, "q_improved": False, "archive_cuts": 0}
 
     best_ub: Optional[float] = None
     proved = False
     Dm: Optional[int] = None
 
     model = ECutModel(inst)
-    pending: List[np.ndarray] = []
+    pending: List[tuple] = []
     if use_tightened:
         w0_coef, _, _, _ = surrogate(inst, q)
-        pending = rank_dominated(dominated, w0_coef)
+        arch_pts = archive.points() if (archive is not None and archive_cuts) \
+            else []
+        pending = build_cut_pool(rank_dominated(dominated, w0_coef),
+                                 arch_pts, w0_coef)
 
     for rnd in range(1, max_rounds + 1):
         left = budget - (time.time() - t0)
@@ -230,11 +312,39 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         w, w0, P, Q = surrogate(inst, q_ref)
 
         # --- plafond adaptatif : un lot de coupes de plus a chaque tour ----
+        # Le vivier melange points domines (Th. 4) et points d'archive
+        # (Th. 6). Pour ces derniers, un ILP etablit d'abord la condition de
+        # cloture du Th. 7 ; s'il rend un point, celui-ci est efficace ET
+        # meilleur que l'incumbent, et on repart de la.
+        improved_by_closure = None
         if pending:
-            for x in pending[:cut_batch]:
-                model.add_dominance_cut(x)
-            pending = pending[cut_batch:]
+            posees = 0
+            for x, kind in pending:
+                if posees >= cut_batch or time.time() > t0 + budget:
+                    break
+                if kind == "arch":
+                    better = same_criteria_improves(inst, x, q_ref)
+                    if better is not None:
+                        improved_by_closure = better
+                        break
+                    model.add_efficiency_cut(x)
+                    info["archive_cuts"] = info.get("archive_cuts", 0) + 1
+                else:
+                    model.add_dominance_cut(x)
+                posees += 1
+            pending = pending[posees + (1 if improved_by_closure is not None
+                                        else 0):]
         info["n_cuts"] = model.n_cuts
+
+        if improved_by_closure is not None:
+            fb = inst.f.value(improved_by_closure)
+            if fb > q:
+                q = fb
+                x_cur = np.asarray(improved_by_closure, dtype=int)
+                if archive is not None:
+                    archive.add(x_cur)
+                info["q_improved"] = True
+                continue
 
         # le dernier tour recoit tout le reste : inutile de garder du budget
         # pour un tour qu'on ne fera pas
@@ -252,6 +362,20 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                 q, x_cur, improved = fy, y, True
         if improved:
             info["q_improved"] = True
+
+        # -- RELACHE VIDE : la preuve la plus forte -------------------------
+        # Le Th. 6 donne E inclus dans R_A union {x : Z(x) = Z(a), a dans A}.
+        # Si R_A est vide, alors E est tout entier dans le second ensemble, et
+        # la condition de cloture -- etablie point par point avant chaque
+        # coupe d'efficacite -- dit qu'aucun de ses elements ne bat q. Donc
+        # q* <= q, et comme q <= q*, q* = q.
+        #
+        # C'est une preuve que la coupe de DOMINANCE ne peut jamais produire :
+        # elle preserve E, donc R ne se vide pas. Seule la coupe d'efficacite
+        # peut epuiser le relache. Le cas se presente exactement quand E est
+        # mince -- le regime a corr eleve -- ou l'archive couvre vite tout E.
+        if r.status == "empty" and info.get("archive_cuts", 0) > 0:
+            return CertResult(float(q), True, q, x_cur, info)
 
         # -- optimalite prouvee : F(q) resolu et <= 0 ----------------------
         if r.status == "optimal" and r.value is not None and r.value <= 1e-9 \
@@ -550,6 +674,7 @@ def matheuristic_P(inst: MOILFP,
                    reallocate: bool = True,
                    cut_batch: int = 40,
                    cert_rounds: int = 2,
+                   archive_cuts: bool = False,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -685,7 +810,8 @@ def matheuristic_P(inst: MOILFP,
     if certify_bound and budget > 0:
         c = certify(inst, q, x_best, dominated, budget,
                     use_tightened=tightened, archive=arch,
-                    cut_batch=cut_batch, max_rounds=cert_rounds)
+                    cut_batch=cut_batch, max_rounds=cert_rounds,
+                    archive_cuts=archive_cuts)
         q_ub, proved, cert_info = c.q_ub, c.proved, c.info
         cut_points = c.cut_points
         if c.q_lb is not None and c.q_lb > q:

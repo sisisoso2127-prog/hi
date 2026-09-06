@@ -601,6 +601,227 @@ la matheuristique \emph{prouve} désormais l'optimalité, sur des instances que
 la méthode exacte seule n'avait pas su résoudre dans le même budget. La
 formulation « trouve sans pouvoir prouver » ne tient plus.
 
+\section{Couper depuis un point efficace}
+\label{sec:archcut}
+
+\subsection{Ce que le théorème~\ref{th:cut} ne permet pas}
+
+Le relâché $\Rcal$ sur lequel repose la borne du théorème~\ref{th:bound} est
+obtenu en coupant autour de points \emph{dominés} : c'est la précondition du
+théorème~\ref{th:cut}, et elle n'est pas négociable, car couper autour d'un
+point efficace retire ce point de $\Rcal$.
+
+Or les points dominés sont rares là où la borne en aurait le plus besoin. La
+campagne mesure une profondeur médiane de chaîne de réparation égale à $1$ :
+la recherche ne traverse qu'un point dominé par mouvement. Dans le régime à
+$\Ecal$ épais -- celui que la section~\ref{sec:echelle} identifie comme le
+verrou -- l'archive compte des dizaines de points efficaces certifiés tandis
+que les points dominés se comptent sur les doigts. \emph{Les coupes de
+dominance n'ont presque rien à mordre précisément là où il le faudrait.}
+
+La question est donc : peut-on couper depuis un point \textbf{efficace} ?
+
+\subsection{On le peut, à une réserve près}
+
+\begin{theorem}[Coupe d'efficacité]\label{th:effcut}
+Soit $a\in\Ecal$ et $x\in\Ecal$ avec $Z(x)\ne Z(a)$. Alors il existe $k$ tel
+que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Ecal$,
+\[
+  \Ecal\ \subseteq\ \Rcal_A\ \cup\ \bigl\{x\in\Scal:\ \exists a\in A,\ Z(x)=Z(a)\bigr\},
+  \qquad
+  \Rcal_A=\bigl\{x\in\Scal:\ \forall a\in A,\ \exists k,\ e^a_k(x)\ge 1\bigr\}.
+\]
+\end{theorem}
+
+\begin{proof}
+Supposons $Z_k(x)\le Z_k(a)$ pour tout $k$. Comme $Z(x)\ne Z(a)$, le point
+$a$ dominerait $x$, ce qui contredit l'efficacité de $x$. Il existe donc $k$
+avec $Z_k(x)>Z_k(a)$, c'est-à-dire $e^a_k(x)\ge 1$ par intégralité
+(théorème~\ref{th:cut}). L'inclusion s'ensuit en appliquant ceci à chaque
+$a\in A$ pour les $x$ dont le vecteur critères diffère de tous.
+\end{proof}
+
+\noindent
+La différence avec le théorème~\ref{th:cut} tient en une ligne. Couper autour
+d'un point \emph{dominé} ne retire aucun point efficace ; couper autour d'un
+point \emph{efficace} n'en retire que ceux de \textbf{même vecteur
+critères}. C'est cette réserve -- la question des solutions alternatives --
+qui interdisait jusqu'ici de le faire. Elle se lève par une condition qui se
+vérifie, et à bon compte.
+
+\begin{theorem}[Borne sur le relâché d'archive]\label{th:archbound}
+Soient $A\subseteq\Ecal$ un ensemble de points efficaces certifiés,
+$q=P/Q$ la valeur de l'incumbent, et supposons la \emph{condition de
+clôture} :
+\[
+  \text{pour tout } a\in A,\qquad
+  \max\{f(x)\ :\ x\in\Scal,\ Z(x)=Z(a)\}\ \le\ q .
+\]
+Soient $U\ge\max_{x\in\Rcal_A}\{QN(x)-PD(x)\}$ et
+$D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$. Alors
+\[
+  \qs\ \le\ q+\frac{U}{Q\,D^{+}} .
+\]
+\end{theorem}
+
+\begin{proof}
+Soit $x^\star\in\Ecal$ atteignant $\qs$. Par le théorème~\ref{th:effcut},
+ou bien $Z(x^\star)=Z(a)$ pour un $a\in A$, et alors $\qs=f(x^\star)\le q$
+par la condition de clôture, donc l'inégalité est acquise puisque
+$U\ge 0$ ; ou bien $x^\star\in\Rcal_A$, et l'argument du
+théorème~\ref{th:bound} s'applique mot pour mot à $\Rcal_A$.
+\end{proof}
+
+\begin{proposition}[Relâché vide : une preuve inaccessible à la coupe de
+dominance]\label{prop:vide}
+Sous les hypothèses du théorème~\ref{th:archbound}, si $\Rcal_A=\emptyset$
+alors $\qs=q$.
+\end{proposition}
+
+\begin{proof}
+Par le théorème~\ref{th:effcut}, $\Ecal\subseteq\Rcal_A\cup\{x:\exists a\in
+A,\ Z(x)=Z(a)\}$. Si $\Rcal_A=\emptyset$, tout point efficace a donc le
+vecteur critères d'un point de $A$, et la condition de clôture donne
+$\qs\le q$. Comme $q\le\qs$, il y a égalité.
+\end{proof}
+
+\noindent
+Cette proposition n'a pas d'équivalent pour la coupe de dominance. Celle-ci
+\emph{préserve} $\Ecal$ par construction : $\Rcal$ contient toujours
+$\Ecal$ et ne peut donc jamais se vider tant que $\Ecal$ est non vide. Seule
+la coupe d'efficacité peut \emph{épuiser} le relâché, et c'est une preuve
+d'optimalité obtenue sans jamais évaluer de borne.
+
+Le cas se présente exactement là où $\Ecal$ est mince -- le régime à
+$\text{corr}$ élevé, où la campagne mesure une médiane $|\Ecal|=1$ --
+puisque l'archive y couvre $\Ecal$ en quelques points. Ne pas le traiter
+coûte cher : dans une version antérieure, un relâché vide était lu comme un
+échec de la borne, et l'optimalité prouvée tombait à 56 instances sur 90
+au lieu de 86, la totalité de l'écart provenant d'instances à
+$\text{corr}=0{,}9$.
+
+\subsection{Établir la clôture coûte un programme, pas un optimum}
+
+La condition de clôture semble demander, pour chaque $a\in A$, un maximum de
+$f$ sur $\{x:Z(x)=Z(a)\}$ -- donc un Dinkelbach complet par point
+d'archive. Il n'en est rien : \emph{on n'a pas besoin du maximum, seulement
+de savoir s'il dépasse $q$}. C'est une question de faisabilité, et un seul
+programme y répond :
+\[
+  \text{trouver } x\in\Scal \quad\text{tel que}\quad
+  e^a_k(x)=0\ \ \forall k,
+  \qquad Q\,N(x)-P\,D(x)\ \ge\ 1 .
+\]
+Les $e^a_k$ étant entières, $e^a_k(x)=0$ équivaut à $Z_k(x)=Z_k(a)$, et le
+membre de droite étant entier, la seconde contrainte équivaut à $f(x)>q$.
+Deux issues, toutes deux utiles :
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{infaisable} : la clôture est établie pour $a$, on pose la
+      coupe ;
+\item \textbf{faisable} : le point rendu a le même vecteur critères qu'un
+      point efficace, il est donc lui-même efficace, et il bat l'incumbent.
+      On l'empoche -- la borne n'est pas posée, mais la borne inférieure
+      monte.
+\end{itemize}
+
+\noindent
+Dans nos mesures la seconde issue ne s'est jamais produite : sur
+$143\,220$ paires de points efficaces vérifiées par énumération, aucune ne
+partageait un vecteur critères. La clôture est donc en pratique gratuite,
+mais elle est \emph{vérifiée} et non supposée -- c'est ce qui rend la coupe
+sûre.
+
+\subsection{En quoi ceci est une hybridation, et non un ajout}
+
+L'archive n'était jusqu'ici qu'un sous-produit : une liste de points
+efficaces livrée au décideur, et une réserve de bases pour les redémarrages.
+Le théorème~\ref{th:effcut} en fait la \emph{source des coupes de la borne
+exacte}. Le flux d'information s'inverse : ce n'est plus la partie exacte qui
+certifie la partie heuristique, c'est la partie heuristique qui fournit à la
+partie exacte ce dont elle manque.
+
+Cette hybridation n'est possible qu'ainsi. Sans la recherche heuristique il
+n'y a pas d'archive fournie ; sans la certification exacte du
+théorème~\ref{th:eff} les points de l'archive ne seraient pas \emph{prouvés}
+efficaces et la coupe serait invalide. Aucune des deux moitiés ne produit
+seule ce résultat.
+
+\subsection{Effet mesuré}
+
+\paragraph{Un vivier, deux sources.} Les deux coupes ont la même forme et
+donc le même coût, $p$ binaires chacune. Leur allouer des budgets séparés
+serait doublement fautif : la mesure du plafond
+(section~\ref{sec:negatif}) établit qu'au-delà d'une quarantaine de coupes
+chacune coûte plus qu'elle ne rapporte, et poser $40$ coupes d'archive
+\emph{en plus} des $40$ de dominance a fait tomber l'optimalité prouvée de
+$84$ à $56$ sur les $90$ instances du lot. On classe donc les candidats des
+deux sources ensemble, par valeur décroissante du substitut, sous le plafond
+global déjà réglé. L'effet est automatique : là où les points dominés
+abondent ils occupent le vivier, là où ils sont rares l'archive le remplit.
+
+\begin{table}[htbp]
+\centering
+\caption{Régime cible, 8 instances $\times$ 10 graines, budget identique de
+$7+5$~s, vérité terrain disponible.}
+\label{tab:archcut}
+\begin{tabular}{lcc}
+\toprule
+& sans coupes d'archive & avec\\
+\midrule
+écart garanti médian & $0{,}00\ \%$ & $0{,}00\ \%$\\
+optimalité \textbf{prouvée} & 57/80 exécutions & $\mathbf{75/80}$\\
+validité $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ & 80/80 & \textbf{80/80}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Les deux instances dont la borne ne fermait jamais voient leur écart garanti
+médian passer de $20{,}2\ \%$ à $0{,}6\ \%$ et de $6{,}8\ \%$ à
+$0{,}0\ \%$. La première est \texttt{n7 m4 p4 c0.25}, celle dont la
+section~\ref{sec:echelle} mesure qu'il faut $433$~s et $177$ coupes pour la
+prouver par l'oracle seul.
+
+\begin{table}[htbp]
+\centering
+\caption{Lot figé, 90 instances, budget identique de 12~s. Toutes les
+vérifications $C_1$--$C_4$ passent.}
+\label{tab:archlot}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccccc}
+\toprule
+& optimalité & meilleure & \ILP & $t$ & vérifications\\
+& \textbf{prouvée} & valeur & méd. & méd. & KO\\
+\midrule
+méthode exacte & 69/90 & 75/90 & 92 & $1{,}8$~s & 0\\
+matheuristique & 84/90 & \textbf{90/90} & 124 & $0{,}9$~s & 0\\
+\textbf{+ coupes d'archive} & $\mathbf{86/90}$ & \textbf{90/90}
+ & $\mathbf{97}$ & $\mathbf{0{,}7}$~s & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Sur le lot systématique, l'apport est strictement positif sur \emph{tous} les
+axes : deux preuves de plus, même valeur, et un coût moindre -- $97$ appels
+médians contre $124$, pour $0{,}7$~s contre $0{,}9$. La coupe d'archive ne
+s'ajoute pas au travail, elle le remplace avantageusement.
+
+\paragraph{Où elle n'apporte rien, et pourquoi.} À $\text{corr}=0$ et
+$n\ge 20$ -- le régime à $\Ecal$ épais -- les écarts garantis sont
+\emph{inchangés} ($98{,}3\ \%$, $97{,}1\ \%$, $92{,}6\ \%$ à $n=20$, $30$,
+$40$). La raison est mécanique : à ces tailles la recherche produit
+suffisamment de points dominés pour saturer le plafond de coupes avant que
+l'archive ne soit atteinte. Aucune coupe d'efficacité n'est donc posée.
+
+C'est un résultat négatif utile, et il désigne le verrou suivant sans
+ambiguïté : ce n'est plus la \emph{disponibilité} des coupes qui limite la
+borne à grande taille, c'est le \emph{plafond} lui-même -- donc le coût en
+$p$ binaires par coupe. Désagréger la disjonction redevient la priorité, et
+l'on sait désormais qu'il y a, derrière ce plafond, de la matière à couper
+qui attend.
+
 \section{La matheuristique}
 
 \subsection{Architecture}
@@ -1637,6 +1858,7 @@ prouvant plus souvent que la méthode exacte --- et c'est sur elle qu'il faut
 porter l'effort, non sur l'assemblage des deux méthodes.
 
 \section{Résultats négatifs}
+\label{sec:negatif}
 
 Ils sont rapportés au même titre que les positifs, parce qu'ils délimitent ce
 qu'il reste à chercher.

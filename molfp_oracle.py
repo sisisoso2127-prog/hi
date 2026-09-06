@@ -175,6 +175,31 @@ class ECutModel:
 
         self._cut_rows.append((sum_row, 1.0, INF))   # sum_k u_k >= 1
 
+    # -- coupe d'EFFICACITE (Th. 6) ---------------------------------------
+    def add_efficiency_cut(self, a: np.ndarray) -> None:
+        """
+        Retire { x : Z(x) <= Z(a) } pour `a` EFFICACE certifie.
+
+        Structurellement identique a `add_dominance_cut` -- meme disjonction,
+        meme big-M -- mais la PRECONDITION et la PORTEE different, et c'est
+        tout l'interet :
+
+          * `add_dominance_cut` exige `a` DOMINE. Le lemme du Th. 4 garantit
+            alors qu'aucun point efficace n'est retire.
+          * `add_efficiency_cut` exige `a` EFFICACE. La region retiree ne
+            contient alors, parmi les points efficaces, que ceux de MEME
+            vecteur criteres que `a` (Th. 6). L'appelant doit avoir etabli
+            qu'aucun d'eux ne bat l'incumbent -- condition de cloture.
+
+        Pourquoi cette coupe manquait. Les coupes de dominance ne se posent
+        que sur des points domines, c'est-a-dire sur ce que les chaines de
+        reparation traversent -- or leur profondeur mediane vaut 1. Dans le
+        regime a E epais, ou l'archive est grande et les points domines rares,
+        il n'y avait donc presque rien a couper. Cette coupe puise dans
+        l'archive, qui y est justement abondante.
+        """
+        self.add_dominance_cut(a)
+
     @staticmethod
     def _pad_to(row: Row, nvar: int) -> Row:
         coef, lo, hi = row
