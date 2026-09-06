@@ -58,7 +58,7 @@ import numpy as np
 from molfp_core import (ORACLE_CALLS, efficiency_test, reset_oracle_counter)
 from molfp_enum import ground_truth
 from molfp_instance import MOILFP
-from molfp_matheuristic import matheuristic_P
+from molfp_matheuristic import matheuristic_P, solve_P_warm
 from molfp_oracle import solve_P
 
 LOT = os.path.join("instances", "lot_v1")
@@ -111,10 +111,25 @@ def m_matheuristic(inst: MOILFP, time_limit: float) -> MethodResult:
                         ORACLE_CALLS["ilp"], time.time() - t0, r.q_ub)
 
 
+def m_hybrid(inst: MOILFP, time_limit: float) -> MethodResult:
+    """
+    Hybride : la matheuristique amorce la methode exacte et lui transmet ses
+    coupes. Le statut 'optimal' garde le meme sens -- optimalite PROUVEE par
+    la phase exacte.
+    """
+    reset_oracle_counter()
+    t0 = time.time()
+    r = solve_P_warm(inst, time_limit=time_limit, seed=0)
+    return MethodResult(r.q_star, r.x_star,
+                        "optimal" if r.status == "optimal" else "limit",
+                        ORACLE_CALLS["ilp"], time.time() - t0)
+
+
 METHODS: Dict[str, Callable[[MOILFP, float], MethodResult]] = {
     "enum": m_enum,
     "exact": m_exact,
     "matheuristic": m_matheuristic,
+    "hybrid": m_hybrid,
     # "zerdani_moulai": ...,   <- a brancher, cf. en-tete du module
     # "drici": ...,
 }

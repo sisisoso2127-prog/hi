@@ -22,7 +22,7 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `molfp_core.py` | Theoremes 1-3 : seuils integraux, test d'efficacite, Dinkelbach exact, minorant LP |
 | `molfp_enum.py` | Verite terrain : enumeration de S, filtre de Pareto exact, `q*` de reference |
 | `molfp_oracle.py` | Oracle lineaire sur E (coupes de dominance, bornes anytime) + hybride exact-exact |
-| `molfp_matheuristic.py` | Volet exact-metaheuristique : recherche certifiee (Th. 2) + bornes (Th. 5/5') |
+| `molfp_matheuristic.py` | Volet exact-metaheuristique : recherche certifiee (Th. 2), bornes (Th. 5/5'), hybride `solve_P_warm` |
 | `verify.py` | Validation V1-V4 des briques de base |
 | `verify_oracle.py` | Validation V5-V8 de l'oracle, de l'hybride et du big-M |
 | `verify_math.py` | Validation V8-V11 de la matheuristique + comparaison a budget egal |

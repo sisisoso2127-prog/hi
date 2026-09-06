@@ -106,7 +106,8 @@ import numpy as np
 from molfp_core import (INF, ORACLE_CALLS, efficiency_test, feasibility_rows,
                         solve_ilp)
 from molfp_instance import MOILFP
-from molfp_oracle import ECutModel, max_linear_over_E, repair_to_efficient
+from molfp_oracle import (ECutModel, HybridResult, max_linear_over_E,
+                          repair_to_efficient)
 
 Row = Tuple[np.ndarray, float, float]
 
@@ -412,6 +413,103 @@ class MatheurResult:
             return None
         lb = float(self.q_lb)
         return (self.q_ub - lb) / max(1e-12, abs(self.q_ub))
+
+# ----------------------------------------------------------------------------
+# Hybride : la matheuristique amorce et alimente la methode exacte
+# ----------------------------------------------------------------------------
+
+def solve_P_warm(inst: MOILFP,
+                 time_limit: float = 30.0,
+                 warm_frac: float = 0.35,
+                 max_preload: int = 40,
+                 seed: int = 0,
+                 verbose: bool = False):
+    """
+    Hybride a proprement parler : une PHASE HEURISTIQUE amorce la METHODE
+    EXACTE, au lieu que les deux soient deux methodes concurrentes.
+
+    Ce que la methode exacte gaspille sans amorcage. `solve_P` demarre au
+    point efficace obtenu en reparant x = 0, dont la valeur de f est
+    arbitraire, puis remonte vers q* par iterations de Dinkelbach. Or chaque
+    iteration externe coute un appel COMPLET a l'oracle, et l'oracle est la
+    partie chere. Partir loin de q* se paie donc en appels a l'oracle, pas en
+    arithmetique.
+
+    Ce que la matheuristique fournit, et pourquoi c'est licite :
+
+      * un point efficace CERTIFIE de valeur proche de q*. Le Th. 3 n'impose
+        rien au point de depart sinon d'appartenir a l'ensemble optimise :
+        partir de la donne q <= q* et l'iteration reste croissante. Le
+        demarrage a chaud ne peut donc pas fausser le resultat, seulement
+        raccourcir le chemin ;
+      * des coupes de dominance deja payees. Le Th. 4 ne depend que de E, pas
+        de l'objectif : les coupes posees pendant la recherche restent valides
+        pour la methode exacte. Les lui transmettre, c'est lui offrir un
+        relache R deja resserre.
+
+    DEUX VOIES DE PREUVE. Le Th. 5' certifie l'optimalite sans fermer le
+    sous-probleme, la phase exacte la prouve en le fermant : ce sont deux
+    routes independantes vers le meme statut 'optimal', et la premiere est
+    strictement moins chere. L'hybride prend celle qui aboutit -- si la phase
+    heuristique a deja prouve, il s'arrete la. Ne pas le faire coute cher :
+    mesure a l'appui, exiger systematiquement la preuve par fermeture faisait
+    tomber l'hybride a 75 preuves sur 90, contre 84 pour la matheuristique
+    seule.
+
+    Ce que l'hybride ne change pas : le sens du statut. 'optimal' signifie
+    toujours optimalite PROUVEE, par l'une ou l'autre voie. L'amorcage
+    accelere ou ne fait rien ; il ne peut pas faire conclure a tort.
+
+    `warm_frac` est la part du budget confiee a la phase heuristique.
+    """
+    t0 = time.time()
+    calls0 = ORACLE_CALLS["ilp"]
+
+    # --- phase heuristique -------------------------------------------------
+    wb = warm_frac * time_limit
+    mh = matheuristic_P(inst, time_budget=wb * 0.7, bound_budget=wb * 0.3,
+                        seed=seed)
+
+    # --- DEUX VOIES DE PREUVE, on prend celle qui aboutit -----------------
+    # Mesure : sans ce test, l'hybride prouvait 75 fois sur 90 la ou la
+    # matheuristique seule en prouvait 84. Il jetait en effet la preuve deja
+    # obtenue pour en exiger une plus chere. Les deux voies sont pourtant
+    # independantes et egalement valides :
+    #   * Th. 5' certifie SANS fermer le sous-probleme -- il suffit que la
+    #     borne U rejoigne l'incumbent ;
+    #   * la phase exacte prouve en fermant F(q) <= 0, ce qui est
+    #     strictement plus difficile.
+    # Une preuve deja en main n'a aucune raison d'etre refaite.
+    if mh.proved_optimal:
+        return HybridResult(
+            "optimal", mh.q_lb, mh.x_best, 0, 0,
+            ORACLE_CALLS["ilp"] - calls0, time.time() - t0,
+            [], list(mh.archive))
+
+    # --- transfert : relache pre-garni des coupes deja payees --------------
+    R = ECutModel(inst)
+    for x in mh.cut_points[:max_preload]:
+        R.add_dominance_cut(x)
+
+    if verbose:
+        print(f"  amorcage : q_lb = {float(mh.q_lb):.6f}, "
+              f"{R.n_cuts} coupes transmises, "
+              f"{ORACLE_CALLS['ilp'] - calls0} ILP consommes "
+              f"({time.time() - t0:.1f} s)")
+
+    # --- phase exacte, amorcee a chaud -------------------------------------
+    from molfp_oracle import solve_P
+    left = max(0.1, time_limit - (time.time() - t0))
+    r = solve_P(inst, time_limit=left, model=R, x0=mh.x_best,
+                verbose=verbose)
+
+    # l'incumbent de la phase heuristique ne peut pas etre perdu : la phase
+    # exacte demarre dessus et Dinkelbach est croissante
+    r.ilp_calls = ORACLE_CALLS["ilp"] - calls0
+    r.time = time.time() - t0
+    r.archive = list(r.archive) + list(mh.archive)
+    return r
+
 
 def _select_pool(arch: "Archive", usage: Dict[Tuple[int, ...], int],
                  rng: np.random.Generator, inst: MOILFP,

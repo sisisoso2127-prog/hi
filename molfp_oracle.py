@@ -466,6 +466,8 @@ def solve_P(inst: MOILFP,
             max_outer: int = 60,
             time_limit: float = 600.0,
             reuse_cuts: bool = True,
+            model: Optional[ECutModel] = None,
+            x0: Optional[np.ndarray] = None,
             verbose: bool = False) -> HybridResult:
     """
     Resout  (P)  max f(x) s.c. x in E  par l'hybride exact-exact.
@@ -477,22 +479,44 @@ def solve_P(inst: MOILFP,
     fonction objectif. Les conserver d'une iteration Dinkelbach a l'autre
     evite de reconstruire la relaxation a chaque fois -- c'est le point
     d'hybridation qui rend l'ensemble economique.
+
+    AMORCAGE A CHAUD. `x0` et `model` permettent de demarrer ailleurs qu'au
+    point efficace arbitraire obtenu depuis 0 :
+
+      * `x0` doit etre un point EFFICACE CERTIFIE. Le Th. 3 ne suppose rien
+        sur le point de depart sinon qu'il appartienne a l'ensemble sur
+        lequel on optimise ; partir de x0 dans E donne q = f(x0) <= q*, et
+        l'iteration reste croissante. Un x0 proche de l'optimum epargne des
+        iterations externes, dont chacune coute un appel complet a l'oracle.
+      * `model` peut arriver deja garni de coupes de dominance. Elles restent
+        valides quel que soit l'objectif (Th. 4 ne depend que de E), donc des
+        coupes produites par une autre methode sont directement reutilisables.
+
+    C'est ce qui permet de brancher une metaheuristique en amont : voir
+    `solve_P_warm`.
     """
     t0 = time.time()
     calls0 = ORACLE_CALLS["ilp"]
     f = inst.f
-    R = ECutModel(inst) if reuse_cuts else None
+    if model is not None:
+        R = model
+    else:
+        R = ECutModel(inst) if reuse_cuts else None
 
-    # amorcage : un point efficace quelconque
-    first = max_linear_over_E(inst, np.zeros(inst.n), 0.0,
-                              model=R, time_limit=time_limit)
-    if first.x_star is None and not first.incumbents:
-        return HybridResult("empty", None, None, 0, 0,
-                            ORACLE_CALLS["ilp"] - calls0, time.time() - t0)
-    x_cur = first.x_star if first.x_star is not None else first.incumbents[0]
+    if x0 is not None:
+        x_cur = np.asarray(x0, dtype=int)
+        archive = [x_cur]
+    else:
+        # amorcage : un point efficace quelconque
+        first = max_linear_over_E(inst, np.zeros(inst.n), 0.0,
+                                  model=R, time_limit=time_limit)
+        if first.x_star is None and not first.incumbents:
+            return HybridResult("empty", None, None, 0, 0,
+                                ORACLE_CALLS["ilp"] - calls0, time.time() - t0)
+        x_cur = first.x_star if first.x_star is not None else first.incumbents[0]
+        archive = list(first.incumbents)
 
     q = f.value(x_cur)
-    archive = list(first.incumbents)
     trace: List[Tuple[Fraction, float]] = []
 
     for it in range(1, max_outer + 1):

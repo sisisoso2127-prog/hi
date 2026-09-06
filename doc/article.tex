@@ -1540,6 +1540,102 @@ variance entre graines est au moins aussi grande que l'effet de la taille.
 Conclusion à ne pas dépasser : corr domine, $n$ compte moins qu'il n'y paraît.
 \end{remark}
 
+\section{Jusqu'où hybrider ? une expérience}
+\label{sec:hybride}
+
+La méthode décrite est déjà un hybride : les régions de recherche sont
+choisies heuristiquement mais chaque sous-problème est un programme en
+nombres entiers résolu \emph{exactement}, chaque incumbent est \emph{certifié}
+par le théorème~\ref{th:eff}, et la phase~2 est un oracle exact. Reste une
+hybridation qui n'était pas faite : faire coopérer la matheuristique et la
+méthode exacte au lieu de les opposer.
+
+\subsection{Amorçage à chaud et transfert de coupes}
+
+La méthode exacte démarre au point efficace obtenu en réparant $x=0$, dont la
+valeur de $f$ est arbitraire, puis remonte vers $\qs$ par itérations de
+Dinkelbach --- chacune coûtant un appel \emph{complet} à l'oracle. Partir
+loin de $\qs$ se paie donc en appels, non en arithmétique.
+
+Deux transferts sont licites, et pour des raisons distinctes.
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Le point de départ.} Le théorème~\ref{th:dink} n'impose rien
+      au point initial sinon qu'il appartienne à l'ensemble optimisé. Partir
+      d'un point de $\Ecal$ certifié donne $q\le\qs$ et l'itération reste
+      croissante : l'amorçage ne peut pas fausser le résultat, seulement
+      raccourcir le chemin.
+\item \textbf{Les coupes.} Le théorème~\ref{th:cut} ne dépend que de
+      $\Ecal$, pas de l'objectif. Les coupes posées pendant la recherche
+      restent donc valides pour la phase exacte : les lui transmettre, c'est
+      lui offrir un relâché déjà resserré.
+\end{itemize}
+
+\subsection{Deux voies de preuve, et ce que coûte d'en oublier une}
+
+La première version exigeait que la phase exacte \emph{prouve} en fermant
+$F(q)\le 0$. Résultat mesuré : \textbf{75 preuves sur 90}, contre 84 pour la
+matheuristique seule. L'hybride jetait une preuve déjà acquise pour en exiger
+une plus chère.
+
+Il y a en effet \emph{deux routes indépendantes} vers le même statut :
+le théorème~\ref{th:bound} certifie \emph{sans} fermer le sous-problème ---
+il suffit que la borne rejoigne l'incumbent --- tandis que la phase exacte
+prouve en le fermant, ce qui est strictement plus difficile. L'hybride prend
+désormais celle qui aboutit.
+
+\subsection{Ce que l'expérience donne}
+
+\begin{table}[htbp]
+\centering
+\caption{Lot figé, 90 instances, budget identique de 12~s. Toutes les
+vérifications $C_1$--$C_4$ passent pour les trois méthodes.}
+\label{tab:hybride}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccccc}
+\toprule
+& optimalité & meilleure & \ILP & $t$ & vérifications\\
+& \textbf{prouvée} & valeur & méd. & méd. & KO\\
+\midrule
+méthode exacte & 69/90 & 75/90 & 92 & $1{,}8$~s & 0\\
+matheuristique & \textbf{84/90} & \textbf{90/90} & 124 & $0{,}9$~s & 0\\
+hybride (preuve par fermeture seule) & 75/90 & --- & --- & --- & 0\\
+hybride (deux voies de preuve) & \textbf{84/90} & 89/90 & 124 & $0{,}9$~s & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Deux lectures, de signes opposés.
+
+\textbf{L'amorçage aide bien la méthode exacte} : forcée d'emprunter la voie
+de la fermeture, elle passe de 69 à 75 preuves. Le gain est réel et
+s'explique : elle démarre près de $\qs$ et hérite d'un relâché déjà resserré.
+
+\textbf{Mais l'hybride n'apporte rien de plus que la matheuristique seule.}
+Les deux prouvent 84 instances sur 90, et l'examen instance par instance
+montre que l'égalité n'est pas une coïncidence de comptage mais un échange :
+l'hybride prouve une instance que la matheuristique manque
+(\texttt{n7 m4 p2 c0.50}), et en manque une qu'elle prouve
+(\texttt{n8 m5 p3 c0.00}). Il perd en outre en valeur sur une instance à
+$n=20$ ($3{,}73$ contre $2{,}62$), parce que la recherche n'y reçoit que
+$35\ \%$ du budget au lieu de la totalité.
+
+\subsection{Ce que cela apprend}
+
+Le résultat est négatif sur ce lot, et il est instructif. Sur les six
+instances que la matheuristique ne prouve pas, la phase exacte amorcée à
+chaud échoue elle aussi : \emph{le verrou n'est pas le point de départ}. Il
+est là où la section~\ref{sec:echelle} l'avait déjà localisé --- dans la
+qualité de la relaxation quand $\Ecal$ est épais --- et un meilleur point de
+départ n'y change rien.
+
+Il reste que l'expérience établit un fait utilisable : la certification du
+théorème~\ref{th:bound} est une route vers la preuve \emph{strictement moins
+chère} que la fermeture du sous-problème. C'est elle qui explique le
+résultat contre-intuitif du tableau~\ref{tab:lot} --- la matheuristique
+prouvant plus souvent que la méthode exacte --- et c'est sur elle qu'il faut
+porter l'effort, non sur l'assemblage des deux méthodes.
+
 \section{Résultats négatifs}
 
 Ils sont rapportés au même titre que les positifs, parce qu'ils délimitent ce
