@@ -1,0 +1,71 @@
+==============================================================================
+CAMPAGNE DE DIFFICULTE - 216 instances
+==============================================================================
+resolues a l'optimum : 199
+arretees sur limite  : 17  (cout CENSURE, exclu de Q1)
+
+VALIDATION contre la verite terrain
+  divergences (statut 'optimal' mais q != q*) : 0
+  faux positifs dans les archives             : 0
+
+==============================================================================
+Q1 - COUT PARMI LES INSTANCES RESOLUES (censurees exclues)
+==============================================================================
+predicteur                                        Spearman avec les appels ILP
+relax_gap = (max_S f - q*)/|max_S f|                              +0.607 ***  
+theta_S (un seul ILP)                                             +0.409 ***  
+depth_S (quelques ILP)                                            +0.373 ***  
+ratio |E|/|S|                                                     -0.352 ***  
+|E| absolu                                                        -0.306 ***  
+p                                                                 -0.273 ***  
+n                                                                 +0.268 ***  
+|S|                                                               +0.173 *    
+
+`relax_gap` fait intervenir q*, donc la reponse cherchee : c'est un
+indicateur de MECANISME, jamais un predicteur utilisable avant
+resolution.
+
+==============================================================================
+Q2 - ECHEC TOTAL : censurees contre resolues
+==============================================================================
+variable            mediane censuree   mediane resolue          Mann-Whitney
+|E|                               26                 4     p = 1.2e-03 **   
+ratio |E|/|S|                0.01393          0.001716     p = 7.7e-03 **   
+n                                  7                 6     p = 3.2e-02 *    
+|S|                             2387              1931     p = 5.3e-02 (n.s.)
+theta_S                         3229              2819     p = 4.2e-01 (n.s.)
+depth_S                            1                 1     p = 8.0e-01 (n.s.)
+
+Lire le SENS de chaque ligne : si une variable monte chez les
+censurees alors qu'elle correle NEGATIVEMENT avec le cout en Q1,
+les deux regimes sont de sens opposes et aucun reglage a priori
+ne protege des deux a la fois.
+
+==============================================================================
+Q3 - EXPERIENCE CONTROLEE SUR corr (domaine S identique)
+==============================================================================
+  corr   |E| median   timeouts   ILP median (resolues)
+  0.00         44.5          6                    29.5
+  0.25         47.0          4                    34.5
+  0.50         18.5          6                    59.5
+  0.75          2.0          1                    83.0
+  0.90          1.0          0                    65.5
+  1.00          1.0          0                    53.0
+
+La colonne des couts se lit APRES celle des timeouts : a faible
+corr, les instances cheres sont censurees et sortent de la mediane.
+
+==============================================================================
+Q4 - LA TAILLE PREDIT-ELLE QUELQUE CHOSE ?
+==============================================================================
+   n   ILP median     min     max   % timeout
+   5           41       5     214        1.9%
+   6           44       7     236        5.6%
+   7           57       5     359       13.0%
+   8           92      10     215       11.1%
+
+==============================================================================
+CONFIRMATIONS
+==============================================================================
+Dinkelbach : 1 a 4 iterations externes (mediane 1, moyenne 1.56)
+Archive    : couverture mediane de E = 58.6 %, aucun faux positif

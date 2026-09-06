@@ -30,17 +30,18 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `bench_improve.py` | Mesure multi-graines sur le regime cible ; sert aussi de temoin d'A/B |
 | `verify_scale.py` | Validation W1-W6 SANS verite terrain, jusqu'a `n = 40` |
 | `bench_scale.py` | Passage a l'echelle : exact contre matheuristique, sans enumeration |
+| `campaign.py` | Campagne de difficulte : plan controle sur 216 instances -> `campaign.csv` |
+| `analyze.py` | Analyse de `campaign.csv` : Q1-Q4, censure traitee separement |
 | `doc/pseudocode.tex` | Pseudo-code des dix algorithmes (LaTeX + PDF compile) |
 | `legacy/` | Prototype initial a deux variables, conserve pour tracabilite |
 
 Lancer : `python verify.py` puis `python verify_oracle.py`
 (dependances : `pip install -r requirements.txt` — numpy, scipy >= 1.9).
 
-`scaling.py`, `campaign.py` et `analyze.py`, dont les resultats sont
-rapportes plus bas, ne sont pas encore dans ce depot : les tableaux de la
-section « Campagne de difficulte » proviennent de la campagne d'origine et
-sont conserves ici comme resultats acquis, non comme sorties reproductibles
-en l'etat.
+La campagne de difficulte est reproductible : `python campaign.py`
+(9.5 min, ecrit `campaign.csv`) puis `python analyze.py` (`results/analyze.out`).
+`scaling.py`, dont l'etude de passage a l'echelle est reprise et etendue par
+`bench_scale.py`, n'est pas dans ce depot.
 
 ## Hypotheses garanties par construction
 
@@ -237,7 +238,15 @@ V8 big-M des coupes contre le minimum reel de `e_k` sur `S` enumere.
 
 ## Campagne de difficulte (216 instances)
 
-`campaign.py` / `analyze.py` / `campaign.csv` / `analyze.out`
+`campaign.py` / `analyze.py` / `campaign.csv` / `results/analyze.out`
+
+> **Reproduction.** Cette campagne a ete rejouee integralement avec le code
+> actuel (`campaign.py`, 216 instances, 9.5 min) : **17 arrets sur limite sur
+> 216**, **0 divergence** avec la verite terrain, **0 faux positif**. Les
+> coefficients de Spearman de Q1 et les tests de Q2 sont retrouves au
+> millieme pres, et les tableaux Q3 et Q4 a l'identique sauf trois valeurs,
+> signalees ci-dessous. Les conclusions de la campagne ne dependent donc
+> d'aucune version particuliere du code.
 
 **Plan d'experience controle.** Le parametre `corr` du generateur pilote la
 similarite entre criteres, donc la finesse de `E`, **a domaine `S`
@@ -349,16 +358,25 @@ la mediane.
 | 5 | 41 | 5 | 214 | 1.9 |
 | 6 | 44 | 7 | 236 | 5.6 |
 | 7 | 57 | 5 | **359** | 13.0 |
-| 8 | 91 | 10 | 211 | 11.1 |
+| 8 | 92 | 10 | 215 | 11.1 |
 
 A `n` fixe le cout couvre deux ordres de grandeur. Rapporter les performances
 en fonction de la seule taille ne permet aucune prediction utile.
 
 ### Confirmations
 
-* **Dinkelbach : 1 a 4 iterations externes** (mediane 1, moyenne 1.53) sur
+* **Dinkelbach : 1 a 4 iterations externes** (mediane 1, moyenne 1.56) sur
   216 instances. La convergence finie du Th. 3 est rapide en pratique.
-* **Archive** : couverture mediane de `E` de 66.7 %, sans aucun faux positif.
+* **Archive** : couverture mediane de `E` de 58.6 %, sans aucun faux positif.
+
+Les trois seules valeurs qui different de la campagne d'origine sont ici :
+`n = 8` passe de 91 a 92 appels ILP medians (max 211 -> 215), la moyenne
+Dinkelbach de 1.53 a 1.56, et la couverture d'archive de 66.7 % a 58.6 %.
+Elles sont attribuables aux modifications de l'oracle decrites plus bas
+(big-M renforce, limite de temps par ILP, politique de coupure), qui
+changent le chemin suivi sans changer aucune conclusion. La derniere,
+la couverture, est la seule dont l'ecart est notable : elle merite d'etre
+resurveillee si l'archive devient un argument de la these.
 
 ## Ce que la campagne change pour la these
 
@@ -991,9 +1009,11 @@ qui reste :
    10 graines chacune, mediane et dispersion. Le lot mesure ici n'en couvre
    que 8, choisies parce que la methode exacte y echouait ; ce choix est
    assume mais il n'est pas un echantillon.
-5. **Remettre `campaign.py` et `analyze.py` dans le depot.**
-   Les tableaux de la section « Campagne de difficulte » ne sont pas
-   reproductibles en l'etat.
+5. **Surveiller la couverture d'archive.** Seule quantite de la campagne qui
+   ait notablement bouge a la reproduction (66.7 % -> 58.6 %). Sans
+   consequence sur les conclusions actuelles, mais l'archive est un argument
+   annonce de la these : il faut savoir si la baisse est un effet des coupes
+   renforcees ou du bruit.
 6. **Comparaison avec la litterature** — reimplementer Zerdani & Moulai
    (2011) et Drici et al. (2018) sur le meme lot. Point 4 du plan de these.
 7. **Protocole** — stratifier par `corr` : a `(n,m,p)` fixe, `|E|` varie d'un
