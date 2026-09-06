@@ -30,6 +30,7 @@ ou `E` est l'ensemble des solutions efficaces de (MOILFP).
 | `bench_improve.py` | Mesure multi-graines sur le regime cible ; sert aussi de temoin d'A/B |
 | `verify_scale.py` | Validation W1-W6 SANS verite terrain, jusqu'a `n = 40` |
 | `bench_scale.py` | Passage a l'echelle : exact contre matheuristique, sans enumeration |
+| `literature.py` | Positionnement vs litterature + test d'Ecker & Kouada (1975) et validation croisee |
 | `campaign.py` | Campagne de difficulte : plan controle sur 216 instances -> `campaign.csv` |
 | `analyze.py` | Analyse de `campaign.csv` : Q1-Q4, censure traitee separement |
 | `make_lot.py` | Ecrit le lot fige `instances/lot_v1` (JSON), format d'echange entre methodes |

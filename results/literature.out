@@ -1,0 +1,20 @@
+====================================================================================
+VALIDATION CROISEE - Th. 2 contre le test d'Ecker & Kouada (1975)
+sur des instances a criteres LINEAIRES, classe de Drici et al. (2018)
+====================================================================================
+instance                  |S|   |E|  testes  theta identique  verdicts  vs verite
+------------------------------------------------------------------------------------
+lin_n4_m3_p2_s1           159     8      48              oui        ok         ok
+lin_n5_m3_p3_s1           495    16      56              oui        ok         ok
+lin_n5_m4_p2_s2           445     5      45              oui        ok         ok
+lin_n6_m4_p3_s1          1436     5      45              oui        ok         ok
+lin_n6_m4_p2_s3          2121     3      43              oui        ok         ok
+lin_n7_m4_p3_s2         10849     7      47              oui        ok         ok
+------------------------------------------------------------------------------------
+RESULTAT : TOUT VALIDE
+
+Lecture. Sur criteres lineaires, notre theta ne se contente pas de
+rendre le meme VERDICT que le test d'Ecker & Kouada : il en rend la
+meme VALEUR entiere. Le theoreme 2 est donc la generalisation
+stricte de ce test aux criteres fractionnaires, ou Ecker & Kouada ne
+s'applique plus.

@@ -134,15 +134,56 @@ connexe, et son cardinal peut croître très vite : les mesures rapportées à l
 section~\ref{sec:campagne} montrent un rapport $|\Ecal|/|\Scal|$ variant de
 $0{,}001$ à $0{,}34$ sur des instances de même taille.
 
-\subsection{Ce que la littérature fait, et ce qu'elle ne fait pas}
+\subsection{Positionnement : trois problèmes voisins}
+\label{sec:position}
 
-Les méthodes exactes existantes procèdent par énumération implicite :
-elles balaient les points entiers du domaine, testent leur efficacité, et
-resserrent progressivement la région de recherche par des coupes. Le travail
-de référence pour le cas fractionnaire multi-objectif est celui de Zerdani et
-Moulaï~\cite{zerdani2011}, qui optimise une fonction \emph{linéaire} sur
-l'ensemble efficace entier d'un MOILFP ; Drici et
-collaborateurs~\cite{drici2018} prolongent cette ligne.
+La littérature du domaine traite des problèmes que l'on confond aisément.
+La distinction porte sur \emph{deux axes indépendants} : la nature des
+critères du programme multi-objectif, et celle de la fonction d'utilité
+optimisée sur son ensemble efficace.
+
+\begin{table}[htbp]
+\centering
+\caption{Deux axes, quatre cases. Notre problème occupe la case que ni
+Zerdani et Moulaï ni Drici et collaborateurs ne couvrent.}
+\label{tab:position}
+\begin{tabular}{lll}
+\toprule
+& critères \textbf{linéaires} (MOILP) & critères \textbf{fractionnaires} (MOILFP)\\
+\midrule
+$f$ linéaire
+ & Jorge~\cite{jorge2009}, Chergui \& Moulaï~\cite{chergui2008}
+ & Zerdani \& Moulaï~\cite{zerdani2011}\\
+ & & \emph{$\to$ notre oracle interne}\\[3pt]
+$f$ fractionnaire
+ & Mahdi \& Chaabane~\cite{mahdi2015},
+ & \textbf{notre problème (P)}\\
+ & Drici \emph{et al.}~\cite{drici2018} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Deux conséquences, qu'il faut énoncer avant toute comparaison.
+
+\textbf{L'oracle dont nous avons besoin existe déjà.} Zerdani et
+Moulaï~\cite{zerdani2011} optimisent une fonction \emph{linéaire} sur
+l'ensemble efficace d'un MOILFP : c'est exactement le sous-problème que
+résout notre oracle à chaque itération de Dinkelbach
+(remarque~\ref{rem:oracle}). Notre apport ne porte donc pas sur ce
+sous-problème mais sur son emploi \emph{anytime} et sur la certification.
+
+\textbf{Drici et collaborateurs ne résolvent pas notre problème.} Leur
+méthode~\cite{drici2018} optimise bien une fonction fractionnaire sur un
+ensemble efficace, mais celui d'un programme à critères \emph{linéaires}.
+Cette restriction n'est pas incidente : leur test d'efficacité est celui
+d'Ecker et Kouada~\cite{ecker1975}, qui suppose des critères linéaires, et
+leurs coupes s'expriment dans le tableau du simplexe des relaxations
+continues. Une comparaison frontale avec eux n'a donc de sens que sur
+l'\emph{intersection} des deux classes, c'est-à-dire sur des instances à
+critères linéaires -- que notre cadre produit comme cas particulier en posant
+$d_k=0$ et $b_k=1$. Nous revenons sur ce point à la
+section~\ref{sec:ecker}.
 
 Ces méthodes partagent une caractéristique structurante : elles sont de type
 \emph{tout ou rien}. Interrompues avant terme, elles ne fournissent ni
@@ -325,7 +366,7 @@ finitude de $\Ecal$. Avec $q=P/Q$ rationnel, le sous-problème s'écrit
 à coefficients entiers, de valeur optimale entière : le critère d'arrêt
 $F(q)\le 0$ est testé exactement.
 
-\begin{remark}[Conséquence structurante]
+\begin{remark}[Conséquence structurante]\label{rem:oracle}
 Chaque itération revient à \emph{maximiser une fonction linéaire sur
 l'ensemble efficace entier} -- exactement le problème traité
 par~\cite{zerdani2011}. L'oracle interne dont nous avons besoin existe donc
@@ -1104,6 +1145,53 @@ $W_5$ transforme la simple répétition d'exécutions en test de cohérence
 rigoureux. Le protocole établit la \textbf{validité} des bornes, non leur
 finesse : une borne correcte mais inutile passe $W_1$--$W_6$ sans broncher.
 
+\subsection{Rapport au test d'Ecker et Kouada}
+\label{sec:ecker}
+
+Le test d'efficacité employé par Drici \emph{et al.}~\cite{drici2018} est
+celui d'Ecker et Kouada~\cite{ecker1975} :
+\[
+  \Theta(\bar x)=\max\ \sum_{i=1}^{p}\omega_i
+  \qquad\text{s.c.}\quad Cx=I\omega+C\bar x,\quad x\in\Scal,\quad \omega\ge 0,
+\]
+et $\bar x$ est efficace si et seulement si $\Theta(\bar x)=0$. Comme
+$\omega=C(x-\bar x)$, la contrainte $\omega\ge 0$ impose
+$Z_i(x)\ge Z_i(\bar x)$ pour tout $i$, et
+$\Theta=\sum_i\bigl(Z_i(x)-Z_i(\bar x)\bigr)$. Ce test suppose des critères
+\emph{linéaires} : il n'a pas de sens sur un MOILFP.
+
+\begin{proposition}[Le théorème~\ref{th:eff} généralise Ecker et Kouada]
+\label{prop:ecker}
+Si les critères sont linéaires, c'est-à-dire $d_k=0$ et $b_k=1$ pour tout
+$k$, alors $\theta(\bar x)=\Theta(\bar x)$ pour tout $\bar x\in\Scal$.
+\end{proposition}
+
+\begin{proof}
+Sous ces hypothèses $\Dk(x)=1$ pour tout $x$, donc $\bar D_k=1$, et
+\[
+  e_k(x)=\bar D_k\Nk(x)-\bar N_k\Dk(x)=\Nk(x)-\bar N_k
+        =\Zk(x)-\Zk(\bar x).
+\]
+Les deux programmes ont alors la même région réalisable -- les contraintes
+$e_k(x)\ge 0$ coïncident avec $\omega\ge 0$ -- et le même objectif
+$\sum_k\bigl(\Zk(x)-\Zk(\bar x)\bigr)$. Leurs valeurs optimales sont donc
+égales.
+\end{proof}
+
+\noindent
+L'égalité porte sur la \emph{valeur entière}, pas seulement sur le verdict.
+C'est un contrôle nettement plus serré, et il est vérifié numériquement
+plutôt que postulé : sur 6 instances à critères linéaires et 284 points
+testés, $\theta$ et $\Theta$ coïncident à chaque fois, les deux verdicts
+s'accordent, et tous deux s'accordent avec la vérité terrain
+(\texttt{literature.py}).
+
+Le théorème~\ref{th:eff} est donc la généralisation stricte, aux critères
+fractionnaires, du test standard du domaine. C'est aussi ce qui explique
+pourquoi la méthode de~\cite{drici2018} ne se transpose pas directement à
+notre problème : son test d'efficacité, comme ses coupes, repose sur la
+linéarité des critères.
+
 \subsection{Niveau 3 --- comparaison entre méthodes}
 
 Comparer suppose un lot d'instances identique, une interface commune, et
@@ -1444,14 +1532,36 @@ diagnostic tant qu'un témoin indépendant ne l'a pas confirmée.}
 Elles sont énoncées ici plutôt que laissées à découvrir.
 
 \begin{enumerate}[leftmargin=*,itemsep=3pt]
-\item \textbf{Aucun témoin issu de la littérature.} Les méthodes
-      de~\cite{zerdani2011} et~\cite{drici2018} ne sont pas réimplémentées :
-      les articles n'ont pu être obtenus dans notre environnement de
-      développement, et réimplémenter de mémoire un algorithme non lu
-      produirait un homme de paille, que l'on battrait par construction. La
-      seule comparaison disponible reste donc \emph{interne}. C'est la limite
-      dominante pour la publication, et le banc décrit au niveau~3 du
-      protocole est prêt à accueillir ces témoins sans modification.
+\item \textbf{Aucun témoin complet issu de la littérature.} La
+      proposition~\ref{prop:ecker} valide notre test d'efficacité contre
+      celui d'Ecker et Kouada, mais un \emph{composant} validé n'est pas une
+      méthode comparée : les algorithmes de~\cite{zerdani2011}
+      et~\cite{drici2018} ne sont pas réimplémentés, et la seule comparaison
+      de bout en bout disponible reste \emph{interne}. C'est la limite
+      dominante pour la publication.
+
+      L'obstacle est identifié et chiffrable plutôt que vague. La méthode
+      de~\cite{drici2018} est un branch and cut sur les relaxations
+      \emph{continues} fractionnaires, dont la coupe efficace
+      \[
+        \sum_{j\in H_l}x_j\ \ge\ 1,\qquad
+        H_l=\{j\in N_l:\exists i,\ \bar c^{\,i}_j>0\}
+             \cup\{j\in N_l:\bar c^{\,i}_j=0\ \forall i\},
+      \]
+      s'exprime dans le \emph{tableau du simplexe} : $N_l$ est l'ensemble des
+      variables hors base et $\bar c^{\,i}_j$ les coûts réduits du critère
+      $i$. La reproduire fidèlement demande un simplexe donnant accès au
+      tableau, plus un simplexe fractionnaire~\cite{martos1975,cambini1992}
+      pour les sous-problèmes continus -- ni l'un ni l'autre n'étant exposé
+      par les solveurs employés ici. Le banc du niveau~3 est prêt à accueillir
+      ces témoins sans modification ; c'est leur implémentation qui reste à
+      faire.
+
+      Une seconde difficulté, indépendante, est de \emph{classe} : la
+      section~\ref{sec:position} montre que~\cite{drici2018} traite des
+      critères linéaires. La comparaison ne pourra donc porter que sur
+      l'intersection des deux classes, et n'établira rien sur le régime à
+      critères fractionnaires -- celui qui nous occupe.
 \item \textbf{Calibre modéré.} $n\le 20$ dans le lot comparatif, $n\le 40$
       dans la validation. La vérité terrain par énumération plafonne vers
       $n=8$, ce que le niveau~2 du protocole contourne mais ne supprime pas.
@@ -1490,9 +1600,13 @@ coupes ne fera mieux.
 
 \paragraph{Établir la comparaison externe.} Réimplémenter~\cite{zerdani2011}
 et~\cite{drici2018} sur le lot figé, avec la vérification $C_1$--$C_4$
-appliquée à tous de la même manière.
+appliquée à tous de la même manière. Le préalable technique est un simplexe
+donnant accès au tableau, ainsi qu'un simplexe fractionnaire ; le préalable
+méthodologique est de restreindre la comparaison avec~\cite{drici2018} aux
+instances à critères linéaires, seule intersection des deux classes de
+problèmes.
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 \bibitem{dinkelbach1967}
 W.~Dinkelbach.
 \newblock On nonlinear fractional programming.
@@ -1505,11 +1619,44 @@ O.~Zerdani et M.~Moulaï.
 \newblock \emph{Applied Mathematical Sciences}, 5(50):2451--2466, 2011.
 
 \bibitem{drici2018}
-W.~Drici \emph{et al.}
-\newblock Optimisation sur l'ensemble efficace entier d'un programme
-  fractionnaire multi-objectif, 2018.
-\newblock \emph{[Référence citée d'après le plan de thèse ; coordonnées
-  bibliographiques complètes à vérifier sur l'original.]}
+W.~Drici, F.~Z.~Ouail et M.~Moulaï.
+\newblock Optimizing a linear fractional function over the integer efficient
+  set.
+\newblock \emph{Annals of Operations Research}, 267(1--2):135--151, 2018.
+\newblock \texttt{doi:10.1007/s10479-017-2691-0}.
+
+\bibitem{ecker1975}
+J.~G.~Ecker et I.~A.~Kouada.
+\newblock Finding efficient points for linear multiple objective programs.
+\newblock \emph{Mathematical Programming}, 8:375--377, 1975.
+
+\bibitem{mahdi2015}
+S.~Mahdi et D.~Chaabane.
+\newblock A linear fractional optimization over an integer efficient set.
+\newblock \emph{RAIRO -- Operations Research}, 49:265--278, 2015.
+
+\bibitem{chergui2008}
+M.~E.~A.~Chergui et M.~Moulaï.
+\newblock An exact method for a discrete multiobjective linear fractional
+  optimization.
+\newblock \emph{Journal of Applied Mathematics and Decision Sciences}, 2008,
+  article 760191.
+
+\bibitem{jorge2009}
+J.~M.~Jorge.
+\newblock An algorithm for optimizing a linear function over an integer
+  efficient set.
+\newblock \emph{European Journal of Operational Research}, 195:98--103, 2009.
+
+\bibitem{martos1975}
+B.~Martos.
+\newblock \emph{Nonlinear Programming, Theory and Methods}.
+\newblock North-Holland, 1975.
+
+\bibitem{cambini1992}
+A.~Cambini et L.~Martein.
+\newblock Equivalence in linear fractional programming.
+\newblock \emph{Optimization}, 23:41--51, 1992.
 
 \bibitem{sylva2004}
 J.~Sylva et A.~Crema.
