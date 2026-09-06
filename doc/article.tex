@@ -1,0 +1,1128 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage[hidelinks]{hyperref}
+
+\renewcommand{\algorithmcfname}{Algorithme}
+\SetKwInput{KwIn}{Entrées}
+\SetKwInput{KwOut}{Sorties}
+\SetKwFor{For}{pour}{faire}{fin pour}
+\SetKwFor{While}{tant que}{faire}{fin tant que}
+\SetKwFor{ForEach}{pour chaque}{faire}{fin pour chaque}
+\SetKwIF{If}{ElseIf}{Else}{si}{alors}{sinon si}{sinon}{fin si}
+\SetKwBlock{Loop}{boucler}{fin boucle}
+\SetKw{Return}{retourner}
+\SetKw{KwTo}{à}
+\SetKw{Break}{sortir}
+\SetKwComment{Comment}{$\triangleright$\ }{}
+\DontPrintSemicolon
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Théorème}
+\newtheorem{lemma}[theorem]{Lemme}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remarque}
+
+\newcommand{\Zk}{Z_k}
+\newcommand{\Nk}{N_k}
+\newcommand{\Dk}{D_k}
+\newcommand{\Ecal}{\mathcal{E}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\ILP}{\textsc{Pline}}
+\newcommand{\qs}{q^{\star}}
+
+\title{\bfseries Une matheuristique certifiée pour l'optimisation d'une
+fonction fractionnaire sur l'ensemble efficace\\d'un programme linéaire
+fractionnaire multi-objectif en nombres entiers}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2\baselineskip}
+
+\begin{abstract}
+\noindent
+On considère le problème (P) : maximiser une fonction linéaire fractionnaire
+$f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
+fractionnaire multi-objectif en nombres entiers (MOILFP). Les méthodes
+exactes de la littérature résolvent ce problème par énumération implicite de
+$\Ecal$ ; elles ne fournissent aucune garantie lorsqu'elles sont interrompues,
+alors même que l'énumération de $\Ecal$ devient impraticable dès que le front
+s'épaissit.
+
+Nous proposons une \emph{matheuristique certifiée} : une recherche
+heuristique dans l'espace des critères, dont chaque sous-problème est un
+programme en nombres entiers résolu exactement et dont chaque incumbent est
+certifié efficace, couplée à un mécanisme de certification qui convertit un
+budget de calcul borné en une borne supérieure \emph{valide} sur l'optimum.
+La méthode encadre donc $\qs$ à tout instant, ce qu'aucune méthode exacte du
+domaine ne fait.
+
+Trois résultats structurent la construction. Le test d'efficacité du
+théorème~\ref{th:eff} est \emph{entièrement entier}, donc exact sans
+tolérance numérique, et fournit gratuitement un certificat de dominance
+réutilisable comme mouvement de recherche. La coupe de dominance du
+théorème~\ref{th:cut} transpose au cas fractionnaire la coupe « $+1$ » du cas
+linéaire entier, sans qu'aucun pas minimal ne soit à estimer. Le
+théorème~\ref{th:bound} convertit toute borne supérieure du sous-problème de
+Dinkelbach en borne sur $\qs$, avec un dénominateur restreint à la région où
+la borne agit.
+
+Sur un lot systématique de 90 instances, tous les résultats des deux méthodes
+passent une vérification indépendante ; la matheuristique rend la meilleure
+valeur sur \textbf{90 instances sur 90} et \emph{prouve} l'optimalité sur
+\textbf{84}, contre 76 et 73 pour la méthode exacte de référence. Une
+campagne contrôlée de 216 instances établit en outre que la taille et la
+corrélation entre critères agissent sur des axes \emph{orthogonaux} : la
+première gouverne l'échec de la méthode exacte, la seconde la fermeture de la
+borne. Les résultats négatifs mesurés sont rapportés au même titre que les
+positifs.
+\end{abstract}
+
+\tableofcontents
+
+\bigskip
+
+\section{Introduction}
+
+\subsection{Le problème et sa difficulté propre}
+
+Un programme linéaire fractionnaire multi-objectif en nombres entiers
+s'écrit
+\[
+  \text{(MOILFP)}\qquad
+  \max\ \Zk(x)=\frac{c_k^{\!\top}x+a_k}{d_k^{\!\top}x+b_k},\quad k=1,\dots,p
+  \qquad\text{s.c.}\quad Ax\le b,\ x\in\mathbb{Z}^n_+ .
+\]
+Les fonctions fractionnaires sont des mesures de performance naturelles --
+rendement, productivité, ratio coût/bénéfice -- ce qui explique leur usage en
+planification de production et en analyse financière. Notons
+$\Scal=\{x\in\mathbb{Z}^n_+ : Ax\le b\}$ le domaine réalisable et
+$\Ecal\subseteq\Scal$ l'ensemble des solutions \emph{efficaces} de (MOILFP),
+c'est-à-dire des $x$ pour lesquels il n'existe aucun $y\in\Scal$ vérifiant
+$Z(y)\ge Z(x)$ et $Z(y)\ne Z(x)$.
+
+Le problème traité ici est
+\[
+  \text{(P)}\qquad \max\ f(x)=\frac{c^{\!\top}x+a}{d^{\!\top}x+b}
+  \qquad\text{s.c.}\quad x\in\Ecal ,
+\]
+soit l'optimisation d'une fonction d'utilité fractionnaire \emph{sur
+l'ensemble efficace}. Cette formulation modélise la situation d'un décideur
+qui, parmi les compromis admissibles, en choisit un selon un critère propre.
+
+La difficulté est double, et il importe de la nommer précisément.
+D'une part $\Ecal$ n'est pas décrit par un système d'inégalités : il est
+défini par une condition d'optimalité, ce qui interdit d'écrire (P) comme un
+programme mathématique standard. D'autre part $\Ecal$ n'est ni convexe ni
+connexe, et son cardinal peut croître très vite : les mesures rapportées à la
+section~\ref{sec:campagne} montrent un rapport $|\Ecal|/|\Scal|$ variant de
+$0{,}001$ à $0{,}34$ sur des instances de même taille.
+
+\subsection{Ce que la littérature fait, et ce qu'elle ne fait pas}
+
+Les méthodes exactes existantes procèdent par énumération implicite :
+elles balaient les points entiers du domaine, testent leur efficacité, et
+resserrent progressivement la région de recherche par des coupes. Le travail
+de référence pour le cas fractionnaire multi-objectif est celui de Zerdani et
+Moulaï~\cite{zerdani2011}, qui optimise une fonction \emph{linéaire} sur
+l'ensemble efficace entier d'un MOILFP ; Drici et
+collaborateurs~\cite{drici2018} prolongent cette ligne.
+
+Ces méthodes partagent une caractéristique structurante : elles sont de type
+\emph{tout ou rien}. Interrompues avant terme, elles ne fournissent ni
+solution garantie efficace, ni borne sur l'écart à l'optimum. Or nos mesures
+(section~\ref{sec:echelle}) montrent qu'à partir de $n=12$ la méthode exacte
+ne conclut plus que sur une fraction des instances dans un budget réaliste.
+Le régime où elle échoue est précisément celui où le décideur aurait le plus
+besoin d'une réponse.
+
+\subsection{Contribution}
+
+Nous construisons une matheuristique dont la propriété centrale est la
+suivante : \emph{à tout instant, la méthode dispose d'un encadrement valide}
+\[
+  q_{\text{lb}}\ \le\ \qs\ \le\ q_{\text{ub}} ,
+\]
+où $q_{\text{lb}}=f(x_{\text{best}})$ avec $x_{\text{best}}$ \emph{certifié
+efficace}, et où $q_{\text{ub}}$ découle du théorème~\ref{th:bound}. Les
+contributions sont :
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{Un test d'efficacité intégral} (th.~\ref{th:eff}), exact sans
+      tolérance numérique, coûtant un seul programme en nombres entiers, et
+      fournissant gratuitement un certificat de dominance.
+\item \textbf{Une coupe de dominance fractionnaire exacte} (th.~\ref{th:cut}),
+      transposition de la coupe « $+1$ » du cas linéaire entier, avec un
+      big-M renforcé par relaxation continue.
+\item \textbf{Un théorème de certification} (th.~\ref{th:bound}) qui convertit
+      une borne supérieure du sous-problème de Dinkelbach en borne sur $\qs$,
+      en restreignant le dénominateur à la région où la borne agit.
+\item \textbf{Un protocole de validation à trois niveaux}, dont un niveau qui
+      \emph{ne requiert aucune vérité terrain} et lève ainsi le plafond de
+      taille imposé par l'énumération exhaustive.
+\item \textbf{Une campagne contrôlée} qui établit l'orthogonalité de deux
+      axes de difficulté, et un ensemble de \textbf{résultats négatifs}
+      rapportés au même titre que les positifs.
+\end{enumerate}
+
+\section{Notations et hypothèses}
+
+On note $\Nk(x)=c_k^{\!\top}x+a_k$ et $\Dk(x)=d_k^{\!\top}x+b_k$ les
+numérateur et dénominateur du critère $k$, et $N(x)$, $D(x)$ ceux de la
+fonction d'utilité $f$. On pose $\qs=\max_{x\in\Ecal}f(x)$. Un paramètre
+rationnel $q$ est toujours écrit $q=P/Q$ sous forme irréductible avec $Q>0$.
+
+\paragraph{Hypothèses.}
+\begin{description}[leftmargin=1.4cm,style=nextline,itemsep=1pt]
+\item[(A1)] $d_k\ge 0$ et $b_k\ge 1$ pour tout $k$, ainsi que pour $f$.
+\item[(A2)] $A\ge 0$, à colonnes non nulles, et $b\ge 0$.
+\end{description}
+
+\noindent
+(A1) entraîne $\Dk(x)\ge 1>0$ sur tout le domaine : les dénominateurs ne
+s'annulent jamais et gardent un signe constant, ce qui est la condition de
+validité des théorèmes~\ref{th:eff} et~\ref{th:cut}. (A2) entraîne que
+$\Scal$ est non vide ($x=0$ est réalisable) et borné, avec les bornes
+explicites
+\[
+  \overline{x}_j=\min_{i\,:\,A_{ij}>0}\left\lfloor b_i/A_{ij}\right\rfloor .
+\]
+Ces hypothèses ne sont pas des commodités techniques : ce sont elles qui
+rendent la suite exacte. Toute instance extérieure doit être testée contre
+elles avant traitement.
+
+\paragraph{Convention d'intégralité.}
+Toutes les données étant entières, les quantités $\theta$, $e_k$ et $F(q)$
+introduites plus bas sont \emph{entières}. Les tests d'arrêt portant sur elles
+sont donc exacts, sans $\varepsilon$ : c'est un point de mise en \oe uvre
+essentiel, qu'une formulation directe en $v_k=\Nk/\Dk$ flottant perdrait.
+
+\section{Briques exactes}
+
+\subsection{Linéarisation de seuil}
+
+\begin{theorem}[Linéarisation de seuil]\label{th:seuil}
+Sous (A1), pour $v=N/D$ rationnel avec $D>0$ entier,
+\[
+  \Zk(x)\ \ge\ v
+  \iff
+  (D\,c_k-N\,d_k)^{\!\top}x\ \ge\ N b_k-D a_k .
+\]
+\end{theorem}
+
+\begin{proof}
+$\Zk(x)\ge v$ s'écrit $\Nk(x)\,D\ge N\,\Dk(x)$ après multiplication par
+$D\,\Dk(x)>0$, quantité strictement positive sous (A1). En développant et en
+regroupant, on obtient l'inégalité annoncée.
+\end{proof}
+
+\noindent
+\emph{Portée.} Les contraintes de type $\varepsilon$-contrainte sont donc
+\emph{entièrement linéaires et à coefficients entiers}. C'est ce qui permet
+d'employer un solveur en nombres entiers standard à chaque appel, au lieu d'un
+solveur fractionnaire dédié.
+
+\subsection{Test d'efficacité intégral}
+
+\begin{theorem}[Test d'efficacité]\label{th:eff}
+Soit $\bar x\in\Scal$, $\bar N_k=\Nk(\bar x)$ et $\bar D_k=\Dk(\bar x)>0$.
+Posons
+\[
+  \theta(\bar x)=\max\ \sum_{k=1}^{p}\Bigl[(\bar D_k c_k-\bar N_k d_k)^{\!\top}x
+      +\bar D_k a_k-\bar N_k b_k\Bigr]
+\]
+sous les contraintes
+$(\bar D_k c_k-\bar N_k d_k)^{\!\top}x\ge \bar N_k b_k-\bar D_k a_k$ pour tout
+$k$, $Ax\le b$, $x\in\mathbb{Z}^n_+$. Alors $\theta(\bar x)$ est un entier
+positif ou nul, et
+\[
+  \bar x\in\Ecal\iff\theta(\bar x)=0 .
+\]
+De plus, si $\theta(\bar x)>0$, tout optimum $x^\ast$ du programme domine
+$\bar x$.
+\end{theorem}
+
+\begin{proof}
+Le terme $k$ de l'objectif vaut, en développant,
+\[
+  \bar D_k\Nk(x)-\bar N_k\Dk(x)=\bar D_k\,\Dk(x)\,\bigl(\Zk(x)-\Zk(\bar x)\bigr).
+\]
+Comme $\bar D_k>0$ et $\Dk(x)>0$ sous (A1), ce terme est du signe de
+$\Zk(x)-\Zk(\bar x)$. Les contraintes imposent que chacun de ces termes soit
+positif ou nul, c'est-à-dire $Z(x)\ge Z(\bar x)$. Le point $\bar x$ étant
+réalisable pour ce programme et y annulant l'objectif, on a
+$\theta(\bar x)\ge 0$. Si $\theta(\bar x)=0$, aucun $x$ réalisable ne vérifie
+$Z(x)\ge Z(\bar x)$ avec une inégalité stricte quelque part, donc $\bar x$
+est efficace. Réciproquement, si $\theta(\bar x)>0$, un optimum $x^\ast$
+vérifie $Z(x^\ast)\ge Z(\bar x)$ et $Z(x^\ast)\ne Z(\bar x)$ : il domine
+$\bar x$, qui n'est donc pas efficace. L'intégralité de $\theta$ découle de
+celle de toutes les données.
+\end{proof}
+
+\begin{remark}
+Deux conséquences de mise en \oe uvre. D'abord, le test est \emph{exact} :
+$\theta$ étant entier, le critère « $\theta=0$ » ne demande aucune tolérance.
+Ensuite, en cas de non-efficacité, le programme fournit \emph{gratuitement}
+un point dominant : cette information, qui serait perdue par un test binaire,
+est exploitée à la fois comme mouvement de recherche locale et comme base de
+coupe (théorème~\ref{th:cut}).
+\end{remark}
+
+\begin{remark}[Interruption]\label{rem:interruption}
+Si le solveur est interrompu, deux cas seulement se présentent. Si
+l'incumbent donne $\theta\ge 1$, alors $\bar x$ est \emph{prouvé} non
+efficace et le certificat de dominance reste valide : un point dominant
+suffit à conclure, il n'est pas nécessaire de connaître le maximum. Si
+l'incumbent donne $\theta=0$, on ne peut rien conclure, car $\theta$ n'est
+minoré que par $0$. Le verdict est alors \emph{indéterminé} et ne doit jamais
+être lu comme « dominé » : ce test est le seul certificat d'efficacité de la
+méthode, et un incumbent déclaré efficace à tort rendrait la borne inférieure
+optimiste, c'est-à-dire la méthode inutilisable.
+\end{remark}
+
+\subsection{Dinkelbach à paramètre rationnel}
+
+\begin{theorem}[Convergence finie]\label{th:dink}
+Soit $X$ un ensemble fini non vide et
+$F(q)=\max_{x\in X}\{N(x)-q\,D(x)\}$ avec $D>0$ sur $X$. Alors $F$ est le
+supremum d'un nombre fini de fonctions affines de $q$ : elle est convexe,
+linéaire par morceaux, strictement décroissante, et admet une racine unique
+$q^{\ast}_X=\max_{x\in X}f(x)$. L'itération $q_{t+1}=f(x_t)$, où $x_t$
+réalise $F(q_t)$, converge en un nombre \emph{fini} d'étapes.
+\end{theorem}
+
+\begin{proof}
+Chaque $x\in X$ contribue l'affine $q\mapsto N(x)-qD(x)$, de pente
+$-D(x)<0$ ; $F$ est donc convexe, linéaire par morceaux et strictement
+décroissante, d'où l'unicité de la racine. Elle vaut $0$ exactement lorsque
+$\max_X\{N(x)-qD(x)\}=0$, c'est-à-dire $q=\max_X f$. La finitude de $X$
+borne le nombre de morceaux, donc le nombre d'itérations de Newton.
+\end{proof}
+
+\noindent
+Le point important est que la convergence est \emph{finie} et non seulement
+superlinéaire comme dans le cas continu : cela découle exactement de la
+finitude de $\Ecal$. Avec $q=P/Q$ rationnel, le sous-problème s'écrit
+\[
+  \max\ (Q\,c-P\,d)^{\!\top}x+(Qa-Pb)
+\]
+à coefficients entiers, de valeur optimale entière : le critère d'arrêt
+$F(q)\le 0$ est testé exactement.
+
+\begin{remark}[Conséquence structurante]
+Chaque itération revient à \emph{maximiser une fonction linéaire sur
+l'ensemble efficace entier} -- exactement le problème traité
+par~\cite{zerdani2011}. L'oracle interne dont nous avons besoin existe donc
+déjà dans la littérature ; notre apport porte sur son emploi \emph{anytime}
+et sur la certification.
+\end{remark}
+
+\section{Coupe de dominance et oracle}
+
+\subsection{Coupe de dominance fractionnaire}
+
+\begin{theorem}[Coupe de dominance]\label{th:cut}
+Soit $\bar x\in\Scal$ \emph{dominé}. Posons
+\[
+  e_k(x)=\bar D_k\Nk(x)-\bar N_k\Dk(x)
+        =\gamma_k^{\!\top}x+\delta_k
+        =\bar D_k\,\Dk(x)\,\bigl(\Zk(x)-\Zk(\bar x)\bigr).
+\]
+Alors $e_k$ est à valeurs entières et
+$\Zk(x)>\Zk(\bar x)\iff e_k(x)\ge 1$. De plus, la région
+$\{x\in\Scal : Z(x)\le Z(\bar x)\}$ ne contient aucune solution efficace, et
+peut donc être retirée sans perte.
+\end{theorem}
+
+\begin{proof}
+L'identité et l'intégralité découlent du calcul déjà fait au
+théorème~\ref{th:eff}. Comme $e_k$ est entière et de même signe que
+$\Zk(x)-\Zk(\bar x)$, la stricte positivité équivaut à $e_k(x)\ge 1$ :
+\emph{aucun pas minimal $\varepsilon$ n'est à estimer}, c'est la transposition
+exacte au cas fractionnaire de la coupe « $+1$ » du cas linéaire entier.
+
+Pour la seconde assertion, soit $y$ dominant $\bar x$, et soit $x$ tel que
+$Z(x)\le Z(\bar x)$. Alors $Z(y)\ge Z(\bar x)\ge Z(x)$. Si $Z(y)=Z(x)$, alors
+$Z(\bar x)$ est coincé entre les deux, d'où $Z(y)=Z(\bar x)$, ce qui
+contredit le fait que $y$ domine $\bar x$. Donc $y$ domine $x$, et $x$ n'est
+pas efficace.
+\end{proof}
+
+\noindent
+C'est ce lemme qui rend la coupe sûre : \emph{on ne coupe jamais autour d'un
+point efficace}, si bien que la question des solutions alternatives de même
+vecteur critères ne se pose pas. La région est retirée par la disjonction
+« il existe $k$ tel que $e_k(x)\ge 1$ », modélisée par $p$ binaires :
+\[
+  e_k(x)\ \ge\ 1-M_k(1-u_k),\qquad \sum_{k=1}^p u_k\ \ge\ 1,
+  \qquad u\in\{0,1\}^p .
+\]
+En $\bar x$ on a $e_k(\bar x)=0$ pour tout $k$ : $\bar x$ est bien exclu.
+
+\subsection{Renforcement du big-M}
+
+Tout minorant de $\min_{x\in\Scal}e_k(x)$ fournit un $M_k$ valide. Le
+minorant naïf, calculé sur la boîte $0\le x\le\overline{x}$, ignore
+$Ax\le b$ et se révèle très lâche. Nous employons le minorant sur la
+\emph{relaxation continue} de $\Scal$ : il est valide, puisque la relaxation
+contient $\Scal$ ; il est plus fin, puisqu'elle est contenue dans la boîte ;
+et, les coefficients étant entiers, on remonte au plafond entier du minorant
+continu. Le coût est d'un programme linéaire par critère et par coupe,
+comptabilisé séparément des programmes en nombres entiers.
+
+\begin{table}[htbp]
+\centering
+\caption{Renforcement du big-M, 8 instances, 8 coupes chacune. $M_{\text{réel}}$
+est calculé sur $\Scal$ \emph{énuméré} : la validité n'est pas postulée.}
+\label{tab:bigm}
+\begin{tabular}{lc}
+\toprule
+& médiane\\
+\midrule
+resserrement $M_{\text{boîte}}\to M_{\text{lp}}$ & $1{,}14\times$ (jusqu'à $1{,}47$)\\
+écart résiduel $M_{\text{lp}}/M_{\text{réel}}$ & $1{,}00\times$ (au pire $1{,}05$)\\
+validité $M_{\text{lp}}\ge M_{\text{réel}}$ & 8/8 instances\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+La seconde ligne du tableau~\ref{tab:bigm} est la plus informative : le
+minorant continu \emph{atteint pratiquement le minimum entier}. Ce qui reste
+à gagner sur le big-M lui-même est donc nul ou presque. C'est un résultat
+utile bien que négatif : il ferme une piste avant qu'on y consacre du travail.
+
+\subsection{Oracle anytime sur \texorpdfstring{$\Ecal$}{E}}
+\label{sec:oracle}
+
+L'oracle maximise une fonction linéaire $g$ sur $\Ecal$ en maintenant un
+relâché $\Rcal\supseteq\Ecal$, initialisé à $\Scal$ et resserré par les
+coupes du théorème~\ref{th:cut}.
+
+\begin{algorithm}[H]
+\caption{\textsc{MaxLinéaire}$(g,\Rcal,B)$ --- schéma}
+\KwIn{objectif linéaire $g$ ; relâché $\Rcal$ ; budget $B$}
+\KwOut{$(\textsf{statut},x_{\text{best}},\textsf{LB},\textsf{UB})$ avec
+       $\textsf{LB}\le\max_{\Ecal}g\le\textsf{UB}$ à tout instant}
+$\textsf{LB}\gets-\infty$ ;\quad $\textsf{UB}\gets+\infty$\;
+\Loop{
+  \lIf{budget épuisé}{\Return $(\textsf{limite},\cdot)$}
+  $\bar x\gets\arg\max_{\Rcal} g$ ;\quad $\textsf{UB}\gets g(\bar x)$
+    \Comment*[r]{un \ILP}
+  \lIf{$\bar x$ efficace (th.~\ref{th:eff})}{\Return
+    $(\textsf{optimal},\bar x,g(\bar x),\textsf{UB})$}
+  $x_e\gets$ réparation de $\bar x$ par la chaîne de dominance\;
+  $\textsf{LB}\gets\max(\textsf{LB},g(x_e))$\;
+  \lIf{$\textsf{UB}-\textsf{LB}\le 0$}{\Return
+    $(\textsf{optimal},x_{\text{best}},\textsf{LB},\textsf{UB})$}
+  $\textsc{AjouterCoupe}(\Rcal,\bar x)$
+    \Comment*[r]{licite : $\bar x$ est prouvé dominé}
+}
+\end{algorithm}
+
+\begin{proposition}[Correction et terminaison]
+L'invariant $\Ecal\subseteq\Rcal$ est préservé (th.~\ref{th:cut}). À l'arrêt
+avec $\bar x$ efficace, $g(\bar x)=\max_{\Rcal}g\ge\max_{\Ecal}g$ et
+$\bar x\in\Ecal$, donc $\bar x$ est optimal sur $\Ecal$. Chaque coupe retire
+au moins $\bar x$ et $\Scal$ est fini : l'algorithme termine.
+\end{proposition}
+
+\noindent
+\emph{Comportement anytime.} À chaque itération on dispose de
+$\textsf{LB}\le\max_{\Ecal}g\le\textsf{UB}$. L'arrêt peut donc survenir à
+tout instant avec un écart garanti, et survient souvent parce que
+$\textsf{UB}$ rejoint $\textsf{LB}$, \emph{sans que la relaxation ait eu
+besoin de produire un point efficace}. C'est le gain propre au schéma.
+
+\subsection{Un point de sûreté}
+
+L'assemblage naïf « Dinkelbach externe $+$ oracle interne » comporte un piège
+que notre socle de vérité terrain a détecté. Lorsque l'oracle atteint sa
+limite de temps, il renvoie $\textsf{LB}$, qui n'est qu'un \emph{minorant} de
+$F(q)$. Traiter cette valeur comme exacte et conclure « $F(q)\le 0$ donc
+optimal » produit des optima faux affichés comme prouvés. La règle correcte
+est asymétrique :
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $\textsf{LB}>0$ reste valide quel que soit le statut, car
+      $F(q)\ge\textsf{LB}>0$ : la racine n'est pas atteinte, on continue ;
+\item $\textsf{LB}\le 0$ ne permet de conclure que si l'oracle a
+      \emph{prouvé} l'optimalité ; sinon le statut « limite » est propagé.
+\end{itemize}
+
+\section{Certification : du budget à une garantie}
+
+\subsection{Le théorème}
+
+\begin{theorem}[Borne resserrée sur $\qs$]\label{th:bound}
+Soit $q=P/Q$ atteinte par un point efficace (donc $q\le\qs$), soit
+$\Rcal\supseteq\Ecal$ un relâché quelconque, et posons
+\[
+  U\ \ge\ F_{\Rcal}(q)=\max_{x\in\Rcal}\{Q\,N(x)-P\,D(x)\},
+  \qquad
+  D^{+}=\min\bigl\{D(x)\ :\ x\in\Rcal,\ Q\,N(x)-P\,D(x)\ge 0\bigr\}.
+\]
+Alors
+\[
+  \boxed{\ \qs\ \le\ q+\frac{U}{Q\,D^{+}}\ }
+\]
+et si $U=0$ alors $\qs=q$.
+\end{theorem}
+
+\begin{proof}
+Soit $x\in\Ecal\subseteq\Rcal$. Si $Q N(x)-P D(x)<0$, alors $f(x)<q$ et $x$
+ne contraint pas la borne. Sinon $x$ appartient à la région définissant
+$D^{+}$, donc $D(x)\ge D^{+}$, et
+\[
+  f(x)-q=\frac{Q N(x)-P D(x)}{Q\,D(x)}\ \le\ \frac{U}{Q\,D^{+}} .
+\]
+En passant au maximum sur $\Ecal$ on obtient l'inégalité annoncée.
+\end{proof}
+
+\subsection{Trois gains sur la version naïve}
+
+La version naïve du théorème prend $\Rcal=\Scal$ et
+$D_{\min}=\min_{x\in\Scal}D(x)$. Le passage à la forme ci-dessus gagne sur
+trois points, et il est instructif de les distinguer.
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{$\Rcal$ au lieu de $\Scal$.} Les coupes retirent des zones sans
+      aucune solution efficace : $U$ diminue.
+\item \textbf{$D^{+}$ au lieu de $D_{\min}$.} On ne minimise $D$ que là où la
+      borne agit, c'est-à-dire là où $f$ dépasse $q$. Le minimum portant sur
+      un sous-ensemble, $D^{+}\ge D_{\min}$ mécaniquement. Mesures sur le lot :
+      $D_{\min}\to D^{+}$ passe de $1$ à $12$, de $1$ à $13$, de $5$ à $10$,
+      de $7$ à $24$.
+\item \textbf{Recyclage des points dominés.} Les chaînes de réparation du
+      théorème~\ref{th:eff} traversent des points \emph{dominés} -- les seuls
+      sur lesquels le théorème~\ref{th:cut} autorise une coupe. Les jeter
+      gaspillerait une information déjà payée. On les rejoue comme coupes,
+      triés par valeur décroissante du substitut linéaire : ce sont eux qui
+      tirent $U$ vers le haut, donc les couper resserre le plus.
+\end{enumerate}
+
+\begin{remark}
+La région définissant $D^{+}$ n'est jamais vide : l'incumbent y appartient,
+son résidu valant exactement $0$. Une infaisabilité signalerait donc un
+défaut d'implémentation, non une preuve d'optimalité.
+\end{remark}
+
+\subsection{Effet mesuré}
+
+\begin{table}[htbp]
+\centering
+\caption{Théorème naïf contre théorème~\ref{th:bound}, à budget identique,
+8 instances du régime cible. Les deux colonnes sont produites par le même
+code : seule la formule de la borne diffère.}
+\label{tab:bound}
+\begin{tabular}{lcc}
+\toprule
+& version naïve & théorème~\ref{th:bound}\\
+\midrule
+écart garanti médian & $31{,}4\ \%$ & $\mathbf{0{,}0\ \%}$\\
+optimalité \emph{prouvée} & 0/8 & $\mathbf{5/8}$\\
+validité $q_{\text{ub}}\ge\qs$ & 8/8 & 8/8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le changement de nature compte davantage que le chiffre : sur cinq instances,
+la matheuristique \emph{prouve} désormais l'optimalité, sur des instances que
+la méthode exacte seule n'avait pas su résoudre dans le même budget. La
+formulation « trouve sans pouvoir prouver » ne tient plus.
+
+\section{La matheuristique}
+
+\subsection{Architecture}
+
+La méthode se compose de deux phases, dont la première ne peut jamais
+compromettre la seconde.
+
+\paragraph{Phase 1 -- recherche.} Une recherche à voisinage variable dans
+l'\emph{espace des critères}. Chaque voisinage est défini par des contraintes
+linéaires issues des théorèmes~\ref{th:seuil} et~\ref{th:cut}, et le
+sous-problème correspondant est résolu \emph{exactement}. Chaque point obtenu
+est ensuite certifié efficace par le théorème~\ref{th:eff}. Le choix des
+régions est heuristique ; la résolution dans chaque région est exacte. C'est
+le sens précis du mot « matheuristique » ici.
+
+\paragraph{Phase 2 -- certification.} L'oracle de la
+section~\ref{sec:oracle} est lancé avec un budget borné au point $q$ obtenu ;
+sa borne supérieure $U$ est convertie en borne sur $\qs$ par le
+théorème~\ref{th:bound}.
+
+\subsection{Les trois mouvements, et une erreur de conception}
+
+\paragraph{Une erreur instructive.} Une première version prenait pour
+voisinage
+\[
+  V_k(x^r)=\{x\ :\ e_k(x)\ge 1,\ e_j(x)\ge 0\ \forall j\ne k\},
+\]
+soit « mieux sur $k$ sans rien perdre ailleurs ». Or c'est \emph{exactement}
+l'ensemble des points qui dominent $x^r$ : il est \textbf{vide} dès que $x^r$
+est efficace. Le voisinage était donc vide par construction, ce qui fut
+vérifié sur instance, et la recherche ne progressait pas. Un arbitrage sur
+les autres critères est indispensable.
+
+\medskip
+\begin{algorithm}[H]
+\caption{Les trois mouvements}
+\SetKwProg{Mv}{Mouvement}{ :}{}
+\Mv{$A$ --- $\varepsilon$ partiel}{
+  $J\gets$ sous-ensemble \textbf{strict} aléatoire de
+    $\{1,\dots,p\}\setminus\{k\}$\;
+  \Return $\arg\max\{w^{\!\top}x+w_0 : x\in\Scal,\ e_k(x)\ge 1,\
+    e_j(x)\ge 0\ \forall j\in J\}$\;
+}
+\Mv{$B$ --- plancher absolu}{
+  tirer $\varepsilon_j$ entre nadir$_j$ et idéal$_j$\;
+  \Return $\arg\max\{w^{\!\top}x+w_0 : x\in\Scal,\ Z_j(x)\ge\varepsilon_j\}$
+    \Comment*[r]{seuils linéarisés (th.~\ref{th:seuil})}
+}
+\Mv{$C$ --- LNS \emph{fix-and-optimize}}{
+  fige une fraction des variables à leur valeur dans l'incumbent\;
+  \Return l'optimum exact du sous-problème restant\;
+}
+\end{algorithm}
+
+\medskip\noindent
+La taille de $J$ règle l'intensification : $J$ vide donne le mouvement le
+plus explorateur, $J$ plein redonne le voisinage vide ci-dessus.
+
+\subsection{Redémarrages guidés par l'archive}
+
+Une version antérieure arrêtait la recherche au premier tour sans
+amélioration. Elle repart désormais des points de l'archive \emph{les moins
+exploités} comme bases, et n'abandonne qu'après plusieurs tours stériles
+consécutifs. L'archive ne contient que des points efficaces certifiés : ce
+sont des bases légitimes et déjà payées, là où un redémarrage aléatoire
+jetterait le travail accompli.
+
+L'effet porte sur la \emph{dispersion} plus que sur la médiane : sur
+l'instance la plus dure du lot ($|\Ecal|=218$), l'écart réel maximal sur
+10 graines passe de $49{,}0\ \%$ à $0{,}0\ \%$.
+
+\subsection{Allocation du budget et plafond de coupes}
+
+Deux réglages qui étaient figés sont désormais arbitrés par le budget.
+Le budget de recherche non consommé -- la recherche s'arrête sur stagnation --
+est \emph{reversé} à la certification, qui en manquait. Et le plafond de
+coupes recyclées, autrefois fixé à 40, est piloté par le budget : les coupes
+sont ajoutées par lots, un lot de plus n'étant posé que si la borne n'a pas
+fermé et qu'il reste du temps.
+
+\begin{algorithm}[H]
+\caption{\textsc{Matheuristique}$(B_{\text{rech}},B_{\text{cert}},s_{\max})$}
+\KwIn{budgets de recherche et de certification ; seuil de stagnation}
+\KwOut{$(q_{\text{lb}},x_{\text{best}},q_{\text{ub}})$ avec
+       $q_{\text{lb}}\le\qs\le q_{\text{ub}}$}
+$x_0\gets$ réparation de $0$ ;\quad $\mathcal{A}\gets\{x_0\}$ ;\quad
+$q\gets f(x_0)$ ;\quad $s\gets 0$\;
+\While{$\textsc{écoulé}()<B_{\text{rech}}$}{
+  $(w,w_0)\gets$ substitut de Dinkelbach en $q$ ;\quad
+  $\textsf{amélioré}\gets\textbf{faux}$\;
+  $\mathcal{B}\gets\textsc{ChoisirBases}(\mathcal{A},\text{usage},\ s>0)$\;
+  \ForEach{$x^r\in\mathcal{B}$, $k$ dans une permutation de $\{1..p\}$}{
+    $y\gets\textsc{Mouvement}_{A|B|C}(x^r,k,w,w_0)$\;
+    $y\gets$ réparation certifiée de $y$ (th.~\ref{th:eff})\;
+    \lIf{$y=\bot$}{\textbf{continuer} \Comment*[f]{non certifié : rien n'entre}}
+    $\mathcal{A}\gets\mathcal{A}\cup\{y\}$\;
+    \lIf{$f(y)>q$}{$q\gets f(y)$ ;\ $x_{\text{best}}\gets y$ ;\
+      $\textsf{amélioré}\gets\textbf{vrai}$}
+  }
+  $s\gets 0$ \textbf{si} $\textsf{amélioré}$ \textbf{sinon} $s+1$\;
+  \lIf{$s\ge s_{\max}$}{\Break}
+}
+$B\gets B_{\text{cert}}+\max(0,\ B_{\text{rech}}-\textsc{écoulé}())$
+  \Comment*[r]{réallocation}
+$q_{\text{ub}}\gets\textsc{Certifier}(q,\mathcal{A},B)$ (th.~\ref{th:bound})\;
+\Return $(q,x_{\text{best}},q_{\text{ub}})$\;
+\end{algorithm}
+
+\medskip\noindent
+\emph{Propriété fondamentale.} L'incumbent est \emph{toujours} un point
+efficace certifié : la borne inférieure n'est jamais optimiste, même si la
+recherche est interrompue. C'est la seule propriété que la méthode n'a pas le
+droit de perdre, et tout le reste du dispositif est organisé pour la
+préserver -- en particulier la réparation rend $\bot$ plutôt qu'un point non
+certifié (remarque~\ref{rem:interruption}).
+
+\section{Protocole de validation}
+\label{sec:validation}
+
+Aucune brique n'est réputée correcte tant qu'elle n'a pas été confrontée à
+une référence indépendante. Le protocole comporte trois niveaux, adaptés à ce
+qui est vérifiable à chaque taille.
+
+\subsection{Niveau 1 --- contre la vérité terrain ($n\le 8$)}
+
+L'énumération exhaustive de $\Scal$, suivie d'un filtrage de Pareto en
+arithmétique rationnelle exacte, fournit $\Ecal$ et $\qs$. On vérifie :
+$\theta(x)=0\iff x\in\Ecal$ pour tout $x$ testé, et que le dominateur rendu
+domine réellement ; Dinkelbach retrouve $\max_{\Scal}f$ ; l'oracle retrouve
+$\max_{\Ecal}g$ pour plusieurs $g$ ; l'hybride retrouve $\qs$ ; l'archive ne
+contient aucun faux positif ; et le big-M majore le minimum \emph{réel} de
+$e_k$ sur $\Scal$ énuméré.
+
+\subsection{Niveau 2 --- sans vérité terrain (jusqu'à $n=40$)}
+\label{sec:w}
+
+L'énumération plafonne vers $n=8$. Au-delà, les garanties se contrôlent
+néanmoins, car elles sont \emph{auto-certifiantes}.
+
+\begin{table}[htbp]
+\centering
+\caption{Contrôles ne requérant pas $\qs$.}
+\begin{tabular}{clp{9.6cm}}
+\toprule
+& propriété & comment elle se vérifie sans $\qs$\\
+\midrule
+$W_1$ & $q_{\text{lb}}\le\qs$ & $x_{\text{best}}$ passe le test d'efficacité\\
+$W_2$ & archive saine & même test sur un échantillon\\
+$W_3$ & encadrement cohérent & $q_{\text{lb}}\le q_{\text{ub}}$\\
+$W_4$ & coupes sûres & tout point efficace certifié satisfait la disjonction
+        de chaque coupe posée : c'est $\Ecal\subseteq\Rcal$ restreint à la
+        partie \emph{connue} de $\Ecal$, en arithmétique entière pure\\
+$W_5$ & encadrements concordants & plusieurs exécutions indépendantes
+        encadrent le même $\qs$, donc
+        $\max_r q_{\text{lb}}^r\le\min_r q_{\text{ub}}^r$ ; une violation
+        \emph{prouve} un défaut\\
+$W_6$ & témoin indépendant & $\max_{\Scal}f$ est une borne supérieure valide
+        et exacte, obtenue par un seul Dinkelbach, sans énumération\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+$W_4$ remplace le contrôle de sûreté des coupes que l'énumération assurait ;
+$W_5$ transforme la simple répétition d'exécutions en test de cohérence
+rigoureux. Le protocole établit la \textbf{validité} des bornes, non leur
+finesse : une borne correcte mais inutile passe $W_1$--$W_6$ sans broncher.
+
+\subsection{Niveau 3 --- comparaison entre méthodes}
+
+Comparer suppose un lot d'instances identique, une interface commune, et
+surtout une \emph{vérification indépendante} de ce que chaque méthode
+renvoie : on ne compare pas des nombres auto-déclarés. Tout résultat, y
+compris les nôtres, est recontrôlé : $x$ réalisable ($C_1$), $x$ efficace par
+le théorème~\ref{th:eff} ($C_2$), $q=f(x)$ ($C_3$), et contre la vérité
+terrain $q\le\qs$ avec égalité dès que le statut annonce l'optimalité
+($C_4$). Le vérificateur est lui-même testé par une méthode délibérément
+fautive, rejetée par $C_2$ et $C_4$ : un contrôle qu'on n'a jamais vu échouer
+ne prouve rien.
+
+\section{Campagne de difficulté}
+\label{sec:campagne}
+
+\subsection{Plan d'expérience}
+
+Grille : $n\in\{5,6,7,8\}$, $p\in\{2,3,4\}$,
+$\text{corr}\in\{0;0{,}25;0{,}5;0{,}75;0{,}9;1\}$, 3 graines, soit
+\textbf{216 instances}, vérité terrain par énumération, limite de 12~s par
+résolution.
+
+Le paramètre $\text{corr}$ pilote la similarité entre critères, donc la
+finesse de $\Ecal$, \textbf{à domaine $\Scal$ rigoureusement identique} : le
+générateur construit $A$ et $b$ indépendamment de $\text{corr}$, ainsi que la
+fonction d'utilité. On \emph{manipule} donc la cause supposée au lieu de
+l'observer : le plan est causal et non corrélationnel.
+
+\paragraph{Validation.} \textbf{0 divergence} avec la vérité terrain sur les
+199 instances résolues à l'optimum, \textbf{0 faux positif} dans les
+archives, 17 arrêts sur limite honnêtement rapportés.
+
+\subsection{Traitement de la censure}
+
+Les 17 instances arrêtées ont un coût \emph{censuré} : leur nombre d'appels
+est un minorant, pas une mesure. Les inclure dans une moyenne revient à
+remplacer le coût des instances les plus dures par une valeur tronquée, et
+\emph{les strates qui échouent le plus paraissent alors les plus faciles}.
+C'est un biais de survie. On sépare donc deux questions.
+
+\subsection{Q1 --- coût parmi les instances résolues}
+
+\begin{table}[htbp]
+\centering
+\caption{Corrélations de Spearman avec le nombre d'appels au solveur,
+censurées exclues. \emph{***} : $p<10^{-3}$, \emph{*} : $p<5\cdot 10^{-2}$.}
+\begin{tabular}{lr}
+\toprule
+prédicteur & Spearman\\
+\midrule
+$\text{relax\_gap}=(\max_{\Scal}f-\qs)/|\max_{\Scal}f|$ & $+0{,}607$ ***\\
+$\theta_{\Scal}$ (un seul \ILP) & $+0{,}409$ ***\\
+$\text{depth}_{\Scal}$ (quelques \ILP) & $+0{,}373$ ***\\
+rapport $|\Ecal|/|\Scal|$ & $\mathbf{-0{,}352}$ ***\\
+$|\Ecal|$ absolu & $\mathbf{-0{,}306}$ ***\\
+$p$ & $-0{,}273$ ***\\
+$n$ & $+0{,}268$ ***\\
+$|\Scal|$ & $+0{,}173$ *\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le coût monte quand $\Ecal$ est \emph{mince} : la relaxation est alors loin de
+$\Ecal$ et il faut beaucoup de coupes pour l'y ramener. Notons que
+$\text{relax\_gap}$ fait intervenir $\qs$, donc la réponse cherchée : c'est
+un indicateur de \emph{mécanisme}, jamais un prédicteur utilisable avant
+résolution.
+
+\subsection{Q2 --- échec total : le sens inverse}
+
+\begin{table}[htbp]
+\centering
+\caption{Censurées contre résolues (Mann--Whitney bilatéral).}
+\begin{tabular}{lrrr}
+\toprule
+variable & médiane censurée & médiane résolue & $p$\\
+\midrule
+$|\Ecal|$ & $\mathbf{26}$ & $\mathbf{4}$ & $1{,}2\cdot 10^{-3}$ **\\
+$|\Ecal|/|\Scal|$ & $0{,}0139$ & $0{,}0017$ & $7{,}7\cdot 10^{-3}$ **\\
+$n$ & $7$ & $6$ & $3{,}2\cdot 10^{-2}$ *\\
+$|\Scal|$ & $2387$ & $1931$ & $5{,}3\cdot 10^{-2}$ (n.s.)\\
+$\theta_{\Scal}$ & $3229$ & $2819$ & $0{,}42$ (n.s.)\\
+$\text{depth}_{\Scal}$ & $1$ & $1$ & $0{,}80$ (n.s.)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Deux régimes distincts, de sens opposés.} Un $\Ecal$ mince rend
+chaque résolution modérément plus chère ; un $\Ecal$ \emph{gros} rend la
+résolution impossible dans le temps imparti, car l'oracle doit couper un à un
+un grand nombre de points non dominés et dérive vers un comportement
+d'énumération.
+
+Conséquence lourde : $\theta_{\Scal}$ et $\text{depth}_{\Scal}$, les deux
+prédicteurs bon marché, corrèlent avec le coût des instances résolues mais
+\textbf{n'ont aucun pouvoir de prédiction sur l'échec} ($p=0{,}42$ et
+$p=0{,}80$). Ils détectent le facile, pas le catastrophique. C'est un
+résultat négatif, et il est utile : il délimite ce qu'il reste à trouver.
+
+\subsection{Q3 et Q4 --- corrélation et taille}
+
+\begin{table}[htbp]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\caption{Q3 : expérience contrôlée sur corr.}
+\begin{tabular}{cccc}
+\toprule
+corr & $|\Ecal|$ méd. & timeouts & \ILP\ méd.\\
+\midrule
+$0{,}00$ & $44{,}5$ & \textbf{6} & $29{,}5$\\
+$0{,}25$ & $47{,}0$ & \textbf{4} & $34{,}5$\\
+$0{,}50$ & $18{,}5$ & \textbf{6} & $59{,}5$\\
+$0{,}75$ & $2{,}0$ & 1 & $83{,}0$\\
+$0{,}90$ & $1{,}0$ & 0 & $65{,}5$\\
+$1{,}00$ & $1{,}0$ & 0 & $53{,}0$\\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\caption{Q4 : la taille prédit-elle ?}
+\begin{tabular}{crrrr}
+\toprule
+$n$ & méd. & min & max & \% timeout\\
+\midrule
+5 & 41 & 5 & 214 & $1{,}9$\\
+6 & 44 & 7 & 236 & $5{,}6$\\
+7 & 57 & 5 & \textbf{359} & $13{,}0$\\
+8 & 92 & 10 & 215 & $11{,}1$\\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+
+\noindent
+Des critères corrélés font \emph{s'effondrer} $\Ecal$ (médiane $44\to 1$) et
+le timeout disparaît. Lue sur la seule colonne des coûts, la corrélation
+semble au contraire rendre les instances plus chères ($29{,}5\to 83{,}0$), ce
+qui n'est que l'effet du biais de survie. À $n$ fixé, le coût couvre deux
+ordres de grandeur : rapporter les performances en fonction de la seule
+taille ne permet aucune prédiction utile.
+
+\paragraph{Confirmations.} Dinkelbach converge en 1 à 4 itérations externes
+(médiane 1, moyenne $1{,}56$) sur les 216 instances : la convergence finie du
+théorème~\ref{th:dink} est rapide en pratique. L'archive couvre $58{,}6\ \%$
+de $\Ecal$ en médiane, sans aucun faux positif.
+
+\section{Résultats}
+\label{sec:resultats}
+
+\subsection{Comparaison sur un lot systématique}
+
+Le lot \texttt{lot\_v1} comprend 90 instances en deux strates : 72 à
+$n\le 8$ avec vérité terrain, 18 à $n$ de 10 à 20 sans. Il s'agit d'une
+grille systématique $n\times p\times\text{corr}\times$ graine : contrairement
+aux lots choisis \emph{a posteriori} parce qu'une méthode y échouait,
+l'argument n'est pas circulaire.
+
+\begin{table}[htbp]
+\centering
+\caption{Lot figé, 90 instances, budget identique de 12~s par méthode.}
+\label{tab:lot}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccccc}
+\toprule
+& optimalité & meilleure & \ILP & $t$ & vérifications\\
+& \textbf{prouvée} & valeur & méd. & méd. & KO\\
+\midrule
+méthode exacte & 73/90 & 76/90 & 92 & $1{,}5$~s & \textbf{0}\\
+\textbf{matheuristique} & $\mathbf{84/90}$ & $\mathbf{90/90}$ & 124
+& $\mathbf{0{,}7}$~s & \textbf{0}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Détail par strate.}
+\begin{tabular}{llcc}
+\toprule
+strate & & exacte & matheuristique\\
+\midrule
+\multirow{2}{*}{$n\le 8$ (72 inst., vérité terrain)}
+ & optimalité prouvée & 65/72 & $\mathbf{70/72}$\\
+ & meilleure valeur & 66/72 & $\mathbf{72/72}$\\
+\midrule
+\multirow{2}{*}{$n=10\dots20$ (18 inst., sans)}
+ & optimalité prouvée & 8/18 & $\mathbf{14/18}$\\
+ & meilleure valeur & 10/18 & $\mathbf{18/18}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Trois lectures, dans l'ordre d'importance.
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{Les 180 résultats passent $C_1$--$C_4$.} C'est ce qui donne son
+      sens au reste : aucune valeur du tableau n'est auto-déclarée.
+\item \textbf{La matheuristique rend la meilleure valeur sur les 90
+      instances}, et pas seulement dans le régime où l'exact échoue.
+\item \textbf{Elle prouve l'optimalité plus souvent que la méthode exacte}
+      (84 contre 73). Ce résultat contre-intuitif tient au
+      théorème~\ref{th:bound} : elle certifie sans avoir à fermer le
+      sous-problème, là où la méthode exacte doit le résoudre.
+\end{enumerate}
+Le coût médian en appels est plus élevé (124 contre 92) pour un temps médian
+plus faible ($0{,}7$~s contre $1{,}5$~s) : les sous-problèmes sont plus
+nombreux mais individuellement plus petits. C'est pourquoi les deux unités
+sont rapportées.
+
+\subsection{Stabilité entre graines}
+
+La recherche étant stochastique, un tableau à une seule graine illustre un
+comportement mais ne le mesure pas. Sur 8 instances $\times$ 10 graines à
+budget identique : écart garanti médian $\mathbf{0{,}00\ \%}$, optimum
+atteint sur \textbf{78 exécutions sur 80}, optimalité prouvée sur
+\textbf{57/80}, et l'encadrement $q_{\text{lb}}\le\qs\le q_{\text{ub}}$
+vérifié sur \textbf{80/80}.
+
+\subsection{Passage à l'échelle : deux axes orthogonaux}
+\label{sec:echelle}
+
+\begin{table}[htbp]
+\centering
+\caption{Écart garanti médian, grille $n\times\text{corr}$, 30~s par méthode.}
+\label{tab:echelle}
+\begin{tabular}{lccc}
+\toprule
+$n$ & $\text{corr}=0{,}00$ & $\text{corr}=0{,}50$ & $\text{corr}=0{,}90$\\
+\midrule
+10 & $0{,}0\ \%$ & $0{,}0\ \%$ & $0{,}0\ \%$\\
+15 & $37{,}9\ \%$ & $0{,}0\ \%$ & $0{,}0\ \%$\\
+20 & $61{,}0\ \%$ & $10{,}8\ \%$ & $0{,}0\ \%$\\
+25 & $44{,}6\ \%$ & $4{,}6\ \%$ & $0{,}0\ \%$\\
+30 & $82{,}4\ \%$ & $24{,}8\ \%$ & $42{,}6\ \%$\\
+40 & $92{,}8\ \%$ & $70{,}8\ \%$ & $19{,}6\ \%$\\
+\midrule
+\textbf{toutes tailles} & $\mathbf{71{,}6\ \%}$ & $\mathbf{4{,}6\ \%}$
+& $\mathbf{0{,}0\ \%}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+La méthode exacte, elle, prouve l'optimalité sur 3 instances sur 12 à
+\emph{chacun} des trois niveaux de corr, avec la même décroissance 2/2, 1/2,
+puis 0/2 partout dès $n=20$.
+
+\begin{proposition}[Dissociation]
+La taille gouverne l'échec de la méthode exacte, et la corrélation n'y change
+rien. La corrélation gouverne la fermeture de la borne, et beaucoup plus que
+la taille. Les deux axes sont donc \emph{orthogonaux}, et il faut deux
+leviers distincts.
+\end{proposition}
+
+\noindent
+L'effet protecteur de corr observé à petite taille ($n$ de 5 à 8, où les
+17 échecs étaient tous à $\text{corr}\le 0{,}75$) \emph{disparaît} une fois
+$n$ assez grand : au-delà, la taille suffit à faire échouer la méthode exacte
+quelle que soit la finesse de $\Ecal$.
+
+Une vérification directe le confirme. À $n=20$ et $n=25$, la méthode exacte
+lancée 400~s ne conclut pas et rend $2{,}711$ et $3{,}625$ ; la
+matheuristique, en 18~s, \emph{certifie} $3{,}732$ et $5{,}738$. La recherche
+n'est pas le goulot : la borne l'est, dans le régime à $\Ecal$ épais.
+
+\begin{remark}[Réserve]
+Le tableau~\ref{tab:echelle} n'est pas monotone ($n=30$, $\text{corr}=0{,}9$ :
+$42{,}6\ \%$ contre $19{,}6\ \%$ à $n=40$), et deux instances par cellule ne
+permettent pas de trancher entre effet et bruit. Une validation prenant le
+meilleur de trois exécutions donne $0{,}0\ \%$ sur cette même cellule : la
+variance entre graines est au moins aussi grande que l'effet de la taille.
+Conclusion à ne pas dépasser : corr domine, $n$ compte moins qu'il n'y paraît.
+\end{remark}
+
+\section{Résultats négatifs}
+
+Ils sont rapportés au même titre que les positifs, parce qu'ils délimitent ce
+qu'il reste à chercher.
+
+\paragraph{Le nombre de coupes sature, puis nuit.} Une première version du
+plafond adaptatif, à petits lots et nombreux tours, a \emph{dégradé} l'écart
+garanti médian ($2{,}94\ \%\to 6{,}17\ \%$). Diagnostic par les journaux : le
+modèle étant conservé d'un tour à l'autre, les coupes s'accumulent et
+atteignaient environ 90 coupes, soit $p$ binaires chacune ; chaque
+sous-problème devenait trop lourd pour que l'oracle referme quoi que ce soit,
+alors même qu'il disposait de deux fois plus de temps.
+
+\begin{table}[htbp]
+\centering
+\caption{Réglage du plafond de coupes, 4 instances $\times$ 4 graines.}
+\begin{tabular}{lcc}
+\toprule
+schéma & écart garanti médian & optimalité prouvée\\
+\midrule
+lots de 10, 6 tours & $9{,}91\ \%$ & 4/16\\
+lots de 40, 2 tours & $\mathbf{0{,}00\ \%}$ & 11/16\\
+lot unique de 40 & $0{,}00\ \%$ & 10/16\\
+lot unique de 80 & $0{,}00\ \%$ & 12/16\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+La leçon n'est pas le chiffre mais le sens : \textbf{plus de coupes n'est pas
+mieux}. Tant que chaque coupe coûte $p$ binaires, en ajouter davantage se
+paie. Désagréger la disjonction conditionne donc tout gain supplémentaire.
+
+\paragraph{Le big-M est une piste fermée.} Le tableau~\ref{tab:bigm} le
+montre : le minorant continu atteint pratiquement le minimum entier.
+
+\paragraph{La limite de temps par sous-problème n'achète rien de mesurable.}
+Le passage d'une limite de temps réelle au solveur -- correction pourtant
+légitime, puisqu'un seul appel pouvait en principe absorber tout le budget --
+n'a produit \emph{aucun} effet mesurable : $0{,}00\ \%$ d'écart médian,
+78/80 optima, 57/80 preuves, avant comme après. Le dépassement réel
+plafonnait à $+1{,}3$~s. C'est une \emph{assurance}, pas un résultat, et la
+rapporter comme un gain serait trompeur.
+
+\paragraph{Une fausse piste, et sa leçon de méthode.} En mesurant $f$ avant
+et après la chaîne de réparation, on observe une perte de $74$ à $82\ \%$ :
+le mouvement trouve $f=31{,}75$, la réparation rend $f=1{,}77$. Le test
+d'efficacité maximise $\theta$, donc choisit le dominateur qui maximise
+l'amélioration des \emph{critères}, en ignorant $f$. Deux réparations guidées
+furent implémentées ; aucune ne fait mieux à $n=30$, et celle qui maximise
+$f$ exactement coûte trente fois plus d'appels. La comparaison avec la
+méthode exacte a expliqué pourquoi : les points à $f$ élevé sont
+\emph{dominés}, donc hors de $\Ecal$, et leurs voisins efficaces ont
+réellement un $f$ faible. \textbf{Une mesure locale spectaculaire ne vaut pas
+diagnostic tant qu'un témoin indépendant ne l'a pas confirmée.}
+
+\section{Limites}
+
+Elles sont énoncées ici plutôt que laissées à découvrir.
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{Aucun témoin issu de la littérature.} Les méthodes
+      de~\cite{zerdani2011} et~\cite{drici2018} ne sont pas réimplémentées :
+      les articles n'ont pu être obtenus dans notre environnement de
+      développement, et réimplémenter de mémoire un algorithme non lu
+      produirait un homme de paille, que l'on battrait par construction. La
+      seule comparaison disponible reste donc \emph{interne}. C'est la limite
+      dominante pour la publication, et le banc décrit au niveau~3 du
+      protocole est prêt à accueillir ces témoins sans modification.
+\item \textbf{Calibre modéré.} $n\le 20$ dans le lot comparatif, $n\le 40$
+      dans la validation. La vérité terrain par énumération plafonne vers
+      $n=8$, ce que le niveau~2 du protocole contourne mais ne supprime pas.
+\item \textbf{Une seule famille d'instances.} Toutes proviennent d'un même
+      générateur aléatoire sous (A1)--(A2). La transférabilité à des
+      instances structurées ou réelles n'est pas établie.
+\item \textbf{$p$ fixé à 3 à grande taille}, alors même que le coût des
+      coupes croît en $p$ ; et deux instances par cellule dans l'étude
+      d'échelle, quand la variance entre graines est du même ordre que
+      l'effet mesuré.
+\item \textbf{Un seul solveur.} Le comptage des appels atténue la dépendance
+      sans la supprimer.
+\end{enumerate}
+
+\section{Conclusion et perspectives}
+
+Nous avons construit une matheuristique qui, sur le problème d'optimisation
+d'une fonction fractionnaire sur l'ensemble efficace d'un MOILFP, fournit à
+tout instant un encadrement valide de l'optimum. La borne inférieure repose
+sur un incumbent \emph{certifié efficace} par un test intégral exact ; la
+borne supérieure découle du théorème~\ref{th:bound}, qui convertit un budget
+borné en garantie. Sur un lot systématique de 90 instances, tous les
+résultats passent une vérification indépendante, et la méthode rend la
+meilleure valeur partout tout en prouvant l'optimalité plus souvent que la
+méthode exacte de référence.
+
+Deux directions se dégagent, dans cet ordre.
+
+\paragraph{Resserrer la borne dans le régime à $\Ecal$ épais.} C'est le
+verrou, établi de deux côtés indépendants : à petite taille sur une instance
+où prouver $F(\qs)\le 0$ demande 433~s, 177 coupes et 533 appels, soit
+43~fois le budget de certification ; et à grande taille par le
+tableau~\ref{tab:echelle}. Le préalable est de \textbf{désagréger la coupe de
+dominance} : tant que chaque coupe coûte $p$ binaires, aucune stratégie de
+coupes ne fera mieux.
+
+\paragraph{Établir la comparaison externe.} Réimplémenter~\cite{zerdani2011}
+et~\cite{drici2018} sur le lot figé, avec la vérification $C_1$--$C_4$
+appliquée à tous de la même manière.
+
+\begin{thebibliography}{9}
+\bibitem{dinkelbach1967}
+W.~Dinkelbach.
+\newblock On nonlinear fractional programming.
+\newblock \emph{Management Science}, 13(7):492--498, 1967.
+
+\bibitem{zerdani2011}
+O.~Zerdani et M.~Moulaï.
+\newblock Optimization over an integer efficient set of a multiple objective
+  linear fractional problem.
+\newblock \emph{Applied Mathematical Sciences}, 5(50):2451--2466, 2011.
+
+\bibitem{drici2018}
+W.~Drici \emph{et al.}
+\newblock Optimisation sur l'ensemble efficace entier d'un programme
+  fractionnaire multi-objectif, 2018.
+\newblock \emph{[Référence citée d'après le plan de thèse ; coordonnées
+  bibliographiques complètes à vérifier sur l'original.]}
+
+\bibitem{sylva2004}
+J.~Sylva et A.~Crema.
+\newblock A method for finding the set of non-dominated vectors for multiple
+  objective integer linear programs.
+\newblock \emph{European Journal of Operational Research}, 158(1):46--55, 2004.
+\end{thebibliography}
+
+\end{document}

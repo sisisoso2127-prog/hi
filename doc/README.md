@@ -1,5 +1,10 @@
 # doc/
 
+`article.tex` / `article.pdf` — article complet sur la methode finale (la
+matheuristique certifiee) : theoremes et preuves, algorithme, protocole de
+validation a trois niveaux, campagne de 216 instances, resultats sur le lot
+fige de 90 instances, resultats negatifs et limites. 16 pages.
+
 `pseudocode.tex` / `pseudocode.pdf` — pseudo-code des dix algorithmes de la
 methode, en francais, pret a etre inclus dans le manuscrit.
 
