@@ -34,6 +34,11 @@ Ce que le protocole NE dit pas : il etablit la VALIDITE des bornes, pas leur
 finesse, et ne peut pas detecter une borne superieure correcte mais inutile.
 Pour cela, `bench_scale.py` compare a max_S f et a la methode exacte.
 
+La grille croise `n` et `corr` : le generateur construit `A` et `b`
+independamment de `corr`, donc le domaine `S` est identique d'un niveau a
+l'autre. Verifier la validite sur le seul regime `corr = 0` laisserait sans
+controle le regime ou `E` est mince, qui est structurellement different.
+
 Usage :  python verify_scale.py
 """
 
@@ -48,7 +53,8 @@ from molfp_core import (ORACLE_CALLS, efficiency_test, max_f_over_S,
 from molfp_instance import generate
 from molfp_matheuristic import e_row, matheuristic_P
 
-SIZES = [10, 15, 20, 25, 30, 40]
+SIZES = [10, 20, 30, 40]
+CORRS = [0.00, 0.90]        # E epais / E mince, a domaine S identique
 P = 3
 SEEDS = [0, 1, 2]           # executions independantes pour W5
 SEARCH_BUDGET = 8.0
@@ -82,7 +88,7 @@ def main() -> int:
     print(f"budget par execution : {SEARCH_BUDGET:.0f} s + {BOUND_BUDGET:.0f} s"
           f"   |   {len(SEEDS)} executions independantes par instance")
     print("=" * 112)
-    print(f"{'instance':<22}{'n':>4}{'m':>4}"
+    print(f"{'instance':<24}{'n':>4}{'corr':>6}"
           f"{'W1':>4}{'W2':>4}{'W3':>4}{'W4':>4}{'W5':>4}{'W6':>4}"
           f"{'max_r q_lb':>12}{'min_r q_ub':>12}{'max_S f':>11}"
           f"{'ecart%':>9}{'ILP':>7}{'t(s)':>7}")
@@ -90,8 +96,9 @@ def main() -> int:
 
     all_ok = True
     for n in SIZES:
-        m = max(3, n // 2 + 1)
-        inst = generate(n=n, m=m, p=P, seed=1, rhs_scale=1.0)
+      m = max(3, n // 2 + 1)
+      for corr in CORRS:
+        inst = generate(n=n, m=m, p=P, seed=1, rhs_scale=1.0, corr=corr)
 
         t0 = time.time()
         reset_oracle_counter()
@@ -133,7 +140,7 @@ def main() -> int:
             return "ok" if b else "KO"
 
         hi_s = f"{hi:.4f}" if np.isfinite(hi) else "aucune"
-        print(f"{inst.name:<22}{n:>4}{m:>4}"
+        print(f"{inst.name:<24}{n:>4}{corr:>6.2f}"
               f"{mk(w1):>4}{mk(w2):>4}{mk(w3):>4}{mk(w4):>4}{mk(w5):>4}{mk(w6):>4}"
               f"{lo:>12.4f}{hi_s:>12}{max_S:>11.4f}"
               f"{gap:>8.1f}%{ORACLE_CALLS['ilp']:>7}{time.time()-t0:>7.1f}",

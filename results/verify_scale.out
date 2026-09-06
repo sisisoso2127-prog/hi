@@ -2,14 +2,16 @@
 VALIDATION A L'ECHELLE - AUCUNE ENUMERATION, AUCUNE VERITE TERRAIN
 budget par execution : 8 s + 6 s   |   3 executions independantes par instance
 ================================================================================================================
-instance                 n   m  W1  W2  W3  W4  W5  W6  max_r q_lb  min_r q_ub    max_S f   ecart%    ILP   t(s)
+instance                   n  corr  W1  W2  W3  W4  W5  W6  max_r q_lb  min_r q_ub    max_S f   ecart%    ILP   t(s)
 ----------------------------------------------------------------------------------------------------------------
-molfp_n10_m6_p3_c000_s1  10   6  ok  ok  ok  ok  ok  ok     37.6667     37.6667    39.3333     0.0%    552    2.2
-molfp_n15_m8_p3_c000_s1  15   8  ok  ok  ok  ok  ok  ok     32.1667     32.1667    32.1667     0.0%    719    4.3
-molfp_n20_m11_p3_c000_s1  20  11  ok  ok  ok  ok  ok  ok      3.7317     31.5819   268.0000    88.2%   1345   45.5
-molfp_n25_m13_p3_c000_s1  25  13  ok  ok  ok  ok  ok  ok      6.4091     28.5833    71.0000    77.6%   2120   44.9
-molfp_n30_m16_p3_c000_s1  30  16  ok  ok  ok  ok  ok  ok      4.3871     38.7912    87.0000    88.7%    865   44.7
-molfp_n40_m21_p3_c000_s1  40  21  ok  ok  ok  ok  ok  ok      4.7037     64.7500   105.5000    92.7%    598   46.0
+molfp_n10_m6_p3_c000_s1   10  0.00  ok  ok  ok  ok  ok  ok     37.6667     37.6667    39.3333     0.0%    552    3.1
+molfp_n10_m6_p3_c090_s1   10  0.90  ok  ok  ok  ok  ok  ok      5.9474      5.9474    39.3333     0.0%    247    4.3
+molfp_n20_m11_p3_c000_s1  20  0.00  ok  ok  ok  ok  ok  ok      3.7317     33.0767   268.0000    88.7%    801   46.9
+molfp_n20_m11_p3_c090_s1  20  0.90  ok  ok  ok  ok  ok  ok      2.1569      2.1569   268.0000     0.0%    148    1.8
+molfp_n30_m16_p3_c000_s1  30  0.00  ok  ok  ok  ok  ok  ok      4.3871     40.5457    87.0000    89.2%    575   46.0
+molfp_n30_m16_p3_c090_s1  30  0.90  ok  ok  ok  ok  ok  ok      3.1613      3.1613    87.0000     0.0%    236   21.8
+molfp_n40_m21_p3_c000_s1  40  0.00  ok  ok  ok  ok  ok  ok      3.8000     86.9500   105.5000    95.6%    378   45.8
+molfp_n40_m21_p3_c090_s1  40  0.90  ok  ok  ok  ok  ok  ok      4.1967      4.8377   105.5000    13.3%    497   45.0
 ----------------------------------------------------------------------------------------------------------------
 W1-W6 : TOUT VALIDE
 Lecture : W1-W6 etablissent la VALIDITE des bornes, pas leur

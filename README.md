@@ -786,7 +786,9 @@ trouver par un rapporteur.
    retenues *parce que* la methode exacte y echouait. « La matheuristique bat
    l'exact » y est donc presque tautologique. La formulation defendable est
    plus etroite : *sur le regime ou l'exact ne conclut pas, elle transforme
-   une absence de resultat en resultat certifie*.
+   une absence de resultat en resultat certifie*. **Partiellement traitee** :
+   l'etude a l'echelle porte sur une grille systematique `n` x `corr`, non
+   sur un lot choisi ; il y reste `p` fixe et deux instances par cellule.
 3. **Aucun temoin issu de la litterature.** Ni Zerdani & Moulai (2011) ni
    Drici et al. (2018) ne sont implementes. La seule comparaison disponible
    est avec une version anterieure du meme code.
@@ -827,43 +829,104 @@ superieure correcte mais inutile passe W1-W6 sans broncher. C'est
 3 executions independantes par instance, `p = 3`, `m = n/2 + 1`, aucune
 enumeration (`results/verify_scale.out`) :
 
-| `n` | W1-W6 | `max_r q_lb` | meilleure borne sup | ecart garanti |
-|---|---|---|---|---|
-| 10 | ok | 37.6667 | 37.6667 | **0.0 %** |
-| 15 | ok | 32.1667 | 32.1667 | **0.0 %** |
-| 20 | ok | 3.7317 | 31.58 | 88.2 % |
-| 25 | ok | 6.4091 | 28.58 | 77.6 % |
-| 30 | ok | 4.3871 | 38.79 | 88.7 % |
-| 40 | ok | 4.7037 | 64.75 | 92.7 % |
+| `n` | `corr` | W1-W6 | `max_r q_lb` | meilleure borne sup | ecart garanti |
+|---|---|---|---|---|---|
+| 10 | 0.00 | ok | 37.6667 | 37.6667 | **0.0 %** |
+| 10 | 0.90 | ok | 5.9474 | 5.9474 | **0.0 %** |
+| 20 | 0.00 | ok | 3.7317 | 33.08 | 88.7 % |
+| 20 | 0.90 | ok | 2.1569 | 2.1569 | **0.0 %** |
+| 30 | 0.00 | ok | 4.3871 | 40.55 | 89.2 % |
+| 30 | 0.90 | ok | 3.1613 | 3.1613 | **0.0 %** |
+| 40 | 0.00 | ok | 3.8000 | 86.95 | 95.6 % |
+| 40 | 0.90 | ok | 4.1967 | 4.8377 | 13.3 % |
+
+La validite ne depend d'aucun des deux axes : W1-W6 passent partout. Ce qui
+depend de `corr`, c'est la **finesse** — a `corr = 0.9`, l'optimalite est
+prouvee jusqu'a `n = 30`, sur des instances ou la methode exacte ne conclut
+pas.
 
 A noter : prendre le **max des `q_lb`** sur les executions independantes
 ameliore reellement le LB certifie (`n = 30` : 2.54 sur une execution,
 **4.39** sur trois). C'est gratuit et sur : le max de plusieurs minorants
 valides est un minorant valide.
 
+### Une premiere version de cette etude, et son biais
+
+> **Correction.** La premiere version de cette section mesurait `n` a `corr`
+> **fixee a 0**, et concluait que « l'ecart garanti se degrade avec `n` »,
+> de 0 % a `n = 10` a 92.5 % a `n = 40`. Cette conclusion etait un
+> **artefact du plan d'experience** : elle ne decrivait que le regime a `E`
+> epais. Le projet s'etait pourtant donne pour regle, dans la section
+> « Campagne de difficulte », qu'une comparaison ignorant `corr` est
+> ininterpretable — regle enfreinte ici meme. La grille croise desormais
+> `n` et `corr`, et la conclusion change.
+
 ### Ce que le passage a l'echelle revele
 
-`bench_scale.py`, budget identique de 30 s par methode, deux instances par
-taille (`results/bench_scale.out`) :
+`bench_scale.py`, budget identique de 30 s par methode, grille
+`n` x `corr` x 2 instances = 36 instances (`results/bench_scale.out`). Le
+plan est **controle** : le generateur construit `A` et `b` independamment de
+`corr`, donc `S` et la fonction d'utilite `f` sont rigoureusement identiques
+d'un niveau de `corr` a l'autre ; seul `E` change.
 
-| `n` | exact prouve | ecart garanti median |
-|---|---|---|
-| 10 | 2/2 | 0.0 % |
-| 12 | 0/2 | 39.6 % |
-| 15 | 1/2 | 37.2 % |
-| 20 | 0/2 | 63.3 % |
-| 25 | 0/2 | 44.5 % |
-| 30 | 0/2 | 78.9 % |
-| 40 | 0/2 | 92.5 % |
+**Ecart garanti median :**
 
-**La methode exacte decroche des `n = 12`** : 3 preuves sur 14 instances. Et
-sur **11 instances sur 14** la matheuristique rend une valeur strictement
+| `n` | `corr` = 0.00 | `corr` = 0.50 | `corr` = 0.90 |
+|---|---|---|---|
+| 10 | 0.0 % | 0.0 % | 0.0 % |
+| 15 | 37.9 % | 0.0 % | 0.0 % |
+| 20 | 61.0 % | 10.8 % | 0.0 % |
+| 25 | 44.6 % | 4.6 % | 0.0 % |
+| 30 | 82.4 % | 24.8 % | 42.6 % |
+| 40 | 92.8 % | 70.8 % | 19.6 % |
+| **toutes tailles** | **71.6 %** | **4.6 %** | **0.0 %** |
+
+**Optimalite prouvee par la methode exacte :**
+
+| `n` | `corr` = 0.00 | `corr` = 0.50 | `corr` = 0.90 |
+|---|---|---|---|
+| 10 | 2/2 | 2/2 | 2/2 |
+| 15 | 1/2 | 1/2 | 1/2 |
+| 20 | 0/2 | 0/2 | 0/2 |
+| 25 | 0/2 | 0/2 | 0/2 |
+| 30 | 0/2 | 0/2 | 0/2 |
+| 40 | 0/2 | 0/2 | 0/2 |
+| **toutes tailles** | **3/12** | **3/12** | **3/12** |
+
+### Une dissociation nette entre les deux axes
+
+Les deux tableaux ci-dessus ne se ressemblent pas, et c'est le resultat
+principal de cette campagne.
+
+* **`n` gouverne l'echec de la methode exacte**, et `corr` n'y change
+  **rien** : 3 preuves sur 12 a chacun des trois niveaux, avec la meme
+  decroissance 2/2, 1/2, puis 0/2 partout des `n = 20`. L'effet protecteur de
+  `corr` observe a petite taille (`n` de 5 a 8, ou les 17 echecs etaient tous
+  a `corr <= 0.75`) **disparait** une fois `n` assez grand : au-dela, la
+  taille suffit a faire echouer la methode exacte quelle que soit la finesse
+  de `E`.
+* **`corr` gouverne la fermeture de la borne**, et beaucoup plus que `n` :
+  l'ecart garanti median passe de **71.6 % a 0.0 %** entre `corr = 0` et
+  `corr = 0.9`, toutes tailles confondues. A `corr = 0.9`, la matheuristique
+  **prouve** l'optimalite jusqu'a `n = 30` (verification independante,
+  3 executions : `results/verify_scale.out`) sur des instances ou la methode
+  exacte ne conclut pas.
+
+Ces deux axes sont donc **orthogonaux**, et il faut deux leviers distincts :
+la taille attaque la methode exacte, la finesse de `E` attaque la borne.
+Rapporter l'un sans l'autre produit exactement l'erreur corrigee plus haut.
+
+*Reserve.* Le tableau n'est pas monotone (`n = 30`, `corr = 0.9` : 42.6 %,
+contre 19.6 % a `n = 40`), et deux instances par cellule ne permettent pas de
+trancher entre effet et bruit. `verify_scale.py`, qui prend le meilleur de
+3 executions, donne 0.0 % sur cette meme cellule : la variance entre graines
+reste un facteur au moins aussi grand que la taille. Conclusion a ne pas
+depasser : `corr` domine, `n` compte moins qu'il n'y parait.
+
+Sur **20 instances sur 36** la matheuristique rend une valeur strictement
 MEILLEURE que celle de la methode exacte — laquelle, en statut `limit`, ne
-borne rien.
-
-Mais la colonne de droite est le vrai resultat : **c'est la borne superieure
-qui se degrade avec `n`**, pas le LB. Verification directe a `n = 20` et
-`n = 25`, methode exacte lancee 400 s :
+borne rien. Verification directe a `n = 20` et `n = 25`, methode exacte
+lancee 400 s :
 
 | | exact (400 s) | matheuristique (18 s) |
 |---|---|---|
@@ -874,7 +937,9 @@ qui se degrade avec `n`**, pas le LB. Verification directe a `n = 20` et
 Le LB de la matheuristique bat donc ce que la methode exacte trouve en
 vingt fois plus de temps. La recherche n'est pas le goulot : **la borne
 superieure l'est**, exactement comme sur `n7 m4 p4 c0.25` a petite taille.
-Le diagnostic converge de deux directions independantes.
+Le diagnostic converge de deux directions independantes — et la
+stratification par `corr` en precise la portee : le goulot est la borne
+**dans le regime a `E` epais**, pas a toute taille indistinctement.
 
 ### Une fausse piste, mesuree puis abandonnee
 

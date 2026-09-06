@@ -4,8 +4,22 @@ bench_scale.py
 Passage a l'echelle : ou la methode exacte cesse de conclure, et ce que la
 matheuristique certifie au-dela.
 
-Aucune enumeration. Les deux methodes recoivent le MEME budget. Trois
-quantites seulement sont rapportees, toutes calculables sans connaitre q* :
+Aucune enumeration. Les deux methodes recoivent le MEME budget.
+
+STRATIFICATION PAR `corr`. La campagne de difficulte a etabli que `corr` est
+le levier structurel : a `(n, m, p)` fixe, `|E|` varie d'un facteur 40 selon
+ce parametre, et le taux d'echec de la methode exacte suit. Une etude de
+passage a l'echelle menee a `corr` fixe ne mesure donc qu'une tranche du
+probleme, et le projet s'est lui-meme donne pour regle qu'une comparaison
+ignorant `corr` est ininterpretable. La grille croise donc `n` et `corr`.
+
+Le plan est CONTROLE et non observationnel : le generateur construit `A` et
+`b` independamment de `corr`, donc le domaine `S` est rigoureusement
+identique d'un niveau de `corr` a l'autre pour un meme `(n, m, seed)`. On
+manipule la cause supposee, on ne l'observe pas.
+
+Trois quantites seulement sont rapportees, toutes calculables sans connaitre
+q* :
 
   * `exact`   valeur rendue par `solve_P` et son statut. Un statut 'limit'
               signale une valeur NON prouvee : elle ne borne rien.
@@ -35,7 +49,8 @@ from molfp_instance import generate
 from molfp_matheuristic import matheuristic_P
 from molfp_oracle import solve_P
 
-SIZES = [10, 12, 15, 20, 25, 30, 40]
+SIZES = [10, 15, 20, 25, 30, 40]
+CORRS = [0.00, 0.50, 0.90]     # E epais -> E mince, a domaine S identique
 INSTANCE_SEEDS = [1, 2]
 P = 3
 
@@ -56,8 +71,9 @@ def main() -> int:
     rows = []
     for n in SIZES:
         m = max(3, n // 2 + 1)
-        for s in INSTANCE_SEEDS:
-            inst = generate(n=n, m=m, p=P, seed=s, rhs_scale=1.0)
+        for corr in CORRS:
+         for s in INSTANCE_SEEDS:
+            inst = generate(n=n, m=m, p=P, seed=s, rhs_scale=1.0, corr=corr)
 
             reset_oracle_counter()
             try:
@@ -92,24 +108,49 @@ def main() -> int:
             else:
                 who = "exact (non prouve)"
 
-            rows.append((n, e_st, who, gap))
+            rows.append((n, corr, e_st, who, gap))
             print(f"{inst.name:<22}{n:>4}{m:>4}"
                   f"{e_val:>12.4f}{e_st:>10}"
                   f"{lo:>12.4f}{hi:>12.4f}{gap:>9.1f}%{ilp:>7}{who:>16}",
                   flush=True)
 
     print("-" * 114)
-    n_proved = sum(1 for r in rows if r[1] == "optimal")
-    n_mh = sum(1 for r in rows if r[2] == "matheuristique")
+    n_proved = sum(1 for r in rows if r[2] == "optimal")
+    n_mh = sum(1 for r in rows if r[3] == "matheuristique")
     print(f"exact prouve l'optimalite   : {n_proved}/{len(rows)} instances")
     print(f"matheuristique strictement meilleure : {n_mh}/{len(rows)}")
-    by_n = {}
-    for n, st, who, gap in rows:
-        by_n.setdefault(n, []).append((st == "optimal", gap))
-    print(f"\n{'n':>5}{'exact prouve':>15}{'ecart garanti median':>24}")
-    for n in sorted(by_n):
-        v = by_n[n]
-        print(f"{n:>5}{sum(1 for a, _ in v if a):>8}/{len(v):<6}"
+
+    cell = {}
+    for n, corr, st, who, gap in rows:
+        cell.setdefault((n, corr), []).append((st == "optimal", gap))
+
+    print("\nECART GARANTI MEDIAN  (lignes : n ; colonnes : corr)")
+    print(f"{'n':>5}" + "".join(f"{c:>12.2f}" for c in CORRS) + f"{'toutes':>12}")
+    for n in SIZES:
+        line = f"{n:>5}"
+        for c in CORRS:
+            v = cell.get((n, c), [])
+            line += (f"{np.nanmedian([g for _, g in v]):>11.1f}%"
+                     if v else f"{'-':>12}")
+        allv = [g for c in CORRS for _, g in cell.get((n, c), [])]
+        line += f"{np.nanmedian(allv):>11.1f}%" if allv else f"{'-':>12}"
+        print(line)
+
+    print("\nOPTIMALITE PROUVEE PAR LA METHODE EXACTE  (lignes : n ; colonnes : corr)")
+    print(f"{'n':>5}" + "".join(f"{c:>12.2f}" for c in CORRS))
+    for n in SIZES:
+        line = f"{n:>5}"
+        for c in CORRS:
+            v = cell.get((n, c), [])
+            line += (f"{sum(1 for a, _ in v if a):>8}/{len(v):<4}"
+                     if v else f"{'-':>12}")
+        print(line)
+
+    print("\nPar niveau de corr, toutes tailles confondues :")
+    print(f"{'corr':>6}{'exact prouve':>15}{'ecart garanti median':>24}")
+    for c in CORRS:
+        v = [x for (n, cc), lst in cell.items() if cc == c for x in lst]
+        print(f"{c:>6.2f}{sum(1 for a, _ in v if a):>8}/{len(v):<6}"
               f"{np.nanmedian([g for _, g in v]):>23.1f}%")
     return 0
 
