@@ -1,0 +1,15 @@
+============================================================================================
+VERIFICATION DE LA COUPE AGREGEE (sans binaire)
+============================================================================================
+instance   |S|  |E|  domines  lignes  rejetees  |R| agrege  |R| disjonctif  viol. sur E
+--------------------------------------------------------------------------------------------
+I2          22    5       17       0        17          22              22            0
+I3          36    5       31       6        25          32              22            0
+I4          18    5       13       0        13          18              18            0
+I5          14    5        9       5         4          12               9            0
+--------------------------------------------------------------------------------------------
+  V-AGG-1 validite : 11 lignes, 0 violation(s) -> OK
+  V-AGG-2 force    : la forme agregee retranche nettement MOINS que la disjonction
+                     sur les memes points -- c'est un relachement, pas un equivalent.
+                     Elle ne se justifie donc qu'AU-DELA du plafond, ou l'alternative
+                     n'est pas la disjonction mais RIEN.

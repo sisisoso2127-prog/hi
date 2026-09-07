@@ -100,6 +100,7 @@ class ECutModel:
         self._rows_x: List[Row] = feasibility_rows(inst)   # espace x
         self._cut_rows: List[Row] = []                     # espace etendu
         self.n_cuts = 0
+        self.n_agg_cuts = 0          # coupes agregees, sans binaire
         self.tight_big_m = TIGHT_BIG_M if tight_big_m is None else tight_big_m
         # points de base des coupes posees. Les conserver permet de verifier
         # l'invariant E inclus dans R sans connaitre E : tout point EFFICACE
@@ -128,6 +129,73 @@ class ECutModel:
         out = np.zeros(self.nvar)
         out[:len(coef)] = coef
         return (out, lo, hi)
+
+    # -- ligne e_k et minorant, mutualises ---------------------------------
+    def _e_row(self, xbar: np.ndarray, k: int):
+        """Coefficients, constante et minorant valide de e_k autour de xbar."""
+        Zk = self.inst.Z[k]
+        Nbar, Dbar = Zk.numerator(xbar), Zk.denominator(xbar)
+        a = (Dbar * Zk.num - Nbar * Zk.den).astype(float)
+        b = float(Dbar * Zk.a - Nbar * Zk.b)
+        e_min_box = float(np.sum(np.minimum(a, 0.0) * self.ub_x)) + b
+        e_min = e_min_box
+        if self.tight_big_m:
+            e_min_lp = min_over_relaxation(a, b, self._rows_x, self.ub_x)
+            if np.isfinite(e_min_lp):
+                e_min = max(e_min_box, e_min_lp)
+        return a, b, e_min, e_min_box
+
+    # -- coupe AGREGEE : la meme region, sans une seule binaire -------------
+    def add_aggregated_cut(self, xbar: np.ndarray) -> bool:
+        """
+        Relachement AGREGE de la disjonction, a ZERO variable binaire.
+
+        Si x echappe a la region retranchee, il existe j tel que
+        e_j(x) >= 1. En minorant les autres termes par m_k <= min_S e_k :
+
+            sum_k e_k(x)  >=  1 + sum_{k != j} m_k                (pour ce j)
+                          >=  1 + min_j sum_{k != j} m_k
+                          =   1 + sum_k m_k - max_k m_k
+
+        La derniere ligne ne depend plus de j : elle est valide pour toute
+        la disjonction, donc pour E. UNE seule ligne, AUCUNE binaire.
+
+        POURQUOI. Le plafond de coupes ne vient pas du nombre de coupes mais
+        de leur cout : p binaires chacune. A n >= 20 la mesure montre que
+        c'est ce plafond, et non la disponibilite des coupes, qui bloque la
+        borne. Une coupe sans binaire n'a, elle, pas de plafond.
+
+        EN CONTREPARTIE elle est beaucoup plus FAIBLE que la disjonction :
+        elle n'exclut meme pas xbar en general, puisque sum_k e_k(xbar) = 0
+        et que le membre de droite est negatif des que les m_k le sont.
+        C'est un relachement, pas un equivalent -- et c'est pourquoi elle ne
+        remplace pas la forme disjonctive, elle la complete au-dela du
+        plafond.
+
+        Renvoie True si la ligne a ete posee, False si elle est vide de sens
+        (membre de droite -inf, ou coupe trivialement satisfaite sur la
+        boite).
+        """
+        nvar = self.nvar
+        coef = np.zeros(nvar)
+        cst = 0.0
+        mins = []
+        for k in range(self.p):
+            a, b, e_min, _ = self._e_row(xbar, k)
+            coef[:self.n] += a
+            cst += b
+            mins.append(e_min)
+        if not all(np.isfinite(m) for m in mins):
+            return False
+        rhs = 1.0 + sum(mins) - max(mins) - cst
+        # La ligne n'a d'interet que si elle peut mordre : si le minimum de
+        # sum_k e_k sur la boite lui est deja superieur, elle est redondante.
+        borne_boite = float(np.sum(np.minimum(coef[:self.n], 0.0) * self.ub_x))
+        if borne_boite >= rhs - 1e-9:
+            return False
+        self._cut_rows.append((coef, rhs, INF))
+        self.n_agg_cuts += 1
+        return True
 
     # -- ajout d'une coupe -------------------------------------------------
     def add_dominance_cut(self, xbar: np.ndarray) -> None:

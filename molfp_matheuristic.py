@@ -376,7 +376,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cut_batch: int = 10,
             max_rounds: int = 6,
             archive_cuts: bool = False,
-            height_filter: bool = True) -> CertResult:
+            height_filter: bool = True,
+            agg_extra: int = 0) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -402,7 +403,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     t0 = time.time()
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
                   "rounds": 0, "q_improved": False, "archive_cuts": 0,
-                  "select": None, "cloture_lemme": 0}
+                  "select": None, "cloture_lemme": 0, "agg_cuts": 0}
 
     best_ub: Optional[float] = None
     proved = False
@@ -474,6 +475,26 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                 posees += 1
             pending = pending[posees + (1 if improved_by_closure is not None
                                         else 0):]
+        # --- au-dela du plafond : la forme AGREGEE, sans binaire --------
+        # Le plafond ne tient pas au nombre de coupes mais a leur cout en
+        # binaires. Les candidats qui n'ont pas eu de place peuvent quand
+        # meme etre poses sous forme agregee : une ligne, zero binaire, donc
+        # aucun plafond. Beaucoup plus faible, mais gratuit.
+        # On s'en tient aux candidats dont la cloture ne coute rien : points
+        # domines (aucune cloture requise) et points d'archive dont le lemme
+        # de hauteur l'a deja etablie.
+        if agg_extra > 0 and pending:
+            n_agg = 0
+            for cand in pending:
+                if n_agg >= agg_extra or time.time() > t0 + budget:
+                    break
+                xa, ka = cand[0], cand[1]
+                ha = cand[2] if len(cand) > 2 else None
+                if ka == "arch" and not (ha is not None and ha <= 0):
+                    continue
+                if model.add_aggregated_cut(xa):
+                    n_agg += 1
+        info["agg_cuts"] = model.n_agg_cuts
         info["n_cuts"] = model.n_cuts
 
         if improved_by_closure is not None:
@@ -816,6 +837,7 @@ def matheuristic_P(inst: MOILFP,
                    cert_rounds: int = 2,
                    archive_cuts: bool = False,
                    height_filter: bool = True,
+                   agg_extra: int = 0,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -952,7 +974,8 @@ def matheuristic_P(inst: MOILFP,
         c = certify(inst, q, x_best, dominated, budget,
                     use_tightened=tightened, archive=arch,
                     cut_batch=cut_batch, max_rounds=cert_rounds,
-                    archive_cuts=archive_cuts, height_filter=height_filter)
+                    archive_cuts=archive_cuts, height_filter=height_filter,
+                    agg_extra=agg_extra)
         q_ub, proved, cert_info = c.q_ub, c.proved, c.info
         cut_points = c.cut_points
         if c.q_lb is not None and c.q_lb > q:
