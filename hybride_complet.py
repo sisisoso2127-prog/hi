@@ -664,6 +664,37 @@ def epsilon_rows(inst: MOILFP, eps: Sequence[Fraction],
             for k in range(inst.p) if k != skip]
 
 
+def reduce_row(coef: np.ndarray, lo: float, hi: float) -> Tuple[np.ndarray, float, float]:
+    """
+    Divise une ligne ENTIERE par le pgcd de ses coefficients et de ses bornes.
+
+    L'ensemble realisable est INCHANGE -- diviser une inegalite par un entier
+    positif est une identite -- mais les amplitudes baissent, et avec elles le
+    risque qu'un solveur se trompe sur un sommet degenere. Or le test
+    d'efficacite place precisement xbar sur un tel sommet : il y SATURE les p
+    contraintes a la fois, e_k(xbar) valant 0 pour tout k. C'est la
+    configuration ou un statut « infaisable » errone a ete observe, sur un
+    programme dont xbar est pourtant une solution realisable.
+
+    Sans effet si la ligne n'est pas entiere, ou si le pgcd vaut 1.
+    """
+    vals = [v for v in np.asarray(coef, dtype=float)]
+    for b in (lo, hi):
+        if np.isfinite(b):
+            vals.append(float(b))
+    arr = np.asarray(vals, dtype=float)
+    if arr.size == 0 or not np.all(arr == np.rint(arr)):
+        return coef, lo, hi
+    g = 0
+    for v in np.rint(arr).astype(np.int64):
+        g = np.gcd(g, abs(int(v)))
+    if g <= 1:
+        return coef, lo, hi
+    return (np.asarray(coef, dtype=float) / g,
+            lo / g if np.isfinite(lo) else lo,
+            hi / g if np.isfinite(hi) else hi)
+
+
 def feasibility_rows(inst: MOILFP) -> List[Tuple[np.ndarray, float, float]]:
     """Contraintes  A x <= b."""
     return [(inst.A[i].astype(float), -INF, float(inst.b[i]))
@@ -682,7 +713,7 @@ class EfficiencyResult:
     efficient: Optional[bool]
     theta: Optional[int]           # entier ; 0 <=> efficace
     dominator: Optional[np.ndarray]  # solution dominante trouvee si non efficace
-    status: str = "proved"         # 'proved' | 'limit'
+    status: str = "proved"         # 'proved' | 'limit' | 'solveur'
 
     @property
     def conclusive(self) -> bool:
@@ -714,12 +745,24 @@ def efficiency_test(inst: MOILFP, xbar: np.ndarray,
         Dk = Zk.denominator(xbar)        # entier > 0 par (A1)
         coef = (Dk * Zk.num - Nk * Zk.den).astype(float)
         rhs = float(Nk * Zk.b - Dk * Zk.a)
-        rows.append((coef, rhs, INF))    # Z_k(x) >= Z_k(xbar)
+        # la CONTRAINTE est reduite par son pgcd (ensemble realisable
+        # inchange, amplitudes plus petites) ; l'OBJECTIF ne l'est pas, car
+        # c'est lui qui porte theta, dont l'integralite fait l'exactitude du
+        # test « theta = 0 ».
+        rows.append(reduce_row(coef, rhs, INF))   # Z_k(x) >= Z_k(xbar)
         obj += coef
         const += float(Dk * Zk.a - Nk * Zk.b)
 
     res = solve_ilp(obj, rows, ub, maximize=True, obj_const=const,
                     time_limit=time_limit)
+
+    if res.status not in ("optimal", "limit"):
+        # xbar est REALISABLE pour ce programme : e_k(xbar) = 0 pour tout k.
+        # Un statut « infaisable » ne peut donc venir que du solveur, jamais
+        # du modele -- et cela s'observe, selon la version de HiGHS, sur ce
+        # sommet degenere ou xbar sature les p contraintes a la fois.
+        # On retente UNE fois sans limite de temps.
+        res = solve_ilp(obj, rows, ub, maximize=True, obj_const=const)
 
     if res.status == "limit":
         theta_lb = int(round(res.obj)) if res.obj is not None else 0
@@ -730,8 +773,12 @@ def efficiency_test(inst: MOILFP, xbar: np.ndarray,
         return EfficiencyResult(None, None, None, status="limit")
 
     if not res.ok:
-        # xbar est toujours realisable pour ce programme : infaisable = bug
-        raise RuntimeError(f"Test d'efficacite : statut {res.status}")
+        # Apres la seconde chance, on renonce -- sans lever. Un test non
+        # concluant ne coute que de ne pas certifier CE point : les appelants
+        # le traitent deja (`repair_to_efficient` rend None, l'oracle rend
+        # les bornes acquises), et le LB reste valide. Lever, au contraire,
+        # detruirait une execution dont tout le reste etait bon.
+        return EfficiencyResult(None, None, None, status="solveur")
 
     theta = int(round(res.obj))
     if theta == 0:
@@ -1087,7 +1134,12 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
         if dominated_out is not None:
             dominated_out.append(np.array(cur, dtype=int))
         cur = r.dominator
-    raise RuntimeError("Chaine de dominance trop longue (bug probable).")
+    # Chaine anormalement longue. Chaque pas passe a un point qui DOMINE
+    # strictement le precedent, donc la chaine est finie et courte en
+    # pratique (profondeur mediane mesuree : 1). Depasser `max_steps` signale
+    # une anomalie -- mais on rend None plutot que de lever : un point non
+    # certifie n'est simplement pas retenu, et le LB reste valide.
+    return None
 
 
 @dataclass

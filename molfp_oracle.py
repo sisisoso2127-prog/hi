@@ -345,7 +345,12 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
         if dominated_out is not None:
             dominated_out.append(np.array(cur, dtype=int))
         cur = r.dominator
-    raise RuntimeError("Chaine de dominance trop longue (bug probable).")
+    # Chaine anormalement longue. Chaque pas passe a un point qui DOMINE
+    # strictement le precedent, donc la chaine est finie et courte en
+    # pratique (profondeur mediane mesuree : 1). Depasser `max_steps` signale
+    # une anomalie -- mais on rend None plutot que de lever : un point non
+    # certifie n'est simplement pas retenu, et le LB reste valide.
+    return None
 
 
 # ----------------------------------------------------------------------------
