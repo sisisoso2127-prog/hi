@@ -72,9 +72,14 @@ def charger(nom: str) -> MOILFP:
 def une(inst: MOILFP, budget: float, filtre: bool) -> dict:
     reset_oracle_counter()
     t0 = time.time()
+    # TOUT est tenu fixe sauf le lemme : meme budget, meme graine, meme
+    # plafond, reclassement par hauteur DESACTIVE et diversification
+    # DESACTIVEE. Sans quoi la comparaison ne porterait plus sur le lemme
+    # seul, et l'affirmation « aucune instance en recul » ne vaudrait rien.
     r = matheuristic_P(inst, time_budget=budget * 0.6,
                        bound_budget=budget * 0.4, seed=0,
                        archive_cuts=True, closure_lemma=filtre,
+                       height_rank=False, cut_diversify=False,
                        cut_batch=40, cert_rounds=2)
     sel = r.cert.get("select") or {}
     return {"q": r.q_lb, "ub": r.q_ub, "prouve": r.proved_optimal,
