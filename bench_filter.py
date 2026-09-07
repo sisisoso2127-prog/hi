@@ -2,7 +2,16 @@
 """
 bench_filter.py
 ===============
-A/B du FILTRE DE HAUTEUR sur le lot fige.
+A/B du LEMME DE CLOTURE PAR LA HAUTEUR sur le lot fige.
+
+    A = coupes d'archive, cloture etablie par un ILP  (avant)
+    B = coupes d'archive, cloture etablie par un PL quand h <= 0  (apres)
+
+Le lemme ne change RIEN au jeu de coupes : meme vivier, meme ordre, memes
+coupes posees. Seul le moyen d'etablir la cloture change. Le nombre d'appels
+au solveur entier ne peut donc que baisser, la valeur rendue et les preuves
+sont necessairement identiques -- et c'est ce que ce banc verifie plutot que
+de le supposer.
 
 Ce que le filtre change, et pourquoi il fallait le mesurer. La lecture
 APPARIEE du lot avait etabli que les coupes d'archive coutent la ou E est
@@ -65,7 +74,7 @@ def une(inst: MOILFP, budget: float, filtre: bool) -> dict:
     t0 = time.time()
     r = matheuristic_P(inst, time_budget=budget * 0.6,
                        bound_budget=budget * 0.4, seed=0,
-                       archive_cuts=True, height_filter=filtre,
+                       archive_cuts=True, closure_lemma=filtre,
                        cut_batch=40, cert_rounds=2)
     sel = r.cert.get("select") or {}
     return {"q": r.q_lb, "ub": r.q_ub, "prouve": r.proved_optimal,
@@ -88,7 +97,7 @@ def main() -> None:
         noms = CIBLES
 
     print("=" * 104)
-    print(f"A/B DU FILTRE DE HAUTEUR - {len(noms)} instances, budget "
+    print(f"A/B DU LEMME DE CLOTURE - {len(noms)} instances, budget "
           f"{budget:g} s par variante, comparaison APPARIEE")
     print("=" * 104)
     print(f"{'instance':<26}{'q identique':>12}"

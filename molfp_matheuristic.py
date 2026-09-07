@@ -357,6 +357,67 @@ def select_cuts(inst: MOILFP,
     return retenus, info
 
 
+def diversify_over_archive(inst: MOILFP,
+                           archive: "Archive",
+                           q: Fraction,
+                           x_best: np.ndarray,
+                           budget: float,
+                           cap: int = 40,
+                           dominated_out: Optional[List[np.ndarray]] = None
+                           ) -> Tuple[Fraction, np.ndarray, int]:
+    """
+    La coupe d'efficacite comme OPERATEUR DE RECHERCHE, et non comme outil de
+    borne.
+
+    L'idee. Poser une coupe d'efficacite autour de chaque point de l'archive
+    retire { x : Z(x) <= Z(a) } pour tout a deja trouve. Ce qui reste est
+    donc, par construction, l'ensemble des points que l'archive ne domine ni
+    n'egale. Maximiser le substitut sur ce reste rend un point GARANTI NEUF
+    en vecteur criteres -- ce qu'aucun redemarrage aleatoire ne garantit.
+    On le repare en un point efficace certifie, on l'archive, on coupe autour
+    de lui, et on recommence.
+
+    POINT ESSENTIEL : ici la condition de cloture n'est PAS requise. Elle
+    n'est necessaire que pour tirer une BORNE d'un relache ampute. Employee
+    comme operateur de recherche, la coupe ne sert qu'a diriger l'exploration
+    vers du neuf ; la validite du resultat ne tient qu'au test d'efficacite,
+    qui certifie chaque point rendu. Aucun ILP de cloture, donc, et aucune
+    precondition a etablir.
+
+    QUAND. La campagne montre qu'a n >= 20 la borne ne bouge pas : les ecarts
+    garantis restent a 92-98 % quoi qu'on fasse du budget de certification.
+    Or ce budget est preleve sur du temps que la recherche, elle, aurait su
+    employer. Rendre ce temps a la recherche est donc le seul progres
+    disponible dans ce regime -- non pas sur la borne, mais sur la SOLUTION.
+
+    Renvoie (q, x_best, nombre de points neufs certifies).
+    """
+    t0 = time.time()
+    model = ECutModel(inst)
+    for a in archive.points()[:cap]:
+        model.add_efficiency_cut(a)          # aucune cloture a etablir
+    neufs = 0
+    while time.time() - t0 < budget:
+        w, w0, _, _ = surrogate(inst, q)
+        reste = budget - (time.time() - t0)
+        r = model.optimize(w, w0, maximize=True,
+                           time_limit=max(0.05, min(reste, budget / 3.0)))
+        if not r.ok or r.x is None:
+            break                            # relache vide : E est epuise
+        y = repair_to_efficient(inst, np.asarray(r.x[:inst.n], dtype=int),
+                                dominated_out=dominated_out,
+                                deadline=t0 + budget)
+        if y is None:
+            break                            # plus le temps de certifier
+        if archive.add(y):
+            neufs += 1
+        fy = inst.f.value(y)
+        if fy > q:
+            q, x_best = fy, np.asarray(y, dtype=int)
+        model.add_efficiency_cut(y)          # interdire d'y revenir
+    return q, x_best, neufs
+
+
 @dataclass
 class CertResult:
     """Sortie de la phase de certification."""
@@ -376,7 +437,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cut_batch: int = 10,
             max_rounds: int = 6,
             archive_cuts: bool = False,
-            height_filter: bool = True,
+            closure_lemma: bool = True,
+            height_rank: bool = False,
             agg_extra: int = 0) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
@@ -414,12 +476,16 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     if use_tightened:
         arch_pts = archive.points() if (archive is not None and archive_cuts) \
             else []
-        if height_filter:
-            # classement des DEUX sources sur la hauteur de region, et rejet
-            # des candidats sans effet sur la borne quand la place manque.
+        if height_rank:
+            # RECLASSEMENT des deux sources sur la hauteur de region, et
+            # rejet des candidats sans effet quand la place manque.
+            # Mesure sur les 90 instances : gain NET (-393 appels au total)
+            # mais de SIGNE VARIABLE par instance (+25 sur l'une, -83 sur une
+            # autre), parce qu'il change quelles coupes sont posees. Il n'est
+            # donc pas actif par defaut : la ou l'on veut un progres sur
+            # CHAQUE instance, on ne veut pas d'un levier qui parie.
             # `cap` = le plafond qui ARBITRE reellement, c'est-a-dire le lot
-            # pose en un tour, et non le total sur tous les tours : c'est lui
-            # qui decide quels candidats obtiennent une place.
+            # pose en un tour, et non le total sur tous les tours.
             pending, sel = select_cuts(inst, dominated, arch_pts, q,
                                        cap=cut_batch)
             info["select"] = sel
@@ -456,11 +522,21 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                 if posees >= cut_batch or time.time() > t0 + budget:
                     break
                 if kind == "arch":
-                    # LEMME DE CLOTURE PAR LA HAUTEUR (cf. `select_cuts`) :
-                    # h <= 0 majore Q N - P D sur TOUTE la region dominee par
-                    # `x`, donc en particulier sur les points de meme vecteur
-                    # criteres. La cloture est acquise, et l'ILP n'a pas lieu
-                    # d'etre : un PL deja paye le remplace.
+                    # LEMME DE CLOTURE PAR LA HAUTEUR :
+                    #   h(a) <= 0  =>  la cloture est etablie en a.
+                    # {Z(x) = Z(a)} est inclus dans {Z(x) <= Z(a)} ; si le
+                    # maximum de Q N - P D sur le second est <= 0, il l'est
+                    # sur le premier. h etant un MAJORANT calcule par PL,
+                    # h <= 0 suffit : UN PL remplace UN ILP.
+                    #
+                    # Point essentiel : le lemme ne change RIEN au jeu de
+                    # coupes pose. Meme vivier, meme ordre, memes coupes ;
+                    # seul le moyen d'etablir la cloture change. Le nombre
+                    # d'appels au solveur entier ne peut donc que BAISSER,
+                    # jamais monter -- par construction, et pas seulement
+                    # en moyenne.
+                    if h is None and closure_lemma:
+                        h = region_height(inst, x, q_ref)
                     if h is None or h > 0:
                         better = same_criteria_improves(inst, x, q_ref)
                         if better is not None:
@@ -836,8 +912,11 @@ def matheuristic_P(inst: MOILFP,
                    cut_batch: int = 40,
                    cert_rounds: int = 2,
                    archive_cuts: bool = False,
-                   height_filter: bool = True,
+                   closure_lemma: bool = True,
+                   height_rank: bool = False,
                    agg_extra: int = 0,
+                   cut_diversify: bool = True,
+                   gap_hopeless: float = 0.5,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -964,23 +1043,58 @@ def matheuristic_P(inst: MOILFP,
     # --- phase 2 : certification (Th. 5') --------------------------------
     # le budget de recherche non consomme est reverse ici : la recherche a
     # conclu, la certification non.
-    budget = bound_budget
-    if reallocate:
-        budget += max(0.0, time_budget - search_time)
+    leftover = max(0.0, time_budget - search_time) if reallocate else 0.0
+    budget = bound_budget + leftover
 
     q_ub, proved, cert_info = None, False, {}
     cut_points: List[np.ndarray] = []
+    n_neufs = 0
+
+    def _cert(bud: float, rounds: int):
+        return certify(inst, q, x_best, dominated, bud,
+                       use_tightened=tightened, archive=arch,
+                       cut_batch=cut_batch, max_rounds=rounds,
+                       archive_cuts=archive_cuts, closure_lemma=closure_lemma,
+                       height_rank=height_rank, agg_extra=agg_extra)
+
     if certify_bound and budget > 0:
-        c = certify(inst, q, x_best, dominated, budget,
-                    use_tightened=tightened, archive=arch,
-                    cut_batch=cut_batch, max_rounds=cert_rounds,
-                    archive_cuts=archive_cuts, height_filter=height_filter,
-                    agg_extra=agg_extra)
-        q_ub, proved, cert_info = c.q_ub, c.proved, c.info
-        cut_points = c.cut_points
-        if c.q_lb is not None and c.q_lb > q:
-            q, x_best = c.q_lb, c.x_best      # pas de Dinkelbach offert
+        sonde = None
+        # SONDE. Un seul tour de certification, pour SAVOIR si la borne est
+        # en train de se fermer, au lieu de le supposer. Toute borne obtenue
+        # reste valide : la sonde ne peut donc rien gater, et quand elle
+        # repond non elle fait gagner tout le reste du budget.
+        if cut_diversify and leftover > 0.3:
+            part = min(0.3 * budget, leftover)
+            sonde = _cert(part, 1)
+            if sonde.q_lb is not None and sonde.q_lb > q:
+                q, x_best = sonde.q_lb, sonde.x_best
+            q_ub, proved = sonde.q_ub, sonde.proved
+            cert_info, cut_points = sonde.info, sonde.cut_points
+            budget -= part
+            ecart = None if q_ub is None else \
+                (q_ub - float(q)) / max(1e-12, abs(q_ub))
+            # borne qui ne ferme pas : a n >= 20 la campagne mesure 92-98 %
+            # quoi qu'on fasse. Le temps restant vaut alors plus a la
+            # RECHERCHE qu'a la certification, et la coupe d'efficacite sert
+            # ici d'operateur de diversification -- sans cloture a etablir.
+            if not proved and (ecart is None or ecart > gap_hopeless):
+                part_div = 0.6 * budget
+                q, x_best, n_neufs = diversify_over_archive(
+                    inst, arch, q, x_best, part_div, cut_batch, dominated)
+                budget -= part_div
+
+        if budget > 0.05 and not proved:
+            c = _cert(budget, cert_rounds)
+            if c.q_lb is not None and c.q_lb > q:
+                q, x_best = c.q_lb, c.x_best   # pas de Dinkelbach offert
+            # le MINIMUM de deux bornes valides est une borne valide : q* ne
+            # depend pas du q qui a servi a l'obtenir.
+            if c.q_ub is not None:
+                q_ub = c.q_ub if q_ub is None else min(q_ub, c.q_ub)
+            proved = proved or c.proved
+            cert_info, cut_points = c.info, c.cut_points
     cert_info["search_time"] = search_time
+    cert_info["diversify_new"] = n_neufs
     cert_info["cert_budget"] = budget
     cert_info["restarts"] = n_restarts
     cert_info["moves"] = dict(n_moves)
