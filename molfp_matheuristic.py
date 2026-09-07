@@ -1098,14 +1098,30 @@ def matheuristic_P(inst: MOILFP,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
                        agg_extra=agg_extra)
 
+    # --- repartition du plafond d'APPELS entre les phases -----------------
+    # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme
+    # la totalite des appels restants, et la diversification ne s'execute
+    # jamais. Le banc deterministe l'a montre sans ambiguite : `neufs` valait
+    # 0 sur les 23 lignes, non parce que la diversification echouait mais
+    # parce qu'elle ne tournait pas. Un plafond en appels exige donc une
+    # repartition en appels ; melanger les deux unites ne mesure rien.
+    def _cap(fraction: float) -> None:
+        """Plafonne la phase suivante a `fraction` des appels encore libres."""
+        if ilp_budget is None:
+            return
+        utilises = ORACLE_CALLS["ilp"] - calls0
+        reste = max(0, ilp_budget - utilises)
+        set_ilp_budget(calls0 + utilises + max(1, int(fraction * reste)))
+
     if certify_bound and budget > 0:
         sonde = None
         # SONDE. Un seul tour de certification, pour SAVOIR si la borne est
         # en train de se fermer, au lieu de le supposer. Toute borne obtenue
         # reste valide : la sonde ne peut donc rien gater, et quand elle
         # repond non elle fait gagner tout le reste du budget.
-        if cut_diversify and leftover > 0.3:
-            part = min(0.3 * budget, leftover)
+        if cut_diversify and (leftover > 0.3 or ilp_budget is not None):
+            part = min(0.3 * budget, leftover) if leftover > 0.3 else budget
+            _cap(0.3)
             sonde = _cert(part, 1)
             if sonde.q_lb is not None and sonde.q_lb > q:
                 q, x_best = sonde.q_lb, sonde.x_best
@@ -1121,6 +1137,7 @@ def matheuristic_P(inst: MOILFP,
             if not proved and (ecart is None or ecart > gap_hopeless):
                 part_div = 0.6 * budget
                 t_div = time.time()
+                _cap(0.6)
                 q, x_best, n_neufs = diversify_over_archive(
                     inst, arch, q, x_best, part_div, cut_batch, dominated)
                 # on ne retire que ce qui a ETE CONSOMME. La sonde de
@@ -1131,6 +1148,8 @@ def matheuristic_P(inst: MOILFP,
                 # zero point neuf.
                 budget -= min(part_div, time.time() - t_div)
 
+        if ilp_budget is not None:
+            set_ilp_budget(calls0 + ilp_budget)   # le reste a la certification
         if budget > 0.05 and not proved:
             c = _cert(budget, cert_rounds)
             if c.q_lb is not None and c.q_lb > q:
