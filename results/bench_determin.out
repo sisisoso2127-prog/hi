@@ -1,0 +1,33 @@
+ok
+instance                   reproductible  prouve A/B              q_lb A/B     q_ub A     q_ub B  lemme  verdict
+--------------------------------------------------------------------------------------------------------
+molfp_n10_m6_p3_c000_s1              ouiT/         T    37.6667    37.6667    37.6667    37.6667      0       ok
+molfp_n10_m6_p3_c090_s1              ouiT/         T     5.9474     5.9474     5.9474     5.9474      0       ok
+molfp_n15_m8_p3_c050_s1              ouiT/         T    12.6667    12.6667    12.6667    12.6667      0       ok
+molfp_n20_m11_p3_c000_s1             ouiF/         F     2.5098     2.5098   210.9020   210.9020      0       ok
+molfp_n20_m11_p3_c090_s1             ouiT/         T     2.1569     2.1569     2.1569     2.1569      0       ok
+molfp_n5_m3_p2_c050_s1               ouiT/         T    13.2000    13.2000    13.2000    13.2000      0       ok
+molfp_n5_m3_p3_c000_s1               ouiT/         T     4.7059     4.7059     4.7059     4.7059      0       ok
+molfp_n5_m3_p3_c090_s1               ouiT/         T     3.2500     3.2500     3.2500     3.2500      0       ok
+molfp_n5_m3_p4_c050_s1               ouiT/         T     7.3125     7.3125     7.3125     7.3125      0       ok
+molfp_n6_m4_p2_c000_s1               ouiT/         T     2.3846     2.3846     2.3846     2.3846      0       ok
+molfp_n6_m4_p2_c090_s1               ouiT/         T     0.9286     0.9286     0.9286     0.9286      0       ok
+molfp_n6_m4_p3_c050_s1               ouiT/         T     5.7778     5.7778     5.7778     5.7778      5       ok
+molfp_n6_m4_p4_c000_s1               ouiT/         T    37.7500    37.7500    37.7500    37.7500     19       ok
+molfp_n6_m4_p4_c090_s1               ouiT/         T     3.4583     3.4583     3.4583     3.4583      0       ok
+molfp_n7_m4_p2_c050_s1               ouiT/         T     5.3333     5.3333     5.3333     5.3333      1       ok
+molfp_n7_m4_p3_c000_s1               ouiT/         T     4.6250     4.6250     4.6250     4.6250      1       ok
+molfp_n7_m4_p3_c090_s1               ouiT/         T     4.6250     4.6250     4.6250     4.6250      0       ok
+molfp_n7_m4_p4_c050_s1               ouiT/         T     6.0000     6.0000     6.0000     6.0000      0       ok
+molfp_n8_m5_p2_c000_s1               ouiT/         T     4.2692     4.2692     4.2692     4.2692      0       ok
+molfp_n8_m5_p2_c090_s1               ouiT/         T     1.8571     1.8571     1.8571     1.8571      0       ok
+molfp_n8_m5_p3_c050_s1               ouiT/         T     3.9474     3.9474     3.9474     3.9474      0       ok
+molfp_n8_m5_p4_c000_s1               ouiT/         T     6.4286     6.4286     6.4286     6.4286      0       ok
+molfp_n8_m5_p4_c090_s1               ouiT/         T     1.5000     1.5000     1.5000     1.5000      0       ok
+--------------------------------------------------------------------------------------------------------
+  REPRODUCTIBILITE : 23/23 instances identiques d'une execution a l'autre
+  preuves : gagnees 0   perdues 0   inchangees 23
+  reculs   : valeur 0   borne superieure 0
+  => a budget d'appels EGAL, aucune instance en recul, sur les 23 testees.
+
+[exited with code 0]
