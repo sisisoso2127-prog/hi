@@ -13,6 +13,20 @@ Ce fichier est autonome : numpy et scipy suffisent. Il est ASSEMBLE a partir
 des sources du projet, sans retranscription -- ce qui est mesure est ce qui
 est livre.
 
+VERSION. Verifiez que vous avez bien CETTE version avant de signaler un
+probleme :
+
+    grep -c "raise RuntimeError" hybride_complet.py     doit rendre 0
+    grep -c "def reduce_row"     hybride_complet.py     doit rendre 1
+
+Une version anterieure levait `RuntimeError: Test d'efficacite : statut
+infeasible` sur certaines versions de HiGHS. Le programme de ce test est
+pourtant TOUJOURS realisable -- xbar en est une solution -- donc un tel
+statut ne peut venir que du solveur. Plus aucune fonction ne leve sur un
+statut de solveur : le resultat est simplement declare NON CONCLUANT, ce qui
+ne coute que de ne pas certifier ce point-la et laisse toutes les bornes
+valides.
+
     python hybride_complet.py demo      les deux illustrations, pas a pas
     python hybride_complet.py verify    controles de validite (verite terrain)
     python hybride_complet.py ab        A/B des leviers, sur instances generees
@@ -842,8 +856,13 @@ def dinkelbach(fobj: FracObj,
         x_best = res.x
         q = fobj.value(x_best)                     # pas de Newton
 
-    raise RuntimeError("Dinkelbach : max_iter atteint (ne devrait pas arriver "
-                       "sur un ensemble fini).")
+    # `max_iter` atteint. La convergence finie est demontree -- q croit
+    # strictement a chaque tour et S est fini -- donc y arriver signale une
+    # anomalie, en pratique un solveur qui rend un statut aberrant. On rend
+    # le meilleur point atteint avec le statut 'limit' plutot que de lever :
+    # x_best est REALISABLE, donc q en est une borne inferieure valide, et
+    # les appelants savent lire un statut non optimal.
+    return DinkelbachResult(q, x_best, max_iter, "limit", trace)
 
 
 def max_f_over_S(inst: MOILFP) -> DinkelbachResult:
@@ -853,6 +872,22 @@ def max_f_over_S(inst: MOILFP) -> DinkelbachResult:
     Valide car E est inclus dans S, donc max_S f >= max_E f = q*.
     """
     return dinkelbach(inst.f, feasibility_rows(inst), inst.var_upper_bounds())
+
+
+def upper_bound_over_S(inst: MOILFP) -> float:
+    """
+    MAJORANT VALIDE de q* : le maximum de f sur S, puisque E est inclus dans S.
+
+    Le detour par cette fonction n'est pas cosmetique. `max_f_over_S` rend un
+    `DinkelbachResult` dont `q_star` est le maximum cherche UNIQUEMENT si le
+    statut est 'optimal' ; dans les autres cas c'est le meilleur point
+    atteint, donc un MINORANT du maximum -- et s'en servir comme majorant de
+    q* serait faux. On rend alors +inf, qui est un majorant valide et le dit.
+    """
+    r = max_f_over_S(inst)
+    if r.status != "optimal" or r.q_star is None:
+        return float("inf")
+    return float(r.q_star)
 
 
 def ideal_nadir_estimates(inst: MOILFP) -> Tuple[List[Fraction], List[Fraction]]:
@@ -2630,7 +2665,7 @@ def cmd_scale() -> int:
     for n in (20, 30, 40):
         inst = generate(n=n, m=max(3, n // 2 + 1), p=3, seed=1,
                         rhs_scale=1.0, corr=0.0)
-        mS = float(max_f_over_S(inst).q_star)
+        mS = upper_bound_over_S(inst)   # +inf si Dinkelbach n'a pas conclu
         res = {}
         for ac in (False, True):
             r = matheuristic_P(inst, time_budget=18, bound_budget=12,

@@ -35,7 +35,8 @@ import time
 
 import numpy as np
 
-from molfp_core import ORACLE_CALLS, max_f_over_S, reset_oracle_counter
+from molfp_core import (ORACLE_CALLS, reset_oracle_counter,
+                        upper_bound_over_S)
 from molfp_instance import generate
 from molfp_matheuristic import matheuristic_P
 
@@ -76,7 +77,7 @@ def main() -> int:
             for g in GRAINES:
                 inst = generate(n=n, m=m, p=3, seed=1 + g,
                                 rhs_scale=1.0, corr=corr)
-                mS = float(max_f_over_S(inst).q_star)
+                mS = upper_bound_over_S(inst)   # +inf si non conclu
                 A = une(inst, t_rech, t_borne, g, diversify=False)
                 B = une(inst, t_rech, t_borne, g, diversify=True)
                 # les deux encadrements doivent contenir le meme q*

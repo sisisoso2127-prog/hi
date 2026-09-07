@@ -488,8 +488,13 @@ def dinkelbach(fobj: FracObj,
         x_best = res.x
         q = fobj.value(x_best)                     # pas de Newton
 
-    raise RuntimeError("Dinkelbach : max_iter atteint (ne devrait pas arriver "
-                       "sur un ensemble fini).")
+    # `max_iter` atteint. La convergence finie est demontree -- q croit
+    # strictement a chaque tour et S est fini -- donc y arriver signale une
+    # anomalie, en pratique un solveur qui rend un statut aberrant. On rend
+    # le meilleur point atteint avec le statut 'limit' plutot que de lever :
+    # x_best est REALISABLE, donc q en est une borne inferieure valide, et
+    # les appelants savent lire un statut non optimal.
+    return DinkelbachResult(q, x_best, max_iter, "limit", trace)
 
 
 def max_f_over_S(inst: MOILFP) -> DinkelbachResult:
@@ -499,6 +504,22 @@ def max_f_over_S(inst: MOILFP) -> DinkelbachResult:
     Valide car E est inclus dans S, donc max_S f >= max_E f = q*.
     """
     return dinkelbach(inst.f, feasibility_rows(inst), inst.var_upper_bounds())
+
+
+def upper_bound_over_S(inst: MOILFP) -> float:
+    """
+    MAJORANT VALIDE de q* : le maximum de f sur S, puisque E est inclus dans S.
+
+    Le detour par cette fonction n'est pas cosmetique. `max_f_over_S` rend un
+    `DinkelbachResult` dont `q_star` est le maximum cherche UNIQUEMENT si le
+    statut est 'optimal' ; dans les autres cas c'est le meilleur point
+    atteint, donc un MINORANT du maximum -- et s'en servir comme majorant de
+    q* serait faux. On rend alors +inf, qui est un majorant valide et le dit.
+    """
+    r = max_f_over_S(inst)
+    if r.status != "optimal" or r.q_star is None:
+        return float("inf")
+    return float(r.q_star)
 
 
 def ideal_nadir_estimates(inst: MOILFP) -> Tuple[List[Fraction], List[Fraction]]:

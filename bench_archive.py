@@ -28,7 +28,7 @@ import time
 
 import numpy as np
 
-from molfp_core import max_f_over_S, reset_oracle_counter
+from molfp_core import (reset_oracle_counter, upper_bound_over_S)
 from molfp_enum import ground_truth
 from molfp_instance import generate
 from molfp_matheuristic import matheuristic_P
@@ -133,7 +133,7 @@ def partie_b() -> bool:
     for n in ECHELLE:
         m = max(3, n // 2 + 1)
         inst = generate(n=n, m=m, p=3, seed=1, rhs_scale=1.0, corr=0.0)
-        mS = float(max_f_over_S(inst).q_star)
+        mS = upper_bound_over_S(inst)      # +inf si Dinkelbach n'a pas conclu
         res = {}
         for _, ac in VARIANTES:
             reset_oracle_counter()
