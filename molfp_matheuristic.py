@@ -104,7 +104,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 from molfp_core import (INF, ORACLE_CALLS, efficiency_test, feasibility_rows,
-                        solve_ilp)
+                        max_over_relaxation, solve_ilp)
 from molfp_instance import MOILFP
 from molfp_oracle import (ECutModel, HybridResult, max_linear_over_E,
                           repair_to_efficient)
@@ -240,6 +240,123 @@ def build_cut_pool(dominated: Sequence[np.ndarray],
     return pool
 
 
+def region_height(inst: MOILFP, a: np.ndarray, q: Fraction) -> float:
+    """
+    Hauteur de la REGION que retranche une coupe posee en `a` :
+
+        h(a) = max { Q N(x) - P D(x)  :  x in S,  Z(x) <= Z(a) }
+
+    majoree sur la relaxation continue (donc valide), et ramenee au plancher
+    entier puisque Q N - P D est entiere.
+
+    Pourquoi cette quantite, et pas w^T a comme jusqu'ici. Le classement du
+    vivier par valeur decroissante du substitut se justifiait pour les points
+    DOMINES : un tel point est lui-meme dans R et tire U vers le haut, donc le
+    couper fait mecaniquement baisser U. Ce raisonnement ne vaut PAS pour un
+    point d'archive : `a` est efficace, donc f(a) <= q, donc son substitut est
+    <= 0 par construction -- w^T a le classe systematiquement en queue, alors
+    que la valeur d'une coupe d'efficacite ne tient pas au point mais a la
+    REGION qu'il domine. Sur l'instance I2 de l'illustration, la coupe la plus
+    profitable de toute l'instance est posee en un point d'archive de
+    substitut exactement nul.
+
+    Deux usages, tous deux exacts :
+
+      * h(a) <= 0 CERTIFIE que la region ne contient aucun point entier
+        battant q. La couper ne peut ni faire baisser U (un maximum ne bouge
+        pas quand on retire des points sous son niveau) ni faire monter D+
+        (dont le minimum ne porte que sur la zone active). La coupe est donc
+        SANS EFFET sur la borne : la poser gaspille un ILP de cloture et une
+        place sous le plafond.
+      * sinon h(a) classe les candidats des deux sources sur la meme echelle.
+
+    Cout : un seul PL, sur S (et non sur R) -- la region ne depend donc pas
+    des coupes deja posees, et h reste un majorant valide puisque R est
+    inclus dans S.
+    """
+    P, Q = q.numerator, q.denominator
+    rows = feasibility_rows(inst)
+    for k in range(inst.p):
+        coef, cst = e_row(inst, a, k)
+        rows.append((coef, -INF, -cst))            # e_k^a(x) <= 0
+    w = (Q * inst.f.num - P * inst.f.den).astype(float)
+    w0 = float(Q * inst.f.a - P * inst.f.b)
+    return max_over_relaxation(w, w0, rows, inst.var_upper_bounds())
+
+
+def select_cuts(inst: MOILFP,
+                dominated: Sequence[np.ndarray],
+                archive: Sequence[np.ndarray],
+                q: Fraction,
+                cap: int,
+                max_lp: Optional[int] = None) -> Tuple[List[tuple], dict]:
+    """
+    Choisit et ordonne les coupes a poser, les deux sources sur la MEME
+    echelle : la hauteur de region `region_height`.
+
+    Renvoie des TRIPLETS (point, origine, hauteur). La hauteur n'est pas
+    qu'une cle de tri : elle dispense parfois de l'ILP de cloture, par le
+
+    LEMME (cloture par la hauteur). Si h(a) <= 0, la condition de cloture
+    est etablie en `a`.
+      Preuve. { x : Z(x) = Z(a) } est inclus dans { x : Z(x) <= Z(a) }. Si
+      le maximum de Q N - P D sur le second est <= 0, il l'est sur le
+      premier, c'est-a-dire f(x) <= q pour tout x de meme vecteur criteres
+      que a. []
+    Comme h est majoree sur la relaxation continue, un h <= 0 calcule par PL
+    suffit. UN PL remplace donc UN ILP -- et c'etait la, exactement, le
+    surcout mesure : sur les instances a E epais dont le vivier tient sous
+    le plafond, la lecture appariee relevait +21 a +27 appels au solveur
+    entier, pour 21 a 26 coupes d'archive posees. Un ILP de cloture chacune.
+
+    Deux regimes, et la condition qui les separe est la TAILLE DU VIVIER :
+
+      * vivier plus petit que le plafond -> on garde TOUT, y compris les
+        candidats de hauteur nulle. Couper l'archive entiere est a portee,
+        et c'est la seule facon de VIDER le relache, donc d'obtenir la
+        preuve de la proposition du relache vide, qu'aucune borne ne
+        remplace. Ces coupes-la ne coutent plus d'ILP, par le lemme.
+      * vivier plus grand -> vider le relache est hors de portee de toute
+        facon (l'archive ne couvre pas un E epais) et chaque place compte :
+        on ne retient que les candidats de hauteur strictement positive.
+
+    NOTE. Les hauteurs sont calculees une fois, pour le q d'entree. Si la
+    certification ameliore l'incumbent, elles restent des majorants -- donc
+    le lemme reste valide -- mais moins fins.
+
+    Renvoie (vivier ordonne, diagnostic).
+    """
+    w, w0, _, _ = surrogate(inst, q)
+    pool = build_cut_pool(rank_dominated(dominated, w), archive or [], w)
+    serre = len(pool) > cap
+
+    if not serre and not any(k == "arch" for _, k in pool):
+        # rien a arbitrer et aucune cloture a etablir : pas un seul PL.
+        return ([(x, k, None) for x, k in pool],
+                {"pool": len(pool), "evalues": 0, "utiles": None,
+                 "vains": None, "vains_arch": 0, "filtre_actif": False,
+                 "cloture_gratuite": 0})
+
+    budget_lp = max_lp if max_lp is not None else max(2 * cap, 40)
+    scored = [(x, k, region_height(inst, x, q)) for x, k in pool[:budget_lp]]
+    reste = [(x, k, None) for x, k in pool[budget_lp:]]
+
+    utiles = sorted([t for t in scored if t[2] > 0], key=lambda t: -t[2])
+    vains = sorted([t for t in scored if t[2] <= 0], key=lambda t: -t[2])
+
+    retenus = utiles if serre else utiles + vains + reste
+    info = {"pool": len(pool), "evalues": len(scored),
+            "utiles": len(utiles), "vains": len(vains),
+            "vains_arch": sum(1 for t in vains if t[1] == "arch"),
+            "filtre_actif": serre,
+            # coupes d'archive dont la cloture est acquise par le lemme,
+            # donc posees SANS ILP
+            "cloture_gratuite": sum(1 for t in retenus
+                                    if t[1] == "arch" and t[2] is not None
+                                    and t[2] <= 0)}
+    return retenus, info
+
+
 @dataclass
 class CertResult:
     """Sortie de la phase de certification."""
@@ -258,7 +375,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             archive: Optional["Archive"] = None,
             cut_batch: int = 10,
             max_rounds: int = 6,
-            archive_cuts: bool = False) -> CertResult:
+            archive_cuts: bool = False,
+            height_filter: bool = True) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -283,7 +401,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     """
     t0 = time.time()
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
-                  "rounds": 0, "q_improved": False, "archive_cuts": 0}
+                  "rounds": 0, "q_improved": False, "archive_cuts": 0,
+                  "select": None, "cloture_lemme": 0}
 
     best_ub: Optional[float] = None
     proved = False
@@ -292,11 +411,22 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     model = ECutModel(inst)
     pending: List[tuple] = []
     if use_tightened:
-        w0_coef, _, _, _ = surrogate(inst, q)
         arch_pts = archive.points() if (archive is not None and archive_cuts) \
             else []
-        pending = build_cut_pool(rank_dominated(dominated, w0_coef),
-                                 arch_pts, w0_coef)
+        if height_filter:
+            # classement des DEUX sources sur la hauteur de region, et rejet
+            # des candidats sans effet sur la borne quand la place manque.
+            # `cap` = le plafond qui ARBITRE reellement, c'est-a-dire le lot
+            # pose en un tour, et non le total sur tous les tours : c'est lui
+            # qui decide quels candidats obtiennent une place.
+            pending, sel = select_cuts(inst, dominated, arch_pts, q,
+                                       cap=cut_batch)
+            info["select"] = sel
+        else:
+            w0_coef, _, _, _ = surrogate(inst, q)
+            pending = [(x, k, None) for x, k in
+                       build_cut_pool(rank_dominated(dominated, w0_coef),
+                                      arch_pts, w0_coef)]
 
     for rnd in range(1, max_rounds + 1):
         left = budget - (time.time() - t0)
@@ -319,14 +449,24 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         improved_by_closure = None
         if pending:
             posees = 0
-            for x, kind in pending:
+            for cand in pending:
+                x, kind = cand[0], cand[1]
+                h = cand[2] if len(cand) > 2 else None
                 if posees >= cut_batch or time.time() > t0 + budget:
                     break
                 if kind == "arch":
-                    better = same_criteria_improves(inst, x, q_ref)
-                    if better is not None:
-                        improved_by_closure = better
-                        break
+                    # LEMME DE CLOTURE PAR LA HAUTEUR (cf. `select_cuts`) :
+                    # h <= 0 majore Q N - P D sur TOUTE la region dominee par
+                    # `x`, donc en particulier sur les points de meme vecteur
+                    # criteres. La cloture est acquise, et l'ILP n'a pas lieu
+                    # d'etre : un PL deja paye le remplace.
+                    if h is None or h > 0:
+                        better = same_criteria_improves(inst, x, q_ref)
+                        if better is not None:
+                            improved_by_closure = better
+                            break
+                    else:
+                        info["cloture_lemme"] = info.get("cloture_lemme", 0) + 1
                     model.add_efficiency_cut(x)
                     info["archive_cuts"] = info.get("archive_cuts", 0) + 1
                 else:
@@ -675,6 +815,7 @@ def matheuristic_P(inst: MOILFP,
                    cut_batch: int = 40,
                    cert_rounds: int = 2,
                    archive_cuts: bool = False,
+                   height_filter: bool = True,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -811,7 +952,7 @@ def matheuristic_P(inst: MOILFP,
         c = certify(inst, q, x_best, dominated, budget,
                     use_tightened=tightened, archive=arch,
                     cut_batch=cut_batch, max_rounds=cert_rounds,
-                    archive_cuts=archive_cuts)
+                    archive_cuts=archive_cuts, height_filter=height_filter)
         q_ub, proved, cert_info = c.q_ub, c.proved, c.info
         cut_points = c.cut_points
         if c.q_lb is not None and c.q_lb > q:

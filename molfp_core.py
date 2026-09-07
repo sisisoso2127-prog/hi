@@ -228,6 +228,57 @@ def min_over_relaxation(coef: np.ndarray,
     return val + const
 
 
+def max_over_relaxation(coef: np.ndarray,
+                       const: float,
+                       rows: Sequence[Tuple[np.ndarray, float, float]],
+                       var_ub: np.ndarray) -> float:
+    """
+    Majorant VALIDE de  max { coef^T x + const : x in S }  sur la relaxation
+    continue de S = { x entier, 0 <= x <= var_ub, rows }.
+
+    Symetrique de `min_over_relaxation`, a une difference pres qui compte :
+    ici l'ensemble peut etre VIDE (on l'appelle sur des regions definies par
+    des contraintes supplementaires, pas sur S entier). Un maximum sur le vide
+    vaut -inf, et c'est l'information la plus utile qui soit -- pas un echec.
+    On distingue donc les trois cas :
+
+        -inf  la relaxation est vide, donc S l'est aussi ;
+        +inf  le LP a echoue pour une autre raison, ou l'ensemble est non
+              borne : l'appelant doit retomber sur le comportement prudent ;
+        fini  majorant valide.
+
+    Les coefficients etant ENTIERS et x entier, coef^T x est entier : on
+    descend au plancher entier du majorant continu. La marge 1e-6 absorbe
+    l'erreur du simplexe et ne peut que relacher le majorant.
+    """
+    ORACLE_CALLS["lp"] += 1
+    bounds = [(0.0, float(u)) for u in var_ub]
+    A_ub, b_ub = [], []
+    for r_coef, lo, hi in rows:
+        r = np.asarray(r_coef, dtype=float)
+        if np.isfinite(hi):
+            A_ub.append(r)
+            b_ub.append(float(hi))
+        if np.isfinite(lo):
+            A_ub.append(-r)
+            b_ub.append(-float(lo))
+
+    c = np.asarray(coef, dtype=float)
+    res = linprog(c=-c,
+                  A_ub=np.array(A_ub) if A_ub else None,
+                  b_ub=np.array(b_ub) if b_ub else None,
+                  bounds=bounds, method="highs")
+    if not res.success:
+        # status 2 = infaisable : le vide, pas une panne.
+        return -np.inf if getattr(res, "status", None) == 2 else np.inf
+
+    integral = bool(np.all(c == np.rint(c)))
+    val = -float(res.fun)
+    if integral:
+        val = float(np.floor(val + 1e-6))
+    return val + const
+
+
 # ----------------------------------------------------------------------------
 # Theoreme 1 : contraintes de seuil integrales
 # ----------------------------------------------------------------------------
