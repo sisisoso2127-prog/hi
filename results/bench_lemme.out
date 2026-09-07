@@ -1,0 +1,99 @@
+========================================================================================================
+A/B DU LEMME DE CLOTURE - 90 instances, budget 12 s par variante, comparaison APPARIEE
+========================================================================================================
+instance                   q identique  prouve A/B   ILP A   ILP B   dILP   LP B  coupes A/B  arch A/B  lemme  filtre
+--------------------------------------------------------------------------------------------------------
+molfp_n10_m6_p3_c000_s1            ouiT/         T     189     188     -1    104    30/30      14/14        1     non
+molfp_n10_m6_p3_c000_s2            ouiT/         T     299     297     -2    138    35/35      21/21        2     non
+molfp_n10_m6_p3_c050_s1            ouiT/         T     138     138     +0     70    21/21       7/7         0     non
+molfp_n10_m6_p3_c050_s2            ouiT/         T     265     265     +0    133    40/40      10/10        0     non
+molfp_n10_m6_p3_c090_s1            ouiT/         T      48      48     +0     29     9/9        2/2         0     non
+molfp_n10_m6_p3_c090_s2            ouiT/         T     217     217     +0    126    39/39       9/9         0     non
+molfp_n15_m8_p3_c000_s1            ouiT/         T     221     200    -21    134    36/36      26/26       21     non
+molfp_n15_m8_p3_c000_s2            ouiF/         F     438     435     -3    338    99/99      20/20        3     non
+molfp_n15_m8_p3_c050_s1            ouiT/         T     298     298     +0    128    40/40       8/8         0     non
+molfp_n15_m8_p3_c050_s2            ouiT/         T     416     416     +0    133    40/40      13/13        0     non
+molfp_n15_m8_p3_c090_s1            ouiT/         T      42      42     +0     25     8/8        1/1         0     non
+molfp_n15_m8_p3_c090_s2            ouiT/         T      84      84     +0     53    13/13       2/2         0     non
+molfp_n20_m11_p3_c000_s1           ouiF/         F     261     254     -7    269    82/82      17/17        0     non
+molfp_n20_m11_p3_c000_s2           ouiF/         F     292     285     -7    285    84/84      27/27        0     non
+molfp_n20_m11_p3_c050_s1           ouiT/         T     233     233     +0    125    40/40       5/5         0     non
+molfp_n20_m11_p3_c050_s2           ouiT/         T     480     480     +0    313    91/91      25/25        0     non
+molfp_n20_m11_p3_c090_s1           ouiT/         T      42      42     +0     31    10/10       1/1         0     non
+molfp_n20_m11_p3_c090_s2           ouiT/         T      91      91     +0     55    17/17       4/4         0     non
+molfp_n5_m3_p2_c000_s1             ouiT/         T      48      48     +0     17     7/7        3/3         0     non
+molfp_n5_m3_p2_c000_s2             ouiT/         T      45      43     -2     24     6/6        4/4         2     non
+molfp_n5_m3_p2_c050_s1             ouiT/         T      36      36     +0     18     8/8        2/2         0     non
+molfp_n5_m3_p2_c050_s2             ouiT/         T      24      24     +0      7     3/3        1/1         0     non
+molfp_n5_m3_p2_c090_s1             ouiT/         T      27      27     +0     11     5/5        1/1         0     non
+molfp_n5_m3_p2_c090_s2             ouiT/         T      22      22     +0      7     3/3        1/1         0     non
+molfp_n5_m3_p3_c000_s1             ouiT/         T      67      67     +0     36    11/11       3/3         0     non
+molfp_n5_m3_p3_c000_s2             ouiT/         T     215     211     -4    103    30/30      13/13        4     non
+molfp_n5_m3_p3_c050_s1             ouiT/         T      43      43     +0     19     6/6        1/1         0     non
+molfp_n5_m3_p3_c050_s2             ouiT/         T      95      95     +0     56    17/17       5/5         0     non
+molfp_n5_m3_p3_c090_s1             ouiT/         T      35      35     +0     19     6/6        1/1         0     non
+molfp_n5_m3_p3_c090_s2             ouiT/         T      25      25     +0      7     2/2        1/1         0     non
+molfp_n5_m3_p4_c000_s1             ouiT/         T     237     215    -22    169    36/36      25/25       22     non
+molfp_n5_m3_p4_c000_s2             ouiT/         T     471     471     +0    387    83/83      19/19        0     non
+molfp_n5_m3_p4_c050_s1             ouiT/         T     118     118     +0     78    18/18       6/6         0     non
+molfp_n5_m3_p4_c050_s2             ouiT/         T      79      79     +0     52    12/12       4/4         0     non
+molfp_n5_m3_p4_c090_s1             ouiT/         T      45      45     +0     21     5/5        1/1         0     non
+molfp_n5_m3_p4_c090_s2             ouiT/         T      36      36     +0      9     2/2        1/1         0     non
+molfp_n6_m4_p2_c000_s1             ouiT/         T      60      60     +0     33    14/14       5/5         0     non
+molfp_n6_m4_p2_c000_s2             ouiT/         T     104     104     +0     53    23/23       7/7         0     non
+molfp_n6_m4_p2_c050_s1             ouiT/         T     198     198     +0     78    32/32      10/10        0     non
+molfp_n6_m4_p2_c050_s2             ouiT/         T     209     209     +0     83    36/36       7/7         0     non
+molfp_n6_m4_p2_c090_s1             ouiT/         T      26      26     +0      9     4/4        1/1         0     non
+molfp_n6_m4_p2_c090_s2             ouiT/         T      64      64     +0     29    13/13       3/3         0     non
+molfp_n6_m4_p3_c000_s1             ouiT/         T     180     162    -18    126    35/35      21/21       18     non
+molfp_n6_m4_p3_c000_s2             ouiT/         T     274     255    -19    139    40/40      19/19       19     non
+molfp_n6_m4_p3_c050_s1             ouiT/         T     237     229     -8    106    29/29      16/16        8     non
+molfp_n6_m4_p3_c050_s2             ouiT/         T     311     311     +0    151    40/40      10/10        0     non
+molfp_n6_m4_p3_c090_s1             ouiT/         T      29      29     +0     10     3/3        1/1         0     non
+molfp_n6_m4_p3_c090_s2             ouiT/         T      58      58     +0     30     9/9        3/3         0     non
+molfp_n6_m4_p4_c000_s1             ouiT/         T     255     231    -24    144    30/30      24/24       24     non
+molfp_n6_m4_p4_c000_s2             ouiT/         T     524     524     +0    179    40/40      11/11        0     non
+molfp_n6_m4_p4_c050_s1             ouiT/         T     235     235     +0    153    34/34      13/13        0     non
+molfp_n6_m4_p4_c050_s2             ouiT/         T     453     453     +0    182    40/40      18/18        0     non
+molfp_n6_m4_p4_c090_s1             ouiT/         T      41      41     +0     17     4/4        1/1         0     non
+molfp_n6_m4_p4_c090_s2             ouiT/         T     130     130     +0     49    11/11       5/5         0     non
+molfp_n7_m4_p2_c000_s1             ouiT/         T      28      28     +0     11     5/5        1/1         0     non
+molfp_n7_m4_p2_c000_s2             ouiT/         T      70      69     -1     42    17/17       6/6         1     non
+molfp_n7_m4_p2_c050_s1             ouiT/         T     180     176     -4     61    24/24       9/9         4     non
+molfp_n7_m4_p2_c050_s2             ouiF/         F     108     108     +0     58    26/26       4/4         0     non
+molfp_n7_m4_p2_c090_s1             ouiT/         T      29      29     +0     11     5/5        1/1         0     non
+molfp_n7_m4_p2_c090_s2             ouiT/         T      29      29     +0     11     5/5        1/1         0     non
+molfp_n7_m4_p3_c000_s1             ouiT/         T     209     208     -1     84    26/26       6/6         1     non
+molfp_n7_m4_p3_c000_s2             ouiT/         T      61      58     -3     22     5/5        4/4         3     non
+molfp_n7_m4_p3_c050_s1             ouiT/         T     245     245     +0    130    39/39      13/13        0     non
+molfp_n7_m4_p3_c050_s2             ouiT/         T     191     182     -9    112    34/34      10/10        9     non
+molfp_n7_m4_p3_c090_s1             ouiT/         T      41      41     +0     19     6/6        1/1         0     non
+molfp_n7_m4_p3_c090_s2             ouiT/         T      37      37     +0     22     7/7        1/1         0     non
+molfp_n7_m4_p4_c000_s1             ouiT/         T      63      59     -4     28     6/6        4/4         4     non
+molfp_n7_m4_p4_c000_s2             ouiT/         T     272     251    -21    181    40/40      21/21       21     non
+molfp_n7_m4_p4_c050_s1             ouiT/         T     259     259     +0    105    23/23      13/13        0     non
+molfp_n7_m4_p4_c050_s2             ouiT/         T      99      99     +0     87     9/9        3/3         0     non
+molfp_n7_m4_p4_c090_s1             ouiT/         T     108     108     +0     56    13/13       4/4         0     non
+molfp_n7_m4_p4_c090_s2             ouiT/         T      40      40     +0     17     4/4        1/1         0     non
+molfp_n8_m5_p2_c000_s1             ouiT/         T     262     262     +0     68    28/28       8/8         0     non
+molfp_n8_m5_p2_c000_s2             ouiT/         T     102     102     +0     44    19/19       6/6         0     non
+molfp_n8_m5_p2_c050_s1             ouiT/         T      47      47     +0     29    13/13       3/3         0     non
+molfp_n8_m5_p2_c050_s2             ouiT/         T      49      49     +0     26    12/12       2/2         0     non
+molfp_n8_m5_p2_c090_s1             ouiT/         T      29      29     +0     11     5/5        1/1         0     non
+molfp_n8_m5_p2_c090_s2             ouiT/         T      32      32     +0     11     5/5        1/1         0     non
+molfp_n8_m5_p3_c000_s1             ouiT/         T     358     358     +0    245    76/76      14/14        0     non
+molfp_n8_m5_p3_c000_s2             ouiT/         T     130     130     +0     58    17/17       7/7         0     non
+molfp_n8_m5_p3_c050_s1             ouiT/         T     108     108     +0     58    18/18       4/4         0     non
+molfp_n8_m5_p3_c050_s2             ouiT/         T      89      89     +0     52    15/15       7/7         0     non
+molfp_n8_m5_p3_c090_s1             ouiT/         T      38      38     +0     16     5/5        1/1         0     non
+molfp_n8_m5_p3_c090_s2             ouiT/         T      38      38     +0     19     6/6        1/1         0     non
+molfp_n8_m5_p4_c000_s1             ouiT/         T     431     424     -7    193    40/40      25/25        7     non
+molfp_n8_m5_p4_c000_s2             ouiT/         T     592     595     +3    240    40/40       8/8         0     non
+molfp_n8_m5_p4_c050_s1             ouiT/         T      68      68     +0     53    10/10       1/1         0     non
+molfp_n8_m5_p4_c050_s2             ouiT/         T      95      95     +0     69    15/15       5/5         0     non
+molfp_n8_m5_p4_c090_s1             ouiT/         T      47      47     +0     25     6/6        1/1         0     non
+molfp_n8_m5_p4_c090_s2             ouiT/         T      44      44     +0     21     5/5        1/1         0     non
+--------------------------------------------------------------------------------------------------------
+  delta ILP par paire : mediane +0   moyenne -2.1   total -185   baisses 21/90
+  preuves : gagnees 0   perdues 0   inchangees 90
+  VALIDITE q_lb <= q_ub : TOUT VALIDE
