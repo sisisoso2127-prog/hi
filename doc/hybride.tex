@@ -98,12 +98,25 @@ de même vecteur critères -- se lève par une condition de clôture qui coûte
 
 Une proposition en découle, sans équivalent pour la coupe de dominance : si
 le relâché se \emph{vide}, l'optimalité est prouvée sans qu'aucune borne
-n'ait été évaluée. Sur $90$ instances à budget identique, l'optimalité
-prouvée passe de $84$ à $86$, le nombre médian d'appels au solveur entier de
-$124$ à $97$ et le temps médian de $0{,}9$~s à $0{,}7$~s ; sur le régime
-cible, de $57/80$ à $75/80$ preuves. Deux illustrations numériques
-entièrement détaillées, à $2$ puis $3$ variables, exposent le mécanisme pas
-à pas.
+n'ait été évaluée. Un lemme réduit ensuite le coût de la clôture à un
+\emph{programme linéaire}.
+
+Les mesures sont rapportées par \textbf{paires} -- même instance, même
+graine, les deux variantes -- et jamais en comparant deux médianes
+indépendantes, qui laissent croire à un gain par instance qui n'existe pas.
+Sur le régime cible, l'optimalité prouvée passe de $58/80$ à $78/80$
+exécutions, soit $20$ preuves gagnées et \emph{aucune} perdue, avec un coût
+en baisse ($-12$ appels au solveur entier par paire en médiane). Sur un lot
+figé de $90$ instances, $2$ preuves gagnées, aucune perdue, valeur identique
+partout. Un banc à budget \emph{déterministe} -- plafonné en nombre d'appels
+et non en secondes -- confirme la reproductibilité sur $90$ instances sur
+$90$ et l'absence de tout recul.
+
+Les limites sont énoncées avec la même précision que les gains : la méthode
+est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le lemme
+n'achète aucune preuve supplémentaire -- c'est un gain de coût, non de
+capacité. Deux illustrations numériques entièrement détaillées, à $2$ puis
+$3$ variables, exposent le mécanisme pas à pas.
 \end{abstract}
 
 \tableofcontents
@@ -166,10 +179,22 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       preuve, puisqu'elle \emph{préserve} $\Ecal$.
 \item \textbf{La clôture coûte un programme de faisabilité}, pas un optimum
       (\S\ref{sec:cloture}), et ses deux issues sont l'une et l'autre utiles.
+\item \textbf{Théorème~\ref{th:hauteur} (clôture par la hauteur).} Un
+      \emph{majorant} $\le 0$ de la hauteur de la région retranchée établit
+      la clôture. Comme il se calcule sur la relaxation continue, un
+      programme \emph{linéaire} remplace le programme en nombres entiers.
+      C'est ce qui fait passer le coût apparié de $+10$ à $-12$ appels par
+      exécution sur le régime cible.
 \item \textbf{Un seul vivier, deux sources} (\S\ref{sec:vivier}) : mettre les
       deux coupes en concurrence sous un plafond global, et non leur allouer
       des budgets séparés -- point où une mise en \oe uvre naïve perd
       $28$ preuves sur $90$.
+\item \textbf{Un protocole de mesure qui se contrôle lui-même}
+      (\S\ref{sec:determ}) : lecture appariée plutôt que comparaison de
+      médianes, budget plafonné en \emph{appels} et non en secondes, et
+      vérification du déterminisme par double exécution. Sans ce protocole,
+      deux des conclusions de ce mémoire auraient été fausses -- nous le
+      montrons plutôt que de l'affirmer.
 \end{enumerate}
 
 % ============================================================================
@@ -422,6 +447,50 @@ jamais produite dans nos mesures : sur $143\,220$ paires de points efficaces
 vérifiées par énumération exhaustive, aucune ne partage de vecteur critères.
 La clôture est de fait gratuite -- mais elle est \emph{vérifiée} et non
 supposée, et c'est ce qui rend la coupe sûre.
+
+\subsection{Un programme linéaire suffit souvent}
+\label{sec:lemme}
+
+Le programme (C$_a$) est en nombres entiers. On peut faire moins cher, et
+le gain n'est pas marginal : c'est un appel entier de moins par point
+d'archive.
+
+\begin{theorem}[Clôture par la hauteur]\label{th:hauteur}
+Posons la \emph{hauteur de la région} retranchée par une coupe en $a$ :
+\[
+  h(a)\ =\ \max\ \bigl\{\,Q\,N(x)-P\,D(x)\ :\ x\in\Scal,\ Z(x)\le Z(a)\,\bigr\}.
+\]
+Si $h(a)\le 0$, la condition de clôture~\eqref{eq:cloture} est établie
+en $a$.
+\end{theorem}
+
+\begin{proof}
+$\{x : Z(x)=Z(a)\}\subseteq\{x : Z(x)\le Z(a)\}$. Si le maximum de
+$QN-PD$ sur le second ensemble est $\le 0$, il l'est sur le premier,
+c'est-à-dire $f(x)\le q$ pour tout $x$ de même vecteur critères que $a$.
+\end{proof}
+
+\noindent
+L'intérêt tient au fait que seul un \emph{majorant} de $h(a)$ est requis :
+un majorant $\le 0$ suffit à conclure. On le calcule sur la
+\textbf{relaxation continue} de $\Scal$, qui la contient -- donc un
+\emph{programme linéaire} remplace un programme en nombres entiers. Le
+maximum est de plus ramené au plancher entier, $QN-PD$ étant entière.
+
+\begin{remark}[ce que ce lemme est, et ce qu'il n'est pas]\label{rem:lemme}
+Il ne change \emph{aucune} coupe : même vivier, même ordre, mêmes coupes
+posées. Seul le moyen d'autoriser la coupe change. Le nombre d'appels au
+solveur entier ne peut donc que baisser -- par construction, et pas
+seulement en moyenne. C'est un gain de \textbf{coût}. Ce n'est pas un gain
+de \textbf{capacité} : la section~\ref{sec:res} mesure qu'à budget d'appels
+\emph{égal}, il n'achète aucune preuve supplémentaire.
+\end{remark}
+
+\noindent
+Le comportement mesuré est nettement bimodal : là où le lemme opère il
+établit presque toutes les clôtures ($24$ sur $24$, $22$ sur $22$, $21$ sur
+$21$), là où il n'opère pas il n'en établit aucune. Il n'y a pas de régime
+intermédiaire.
 
 % ============================================================================
 \section{Un seul vivier, deux sources}
@@ -1157,17 +1226,31 @@ de $7+5$~s, vérité terrain disponible.}
 & sans coupes d'archive & avec\\
 \midrule
 écart garanti médian & $0{,}00\ \%$ & $0{,}00\ \%$\\
-optimalité \textbf{prouvée} & $57/80$ exécutions & $\mathbf{75/80}$\\
+optimalité \textbf{prouvée} & $58/80$ exécutions & $\mathbf{78/80}$\\
 validité $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ & $80/80$ & $\mathbf{80/80}$\\
+\midrule
+\multicolumn{3}{l}{\emph{lecture appariée} (même instance, même graine)}\\
+preuves gagnées / perdues & \multicolumn{2}{c}{$\mathbf{20}$ / $\mathbf{0}$}\\
+delta des appels par paire & \multicolumn{2}{c}{médiane $\mathbf{-12}$,
+  total $-1\,579$, $54/80$ en baisse}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Les deux instances dont la borne ne fermait jamais voient leur écart garanti
-médian passer de $20{,}2\ \%$ à $0{,}6\ \%$ et de $6{,}8\ \%$ à $0{,}0\ \%$.
-La première est celle qu'il faut $433$~s et $177$ coupes pour prouver par
-l'oracle exact seul.
+C'est ici que le théorème~\ref{th:hauteur} change le signe du coût. Avant
+lui, les preuves supplémentaires s'\emph{achetaient} : la médiane appariée
+valait $+10$ appels. Chaque clôture établie par programme linéaire est un
+appel entier non dépensé, et le temps ainsi rendu retourne à la
+certification, qui ferme davantage de bornes. Les preuves montent
+\emph{et} le coût baisse, non l'un malgré l'autre.
+
+Deux instances changent d'\emph{état}, et non seulement de chiffre : l'une
+passe de $0/10$ preuves et $17{,}3\ \%$ d'écart garanti à $8/10$ et
+$0{,}0\ \%$ ; l'autre de $0/10$ et $6{,}7\ \%$ à $10/10$ et $0{,}0\ \%$.
+Elles passent donc de « solution trouvée, optimalité inconnue » à
+« optimalité prouvée ». La première est celle qu'il faut $433$~s et $177$
+coupes pour prouver par l'oracle exact seul.
 
 \subsection{Lot systématique}
 
@@ -1191,11 +1274,111 @@ recherche seule     & $84/90$ & $\mathbf{90/90}$ & $124$ & $0{,}9$~s & 0\\
 \end{table}
 
 \noindent
-L'apport est strictement positif sur \emph{tous} les axes à la fois : deux
-preuves de plus, même qualité de solution, et un coût \emph{moindre} --
-$97$ appels médians contre $124$, pour $0{,}7$~s contre $0{,}9$. La coupe
-d'efficacité ne s'ajoute pas au travail : elle le remplace avantageusement,
-puisqu'une preuve obtenue tôt épargne les tours suivants.
+Deux preuves de plus et aucune perdue, pour une qualité de solution
+identique : la recherche atteint déjà l'optimum sur les $90$ instances, il
+n'y a donc pas de place pour un progrès de ce côté.
+
+\paragraph{Une lecture qui se trompe, et celle qui la corrige.} Les colonnes
+$\ILP$ et $t$ du tableau~\ref{tab:res2} sont les médianes de deux
+distributions \emph{indépendantes}. Les lire comme un gain par instance est
+une faute, et nous l'avons commise avant de la mesurer. La comparaison
+correcte est \textbf{appariée} : même instance, même graine, on retranche.
+
+\begin{table}[htbp]
+\centering
+\caption{Lecture appariée du même lot. Le signe change.}
+\label{tab:apparie}
+\begin{tabular}{lcc}
+\toprule
+& lecture par médianes & lecture \textbf{appariée}\\
+\midrule
+appels au solveur entier & $124\to 97$, soit $-22\ \%$
+                         & médiane $\mathbf{+1}$ par paire\\
+temps                    & $0{,}9\to 0{,}7$~s
+                         & médiane $\mathbf{+0{,}0}$~s\\
+instances moins chères   & --- & $40/90$ \ (plus chères : $47$)\\
+total des appels         & --- & $-5{,}2\ \%$\\
+total du temps           & --- & $-23\ \%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le gain existe donc, mais il est \emph{concentré dans une queue courte} --
+la plus forte baisse atteint $205$ appels sur une seule instance -- et non
+réparti. L'instance médiane ne gagne rien. Écrire « strictement positif sur
+tous les axes », comme le suggérait la première lecture, aurait été faux.
+
+\paragraph{Où le gain se trouve, et pourquoi.} Ventilé par corrélation entre
+critères -- c'est-à-dire par épaisseur du front -- le signe est net et
+conforme à la théorie.
+
+\begin{table}[htbp]
+\centering
+\caption{Delta apparié des appels au solveur entier, par régime.}
+\label{tab:corr}
+\begin{tabular}{lccc}
+\toprule
+& $\text{corr}=0$ & $\text{corr}=0{,}5$ & $\text{corr}=0{,}9$\\
+& (front épais) & & (front mince)\\
+\midrule
+médiane du delta      & $+14$ & $+1$ & $\mathbf{-6}$\\
+total                 & $+107$ & $-501$ & $-361$\\
+instances améliorées  & $4/30$ & $14/30$ & $\mathbf{22/30}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Front mince : l'archive couvre vite $\Ecal$, le relâché se vide, et la
+proposition~\ref{prop:vide} conclut à bas coût. Front épais : les points
+dominés abondent, saturent le plafond, et chaque coupe d'archive posée
+coûtait alors un programme entier de clôture pour rien -- c'est exactement
+ce que le théorème~\ref{th:hauteur} supprime, en ramenant cette clôture à un
+programme linéaire.
+
+\subsection{À budget d'appels égal : un banc déterministe}
+\label{sec:determ}
+
+Les bancs précédents sont bornés en \emph{secondes}. Ils sont réalistes,
+mais ils rendent invérifiable une affirmation telle que « aucune instance en
+recul » : deux exécutions du même code n'y rendent pas le même nombre
+d'appels. Le contrôle est sans appel -- même code, même graine, même
+instance, trois exécutions à $18+12$~s :
+\[
+  q_{\text{lb}} = 26{,}9286\ ;\qquad 60{,}5000\ ;\qquad 60{,}5000 .
+\]
+Soit $125\ \%$ d'écart entre deux exécutions de la même chose.
+
+Nous plafonnons donc en \textbf{nombre d'appels} au solveur entier, ce qui
+retire l'horloge de la boucle de décision. Les mêmes trois exécutions
+donnent alors trois fois la même valeur, le même nombre d'appels et la même
+archive. Le banc \emph{vérifie} ce déterminisme au lieu de le supposer :
+chaque configuration est jouée deux fois et toute ligne instable est exclue
+de la conclusion.
+
+\begin{table}[htbp]
+\centering
+\caption{Banc déterministe, plafond de $100$ appels, $90$ instances.}
+\label{tab:determ}
+\begin{tabular}{lc}
+\toprule
+reproductibilité & $\mathbf{90/90}$ exécutions identiques\\
+preuves gagnées / perdues & $0$ / $\mathbf{0}$\\
+valeurs plus faibles & $\mathbf{0}$\\
+bornes plus lâches & $\mathbf{0}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Deux conclusions, et la seconde est un résultat négatif qu'il faut énoncer
+aussi nettement que les gains. La première : à budget d'appels égal, aucune
+instance ne recule sur aucun des trois axes -- l'affirmation a désormais un
+sens, et elle est établie. La seconde : \emph{aucune preuve n'est gagnée non
+plus}, alors même que le plafond est serré ($6$ instances ne se prouvent
+pas). Le théorème~\ref{th:hauteur} est donc bien ce que la
+remarque~\ref{rem:lemme} annonçait : un gain de coût, et rien de plus.
 
 \subsection{Où elle n'apporte rien, et pourquoi}
 
@@ -1232,12 +1415,51 @@ signature de cette hybridation : une preuve d'optimalité que la partie exacte
 seule ne peut pas atteindre, puisqu'elle repose sur le fait d'avoir
 \emph{épuisé} $\Ecal$ par des points trouvés heuristiquement.
 
-Deux directions restent ouvertes. La première est le plafond de coupes, que
-la section~\ref{sec:res} désigne comme le verrou suivant : désagréger la
-disjonction pour ramener le coût sous $p$ binaires par coupe. La seconde est
-la clôture elle-même : nos mesures n'ont jamais rencontré deux points
-efficaces de même vecteur critères, ce qui suggère qu'une condition
-structurelle -- vérifiable une fois pour toutes sur l'instance plutôt qu'une
-fois par point d'archive -- pourrait rendre la coupe entièrement gratuite.
+\subsection*{Ce que la méthode ne fait pas}
+
+Trois limites, énoncées avec la même précision que les gains, parce qu'elles
+délimitent exactement ce que ce travail établit.
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{Aucun effet au-delà de $n\ge 20$.} Les écarts garantis restent
+      à $98{,}3$, $97{,}1$ et $92{,}6\ \%$, inchangés. Dans ce régime la
+      recherche produit assez de points dominés pour saturer le plafond
+      avant que l'archive ne soit atteinte : aucune coupe d'efficacité n'est
+      posée. Le verrou n'est plus la \emph{disponibilité} des coupes mais
+      leur \emph{coût}, $p$ binaires chacune.
+\item \textbf{Aucun progrès sur la qualité des solutions.} Sur le lot figé
+      la recherche atteint déjà l'optimum $90$ fois sur $90$ : il n'y a pas
+      de place pour un tel progrès, et la contribution porte donc
+      entièrement sur la \emph{certification}. Aux tailles où de la place
+      existerait, nous ne disposons pas encore d'une mesure valide.
+\item \textbf{Le théorème~\ref{th:hauteur} n'achète pas de preuves.} À
+      budget d'appels égal il n'en gagne aucune (\S\ref{sec:determ}) : c'est
+      un gain de coût, non de capacité.
+\end{enumerate}
+
+\subsection*{Directions ouvertes}
+
+La première est le plafond de coupes, que la section~\ref{sec:res} désigne
+comme le verrou suivant : désagréger la disjonction pour ramener le coût
+sous $p$ binaires par coupe. La forme agrégée -- une seule ligne, aucune
+binaire, obtenue en minorant les termes non actifs -- est valide mais
+faible : elle retranche le quart au tiers de ce que retranche la
+disjonction sur les mêmes points. La voie sérieuse est un programme
+générateur de coupes (\emph{lift-and-project}) produisant, par
+programmation linéaire, l'inégalité valide pour la disjonction la plus
+violée par l'optimum courant du relâché.
+
+La seconde est la clôture elle-même : nos mesures n'ont jamais rencontré
+deux points efficaces de même vecteur critères, ce qui suggère qu'une
+condition structurelle -- vérifiable une fois pour toutes sur l'instance
+plutôt qu'une fois par point d'archive -- rendrait la coupe entièrement
+gratuite, le théorème~\ref{th:hauteur} n'en étant qu'une approximation
+bon marché.
+
+La troisième est une comparaison directe avec les méthodes exactes du
+domaine sur un jeu d'instances commun. Ce mémoire compare la méthode à
+elle-même, variante par variante, ce qui est la seule façon d'attribuer un
+effet à un mécanisme ; il ne la situe pas encore par rapport à
+l'état de l'art.
 
 \end{document}
