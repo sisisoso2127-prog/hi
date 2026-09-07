@@ -61,13 +61,20 @@ def partie_a(n_seeds: int) -> bool:
     prv = {k: 0 for _, k in VARIANTES}
     runs = 0
     tout_valide = True
+    # comparaison APPARIEE : meme instance, MEME graine, les deux variantes.
+    # C'est la seule lecture honnete d'un gain -- comparer deux medianes
+    # independantes laisse croire a un gain par instance qui n'existe pas.
+    paires = {"gagne": 0, "perdu": 0, "egal": 0}
+    d_ilp = []
     for cfg in CIBLE:
         inst = generate(**cfg)
         gt = ground_truth(inst, limit=200_000)
         q = float(gt.q_star)
         gaps = {k: [] for _, k in VARIANTES}
+        pv = {k: 0 for _, k in VARIANTES}
         valide = True
         for s in range(n_seeds):
+            pr, il = {}, {}
             for _, ac in VARIANTES:
                 reset_oracle_counter()
                 r = matheuristic_P(inst, time_budget=7, bound_budget=5,
@@ -77,13 +84,23 @@ def partie_a(n_seeds: int) -> bool:
                 valide &= ok
                 gaps[ac].append(r.gap * 100 if r.gap is not None else np.nan)
                 prv[ac] += int(r.proved_optimal)
+                pv[ac] += int(r.proved_optimal)
+                pr[ac], il[ac] = bool(r.proved_optimal), r.ilp_calls
+            if pr[40] and not pr[0]:
+                paires["gagne"] += 1
+            elif pr[0] and not pr[40]:
+                paires["perdu"] += 1
+            else:
+                paires["egal"] += 1
+            d_ilp.append(il[40] - il[0])
         runs += n_seeds
         tout_valide &= valide
         for _, ac in VARIANTES:
             med[ac].append(float(np.nanmedian(gaps[ac])))
         print(f"{inst.name:<24}{len(gt.E):>5}"
               f"{np.nanmedian(gaps[0]):>11.1f}%{np.nanmedian(gaps[40]):>13.1f}%"
-              f"{'':>10}{'':>12}{'ok' if valide else 'KO':>9}", flush=True)
+              f"{pv[0]:>7}/{n_seeds}{pv[40]:>8}/{n_seeds}"
+              f"{'ok' if valide else 'KO':>9}", flush=True)
 
     print("-" * 100)
     for nom, ac in VARIANTES:
@@ -92,6 +109,13 @@ def partie_a(n_seeds: int) -> bool:
               f"optimalite prouvee {prv[ac]:>3}/{runs}")
     print(f"  VALIDITE q_lb <= q* <= q_ub : "
           f"{'TOUT VALIDE' if tout_valide else 'ECHEC'}")
+    print("  --- lecture APPARIEE (meme instance, meme graine) ---")
+    print(f"  preuves gagnees {paires['gagne']:>3}   "
+          f"perdues {paires['perdu']:>3}   inchangees {paires['egal']:>3}")
+    d = np.asarray(d_ilp)
+    print(f"  delta ILP par paire : mediane {np.median(d):+.0f}   "
+          f"moyenne {d.mean():+.1f}   total {d.sum():+.0f}   "
+          f"baisses {(d < 0).sum()}/{len(d)}")
     return tout_valide
 
 
