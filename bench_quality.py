@@ -25,8 +25,15 @@ et exclue de la conclusion.
 CE QUI EST COMPARE, par paires (meme instance, meme graine, meme plafond) :
 
     A  budget de certification integralement consacre a la borne
-    B  sonde d'un tour ; si la borne ne ferme pas, le reste va a la
-       DIVERSIFICATION PAR COUPES D'EFFICACITE
+    B  diversification par coupes d'efficacite FORCEE (gap_hopeless = 0),
+       c'est-a-dire declenchee des que l'optimalite n'est pas prouvee
+
+Le bras B n'est PAS le reglage de production (0,5) et ce choix est
+deliberate : avec le reglage de production la sonde ne declenche presque
+jamais -- sur une instance temoin elle rend un ecart de 23 % la ou le seuil
+est a 50 % -- et le banc ne mesurait donc RIEN. On separe ici les deux
+questions : ce banc mesure la MECANIQUE (si l'on tire, cela vaut-il le
+budget ?), la GACHETTE se calibrant ensuite sur sa reponse.
 
 Lecture. Les deux valeurs sont des points EFFICACES CERTIFIES : q_lb plus
 grand = strictement meilleur, sans verite terrain, ce qui est indispensable
