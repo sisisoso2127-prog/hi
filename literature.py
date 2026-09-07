@@ -81,6 +81,8 @@ Usage :  python literature.py
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 import numpy as np
 
 from molfp_core import INF, efficiency_test, feasibility_rows, solve_milp
@@ -260,6 +262,83 @@ ZM_PUBLISHED_XOPT = (3, 0)
 ZM_PUBLISHED_PHIOPT = 6
 
 
+def drici_ouail_moulai_example() -> MOILFP:
+    """
+    Instance de la section 5 de Drici, Ouail & Moulai (2018), reproduite a
+    l'identique :
+
+        max Z1 = x1 + x2 - x3 - 2x4        max Z3 = 2x2 + 2x3 + 2x4
+        max Z2 = x1 - 3x2 - x3 + x4        max Z4 = -x2 + 2x3 + 2x4
+        s.c.  3x1 - 2x2 +  x3 +  x4 <= 3
+                     x2 + 3x3 + 4x4 <= 4
+               x1 +  x2 +  x3 +  x4 <= 5
+                    2x2 +  x3       <= 6
+              x entier >= 0
+        (ILFP)_E : max f = (-x1 - x2 + 2x3 + 3x4 - 15) / (x2 + x3 + x4 + 1)
+                   sur l'ensemble efficace entier
+
+    POURQUOI CETTE SECONDE VALIDATION EXTERNE COMPTE. L'exemple de Zerdani &
+    Moulai a des criteres FRACTIONNAIRES et une utilite LINEAIRE ; celui-ci a
+    des criteres LINEAIRES et une utilite FRACTIONNAIRE. Ce sont les deux
+    generalisations voisines de notre probleme, prises chacune sur son propre
+    terrain. Les reproduire toutes deux teste nos briques sur les deux bords.
+
+    Ecarts avec le generateur, tous deux couverts :
+    `A` comporte un coefficient NEGATIF (-2 x2), donc (A2) ne tient pas et le
+    calcul automatique des bornes n'a plus de sens : x1 + x2 + x3 + x4 <= 5
+    et x >= 0 donnent x_i <= 5, qu'on fournit explicitement.
+    Les criteres sont lineaires (denominateur 1) et le denominateur de f vaut
+    x2 + x3 + x4 + 1 >= 1 > 0 sur le domaine : l'hypothese reellement
+    necessaire tient, ce que `check_assumptions(strict=False)` verifie.
+    """
+    lin = lambda c, a: FracObj(np.array(c), a, np.zeros(4, dtype=int), 1)
+    inst = MOILFP(
+        A=np.array([[3, -2, 1, 1], [0, 1, 3, 4], [1, 1, 1, 1], [0, 2, 1, 0]]),
+        b=np.array([3, 4, 5, 6]),
+        Z=[lin([1, 1, -1, -2], 0), lin([1, -3, -1, 1], 0),
+           lin([0, 2, 2, 2], 0), lin([0, -1, 2, 2], 0)],
+        f=FracObj(np.array([-1, -1, 2, 3]), -15, np.array([0, 1, 1, 1]), 1),
+        name="drici_ouail_moulai_2018_sec5",
+        ub=np.array([5, 5, 5, 5]),
+    )
+    inst.check_assumptions(strict=False)
+    return inst
+
+
+# resultats PUBLIES, section 5 de l'article : deux optima, meme valeur
+DR_PUBLISHED_XOPT = {(2, 3, 0, 0), (1, 1, 1, 0)}
+DR_PUBLISHED_FOPT = Fraction(-5)
+
+
+def check_drici_example() -> dict:
+    """
+    Reproduit l'exemple publie de Drici et al. et confronte nos sorties.
+
+    Note de lecture : les auteurs annoncent DEUX solutions optimales de meme
+    valeur. Nous verifions donc que les deux sont efficaces chez nous, que
+    f y vaut -5, et qu'aucun point efficace ne fait mieux -- ce qui est plus
+    fort que de comparer un seul argmax, lequel n'est pas unique.
+    """
+    inst = drici_ouail_moulai_example()
+    gt = ground_truth(inst, limit=200_000)
+    E = {tuple(int(v) for v in x) for x in gt.E}
+    from molfp_matheuristic import matheuristic_P
+    r = matheuristic_P(inst, time_budget=6.0, bound_budget=4.0, seed=0,
+                       archive_cuts=True)
+    return {
+        "S": len(gt.S), "E": len(gt.E),
+        "xopt_published_sont_efficaces": DR_PUBLISHED_XOPT <= E,
+        "f_aux_xopt_publies": {x: inst.f.value(np.array(x))
+                               for x in sorted(DR_PUBLISHED_XOPT)},
+        "fopt_ours": gt.q_star,
+        "fopt_match": gt.q_star == DR_PUBLISHED_FOPT,
+        "methode_valeur": r.q_lb,
+        "methode_prouve": r.proved_optimal,
+        "methode_match": r.q_lb == DR_PUBLISHED_FOPT,
+        "methode_ilp": r.ilp_calls,
+    }
+
+
 def check_published_example() -> dict:
     """
     Reproduit l'exemple publie et confronte nos resultats aux leurs.
@@ -353,8 +432,33 @@ def main() -> int:
     print("meme VALEUR entiere. Le theoreme 2 est donc la generalisation")
     print("stricte de ce test aux criteres fractionnaires, ou Ecker & Kouada ne")
     print("s'applique plus.")
-    return 0 if all_ok else 1
-
+    print()
+    print("=" * 84)
+    print("EXEMPLE PUBLIE 2 - Drici, Ouail & Moulai (2018), section 5")
+    print("criteres LINEAIRES, utilite FRACTIONNAIRE : l'autre generalisation")
+    print("=" * 84)
+    d = check_drici_example()
+    print(f"  |S| = {d['S']}   |E| = {d['E']}")
+    print(f"  les deux optima publies (2,3,0,0) et (1,1,1,0) sont efficaces "
+          f"chez nous : {d['xopt_published_sont_efficaces']}")
+    print(f"  f en ces points : "
+          + "  ".join(f"{k} -> {v}" for k, v in d['f_aux_xopt_publies'].items()))
+    print(f"  optimum par enumeration : {d['fopt_ours']}   "
+          f"conforme au publie (-5) : {d['fopt_match']}")
+    print(f"  notre methode : {d['methode_valeur']}   "
+          f"prouve : {d['methode_prouve']}   "
+          f"conforme : {d['methode_match']}   ({d['methode_ilp']} PLNE)")
+    ok_drici = (d["xopt_published_sont_efficaces"] and d["fopt_match"]
+                and d["methode_match"])
+    print()
+    print("VALIDATION EXTERNE 2 : "
+          + ("CONFORME AU PUBLIE" if ok_drici else "*** ECART ***"))
+    print("Cette instance a servi a decouvrir un bogue de l'ENUMERATEUR, qui")
+    print("elaguait comme si A >= 0 et retirait donc des points realisables")
+    print("des que A comportait un coefficient negatif -- dont (2,3,0,0),")
+    print("l'un des deux optima publies. La reference elle-meme etait fausse,")
+    print("precisement sur les instances de la litterature. Corrige.")
+    return 0 if (all_ok and ok_drici) else 1
 
 if __name__ == "__main__":
     raise SystemExit(main())

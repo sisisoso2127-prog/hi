@@ -30,13 +30,38 @@ def enumerate_feasible(inst: MOILFP, limit: int = 2_000_000) -> List[np.ndarray]
     """
     Enumere tous les points entiers de S = {x in Z^n_+ : Ax <= b}.
 
-    Elagage : A >= 0 donc les sommes partielles A[:, :j] @ x[:j] sont
-    croissantes en j ; des qu'une composante depasse b, tout le sous-arbre
-    est infaisable.
+    ELAGAGE, ET LE BOGUE QU'IL A CACHE. Une premiere version elaguait ainsi :
+    des qu'une somme partielle A[:, :j] @ x[:j] depassait b, elle coupait le
+    sous-arbre et sortait de la boucle sur la valeur de x_j. Ce raisonnement
+    suppose A >= 0 -- les sommes partielles ne peuvent alors que croitre. Le
+    generateur garantit cette hypothese (A2), donc rien ne s'est jamais vu
+    sur les instances tirees.
+
+    Mais les instances de la LITTERATURE ont des coefficients NEGATIFS. Une
+    variable ultERIEURE peut alors faire REDESCENDRE une ligne au-dessous de
+    b, et l'elagage retire des points REALISABLES. Sur l'exemple de Drici,
+    Ouail & Moulai (2018), il retirait tous les points a x1 = 2, dont
+    (2,3,0,0) -- l'un des deux optima publies. La reference elle-meme etait
+    donc fausse, precisement sur les instances servant a la validation
+    externe.
+
+    Elagage CORRECT. Pour chaque ligne i, on minore la contribution des
+    variables encore libres par sum_{k >= j} min(0, A[i,k]) * ub[k]. Ajoutee
+    a la somme partielle, elle donne le plus petit membre de gauche encore
+    atteignable : si celui-ci depasse deja b, le sous-arbre est reellement
+    infaisable. Et l'on ne sort de la boucle sur x_j (`break`) que si la
+    colonne est >= 0 ; sinon on passe a la valeur suivante (`continue`), une
+    valeur plus grande pouvant redevenir realisable.
     """
     n, m = inst.n, inst.m
     ub = inst.var_upper_bounds()
     A, b = inst.A, inst.b
+
+    # contribution MINIMALE encore atteignable par les variables j..n-1
+    neg = np.minimum(A, 0) * ub                       # m x n
+    suffix_min = np.zeros((n + 1, m), dtype=int)
+    for j in range(n - 1, -1, -1):
+        suffix_min[j] = suffix_min[j + 1] + neg[:, j]
 
     out: List[np.ndarray] = []
     x = np.zeros(n, dtype=int)
@@ -46,13 +71,17 @@ def enumerate_feasible(inst: MOILFP, limit: int = 2_000_000) -> List[np.ndarray]
             raise MemoryError(f"Plus de {limit} points realisables : instance "
                               f"trop grande pour l'enumeration exhaustive.")
         if j == n:
-            out.append(x.copy())
+            if np.all(partial <= b):
+                out.append(x.copy())
             return
         col = A[:, j]
+        montante = bool(np.all(col >= 0))
         for v in range(ub[j] + 1):
             new_partial = partial + v * col
-            if np.any(new_partial > b):
-                break                      # col >= 0 : inutile d'aller plus loin
+            if np.any(new_partial + suffix_min[j + 1] > b):
+                if montante:
+                    break          # colonne >= 0 : les v suivants sont pires
+                continue           # sinon un v plus grand peut redevenir bon
             x[j] = v
             rec(j + 1, new_partial)
         x[j] = 0

@@ -35,3 +35,20 @@ rendre le meme VERDICT que le test d'Ecker & Kouada : il en rend la
 meme VALEUR entiere. Le theoreme 2 est donc la generalisation
 stricte de ce test aux criteres fractionnaires, ou Ecker & Kouada ne
 s'applique plus.
+
+====================================================================================
+EXEMPLE PUBLIE 2 - Drici, Ouail & Moulai (2018), section 5
+criteres LINEAIRES, utilite FRACTIONNAIRE : l'autre generalisation
+====================================================================================
+  |S| = 14   |E| = 7
+  les deux optima publies (2,3,0,0) et (1,1,1,0) sont efficaces chez nous : True
+  f en ces points : (1, 1, 1, 0) -> -5  (2, 3, 0, 0) -> -5
+  optimum par enumeration : -5   conforme au publie (-5) : True
+  notre methode : -5   prouve : True   conforme : True   (101 PLNE)
+
+VALIDATION EXTERNE 2 : CONFORME AU PUBLIE
+Cette instance a servi a decouvrir un bogue de l'ENUMERATEUR, qui
+elaguait comme si A >= 0 et retirait donc des points realisables
+des que A comportait un coefficient negatif -- dont (2,3,0,0),
+l'un des deux optima publies. La reference elle-meme etait fausse,
+precisement sur les instances de la litterature. Corrige.
