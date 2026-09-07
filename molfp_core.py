@@ -85,6 +85,35 @@ class ILPResult:
 # moins chers qu'un ILP et les melanger fausserait la comparaison.
 ORACLE_CALLS = {"ilp": 0, "lp": 0}
 
+# ----------------------------------------------------------------------------
+# BUDGET DETERMINISTE
+# ----------------------------------------------------------------------------
+# Toute la mesure a d'abord ete faite a budget de TEMPS. C'est le cadre
+# realiste, mais il rend une affirmation comme « aucune instance en recul »
+# INVERIFIABLE : deux executions du meme code ne rendent pas le meme nombre
+# d'appels, et un ecart de trois appels ne se distingue pas du bruit.
+#
+# Plafonner en NOMBRE D'APPELS au solveur entier retire l'horloge de la
+# boucle de decision. A plafond fixe, une execution devient reproductible, et
+# une difference entre deux variantes est alors un effet, pas un alea.
+#
+# Mise en oeuvre : au-dela du plafond, `solve_milp` ne consulte plus le
+# solveur et rend le statut 'limit' -- exactement ce que rend un ILP
+# interrompu. Tous les chemins d'appel savent deja le traiter (bornes
+# acquises conservees, points non certifies non retenus), donc rien de
+# nouveau n'est a prevoir : la ressource s'epuise, elle ne casse pas.
+ORACLE_BUDGET: dict = {"ilp": None}
+
+
+def set_ilp_budget(n: Optional[int]) -> None:
+    """Plafond d'appels au solveur ENTIER, ou None pour l'illimite."""
+    ORACLE_BUDGET["ilp"] = n
+
+
+def ilp_budget_left() -> float:
+    cap = ORACLE_BUDGET["ilp"]
+    return np.inf if cap is None else max(0, cap - ORACLE_CALLS["ilp"])
+
 
 def reset_oracle_counter() -> None:
     ORACLE_CALLS["ilp"] = 0
@@ -126,6 +155,13 @@ def solve_milp(obj: np.ndarray,
     `mip_dual_bound`, borne optimiste VALIDE : c'est elle que l'on remonte
     dans `bound`. Un ILP interrompu informe donc encore, au lieu d'etre perdu.
     """
+    if ilp_budget_left() <= 0:
+        # ressource epuisee : on rend le statut d'un ILP interrompu, SANS
+        # consulter le solveur et SANS incrementer le compteur. Le plafond
+        # est ainsi exactement respecte, et la trajectoire ne depend plus de
+        # l'horloge.
+        return ILPResult("limit", None, None, None)
+
     ORACLE_CALLS["ilp"] += 1
     cost = -np.asarray(obj, dtype=float) if maximize else np.asarray(obj, dtype=float)
     if integrality is None:

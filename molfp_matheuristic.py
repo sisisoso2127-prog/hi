@@ -103,8 +103,9 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from molfp_core import (INF, ORACLE_CALLS, efficiency_test, feasibility_rows,
-                        max_over_relaxation, solve_ilp)
+from molfp_core import (INF, ORACLE_BUDGET, ORACLE_CALLS, efficiency_test,
+                        feasibility_rows, max_over_relaxation, set_ilp_budget,
+                        solve_ilp)
 from molfp_instance import MOILFP
 from molfp_oracle import (ECutModel, HybridResult, max_linear_over_E,
                           repair_to_efficient)
@@ -363,7 +364,8 @@ def diversify_over_archive(inst: MOILFP,
                            x_best: np.ndarray,
                            budget: float,
                            cap: int = 40,
-                           dominated_out: Optional[List[np.ndarray]] = None
+                           dominated_out: Optional[List[np.ndarray]] = None,
+                           steriles_max: int = 2
                            ) -> Tuple[Fraction, np.ndarray, int]:
     """
     La coupe d'efficacite comme OPERATEUR DE RECHERCHE, et non comme outil de
@@ -390,6 +392,15 @@ def diversify_over_archive(inst: MOILFP,
     employer. Rendre ce temps a la recherche est donc le seul progres
     disponible dans ce regime -- non pas sur la borne, mais sur la SOLUTION.
 
+    SONDE DE PRODUCTIVITE. La mesure a n = 20 a 50 est nette : quand la
+    diversification produit, elle produit beaucoup -- une instance passe de
+    q_lb = 2,90 a 7,84 (+170 %) avec 36 points neufs. Quand elle ne produit
+    pas, elle ne produit RIEN : les deux instances en recul de la campagne
+    ont toutes deux zero point neuf, et leur perte est exactement le budget
+    pris a la certification. Le mecanisme est donc bon et c'est la POLITIQUE
+    d'activation qui coutait. On abandonne apres `steriles_max` tours sans
+    aucun point neuf, et le budget non consomme retourne a l'appelant.
+
     Renvoie (q, x_best, nombre de points neufs certifies).
     """
     t0 = time.time()
@@ -397,7 +408,8 @@ def diversify_over_archive(inst: MOILFP,
     for a in archive.points()[:cap]:
         model.add_efficiency_cut(a)          # aucune cloture a etablir
     neufs = 0
-    while time.time() - t0 < budget:
+    steriles = 0
+    while time.time() - t0 < budget and steriles < steriles_max:
         w, w0, _, _ = surrogate(inst, q)
         reste = budget - (time.time() - t0)
         r = model.optimize(w, w0, maximize=True,
@@ -411,6 +423,9 @@ def diversify_over_archive(inst: MOILFP,
             break                            # plus le temps de certifier
         if archive.add(y):
             neufs += 1
+            steriles = 0
+        else:
+            steriles += 1        # deja connu : ce tour n'a rien produit
         fy = inst.f.value(y)
         if fy > q:
             q, x_best = fy, np.asarray(y, dtype=int)
@@ -927,6 +942,8 @@ def matheuristic_P(inst: MOILFP,
                    agg_extra: int = 0,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
+                   ilp_budget: Optional[int] = None,
+                   ilp_search_share: float = 0.6,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -955,6 +972,17 @@ def matheuristic_P(inst: MOILFP,
     calls0 = ORACLE_CALLS["ilp"]
     rng = np.random.default_rng(seed)
     arch = Archive(inst)
+
+    # --- budget DETERMINISTE, en nombre d'appels au solveur entier --------
+    # Quand `ilp_budget` est donne, c'est LUI qui arbitre : les budgets de
+    # temps sont laisses larges et l'horloge sort de la boucle de decision.
+    # Une execution devient alors reproductible, et une difference entre deux
+    # variantes est un effet, non un alea. Le plafond est reparti entre les
+    # deux phases dans la meme proportion que le temps, sans quoi la
+    # recherche consommerait tout et la certification n'aurait rien.
+    _budget_exterieur = ORACLE_BUDGET["ilp"]
+    if ilp_budget is not None:
+        set_ilp_budget(calls0 + max(1, int(ilp_search_share * ilp_budget)))
 
     # --- amorcage : un point efficace quelconque --------------------------
     dominated: List[np.ndarray] = []      # recyclage pour le Th. 5' (gain 3)
@@ -1049,6 +1077,8 @@ def matheuristic_P(inst: MOILFP,
             break            # optimum local confirme sur plusieurs tours
 
     search_time = time.time() - t0
+    if ilp_budget is not None:
+        set_ilp_budget(calls0 + ilp_budget)   # le reste va a la certification
 
     # --- phase 2 : certification (Th. 5') --------------------------------
     # le budget de recherche non consomme est reverse ici : la recherche a
@@ -1090,9 +1120,16 @@ def matheuristic_P(inst: MOILFP,
             # ici d'operateur de diversification -- sans cloture a etablir.
             if not proved and (ecart is None or ecart > gap_hopeless):
                 part_div = 0.6 * budget
+                t_div = time.time()
                 q, x_best, n_neufs = diversify_over_archive(
                     inst, arch, q, x_best, part_div, cut_batch, dominated)
-                budget -= part_div
+                # on ne retire que ce qui a ETE CONSOMME. La sonde de
+                # productivite interrompt la diversification des qu'elle
+                # tourne a vide ; sans cette ligne le budget ainsi libere
+                # serait perdu au lieu de revenir a la certification -- ce
+                # qui etait exactement la perte mesuree sur les instances a
+                # zero point neuf.
+                budget -= min(part_div, time.time() - t_div)
 
         if budget > 0.05 and not proved:
             c = _cert(budget, cert_rounds)
@@ -1110,6 +1147,9 @@ def matheuristic_P(inst: MOILFP,
     cert_info["restarts"] = n_restarts
     cert_info["moves"] = dict(n_moves)
     cert_info["hits"] = dict(n_hits)
+
+    if ilp_budget is not None:
+        set_ilp_budget(_budget_exterieur)      # on rend le plafond appelant
 
     return MatheurResult(
         q_lb=q, x_best=x_best, q_ub=q_ub, archive=arch.points(),
