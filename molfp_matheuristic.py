@@ -1130,6 +1130,8 @@ def matheuristic_P(inst: MOILFP,
             budget -= part
             ecart = None if q_ub is None else \
                 (q_ub - float(q)) / max(1e-12, abs(q_ub))
+            _diag = {"sonde_prouve": bool(proved), "sonde_ecart": ecart,
+                     "ilp_apres_sonde": ORACLE_CALLS["ilp"] - calls0}
             # borne qui ne ferme pas : a n >= 20 la campagne mesure 92-98 %
             # quoi qu'on fasse. Le temps restant vaut alors plus a la
             # RECHERCHE qu'a la certification, et la coupe d'efficacite sert
@@ -1138,8 +1140,11 @@ def matheuristic_P(inst: MOILFP,
                 part_div = 0.6 * budget
                 t_div = time.time()
                 _cap(0.6)
+                _diag["divers_tentee"] = True
+                _diag["ilp_avant_divers"] = ORACLE_CALLS["ilp"] - calls0
                 q, x_best, n_neufs = diversify_over_archive(
                     inst, arch, q, x_best, part_div, cut_batch, dominated)
+                _diag["ilp_apres_divers"] = ORACLE_CALLS["ilp"] - calls0
                 # on ne retire que ce qui a ETE CONSOMME. La sonde de
                 # productivite interrompt la diversification des qu'elle
                 # tourne a vide ; sans cette ligne le budget ainsi libere
@@ -1162,6 +1167,10 @@ def matheuristic_P(inst: MOILFP,
             cert_info, cut_points = c.info, c.cut_points
     cert_info["search_time"] = search_time
     cert_info["diversify_new"] = n_neufs
+    try:
+        cert_info["diag"] = _diag
+    except NameError:
+        cert_info["diag"] = None
     cert_info["cert_budget"] = budget
     cert_info["restarts"] = n_restarts
     cert_info["moves"] = dict(n_moves)

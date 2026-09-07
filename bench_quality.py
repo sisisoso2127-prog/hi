@@ -50,11 +50,21 @@ GRAINES = [0, 1, 2]
 CORRS = [0.0, 0.5]
 
 
-def une(inst, cap, seed, diversify):
+def une(inst, cap, seed, diversify, gap_hopeless=0.0):
+    """
+    `gap_hopeless = 0` force la diversification des que l'optimalite n'est pas
+    PROUVEE. Ce n'est pas le reglage de production (0,5) mais celui qui permet
+    de mesurer le MECANISME plutot que le DECLENCHEUR : avec le reglage de
+    production, un premier banc n'a jamais rien mesure du tout, la sonde
+    rendant un ecart de 23 % la ou le seuil est a 50 % -- la diversification
+    n'etait donc, tres correctement, jamais tentee. Un declencheur qui ne
+    tire pas ne dit rien sur l'arme.
+    """
     reset_oracle_counter()
     r = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6,
                        seed=seed, archive_cuts=True,
-                       cut_diversify=diversify, ilp_budget=cap)
+                       cut_diversify=diversify, gap_hopeless=gap_hopeless,
+                       ilp_budget=cap)
     return {"q": r.q_lb, "ub": r.q_ub, "ilp": r.ilp_calls,
             "arch": len(r.archive),
             "neufs": r.cert.get("diversify_new", 0),
