@@ -1682,6 +1682,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             max_rounds: int = 6,
             archive_cuts: bool = False,
             closure_lemma: bool = True,
+            lemma_strikes: int = 3,
             height_rank: bool = False,
             agg_extra: int = 0) -> CertResult:
     """
@@ -1713,6 +1714,13 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
 
     best_ub: Optional[float] = None
     proved = False
+    # Le lemme de cloture est BIMODAL : sur les instances ou il fonctionne il
+    # etablit presque toutes les clotures (24 sur 24, 22 sur 22, 21 sur 21) ;
+    # sur les autres il n'en etablit AUCUNE. Continuer a payer un PL par
+    # candidat quand il a echoue plusieurs fois de suite est donc du gaspillage
+    # pur -- et c'est ce gaspillage qui a fait la seule instance en HAUSSE de
+    # l'isolement sur 90 (+3 appels, avec zero cloture etablie par le lemme).
+    echecs = 0
     Dm: Optional[int] = None
 
     model = ECutModel(inst)
@@ -1779,8 +1787,9 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                     # d'appels au solveur entier ne peut donc que BAISSER,
                     # jamais monter -- par construction, et pas seulement
                     # en moyenne.
-                    if h is None and closure_lemma:
+                    if h is None and closure_lemma and echecs < lemma_strikes:
                         h = region_height(inst, x, q_ref)
+                        echecs = echecs + 1 if h > 0 else 0
                     if h is None or h > 0:
                         better = same_criteria_improves(inst, x, q_ref)
                         if better is not None:
@@ -2033,6 +2042,7 @@ def matheuristic_P(inst: MOILFP,
                    cert_rounds: int = 2,
                    archive_cuts: bool = False,
                    closure_lemma: bool = True,
+                   lemma_strikes: int = 3,
                    height_rank: bool = False,
                    agg_extra: int = 0,
                    cut_diversify: bool = True,
@@ -2174,7 +2184,8 @@ def matheuristic_P(inst: MOILFP,
                        use_tightened=tightened, archive=arch,
                        cut_batch=cut_batch, max_rounds=rounds,
                        archive_cuts=archive_cuts, closure_lemma=closure_lemma,
-                       height_rank=height_rank, agg_extra=agg_extra)
+                       lemma_strikes=lemma_strikes, height_rank=height_rank,
+                       agg_extra=agg_extra)
 
     if certify_bound and budget > 0:
         sonde = None
