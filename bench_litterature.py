@@ -46,7 +46,13 @@ ne prouve pas, elle rend tout de meme une solution et un ecart garanti --
 ce que leur branch and cut, interrompu, ne fournit pas. C'est la difference
 que ce banc doit faire apparaitre, plus que des secondes.
 
-Usage :  python bench_litterature.py [budget_s] [n_par_taille]
+BUDGET DETERMINISTE. Le plafond est en NOMBRE D'APPELS au solveur entier,
+pas en secondes -- comme tous les bancs de ce projet depuis qu'un controle a
+montre 125 % d'ecart entre deux executions du meme code a budget de temps.
+Deux consequences : les chiffres sont reproductibles, et ce banc peut tourner
+en meme temps qu'un autre sans que le partage du processeur ne fausse rien.
+
+Usage :  python bench_litterature.py [plafond_appels] [n_par_taille]
 """
 
 import sys
@@ -85,13 +91,13 @@ def instance_drici(n: int, m: int, r: int, seed: int) -> MOILFP:
 
 
 def main() -> int:
-    budget = float(sys.argv[1]) if len(sys.argv) > 1 else 20.0
+    cap = int(sys.argv[1]) if len(sys.argv) > 1 else 1500
     n_seeds = int(sys.argv[2]) if len(sys.argv) > 2 else 10
 
     print("=" * 104)
     print(f"NOTRE METHODE SUR LE TERRAIN DE DRICI ET AL. (2018) - "
           f"leur protocole, leurs tailles, {n_seeds} instances par taille")
-    print(f"budget {budget:g} s par instance")
+    print(f"budget DETERMINISTE : {cap} appels au solveur entier par instance")
     print("=" * 104)
     print(f"{'n x m':>9}{'r':>3}{'prouve':>9}{'ecart garanti median':>23}"
           f"{'ILP med':>10}{'t med (s)':>11}{'CPU publie':>13}{'valide':>9}")
@@ -105,9 +111,8 @@ def main() -> int:
             inst = instance_drici(n, m, r, 1000 + s)
             reset_oracle_counter()
             t0 = time.time()
-            res = matheuristic_P(inst, time_budget=budget * 0.6,
-                                 bound_budget=budget * 0.4, seed=0,
-                                 archive_cuts=True)
+            res = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6,
+                                 seed=0, archive_cuts=True, ilp_budget=cap)
             temps.append(time.time() - t0)
             ilps.append(res.ilp_calls)
             prouves += int(res.proved_optimal)
