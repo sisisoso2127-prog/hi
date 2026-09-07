@@ -1,0 +1,81 @@
+==============================================================================
+INSTANCE I2   n = 2, m = 2, p = 2
+==============================================================================
+  |S| = 22   |E| = 5   q* = 14/5 = 2.8000 en (4,2)
+  max_S f = 12 en (4,0) (DOMINE)  -> ecart de la borne naive : 77 %
+
+-- Etape 1 : la recherche --------------------------------------
+  archive rendue (5 points, dans l'ordre) : (0,5)  (2,3)  (1,4)  (3,3)  (4,2)
+  incumbent q = 14/5
+  points DOMINES collectes par la recherche : 0   <- le verrou de la section 3
+
+-- Etape 2 : l'ordre du vivier (substitut decroissant) ---------
+  w = Qc - Pd = [15, -23]
+  archive  : (4,2)  (3,3)  (2,3)  (1,4)  (0,5)
+
+-- Etape 3 : la cloture, UN ILP par point ----------------------
+  a =      (4,2) : infaisable -> cloture etablie, coupe licite
+  a =      (3,3) : infaisable -> cloture etablie, coupe licite
+  a =      (2,3) : infaisable -> cloture etablie, coupe licite
+  a =      (1,4) : infaisable -> cloture etablie, coupe licite
+  a =      (0,5) : infaisable -> cloture etablie, coupe licite
+  cout total : 5 appels au solveur entier
+
+-- COUPE D'EFFICACITE (source : archive) --
+    #   coupe en  |R|     U   D+      borne
+    0         --   22    46    1         12
+    1      (4,2)   13     0 None       14/5  <- U = 0, optimalite prouvee
+    2      (3,3)    9     0 None       14/5  <- U = 0, optimalite prouvee
+    3      (2,3)    6     0 None       14/5  <- U = 0, optimalite prouvee
+    4      (1,4)    3     0 None       14/5  <- U = 0, optimalite prouvee
+    5      (0,5)    0   RELACHE VIDE -> q* = q = 14/5   (Proposition 3)
+   points reellement DISPONIBLES pour cette source : 5
+
+-- coupe de dominance (source : reparations) --
+    #   coupe en  |R|     U   D+      borne
+    0         --   22    46    1         12
+    1      (4,0)   21    31    1          9
+    2      (3,0)   20    23    1       37/5
+    3      (4,1)   17     8    3       10/3
+    4      (2,0)   17     8    3       10/3
+    5      (3,1)   15     0    5       14/5  <- U = 0, optimalite prouvee
+    6      (1,0)   15     0    5       14/5  <- U = 0, optimalite prouvee
+    7      (2,1)   14     0    5       14/5  <- U = 0, optimalite prouvee
+    8      (0,0)   14     0    5       14/5  <- U = 0, optimalite prouvee
+   ...
+   points reellement DISPONIBLES pour cette source : 0
+
+-- Ce que la methode rend reellement --------------------------
+  archive_cuts=False : q_lb = 14/5   q_ub = 2.8   prouve = True   coupes d'efficacite posees = 0
+  archive_cuts=True  : q_lb = 14/5   q_ub = 2.8   prouve = True   coupes d'efficacite posees = 5
+  VALIDITE q_lb <= q* <= q_ub : verifiee sur les deux variantes
+
+==============================================================================
+INSTANCE I3   n = 3, m = 2, p = 2
+==============================================================================
+  |S| = 36   |E| = 5   q* = 3 = 3.0000 en (2,2,0)
+  max_S f = 9 en (0,4,0) (DOMINE)  -> ecart de la borne naive : 67 %
+
+-- Etape 1 : la recherche --------------------------------------
+  archive rendue (4 points, dans l'ordre) : (1,0,4)  (2,0,2)  (2,2,0)  (2,1,1)
+  incumbent q = 3
+  points DOMINES collectes par la recherche : 0   <- le verrou de la section 3
+
+-- Etape 2 : l'ordre du vivier (substitut decroissant) ---------
+  w = Qc - Pd = [-1, 2, -2]
+  archive  : (2,2,0)  (2,1,1)  (2,0,2)  (1,0,4)
+
+-- Etape 3 : la cloture, UN ILP par point ----------------------
+  a =    (2,2,0) : infaisable -> cloture etablie, coupe licite
+  a =    (2,1,1) : infaisable -> cloture etablie, coupe licite
+  a =    (2,0,2) : infaisable -> cloture etablie, coupe licite
+  a =    (1,0,4) : infaisable -> cloture etablie, coupe licite
+  cout total : 4 appels au solveur entier
+
+-- COUPE D'EFFICACITE (source : archive) --
+    #   coupe en  |R|     U   D+      borne
+    0         --   36     6    1          9
+    1    (2,2,0)   23     2    2          4
+    2    (2,1,1)   16     0 None          3  <- U = 0, optimalite prouvee
+    3    (2,0,2)    5     0 None          3  <- U = 0, optimalite prouvee
+    4    (1,0,4)    1     0 None          3  <- 

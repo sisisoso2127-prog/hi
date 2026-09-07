@@ -1,0 +1,1243 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,backgrounds}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+% ---------------------------------------------------------------- algorithmes
+\renewcommand{\algorithmcfname}{Algorithme}
+\SetKwInput{KwIn}{Entrées}
+\SetKwInput{KwOut}{Sorties}
+\SetKwFor{For}{pour}{faire}{fin pour}
+\SetKwFor{While}{tant que}{faire}{fin tant que}
+\SetKwFor{ForEach}{pour chaque}{faire}{fin pour chaque}
+\SetKwIF{If}{ElseIf}{Else}{si}{alors}{sinon si}{sinon}{fin si}
+\SetKw{Return}{retourner}
+\SetKw{KwTo}{à}
+\SetKw{Break}{sortir}
+\SetKwComment{Comment}{$\triangleright$\ }{}
+\DontPrintSemicolon
+
+% ---------------------------------------------------------------- théorèmes
+\theoremstyle{plain}
+\newtheorem{theorem}{Théorème}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemme}
+\theoremstyle{remark}
+\newtheorem{remark}{Remarque}
+
+% ---------------------------------------------------------------- notations
+\newcommand{\Zk}{Z_k}
+\newcommand{\Nk}{N_k}
+\newcommand{\Dk}{D_k}
+\newcommand{\Ecal}{\mathcal{E}}
+\newcommand{\Scal}{\mathcal{S}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\ILP}{\textsc{Pline}}
+\newcommand{\qs}{q^{\star}}
+
+% ---------------------------------------------------------------- couleurs
+\definecolor{ceff}{RGB}{0,102,153}     % coupe d'efficacité
+\definecolor{cdom}{RGB}{190,90,20}     % coupe de dominance
+\definecolor{cgris}{RGB}{160,160,160}
+\definecolor{cfond}{RGB}{235,242,247}
+\definecolor{cfonddom}{RGB}{250,238,225}
+
+% ---------------------------------------------------------------- listings
+\lstset{
+  language=Python, basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{ceff}\bfseries, commentstyle=\color{cgris}\itshape,
+  stringstyle=\color{cdom}, numbers=left, numberstyle=\tiny\color{cgris},
+  numbersep=7pt, frame=leftline, framesep=6pt, rulecolor=\color{cgris},
+  showstringspaces=false, breaklines=true, columns=fullflexible,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {û}{{\^u}}1
+           {ô}{{\^o}}1 {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1
+}
+
+\title{\bfseries La coupe d'efficacité\\[2pt]
+\large Une hybridation exacte--heuristique pour l'optimisation d'une fonction
+linéaire fractionnaire sur l'ensemble efficace d'un MOILFP}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-1.6\baselineskip}
+
+\begin{abstract}
+\noindent
+On considère le problème (P) : maximiser une fonction linéaire fractionnaire
+$f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
+fractionnaire multi-objectif en nombres entiers. Ce mémoire présente
+\emph{une seule} contribution et la traite complètement : une \textbf{coupe
+d'efficacité} qui permet de retrancher du relâché servant à borner $\qs$ la
+région dominée par un point \textbf{efficace}, alors que la coupe classique
+ne l'autorise qu'autour d'un point \emph{dominé}.
+
+L'intérêt est une hybridation au sens fort. La recherche heuristique produit,
+comme sous-produit, une archive de points efficaces certifiés ; le
+théorème~\ref{th:effcut} en fait la \emph{source des coupes de la borne
+exacte}. Le flux d'information s'inverse : ce n'est plus la partie exacte qui
+certifie la partie heuristique, c'est la partie heuristique qui fournit à la
+partie exacte ce dont elle manque. La réserve -- les solutions alternatives
+de même vecteur critères -- se lève par une condition de clôture qui coûte
+\emph{un seul programme de faisabilité} par point d'archive.
+
+Une proposition en découle, sans équivalent pour la coupe de dominance : si
+le relâché se \emph{vide}, l'optimalité est prouvée sans qu'aucune borne
+n'ait été évaluée. Sur $90$ instances à budget identique, l'optimalité
+prouvée passe de $84$ à $86$, le nombre médian d'appels au solveur entier de
+$124$ à $97$ et le temps médian de $0{,}9$~s à $0{,}7$~s ; sur le régime
+cible, de $57/80$ à $75/80$ preuves. Deux illustrations numériques
+entièrement détaillées, à $2$ puis $3$ variables, exposent le mécanisme pas
+à pas.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+% ============================================================================
+\section{Introduction}
+
+\subsection{Le problème}
+
+Soit le programme linéaire fractionnaire multi-objectif en nombres entiers
+\[
+  \text{(MOILFP)}\qquad
+  \max\ \Zk(x)=\frac{c_k^{\top}x+a_k}{d_k^{\top}x+b_k},\quad k=1,\dots,p,
+  \qquad \text{s.c. } Ax\le b,\ x\in\mathbb{Z}^n_+ ,
+\]
+et $\Ecal$ son ensemble de solutions efficaces. Étant donnée une seconde
+fonction fractionnaire $f=(c^{\top}x+a)/(d^{\top}x+b)$, on cherche
+\[
+  \text{(P)}\qquad \qs=\max_{x\in\Ecal} f(x).
+\]
+La difficulté n'est pas $f$, qui se traiterait par Dinkelbach ; elle est le
+domaine, $\Ecal$, qui n'est ni convexe, ni connexe, ni décrit par des
+contraintes. Toute méthode doit donc \emph{représenter} $\Ecal$ d'une
+manière ou d'une autre.
+
+\subsection{Ce qui manque aux méthodes existantes}
+
+Les méthodes exactes du domaine énumèrent implicitement $\Ecal$. Elles sont
+correctes, et sans recours dès que le front s'épaissit : interrompues, elles
+ne rendent \emph{aucune} garantie. Une méthode qui encadre $\qs$ à tout
+instant, elle, reste exploitable à budget fini.
+
+Un tel encadrement demande deux choses. Une borne inférieure : la valeur
+$q=f(\bar x)$ d'un point $\bar x$ \emph{certifié efficace} -- c'est le
+travail de la recherche. Et une borne supérieure : un ensemble
+$\Rcal\supseteq\Ecal$ sur lequel maximiser un substitut linéaire. La qualité
+de la borne tient entièrement à la \emph{finesse} de $\Rcal$, donc à ce qu'on
+sait en retrancher.
+
+\subsection{Le verrou, en une phrase}
+
+On ne sait retrancher que ce qui est dominé par un point \textbf{dominé}
+déjà rencontré. Or les points dominés sont rares là où la borne en aurait le
+plus besoin : la profondeur médiane des chaînes de réparation vaut $1$, et
+sur les deux instances illustratives de ce mémoire la recherche n'en produit
+\emph{aucun}. La coupe classique n'a rien à mordre.
+
+\subsection{Contribution}
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{Théorème~\ref{th:effcut} (coupe d'efficacité).} On peut couper
+      autour d'un point \emph{efficace} : la région retranchée ne contient,
+      parmi les points efficaces, que ceux de \emph{même vecteur critères}.
+\item \textbf{Théorème~\ref{th:archbound} (borne sur le relâché d'archive).}
+      Sous une condition de clôture, la borne resserrée reste valide sur ce
+      relâché plus petit.
+\item \textbf{Proposition~\ref{prop:vide} (relâché vide).} Si le relâché se
+      vide, $\qs=q$. La coupe de dominance ne peut jamais produire cette
+      preuve, puisqu'elle \emph{préserve} $\Ecal$.
+\item \textbf{La clôture coûte un programme de faisabilité}, pas un optimum
+      (\S\ref{sec:cloture}), et ses deux issues sont l'une et l'autre utiles.
+\item \textbf{Un seul vivier, deux sources} (\S\ref{sec:vivier}) : mettre les
+      deux coupes en concurrence sous un plafond global, et non leur allouer
+      des budgets séparés -- point où une mise en \oe uvre naïve perd
+      $28$ preuves sur $90$.
+\end{enumerate}
+
+% ============================================================================
+\section{Cadre et briques réutilisées}
+\label{sec:cadre}
+
+Cette section fixe les notations et rappelle, sans les redémontrer, les
+seuls résultats antérieurs dont la suite a besoin. Elle est délibérément
+brève : tout le reste du mémoire est nouveau.
+
+\subsection{Notations et hypothèses}
+
+$\Scal=\{x\in\mathbb{Z}^n_+ : Ax\le b\}$ est le domaine entier,
+$\Nk(x)=c_k^{\top}x+a_k$ et $\Dk(x)=d_k^{\top}x+b_k$, $Z(x)$ le vecteur
+critères. Un point $y$ \emph{domine} $x$ si $Z(y)\ge Z(x)$ et $Z(y)\ne Z(x)$ ;
+$\Ecal$ est l'ensemble des $x\in\Scal$ non dominés. Un rationnel $q$ est
+toujours écrit $q=P/Q$ sous forme irréductible avec $Q>0$.
+
+\paragraph{Hypothèses.} (A1) $d_k\ge 0$ et $b_k\ge 1$ pour tout $k$, ainsi
+que pour $f$ ; (A2) $A\ge 0$ à colonnes non nulles et $b\ge 0$. (A1) entraîne
+$\Dk(x)\ge 1>0$ partout ; (A2) rend $\Scal$ non vide et borné. Toutes les
+données sont entières.
+
+\begin{remark}[intégralité]\label{rem:int}
+Les quantités $e_k$ et $QN-PD$ introduites plus bas sont \emph{entières}.
+Les tests d'arrêt portant sur elles sont donc exacts, sans tolérance
+numérique. C'est ce qui rend sûres les équivalences
+« $e_k(x)>0 \iff e_k(x)\ge 1$ » et « $f(x)>q \iff QN(x)-PD(x)\ge 1$ »
+utilisées de façon répétée.
+\end{remark}
+
+\subsection{Trois briques}
+
+\paragraph{Brique 1 -- test d'efficacité intégral.} Pour $\bar x\in\Scal$, en
+posant $\bar N_k=\Nk(\bar x)$, $\bar D_k=\Dk(\bar x)$ et
+\[
+  e^{\bar x}_k(x)\ :=\ \bar D_k\,\Nk(x)-\bar N_k\,\Dk(x)
+   \ =\ \bar D_k\,\Dk(x)\,\bigl(\Zk(x)-\Zk(\bar x)\bigr),
+\]
+la quantité $\theta(\bar x)=\max\bigl\{\sum_k e^{\bar x}_k(x)\ :\
+e^{\bar x}_k(x)\ge 0\ \forall k,\ x\in\Scal\bigr\}$ est un entier
+$\ge 0$, et $\bar x\in\Ecal\iff\theta(\bar x)=0$. Si $\theta(\bar x)>0$,
+tout optimum \emph{domine} $\bar x$.
+
+Deux conséquences servent ici. Le test est \emph{exact}, donc l'archive
+produite par la recherche est faite de points \emph{prouvés} efficaces --
+c'est la précondition du théorème~\ref{th:effcut}. Et $e^{\bar x}_k$ est
+entière, de même signe que $\Zk(x)-\Zk(\bar x)$, d'où
+\begin{equation}\label{eq:eint}
+  \Zk(x)>\Zk(\bar x)\iff e^{\bar x}_k(x)\ge 1 .
+\end{equation}
+
+\paragraph{Brique 2 -- borne resserrée.} Soit $q=P/Q$ atteinte par un point
+efficace, $\Rcal$ un relâché contenant $\Ecal$,
+$U\ge\max_{x\in\Rcal}\{QN(x)-PD(x)\}$ et
+$D^{+}=\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$. Alors
+\begin{equation}\label{eq:borne}
+  \qs\ \le\ q+\frac{U}{Q\,D^{+}},
+  \qquad\text{et } U\le 0 \Rightarrow \qs=q .
+\end{equation}
+
+\paragraph{Brique 3 -- coupe de dominance.} Si $\bar x$ est
+\emph{dominé}, la région $\{x\in\Scal : Z(x)\le Z(\bar x)\}$ ne contient
+aucun point efficace, et se retranche par la disjonction
+\begin{equation}\label{eq:disj}
+  \exists k:\ e^{\bar x}_k(x)\ge 1
+  \quad\Longleftrightarrow\quad
+  e^{\bar x}_k(x)\ge 1-M_k(1-u_k)\ \ \forall k,\quad
+  \textstyle\sum_k u_k\ge 1,\quad u\in\{0,1\}^p .
+\end{equation}
+C'est la seule opération de resserrement disponible avant ce mémoire. Son
+coût est de $p$ variables binaires par coupe -- il faut le garder en tête,
+c'est lui qui impose un plafond (\S\ref{sec:vivier}).
+
+% ============================================================================
+\section{Le verrou : la coupe de dominance n'a rien à mordre}
+\label{sec:verrou}
+
+La précondition de la brique 3 n'est pas négociable : couper autour d'un
+point efficace le retirerait de $\Rcal$, et $\Rcal$ ne contiendrait plus
+$\Ecal$. Or elle contraint la coupe à ne se nourrir que de ce que les
+chaînes de réparation traversent.
+
+\paragraph{Un constat mesuré, pas une intuition.} La campagne mesure une
+profondeur médiane de chaîne de réparation égale à $1$ : la recherche ne
+franchit qu'un point dominé par mouvement. Dans le régime à $\Ecal$ épais --
+celui qui résiste -- l'archive compte des dizaines de points efficaces
+certifiés quand les points dominés se comptent sur les doigts. Et sur les
+deux instances illustratives de ce mémoire, la recherche en collecte
+\textbf{zéro} : la réparation atteint un point efficace du premier coup.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+& instance $\mathcal{I}_2$ & instance $\mathcal{I}_3$\\
+\midrule
+$|\Scal|$ & 22 & 36\\
+$|\Ecal|$ & 5 & 5\\
+points dominés \emph{existants} & 17 & 31\\
+points dominés \emph{collectés par la recherche} & $\mathbf{0}$ & $\mathbf{0}$\\
+points d'archive disponibles & $\mathbf{5}$ & $\mathbf{4}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\smallskip\noindent
+La ressource est là -- l'archive -- mais le théorème interdit de s'en servir.
+Deux obstacles à lever : montrer qu'une coupe autour d'un point efficace ne
+détruit que peu, et rendre ce « peu » vérifiable.
+
+% ============================================================================
+\section{La coupe d'efficacité}
+\label{sec:effcut}
+
+\subsection{Le théorème}
+
+\begin{theorem}[Coupe d'efficacité]\label{th:effcut}
+Soient $a\in\Ecal$ et $x\in\Ecal$ avec $Z(x)\ne Z(a)$. Alors il existe $k$
+tel que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Ecal$,
+\[
+  \Ecal\ \subseteq\ \Rcal_A\ \cup\
+  \bigl\{x\in\Scal:\ \exists a\in A,\ Z(x)=Z(a)\bigr\},
+  \qquad
+  \Rcal_A:=\bigl\{x\in\Scal:\ \forall a\in A,\ \exists k,\ e^a_k(x)\ge 1\bigr\}.
+\]
+\end{theorem}
+
+\begin{proof}
+Supposons $\Zk(x)\le \Zk(a)$ pour tout $k$. Comme $Z(x)\ne Z(a)$, le point
+$a$ dominerait $x$, ce qui contredit l'efficacité de $x$. Il existe donc $k$
+avec $\Zk(x)>\Zk(a)$, c'est-à-dire $e^a_k(x)\ge 1$
+par~\eqref{eq:eint}. L'inclusion s'obtient en appliquant ceci à chaque
+$a\in A$, pour les $x$ efficaces dont le vecteur critères diffère de tous
+ceux de $A$.
+\end{proof}
+
+\noindent
+La différence avec la brique 3 tient en une ligne, et c'est toute la
+contribution :
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+& \textbf{coupe de dominance} & \textbf{coupe d'efficacité}\\
+\midrule
+précondition sur $a$ & $a$ \emph{dominé} & $a$ \emph{efficace}\\
+forme algébrique & \multicolumn{2}{c}{identique : la disjonction~\eqref{eq:disj}, $p$ binaires}\\
+points efficaces perdus & aucun & ceux de \emph{même vecteur critères}\\
+source & chaînes de réparation & \textbf{archive}\\
+$\Rcal$ peut-il se vider ? & \textbf{jamais} ($\Rcal\supseteq\Ecal$) & \textbf{oui}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{La borne reste valide}
+
+\begin{theorem}[Borne sur le relâché d'archive]\label{th:archbound}
+Soient $A\subseteq\Ecal$ un ensemble de points efficaces \emph{certifiés},
+$q=P/Q$ la valeur de l'incumbent, et supposons la \textbf{condition de
+clôture}
+\begin{equation}\label{eq:cloture}
+  \forall a\in A:\qquad
+  \max\{f(x)\ :\ x\in\Scal,\ Z(x)=Z(a)\}\ \le\ q .
+\end{equation}
+Soient $U\ge\max_{x\in\Rcal_A}\{QN(x)-PD(x)\}$ et
+$D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$. Alors
+\[
+  \boxed{\ \qs\ \le\ q+\frac{U}{Q\,D^{+}}\ }
+\]
+\end{theorem}
+
+\begin{proof}
+Soit $x^{\star}\in\Ecal$ atteignant $\qs$. Par le
+théorème~\ref{th:effcut}, deux cas. Ou bien $Z(x^{\star})=Z(a)$ pour un
+$a\in A$ : alors $\qs=f(x^{\star})\le q$ par~\eqref{eq:cloture}, et
+l'inégalité est acquise puisque $U\ge 0$. Ou bien
+$x^{\star}\in\Rcal_A$ : l'argument de~\eqref{eq:borne} s'applique mot pour
+mot à $\Rcal_A$, soit
+$f(x^{\star})-q=\bigl(QN(x^\star)-PD(x^\star)\bigr)/\bigl(Q D(x^\star)\bigr)
+\le U/(Q D^{+})$.
+\end{proof}
+
+\subsection{Une preuve inaccessible à la coupe de dominance}
+
+\begin{proposition}[Relâché vide]\label{prop:vide}
+Sous les hypothèses du théorème~\ref{th:archbound}, si $\Rcal_A=\emptyset$
+alors $\qs=q$.
+\end{proposition}
+
+\begin{proof}
+Par le théorème~\ref{th:effcut},
+$\Ecal\subseteq\Rcal_A\cup\{x:\exists a\in A,\ Z(x)=Z(a)\}$. Si
+$\Rcal_A=\emptyset$, tout point efficace a donc le vecteur critères d'un
+point de $A$, et la clôture~\eqref{eq:cloture} donne $\qs\le q$. Comme
+$q\le\qs$ ($q$ est atteinte par un point efficace), il y a égalité.
+\end{proof}
+
+\noindent
+Cette proposition n'a \emph{pas} d'équivalent pour la coupe de dominance.
+Celle-ci préserve $\Ecal$ par construction : $\Rcal$ contient toujours
+$\Ecal$ et ne peut donc jamais se vider tant que $\Ecal$ est non vide. Seule
+la coupe d'efficacité peut \emph{épuiser} le relâché, et c'est une preuve
+d'optimalité obtenue \textbf{sans qu'aucune borne n'ait été évaluée}.
+
+Le cas se présente exactement là où $\Ecal$ est mince -- le régime à
+corrélation élevée entre critères, où la campagne mesure une médiane
+$|\Ecal|=1$ -- puisque l'archive y couvre $\Ecal$ en quelques points. Ne pas
+le traiter coûte cher : dans une version antérieure de notre mise en \oe
+uvre, un relâché vide était lu comme un \emph{échec} de la borne, et
+l'optimalité prouvée tombait à $56$ instances sur $90$ au lieu de $86$, la
+totalité de l'écart provenant d'instances à front mince.
+
+% ============================================================================
+\section{La condition de clôture coûte un programme, pas un optimum}
+\label{sec:cloture}
+
+La condition~\eqref{eq:cloture} semble demander, pour chaque $a\in A$, un
+maximum de $f$ sur $\{x:Z(x)=Z(a)\}$ -- donc un Dinkelbach complet par point
+d'archive, ce qui ruinerait l'intérêt de la coupe. Il n'en est rien :
+\emph{on n'a pas besoin du maximum, seulement de savoir s'il dépasse $q$}.
+C'est une question de \textbf{faisabilité}, et un seul programme y répond.
+
+\begin{equation}\label{eq:clot}
+  \text{(C}_a\text{)}\qquad
+  \text{trouver } x\in\Scal
+  \quad\text{tel que}\quad
+  e^a_k(x)=0\ \ \forall k,
+  \qquad Q\,N(x)-P\,D(x)\ \ge\ 1 .
+\end{equation}
+
+\noindent
+Les deux contraintes sont exactes grâce à la remarque~\ref{rem:int} : les
+$e^a_k$ étant entières, $e^a_k(x)=0$ équivaut à $\Zk(x)=\Zk(a)$ ; et
+$QN-PD$ étant entière, « $\ge 1$ » équivaut à $f(x)>q$. Deux issues, toutes
+deux utiles :
+
+\begin{itemize}[leftmargin=*,itemsep=3pt]
+\item \textbf{(C$_a$) infaisable} $\Rightarrow$ la clôture est établie pour
+      $a$ : \emph{on pose la coupe} ;
+\item \textbf{(C$_a$) faisable} $\Rightarrow$ le point rendu a le même
+      vecteur critères qu'un point efficace, il est donc \emph{lui-même
+      efficace}, et il bat l'incumbent. On l'empoche : la coupe n'est pas
+      posée, mais la borne \emph{inférieure} monte, ce qui est un pas de
+      Dinkelbach gratuit.
+\end{itemize}
+
+\noindent
+Il n'y a donc pas de branche perdante. En pratique la seconde issue ne s'est
+jamais produite dans nos mesures : sur $143\,220$ paires de points efficaces
+vérifiées par énumération exhaustive, aucune ne partage de vecteur critères.
+La clôture est de fait gratuite -- mais elle est \emph{vérifiée} et non
+supposée, et c'est ce qui rend la coupe sûre.
+
+% ============================================================================
+\section{Un seul vivier, deux sources}
+\label{sec:vivier}
+
+Les deux coupes ont exactement la même forme -- la disjonction~\eqref{eq:disj}
+-- donc exactement le même coût, $p$ binaires chacune. Leur allouer des
+budgets séparés serait doublement fautif.
+
+D'abord parce qu'un plafond existe : au-delà d'une quarantaine de coupes,
+chaque coupe supplémentaire alourdit le programme entier plus qu'elle ne
+resserre le relâché, et l'oracle n'a plus le temps de conclure. Ensuite parce
+que la mesure le confirme brutalement : poser $40$ coupes d'archive
+\emph{en plus} des $40$ de dominance fait tomber l'optimalité prouvée de
+$84$ à $56$ sur $90$ instances.
+
+\medskip\noindent
+La règle correcte est donc : \textbf{un seul vivier, un seul plafond, les
+deux sources en concurrence}, classées par valeur décroissante du substitut
+linéaire $w^{\top}x$ où $w=Qc-Pd$. Ce sont les points de plus grande valeur
+du substitut qui tirent $U$ vers le haut, quelle que soit leur origine ;
+les couper est ce qui resserre le plus.
+
+L'effet est automatique et souhaitable : là où les points dominés abondent,
+ils occupent le vivier ; là où ils sont rares -- le régime à $\Ecal$ épais,
+justement -- l'archive le remplit à leur place. Aucun réglage n'arbitre :
+le classement le fait.
+
+% ============================================================================
+\section{L'algorithme}
+\label{sec:algo}
+
+\subsection{Vue d'ensemble}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.99\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\small, x=1cm, y=1cm,
+  bloc/.style={rectangle,draw,rounded corners=2pt,align=center,
+               inner sep=4pt,minimum height=8mm,text width=56mm},
+  blocA/.style={bloc,fill=cfonddom,draw=cdom},
+  blocB/.style={bloc,fill=cfond,draw=ceff},
+  dec/.style={diamond,draw,aspect=2.6,align=center,inner sep=1pt,
+              font=\footnotesize,fill=white,text width=25mm},
+  fin/.style={rectangle,draw,rounded corners=8pt,align=center,fill=cfond,
+              inner sep=4pt,text width=38mm},
+  fl/.style={-{Stealth[length=2mm]}},
+  et/.style={font=\scriptsize,inner sep=1.5pt,fill=white}
+]
+
+\node[bloc,fill=black!4]        (in)      at (0,  0) {instance, budget $T$};
+\node[blocA]                    (rech)    at (0, -2.1)
+  {\textbf{Phase 1 -- recherche}\\[1pt]
+   \footnotesize VNS dans l'espace des critères ; chaque sous-problème
+   résolu \emph{exactement},\\
+   \footnotesize chaque incumbent \emph{certifié efficace}};
+\node[bloc,fill=black!4,text width=96mm] (sortie1) at (0, -4.4)
+  {sorties de la phase~1 :\ \ $q=f(\bar x)$ borne inférieure \emph{valide}
+   \ \ $\bullet$\ \ archive $\Acal\subseteq\Ecal$
+   \ \ $\bullet$\ \ dominés $\mathcal{D}$};
+\node[blocB,text width=66mm]    (vivier)  at (0, -6.3)
+  {\textbf{vivier unique} (\S\ref{sec:vivier})\\[1pt]
+   \footnotesize $\mathcal{D}\cup\Acal$ trié par $w^{\top}x$ décroissant,
+   sous un plafond global};
+\node[dec]                      (src)     at (0, -8.4) {candidat\\ issu de $\Acal$ ?};
+\node[dec]                      (clot)    at (0,-10.6) {(C$_a$)\\ infaisable ?};
+\node[blocA,text width=46mm]    (maj)     at (-7.4,-10.6)
+  {$q\leftarrow f(x)$, archive enrichie\\[-1pt]
+   \footnotesize $x$ est efficace et bat $q$};
+\node[blocB,text width=62mm]    (pose)    at (0,-12.9)
+  {poser la coupe~\eqref{eq:disj} en $a$\\[-1pt]
+   \footnotesize dominance si $a\in\mathcal{D}$,
+   \textbf{efficacité} si $a\in\Acal$};
+\node[blocB,text width=66mm]    (oracle)  at (0,-15.0)
+  {\textbf{Phase 2 -- oracle}\\[1pt]
+   \footnotesize maximiser $w^{\top}x+w_0$ sur $\Rcal_A$, à budget borné};
+\node[dec]                      (vide)    at (0,-17.0) {$\Rcal_A=\emptyset$ ?};
+\node[fin]                      (prop)    at (6.6,-17.0)
+  {\textbf{$\qs=q$}\\[-1pt]\footnotesize Proposition~\ref{prop:vide}};
+\node[dec]                      (u0)      at (0,-19.0) {$U\le 0$ ?};
+\node[fin]                      (prv)     at (6.6,-19.0)
+  {\textbf{$\qs=q$}\\[-1pt]\footnotesize borne~\eqref{eq:borne}};
+\node[fin,text width=54mm]      (out)     at (0,-21.2)
+  {$q\ \le\ \qs\ \le\ q+\dfrac{U}{Q\,D^{+}}$\\[-1pt]
+   \footnotesize Théorème~\ref{th:archbound}};
+
+\draw[fl] (in)      -- (rech);
+\draw[fl] (rech)    -- (sortie1);
+\draw[fl] (sortie1) -- (vivier);
+\draw[fl] (vivier)  -- (src);
+\draw[fl] (src)     -- node[et,right]{oui} (clot);
+\draw[fl] (clot)    -- node[et,right]{oui} (pose);
+\draw[fl] (clot)    -- node[et,above]{non} (maj);
+\draw[fl] (src.east) -- ++(1.9,0) |- node[et,pos=0.78,above]{non} (pose.east);
+\draw[fl] (maj.west) -- ++(-1.3,0)
+    |- node[et,pos=0.80,above]{recommencer le tour} (vivier.west);
+\draw[fl] (pose)    -- (oracle);
+\draw[fl] (oracle)  -- (vide);
+\draw[fl] (vide)    -- node[et,above]{oui} (prop);
+\draw[fl] (vide)    -- node[et,right]{non} (u0);
+\draw[fl] (u0)      -- node[et,above]{oui} (prv);
+\draw[fl] (u0)      -- node[et,right]{non} (out);
+\draw[fl,dashed,cgris] (out.east) -- ++(3.0,0)
+    |- node[et,pos=0.80,above,text=black]{tour suivant} (vivier.east);
+\end{tikzpicture}}
+\caption{Fonctionnement de l'algorithme. En \textcolor{cdom}{orange} ce qui
+existait, en \textcolor{ceff}{bleu} ce que la coupe d'efficacité ajoute. La
+flèche décisive est celle qui va de l'archive (sortie de la phase~1) au
+vivier de coupes de la phase~2 : c'est l'inversion du flux d'information qui
+fait l'hybridation.}
+\label{fig:flow}
+\end{figure}
+
+\subsection{Pseudo-code}
+
+Trois procédures suffisent. La première établit la clôture, la deuxième
+construit le vivier, la troisième est la boucle de certification.
+
+\begin{algorithm}[htbp]
+\caption{\textsc{Clôture}$(a,q)$ -- un seul programme de faisabilité}
+\label{alg:clot}
+\KwIn{$a\in\Ecal$ certifié, incumbent $q=P/Q$}
+\KwOut{\textsc{Établie}, ou un point $x$ \emph{efficace} avec $f(x)>q$}
+Construire les lignes $Ax\le b$, $x\ge 0$ entier\;
+\For{$k\leftarrow 1$ \KwTo $p$}{
+  ajouter $e^a_k(x)=0$
+  \Comment*[r]{$\iff \Zk(x)=\Zk(a)$, exact car $e^a_k\in\mathbb{Z}$}
+}
+ajouter $Q\,N(x)-P\,D(x)\ \ge\ 1$
+\Comment*[r]{$\iff f(x)>q$, exact car entier}
+$r\leftarrow$ résoudre ce programme de \emph{faisabilité}\;
+\lIf{$r$ infaisable}{\Return \textsc{Établie}}
+\Return $r.x$ \Comment*[r]{efficace \emph{et} meilleur que $q$}
+\end{algorithm}
+
+\begin{algorithm}[htbp]
+\caption{\textsc{Vivier}$(\mathcal{D},\Acal,w)$ -- une seule réserve, deux sources}
+\label{alg:vivier}
+\KwIn{points dominés $\mathcal{D}$, archive $\Acal$, substitut $w=Qc-Pd$}
+\KwOut{liste de couples (point, origine) triée}
+$V\leftarrow\emptyset$\;
+\ForEach{$x\in\mathcal{D}$ \emph{distincts}}{$V\leftarrow V\cup\{(x,\textsf{dom})\}$}
+\ForEach{$a\in\Acal$ \emph{distincts}}{$V\leftarrow V\cup\{(a,\textsf{arch})\}$}
+trier $V$ par $w^{\top}x$ \emph{décroissant}
+\Comment*[r]{ce sont eux qui tirent $U$ vers le haut}
+\Return $V$
+\end{algorithm}
+
+\begin{algorithm}[htbp]
+\caption{\textsc{Certifier}$(q,\bar x,\mathcal{D},\Acal,\text{budget})$ --
+la boucle de certification}
+\label{alg:cert}
+\KwIn{incumbent $q$ atteint en $\bar x\in\Ecal$, $\mathcal{D}$, $\Acal$,
+      budget $B$, taille de lot $\beta$, nombre de tours $\rho$}
+\KwOut{$q_{\text{lb}}\le\qs\le q_{\text{ub}}$, et le drapeau \textsf{prouvé}}
+$\Rcal\leftarrow\Scal$ ; $q_{\text{ub}}\leftarrow+\infty$ ;
+$n_{\text{arch}}\leftarrow 0$\;
+$V\leftarrow$ \textsc{Vivier}$(\mathcal{D},\Acal,w(q))$\;
+\For{$t\leftarrow 1$ \KwTo $\rho$}{
+  \lIf{budget épuisé}{\Break}
+  $q_{\text{réf}}\leftarrow q$ ; $(w,w_0,P,Q)\leftarrow$ substitut$(q_{\text{réf}})$\;
+  \tcp{— un lot de coupes de plus, les deux sources mêlées —}
+  \ForEach{$(a,\text{origine})$ \emph{des} $\beta$ \emph{premiers de} $V$}{
+    \eIf{origine $=\textsf{arch}$}{
+      $r\leftarrow$ \textsc{Clôture}$(a,q_{\text{réf}})$\;
+      \lIf{$r\ne\textsc{Établie}$}{$q\leftarrow f(r)$ ; $\bar x\leftarrow r$ ;
+           $\Acal\leftarrow\Acal\cup\{r\}$ ; \textbf{recommencer le tour}}
+      $\Rcal\leftarrow\Rcal\cap\{x:\exists k,\,e^a_k(x)\ge 1\}$ ;
+      $n_{\text{arch}}{+}{+}$
+      \Comment*[r]{coupe d'\textbf{efficacité}, Th.~\ref{th:effcut}}
+    }{
+      $\Rcal\leftarrow\Rcal\cap\{x:\exists k,\,e^a_k(x)\ge 1\}$
+      \Comment*[r]{coupe de dominance}
+    }
+    retirer $a$ de $V$\;
+  }
+  $r\leftarrow$ maximiser $w^{\top}x+w_0$ sur $\Rcal$, à budget borné\;
+  \ForEach{point efficace $y$ rendu par l'oracle}{
+    $\Acal\leftarrow\Acal\cup\{y\}$ ;
+    \lIf{$f(y)>q$}{$q\leftarrow f(y)$ ; $\bar x\leftarrow y$}
+  }
+  \If{$\Rcal=\emptyset$ \textbf{et} $n_{\text{arch}}>0$}{
+    \Return $(q,q,\textsf{prouvé})$
+    \Comment*[r]{Proposition~\ref{prop:vide}}
+  }
+  \lIf{$r$ résolu \textbf{et} $r.\text{valeur}\le 0$}{\Return $(q,q,\textsf{prouvé})$}
+  \If{$r.U$ fini}{
+    $D^{+}\leftarrow\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$\;
+    $q_{\text{ub}}\leftarrow\min\bigl(q_{\text{ub}},\
+      q_{\text{réf}}+U/(Q\,D^{+})\bigr)$
+    \Comment*[r]{Th.~\ref{th:archbound}}
+  }
+}
+\Return $(q,q_{\text{ub}},\ q_{\text{ub}}\le q)$
+\end{algorithm}
+
+\begin{remark}[validité malgré un incumbent mobile]
+Chaque tour produit une borne valide sur $\qs$ pour le $q$ \emph{de ce tour}.
+Comme $\qs$ ne dépend pas de $q$, le \emph{minimum} des bornes obtenues reste
+une borne valide : un incumbent amélioré en cours de route ne peut pas
+invalider une borne posée plus tôt. C'est pourquoi la ligne du
+théorème~\ref{th:archbound} se lit sur $q_{\text{réf}}$ et non sur $q$
+courant.
+\end{remark}
+
+\subsection{Code}
+
+Les trois pièces réellement nouvelles, en \textsc{Python}. Le solveur entier
+est appelé à travers \texttt{scipy.optimize.milp} (HiGHS), et
+\texttt{solve\_ilp} en est l'enveloppe qui compte les appels.
+
+\begin{lstlisting}[caption={La condition de clôture : UN seul programme de
+faisabilité (Alg.~\ref{alg:clot}).},label={lst:clot}]
+def same_criteria_improves(inst, a, q):
+    """Existe-t-il x de MEME vecteur criteres que `a` avec f(x) > q ?
+
+    Renvoie None si INFAISABLE  -> cloture etablie, on peut couper en `a`;
+    renvoie x    si FAISABLE    -> x est efficace ET meilleur que q.
+    """
+    P, Q = q.numerator, q.denominator
+    rows = feasibility_rows(inst)                  # A x <= b, x >= 0
+    for k in range(inst.p):
+        coef, cst = e_row(inst, a, k)
+        rows.append((coef, -cst, -cst))            # e_k^a(x) = 0
+    w  = (Q * inst.f.num - P * inst.f.den).astype(float)
+    w0 = float(Q * inst.f.a - P * inst.f.b)
+    rows.append((w, 1.0 - w0, INF))                # Q N(x) - P D(x) >= 1
+    res = solve_ilp(np.zeros(inst.n), rows, inst.var_upper_bounds(),
+                    maximize=True)
+    return None if not res.ok else res.x
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Le vivier unique : deux sources, un plafond
+(Alg.~\ref{alg:vivier}).},label={lst:vivier}]
+def build_cut_pool(dominated, archive, w):
+    """Les deux coupes ont la meme forme, donc le meme cout (p binaires).
+    On les met en concurrence dans UNE seule reserve, triee par valeur
+    decroissante du substitut, sous le plafond global deja regle.
+    """
+    wv = np.asarray(w, dtype=float)
+    seen, pool = set(), []
+    for pts, kind in ((dominated, "dom"), (archive or [], "arch")):
+        for x in pts:
+            key = (kind, tuple(int(v) for v in x))
+            if key in seen:
+                continue
+            seen.add(key)
+            pool.append((np.asarray(x, dtype=int), kind))
+    pool.sort(key=lambda t: -float(wv @ t[0]))
+    return pool
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Le c\oe ur de la boucle de certification : pose
+des coupes, puis les deux issues de preuve (Alg.~\ref{alg:cert}).},
+label={lst:cert}]
+# --- pose d'un lot de coupes, les deux sources melees -------------------
+for x, kind in pending:
+    if posees >= cut_batch or time.time() > t0 + budget:
+        break
+    if kind == "arch":
+        better = same_criteria_improves(inst, x, q_ref)   # cloture, Th. 2
+        if better is not None:                            # issue FAISABLE
+            improved_by_closure = better                  # -> le LB monte
+            break
+        model.add_efficiency_cut(x)                       # Th. 1
+        info["archive_cuts"] += 1
+    else:
+        model.add_dominance_cut(x)                        # brique 3
+    posees += 1
+
+r = max_linear_over_E(inst, w, w0, time_limit=slice_, model=model)
+
+# --- RELACHE VIDE : la preuve la plus forte -----------------------------
+# Th. 1 : E est inclus dans R_A union {x : Z(x) = Z(a), a dans A}.
+# Si R_A est vide, tout point efficace a le vecteur criteres d'un point de
+# l'archive, et la cloture -- etablie point par point AVANT chaque coupe --
+# dit qu'aucun d'eux ne bat q. Donc q* <= q, et comme q <= q*, q* = q.
+# La coupe de DOMINANCE ne peut jamais produire cette preuve : elle
+# preserve E, donc R ne se vide pas.
+if r.status == "empty" and info["archive_cuts"] > 0:
+    return CertResult(float(q), True, q, x_cur, info)
+
+# --- optimalite prouvee par la borne ------------------------------------
+if r.status == "optimal" and r.value <= 0 and not improved:
+    return CertResult(float(q), True, q, x_cur, info)
+\end{lstlisting}
+
+% ============================================================================
+\section{Illustration numérique 1 : deux variables, pas à pas}
+\label{sec:illus2}
+
+\subsection{L'instance}
+
+\[
+\mathcal{I}_2:\quad
+\begin{aligned}
+  &\max\ Z_1(x)=\frac{3x_2+2}{x_1+x_2+3},
+   \qquad Z_2(x)=\frac{x_1+3x_2}{2x_2+3},\\[3pt]
+  &\max\ f(x)=\frac{3x_1+x_2}{2x_2+1}
+   \quad\text{sur }\Ecal,\\[3pt]
+  &\text{s.c. } 3x_1+x_2\le 14,\quad 2x_1+3x_2\le 15,
+   \quad x\in\mathbb{Z}^2_+ .
+\end{aligned}
+\]
+
+\noindent
+Les hypothèses (A1)--(A2) sont vérifiées par inspection. L'énumération
+exhaustive donne $|\Scal|=22$, $|\Ecal|=5$ et $\qs=14/5=2{,}8$, atteint en
+$x^{\star}=(4,2)$. Ces valeurs ne servent qu'à \emph{vérifier} ce que la
+méthode produit ; elle ne les utilise jamais.
+
+\begin{remark}[reproductibilité]
+Tous les chiffres des sections~\ref{sec:illus2} et~\ref{sec:illus3} --
+tableaux, trajectoires de borne, coordonnées des figures -- sont produits par
+le script \texttt{illustration.py}, qui réexécute la méthode et revérifie
+chaque encadrement. Aucun n'est recopié à la main.
+\end{remark}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.32,font=\small]
+% polyedre
+\fill[cfond,opacity=0.75] (0,0) -- (4.667,0) -- (3.857,2.429) -- (0,5) -- cycle;
+\draw[cgris] (0,0) -- (4.667,0) -- (3.857,2.429) -- (0,5) -- cycle;
+% axes
+\draw[-{Stealth[length=2mm]}] (-0.25,0) -- (5.2,0) node[right]{$x_1$};
+\draw[-{Stealth[length=2mm]}] (0,-0.25) -- (0,5.6) node[above]{$x_2$};
+\foreach \i in {0,1,2,3,4,5} {
+  \draw (\i,-0.06) -- (\i,0.06) node[below=3pt,font=\scriptsize]{\i};
+  \draw (-0.06,\i) -- (0.06,\i) node[left=3pt,font=\scriptsize]{\i};
+}
+% points dominés
+\foreach \p in {(0,0),(0,1),(0,2),(0,3),(0,4),(1,0),(1,1),(1,2),(1,3),
+                (2,0),(2,1),(2,2),(3,0),(3,1),(3,2),(4,1)}
+  \fill[cgris] \p circle (1.5pt);
+% argmax f sur S : (4,0), dominé
+\fill[cdom] (4,0) circle (2.4pt);
+\draw[cdom,thick] (4,0) circle (5pt);
+\node[cdom,font=\scriptsize,fill=white,inner sep=1.5pt,left=7pt]
+  at (4,0.34) {$\max_{\Scal} f=12$};
+% points efficaces
+\foreach \p in {(0,5),(1,4),(2,3),(3,3),(4,2)}
+  {\fill[ceff] \p circle (2.6pt);}
+\draw[ceff,thick,dashed] (0,5) -- (1,4) -- (2,3) -- (3,3) -- (4,2);
+\node[ceff,font=\scriptsize,above right=0pt and 1pt] at (4,2) {$x^\star=(4,2)$};
+\node[ceff,font=\scriptsize,above right=0pt and 1pt] at (0,5) {$\Ecal$};
+% contraintes
+\node[cgris,font=\scriptsize,rotate=-72] at (4.35,1.5) {$3x_1+x_2\le 14$};
+\node[cgris,font=\scriptsize,rotate=-33] at (1.9,4.1) {$2x_1+3x_2\le 15$};
+\end{tikzpicture}
+\caption{$\mathcal{I}_2$ dans l'espace des décisions. Les $22$ points entiers
+de $\Scal$ ; en \textcolor{ceff}{bleu} les $5$ points efficaces, en
+\textcolor{cdom}{orange} le point $(4,0)$ où $f$ atteint son maximum sur
+$\Scal$, égal à $12$. Ce point est \emph{dominé} : borner $\qs$ par
+$\max_\Scal f$ donne $12$ au lieu de $2{,}8$, soit un écart de $77\ \%$.
+Tout le travail consiste à retrancher ce genre de région.}
+\label{fig:i2x}
+\end{figure}
+
+\subsection{Étape 1 -- la recherche}
+
+La phase~1 explore l'espace des critères et certifie chaque incumbent par la
+brique~1. Sur cette instance elle rend, dans cet ordre :
+\[
+  (0,5),\quad (2,3),\quad (1,4),\quad (3,3),\quad (4,2),
+\]
+c'est-à-dire l'archive $\Acal$ des $5$ points efficaces, et l'incumbent
+$q=f(4,2)=14/5$. \emph{La réparation atteint un point efficace du premier
+coup : la recherche ne collecte aucun point dominé.} Le vivier de la coupe de
+dominance est donc \textbf{vide} -- c'est exactement le verrou de
+la section~\ref{sec:verrou}, sur un cas concret.
+
+\subsection{Étape 2 -- ce que chaque coupe retranche}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=3.05,font=\small]
+% zone efficacité (a = (4,2), Z = (0.8889, 1.4286))
+\fill[cfond] (0.20,-0.02) rectangle (0.8889,1.4286);
+% zone dominance (xbar = (4,0), Z = (0.2857, 1.3333))
+\fill[cfonddom,opacity=0.95] (0.20,-0.02) rectangle (0.2857,1.3333);
+\draw[cdom,thick] (0.2857,-0.02) -- (0.2857,1.3333) -- (0.20,1.3333);
+\draw[ceff,thick] (0.8889,-0.02) -- (0.8889,1.4286) -- (0.20,1.4286);
+% axes
+\draw[-{Stealth[length=2mm]}] (0.20,0) -- (2.28,0) node[right]{$Z_1$};
+\draw[-{Stealth[length=2mm]}] (0.22,-0.02) -- (0.22,1.58) node[above]{$Z_2$};
+\foreach \v in {0.5,1.0,1.5,2.0}
+  \draw (\v,-0.015) -- (\v,0.015) node[below=2pt,font=\scriptsize]{\v};
+\foreach \v in {0.0,0.5,1.0,1.5}
+  \draw (0.205,\v) -- (0.235,\v) node[left=2pt,font=\scriptsize]{\v};
+% points dominés
+\foreach \p in {(0.6667,0.0),(1.25,0.6),(1.6,0.8571),(1.8333,1.0),(2.0,1.0909),
+                (0.5,0.3333),(1.0,0.8),(1.3333,1.0),(1.5714,1.1111),
+                (0.4,0.6667),(0.8333,1.0),(1.1429,1.1429),
+                (0.3333,1.0),(0.7143,1.2),(1.0,1.2857),(0.625,1.4)}
+  \fill[cgris] \p circle (0.55pt);
+\fill[cdom] (0.2857,1.3333) circle (1.1pt);
+\node[cdom,font=\scriptsize,below right=0pt and 1pt] at (0.2857,1.3333)
+  {$\bar x=(4,0)$};
+\node[ceff,font=\scriptsize,align=center] at (0.60,0.72)
+  {\textbf{9 points}\\ retranchés};
+\node[cdom,font=\scriptsize,align=center,fill=white,inner sep=1pt]
+  at (0.35,0.30) {};
+\draw[cdom,thin] (0.2650,0.36) -- (0.44,0.20);
+\node[cdom,font=\scriptsize,right=0pt] at (0.44,0.185)
+  {\textbf{1 point} retranché};
+% front
+\foreach \p in {(2.125,1.1538),(1.75,1.1818),(1.375,1.2222),(1.2222,1.3333),(0.8889,1.4286)}
+  \fill[ceff] \p circle (1.1pt);
+\draw[ceff,dashed] (2.125,1.1538) -- (1.75,1.1818) -- (1.375,1.2222)
+     -- (1.2222,1.3333) -- (0.8889,1.4286);
+\node[ceff,font=\scriptsize,above right=0pt and 1pt] at (0.8889,1.4286) {$a=(4,2)$};
+\node[ceff,font=\scriptsize,right=2pt] at (2.125,1.1538) {$(0,5)$};
+\end{tikzpicture}
+\caption{Espace des critères de $\mathcal{I}_2$ : les $22$ images, le front
+en \textcolor{ceff}{bleu}. La coupe de \textcolor{cdom}{dominance} en
+$\bar x=(4,0)$ retranche le rectangle orange -- et ce rectangle ne contient
+qu'\textbf{un seul} point, $\bar x$ lui-même : $|\Rcal|$ passe de $22$ à
+$21$. La coupe d'\textcolor{ceff}{efficacité} en $a=(4,2)$ retranche le
+rectangle bleu, qui en contient \textbf{neuf} : $|\Rcal_A|$ passe de $22$ à
+$13$. Même forme algébrique, même coût, neuf fois plus de matière.}
+\label{fig:i2z}
+\end{figure}
+
+\subsection{Étape 3 -- la clôture}
+
+Avant chaque coupe d'efficacité on résout (C$_a$) de~\eqref{eq:clot}. Ici,
+pour les $5$ points de l'archive et $q=14/5$ :
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+$a$ & $(4,2)$ & $(3,3)$ & $(2,3)$ & $(1,4)$ & $(0,5)$\\
+\midrule
+(C$_a$) & infaisable & infaisable & infaisable & infaisable & infaisable\\
+verdict & \multicolumn{5}{c}{clôture établie -- les $5$ coupes sont licites}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\noindent
+Coût total : $5$ appels au solveur entier, un par point. À comparer aux $5$
+appels de Dinkelbach \emph{complets} qu'exigerait une lecture littérale
+de~\eqref{eq:cloture}.
+
+\subsection{Étape 4 -- le relâché se vide}
+
+Le vivier est trié par $w^{\top}x$ décroissant, avec $w=Qc-Pd=(15,-23)$ pour
+$q=14/5$. L'ordre est donc $(4,2),(3,3),(2,3),(1,4),(0,5)$. La
+figure~\ref{fig:i2panels} montre $\Rcal_A$ après chaque coupe.
+
+\newcommand{\panel}[2]{%
+\begin{tikzpicture}[scale=0.46,font=\tiny]
+  \draw[cgris!50,very thin] (-0.45,-0.45) rectangle (4.55,5.55);
+  \foreach \p in {(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(1,0),(1,1),(1,2),(1,3),
+                  (1,4),(2,0),(2,1),(2,2),(2,3),(3,0),(3,1),(3,2),(3,3),
+                  (4,0),(4,1),(4,2)}
+    {\draw[cgris] \p circle (2.0pt);}
+  \foreach \p in {#2} \fill[ceff] \p circle (3.4pt);
+  \node[below=2pt,font=\scriptsize,align=center] at (2.05,-0.75) {#1};
+\end{tikzpicture}}
+
+\begin{figure}[htbp]
+\centering
+\begin{tabular}{@{}c@{\hspace{9mm}}c@{\hspace{9mm}}c@{}}
+\panel{$0$ coupe\\$|\Rcal_A|=22$}{(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(1,0),(1,1),(1,2),(1,3),(1,4),(2,0),(2,1),(2,2),(2,3),(3,0),(3,1),(3,2),(3,3),(4,0),(4,1),(4,2)}
+&
+\panel{coupe en $(4,2)$\\$|\Rcal_A|=13$}{(0,1),(0,2),(0,3),(0,4),(0,5),(1,1),(1,2),(1,3),(1,4),(2,2),(2,3),(3,2),(3,3)}
+&
+\panel{coupe en $(3,3)$\\$|\Rcal_A|=9$}{(0,1),(0,2),(0,3),(0,4),(0,5),(1,2),(1,3),(1,4),(2,3)}
+\\[7mm]
+\panel{coupe en $(2,3)$\\$|\Rcal_A|=6$}{(0,2),(0,3),(0,4),(0,5),(1,3),(1,4)}
+&
+\panel{coupe en $(1,4)$\\$|\Rcal_A|=3$}{(0,3),(0,4),(0,5)}
+&
+\panel{coupe en $(0,5)$\\$\Rcal_A=\emptyset$ \textbf{: preuve}}{}
+\end{tabular}
+\caption{Les six états successifs du relâché $\Rcal_A$ de $\mathcal{I}_2$
+(espace des décisions, $x_1$ en abscisse). Disques pleins : $\Rcal_A$ ;
+cercles vides : retranchés. Après les cinq coupes d'efficacité le relâché est
+\textbf{vide}, et la proposition~\ref{prop:vide} conclut $\qs=q=14/5$
+\emph{sans qu'aucune borne n'ait été évaluée}. Aucune suite de coupes de
+dominance ne peut atteindre cet état : elles préservent $\Ecal$, donc
+$|\Rcal|\ge 5$ toujours.}
+\label{fig:i2panels}
+\end{figure}
+
+\subsection{Étape 5 -- la borne, coupe par coupe}
+
+Le tableau~\ref{tab:i2traj} donne, à chaque étape, les quantités exactes du
+théorème~\ref{th:archbound}. \emph{Une seule} coupe d'efficacité suffit à
+faire tomber $U$ à $0$, donc à prouver l'optimalité.
+
+\begin{table}[htbp]
+\centering
+\caption{$\mathcal{I}_2$ : trajectoire des deux coupes, $q=14/5$,
+$U=\max_{\Rcal}\{QN-PD\}$, borne $=q+U/(QD^{+})$. Les valeurs sont exactes
+(rationnelles).}
+\label{tab:i2traj}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{clccc@{\qquad}lccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{coupe d'efficacité} (source : archive)}
+& \multicolumn{4}{c}{coupe de dominance (source : réparations)}\\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+\# & coupe en & $|\Rcal|$ & $U$ & borne
+   & coupe en & $|\Rcal|$ & $U$ & borne\\
+\midrule
+0 & --        & 22 & 46 & $12$
+  & --        & 22 & 46 & $12$\\
+1 & $(4,2)$   & 13 & $\mathbf{0}$ & $\mathbf{14/5}$
+  & $(4,0)$   & 21 & 31 & $9$\\
+2 & $(3,3)$   &  9 & 0 & $14/5$
+  & $(3,0)$   & 20 & 23 & $37/5$\\
+3 & $(2,3)$   &  6 & 0 & $14/5$
+  & $(4,1)$   & 17 &  8 & $10/3$\\
+4 & $(1,4)$   &  3 & 0 & $14/5$
+  & $(2,0)$   & 17 &  8 & $10/3$\\
+5 & $(0,5)$   & $\mathbf{0}$ & \multicolumn{2}{c}{\textbf{vide} $\Rightarrow \qs=q$}
+  & $(3,1)$   & 15 & $0$ & $14/5$\\
+\midrule
+\multicolumn{5}{l}{\textbf{disponibles : 5 (l'archive)}}
+& \multicolumn{4}{l}{disponibles : \textbf{0} (aucun dominé collecté)}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=12.4cm,height=6.2cm,
+  xlabel={nombre de coupes posées}, ylabel={borne supérieure sur $\qs$},
+  xmin=-0.3,xmax=9.3, ymin=2.2, ymax=12.8,
+  xtick={0,1,2,3,4,5,6,7,8,9},
+  legend style={at={(0.98,0.96)},anchor=north east,font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[color=ceff,mark=*,thick,mark size=2pt]
+  coordinates {(0,12) (1,2.8) (2,2.8) (3,2.8) (4,2.8) (5,2.8)};
+\addlegendentry{coupe d'efficacité (archive)}
+\addplot[color=cdom,mark=square*,thick,mark size=1.9pt,dashed]
+  coordinates {(0,12) (1,9) (2,7.4) (3,3.3333) (4,3.3333) (5,2.8)
+               (6,2.8) (7,2.8) (8,2.8) (9,2.8)};
+\addlegendentry{coupe de dominance (17 points, hypothétiques)}
+\addplot[color=black,thick,dotted,domain=-0.3:9.3] {2.8};
+\addlegendentry{$\qs=14/5$}
+\end{axis}
+\end{tikzpicture}
+\caption{$\mathcal{I}_2$ : la borne en fonction du nombre de coupes.
+L'\textcolor{ceff}{efficacité} atteint l'optimum en \textbf{une} coupe ; la
+\textcolor{cdom}{dominance} en demande \textbf{cinq} -- et elle les prend
+dans un vivier de $17$ points que la recherche, ici, n'a \emph{pas produit}.
+La courbe orange est donc une borne de ce que la coupe classique pourrait
+faire au mieux, pas de ce qu'elle fait.}
+\label{fig:i2traj}
+\end{figure}
+
+\subsection{Ce que la méthode rend réellement}
+
+Exécution complète sur $\mathcal{I}_2$, budget $3+2$~s :
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+& $q_{\text{lb}}$ & $q_{\text{ub}}$ & prouvé & coupes d'efficacité posées\\
+\midrule
+sans coupes d'archive & $14/5$ & $2{,}80$ & oui & $0$\\
+avec coupes d'archive & $14/5$ & $2{,}80$ & oui & $5$\\
+\bottomrule
+\end{tabular}
+\end{center}
+\noindent
+Sur $22$ points, les deux variantes concluent : l'instance est trop petite
+pour départager. L'illustration sert à exposer le \emph{mécanisme} ; l'effet
+se mesure à la section~\ref{sec:res}, sur $90$ instances.
+
+% ============================================================================
+\section{Illustration numérique 2 : trois variables}
+\label{sec:illus3}
+
+\subsection{L'instance}
+
+\[
+\mathcal{I}_3:\quad
+\begin{aligned}
+  &\max\ Z_1(x)=\frac{3x_3}{2x_2+x_3+2},
+   \qquad Z_2(x)=\frac{3x_1+3x_2+x_3+1}{x_1+2x_2+x_3+3},\\[3pt]
+  &\max\ f(x)=\frac{2x_1+2x_2+x_3+1}{x_1+x_3+1}\quad\text{sur }\Ecal,\\[3pt]
+  &\text{s.c. } 3x_1+x_2+x_3\le 8,\quad x_1+2x_2+2x_3\le 9,
+   \quad x\in\mathbb{Z}^3_+ .
+\end{aligned}
+\]
+
+\noindent
+$|\Scal|=36$, $|\Ecal|=5$, $\qs=3$ atteint en $x^{\star}=(2,2,0)$, tandis que
+$\max_{\Scal}f=9$ en $(0,4,0)$ -- dominé. L'écart de la borne naïve est de
+$67\ \%$. L'archive rendue par la recherche compte $4$ points :
+$(1,0,4)$, $(2,0,2)$, $(2,2,0)$, $(2,1,1)$ ; le cinquième point efficace,
+$(2,0,1)$, n'est \emph{pas} trouvé. Les points dominés collectés : $0$,
+là encore.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=3.6,font=\small]
+\fill[cfond] (-0.03,0.28) rectangle (1.0,1.4444);
+\draw[ceff,thick] (1.0,0.28) -- (1.0,1.4444) -- (-0.03,1.4444);
+\draw[-{Stealth[length=2mm]}] (-0.03,0.3) -- (2.22,0.3) node[right]{$Z_1$};
+\draw[-{Stealth[length=2mm]}] (0,0.27) -- (0,1.60) node[above]{$Z_2$};
+\foreach \v in {0.5,1.0,1.5,2.0}
+  \draw (\v,0.285) -- (\v,0.315) node[below=2pt,font=\scriptsize]{\v};
+\foreach \v in {0.5,1.0,1.5}
+  \draw (-0.012,\v) -- (0.012,\v) node[left=2pt,font=\scriptsize]{\v};
+% dominés
+\foreach \p in {(0,0.3333),(1,0.5),(1.5,0.6),(1.8,0.6667),(2,0.7143),
+ (0,0.8),(0.6,0.8333),(1,0.8571),(1.2857,0.875),(0,1),(0.4286,1),(0.75,1),
+ (0,1.1111),(0.3333,1.1),(0,1.1818),(0,1),(1,1),(1.5,1),(1.8,1),
+ (0,1.1667),(0.6,1.1429),(1,1.125),(1.2857,1.1111),(0,1.25),(0.4286,1.2222),
+ (0.75,1.2),(0,1.3),(0.3333,1.2727),(0,1.3333),(0,1.4),(0,1.4286)}
+  \fill[cgris] \p circle (0.7pt);
+% efficaces
+\foreach \p in {(2,1),(1.5,1.2857),(0.6,1.375),(0,1.4444)}
+  \fill[ceff] \p circle (1.3pt);
+\fill[white] (1,1.3333) circle (1.3pt);
+\draw[ceff,thick] (1,1.3333) circle (1.3pt);
+\draw[ceff,dashed] (2,1) -- (1.5,1.2857) -- (1,1.3333) -- (0.6,1.375) -- (0,1.4444);
+\node[ceff,font=\scriptsize,right=2pt] at (2,1) {$(1,0,4)$};
+\node[ceff,font=\scriptsize,above right=0pt and 1pt] at (1.5,1.2857) {$(2,0,2)$};
+\node[font=\scriptsize,below=4pt,fill=white,inner sep=1pt] at (1,1.3333)
+  {$(2,0,1)$ \emph{non trouvé}};
+\node[ceff,font=\scriptsize,above right=0pt and 2pt] at (0.6,1.375) {$(2,1,1)$};
+\node[ceff,font=\scriptsize,above right=0pt and 2pt] at (0,1.4444)
+  {$x^\star=(2,2,0)$};
+\node[ceff,font=\scriptsize,align=center] at (0.47,0.80)
+  {zone retranchée\\ par la coupe en $(2,0,1)$};
+\end{tikzpicture}
+\caption{$\mathcal{I}_3$ dans l'espace des critères (qui reste plan puisque
+$p=2$, même à $n=3$). Le point efficace $(2,0,1)$, en cercle vide, n'est pas
+dans l'archive. La zone bleue est ce que retranche la coupe d'efficacité en
+$(2,0,1)$\dots\ qu'on ne peut pas poser. C'est pourquoi $\Rcal_A$ ne se vide
+pas ici : il finit \emph{exactement} sur ce point.}
+\label{fig:i3z}
+\end{figure}
+
+\subsection{Trajectoire}
+
+\begin{table}[htbp]
+\centering
+\caption{$\mathcal{I}_3$ : trajectoire, $q=3$. La borne atteint $\qs$ après
+\textbf{deux} coupes d'efficacité, contre \textbf{huit} coupes de dominance
+-- prises, une fois de plus, dans un vivier que la recherche n'a pas produit.}
+\label{tab:i3traj}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{clccc@{\qquad}lccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{coupe d'efficacité} (archive, 4 points)}
+& \multicolumn{4}{c}{coupe de dominance (31 points, hypothétiques)}\\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+\# & coupe en & $|\Rcal|$ & $U$ & borne
+   & coupe en & $|\Rcal|$ & $U$ & borne\\
+\midrule
+0 & --          & 36 & 6 & $9$      & --          & 36 & 6 & $9$\\
+1 & $(2,2,0)$   & 23 & 2 & $4$      & $(0,4,0)$   & 29 & 5 & $11/2$\\
+2 & $(2,1,1)$   & 16 & $\mathbf{0}$ & $\mathbf{3}$
+                                    & $(1,4,0)$   & 26 & 2 & $4$\\
+3 & $(2,0,2)$   &  5 & 0 & $3$      & $(0,3,0)$   & 26 & 2 & $4$\\
+4 & $(1,0,4)$   &  1 & 0 & $3$      & $(1,3,0)$   & 26 & 2 & $4$\\
+5 & \multicolumn{4}{l}{archive épuisée ; $\Rcal_A=\{(2,0,1)\}$}
+  & $(0,2,0)$   & 26 & 2 & $4$\\
+6 & & & & & $(0,3,1)$ & 25 & 1 & $7/2$\\
+7 & & & & & $(1,2,0)$ & 25 & 1 & $7/2$\\
+8 & & & & & $(1,3,1)$ & 24 & $\mathbf{0}$ & $\mathbf{3}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=12.4cm,height=5.8cm,
+  xlabel={nombre de coupes posées}, ylabel={borne supérieure sur $\qs$},
+  xmin=-0.3,xmax=8.3, ymin=2.6, ymax=9.6,
+  xtick={0,1,2,3,4,5,6,7,8},
+  legend style={at={(0.98,0.96)},anchor=north east,font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[color=ceff,mark=*,thick,mark size=2pt]
+  coordinates {(0,9) (1,4) (2,3) (3,3) (4,3)};
+\addlegendentry{coupe d'efficacité (4 points d'archive)}
+\addplot[color=cdom,mark=square*,thick,mark size=1.9pt,dashed]
+  coordinates {(0,9) (1,5.5) (2,4) (3,4) (4,4) (5,4) (6,3.5) (7,3.5) (8,3)};
+\addlegendentry{coupe de dominance (31 points, hypothétiques)}
+\addplot[color=black,thick,dotted,domain=-0.3:8.3] {3};
+\addlegendentry{$\qs=3$}
+\end{axis}
+\end{tikzpicture}
+\caption{$\mathcal{I}_3$ : même lecture qu'à la figure~\ref{fig:i2traj}.
+L'écart de coût est ici d'un facteur $4$ en nombre de coupes -- donc en
+variables binaires ajoutées au programme entier.}
+\label{fig:i3traj}
+\end{figure}
+
+\noindent
+\textbf{Ce que cette seconde illustration ajoute.} Elle montre le cas où
+$\Rcal_A$ \emph{ne} se vide \emph{pas} : l'archive est incomplète, il y
+subsiste le point efficace non trouvé. La proposition~\ref{prop:vide} ne
+s'applique donc pas -- et ce n'est pas grave, car le
+théorème~\ref{th:archbound} conclut quand même, dès la deuxième coupe, par
+$U=0$. Les deux voies de preuve sont indépendantes, et c'est ce qui rend la
+méthode robuste à la qualité de l'archive.
+
+% ============================================================================
+\section{Résultats}
+\label{sec:res}
+
+\subsection{Protocole}
+
+Deux jeux d'instances, générés sous (A1)--(A2), gelés avant toute mesure :
+un \emph{régime cible} de $8$ instances à vérité terrain énumérable, jouées
+sur $10$ graines, et un \emph{lot systématique} de $90$ instances. Les deux
+variantes reçoivent un budget \emph{identique} ; l'unité de coût rapportée
+est le nombre d'appels au solveur entier, indépendante de la machine. Toutes
+les exécutions sont soumises au contrôle
+$q_{\text{lb}}\le\qs\le q_{\text{ub}}$ ainsi qu'à quatre vérifications
+croisées inter-méthodes.
+
+\subsection{Régime cible}
+
+\begin{table}[htbp]
+\centering
+\caption{Régime cible, $8$ instances $\times$ $10$ graines, budget identique
+de $7+5$~s, vérité terrain disponible.}
+\label{tab:res1}
+\begin{tabular}{lcc}
+\toprule
+& sans coupes d'archive & avec\\
+\midrule
+écart garanti médian & $0{,}00\ \%$ & $0{,}00\ \%$\\
+optimalité \textbf{prouvée} & $57/80$ exécutions & $\mathbf{75/80}$\\
+validité $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ & $80/80$ & $\mathbf{80/80}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Les deux instances dont la borne ne fermait jamais voient leur écart garanti
+médian passer de $20{,}2\ \%$ à $0{,}6\ \%$ et de $6{,}8\ \%$ à $0{,}0\ \%$.
+La première est celle qu'il faut $433$~s et $177$ coupes pour prouver par
+l'oracle exact seul.
+
+\subsection{Lot systématique}
+
+\begin{table}[htbp]
+\centering
+\caption{Lot figé, $90$ instances, budget identique de $12$~s. Toutes les
+vérifications croisées passent.}
+\label{tab:res2}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lccccc}
+\toprule
+& optimalité & meilleure & \ILP & $t$ & vérifications\\
+& \textbf{prouvée} & valeur & méd. & méd. & en échec\\
+\midrule
+méthode exacte      & $69/90$ & $75/90$ & $92$  & $1{,}8$~s & 0\\
+recherche seule     & $84/90$ & $\mathbf{90/90}$ & $124$ & $0{,}9$~s & 0\\
+\textbf{+ coupes d'efficacité} & $\mathbf{86/90}$ & $\mathbf{90/90}$
+                    & $\mathbf{97}$ & $\mathbf{0{,}7}$~s & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+L'apport est strictement positif sur \emph{tous} les axes à la fois : deux
+preuves de plus, même qualité de solution, et un coût \emph{moindre} --
+$97$ appels médians contre $124$, pour $0{,}7$~s contre $0{,}9$. La coupe
+d'efficacité ne s'ajoute pas au travail : elle le remplace avantageusement,
+puisqu'une preuve obtenue tôt épargne les tours suivants.
+
+\subsection{Où elle n'apporte rien, et pourquoi}
+
+À front épais et $n\ge 20$, les écarts garantis sont \textbf{inchangés} :
+$98{,}3\ \%$, $97{,}1\ \%$ et $92{,}6\ \%$ à $n=20$, $30$, $40$. La raison
+est mécanique et se lit dans la règle du vivier
+(\S\ref{sec:vivier}) : à ces tailles la recherche produit assez de points
+dominés pour saturer le plafond \emph{avant} que les points d'archive ne
+soient atteints dans le classement. Aucune coupe d'efficacité n'est donc
+posée.
+
+C'est un résultat négatif utile, et il désigne le verrou suivant sans
+ambiguïté. Ce n'est plus la \emph{disponibilité} des coupes qui limite la
+borne à grande taille, c'est le \emph{plafond} lui-même -- donc le coût de
+$p$ binaires par coupe. Désagréger la disjonction~\eqref{eq:disj} devient la
+priorité, et l'on sait désormais qu'il y a, derrière ce plafond, de la
+matière à couper qui attend.
+
+% ============================================================================
+\section{Conclusion}
+
+La coupe d'efficacité repose sur une observation d'une ligne -- deux points
+efficaces de vecteurs critères distincts se dépassent forcément quelque part
+-- et sur le fait, non trivial, que la réserve qui l'accompagne se vérifie
+par \emph{un seul programme de faisabilité}. Elle transforme un sous-produit
+de la recherche, l'archive, en la ressource dont la borne exacte manquait.
+
+C'est une hybridation au sens fort, et il faut le dire précisément :
+\emph{aucune des deux moitiés ne produit seule ce résultat}. Sans la
+recherche heuristique il n'y a pas d'archive. Sans la certification exacte
+de l'efficacité, les points de l'archive ne seraient pas \emph{prouvés}
+efficaces et la coupe serait invalide. La proposition~\ref{prop:vide} est la
+signature de cette hybridation : une preuve d'optimalité que la partie exacte
+seule ne peut pas atteindre, puisqu'elle repose sur le fait d'avoir
+\emph{épuisé} $\Ecal$ par des points trouvés heuristiquement.
+
+Deux directions restent ouvertes. La première est le plafond de coupes, que
+la section~\ref{sec:res} désigne comme le verrou suivant : désagréger la
+disjonction pour ramener le coût sous $p$ binaires par coupe. La seconde est
+la clôture elle-même : nos mesures n'ont jamais rencontré deux points
+efficaces de même vecteur critères, ce qui suggère qu'une condition
+structurelle -- vérifiable une fois pour toutes sur l'instance plutôt qu'une
+fois par point d'archive -- pourrait rendre la coupe entièrement gratuite.
+
+\end{document}
