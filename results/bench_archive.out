@@ -5,28 +5,29 @@ instance                  |E|      ecart garanti median    optimalite prouvee   
                                      sans          avec      sans        avec
 ----------------------------------------------------------------------------------------------------
 molfp_n7_m4_p4_c000_s3    218        0.0%          0.0%     10/10      10/10       ok
-molfp_n7_m4_p4_c025_s3    198       20.1%          0.6%      0/10       5/10       ok
+molfp_n7_m4_p4_c025_s3    198       17.3%          0.0%      0/10       8/10       ok
 molfp_n6_m4_p4_c000_s3    185        0.0%          0.0%     10/10      10/10       ok
-molfp_n7_m4_p3_c025_s1    112        0.0%          0.0%      9/10      10/10       ok
-molfp_n5_m3_p4_c000_s2     54        6.6%          0.0%      0/10      10/10       ok
+molfp_n7_m4_p3_c025_s1    112        0.0%          0.0%     10/10      10/10       ok
+molfp_n5_m3_p4_c000_s2     54        6.7%          0.0%      0/10      10/10       ok
 molfp_n8_m5_p3_c000_s1     46        0.0%          0.0%      8/10      10/10       ok
 molfp_n7_m4_p4_c050_s3     30        0.0%          0.0%     10/10      10/10       ok
 molfp_n6_m4_p2_c025_s1     26        0.0%          0.0%     10/10      10/10       ok
 ----------------------------------------------------------------------------------------------------
-  sans  : ecart garanti median (sur les medianes) =   0.00 %   optimalite prouvee  57/80
-  avec  : ecart garanti median (sur les medianes) =   0.00 %   optimalite prouvee  75/80
+  sans  : ecart garanti median (sur les medianes) =   0.00 %   optimalite prouvee  58/80
+  avec  : ecart garanti median (sur les medianes) =   0.00 %   optimalite prouvee  78/80
   VALIDITE q_lb <= q* <= q_ub : TOUT VALIDE
   --- lecture APPARIEE (meme instance, meme graine) ---
-  preuves gagnees  18   perdues   0   inchangees  62
-  delta ILP par paire : mediane +10   moyenne +4.1   total +328   baisses 26/80
+  preuves gagnees  20   perdues   0   inchangees  60
+  delta ILP par paire : mediane -12   moyenne -19.7   total -1579   baisses 54/80
 
 ====================================================================================================
 PARTIE B - PASSAGE A L'ECHELLE a corr = 0 (E epais), sans verite terrain, budget 18 s + 12 s
 ====================================================================================================
    n     max_S f   q_lb sans   q_ub sans    ecart   q_lb avec   q_ub avec    ecart  coherent
 ----------------------------------------------------------------------------------------------------
-  20    268.0000      3.7317    222.4146    98.3%      3.7317    223.6829    98.3%        ok
-  30     87.0000      2.5385     81.5962    96.9%      2.4526     83.3579    97.1%        ok
-  40    105.5000      5.3200     71.8500    92.6%      5.3200     81.5000    93.5%        ok
+  20    268.0000      3.7317    218.3415    98.3%      3.7317    218.3415    98.3%        ok
+  30     87.0000      2.4324     82.5338    97.1%      2.4324     82.4324    97.0%        ok
+  40    105.5000      5.3200     71.2600    92.5%      5.3200     70.3500    92.4%        ok
 ----------------------------------------------------------------------------------------------------
   COHERENCE des encadrements : TOUT VALIDE
+=== ARCH FINI ===
