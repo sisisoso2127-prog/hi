@@ -1737,10 +1737,10 @@ du raisonnement et non de ses déchets.
 \section{Ce que les coupes peuvent atteindre}
 \label{sec:couverture}
 
-Deux explications de l'écart résiduel ont été avancées, et les deux ont été
-réfutées par la mesure : le plafond de coupes
-(§\ref{sec:cglp}) et leur ordre. Une troisième restait : la région que l'on
-sait retrancher serait négligeable devant ce qui sépare $\Rcal$ de $\Ecal$.
+Une première explication de l'écart résiduel a été avancée puis réfutée par
+la mesure : le coût en binaires, donc le plafond de coupes
+(§\ref{sec:cglp}). Une seconde restait : la région que l'on sait retrancher
+serait négligeable devant ce qui sépare $\Rcal$ de $\Ecal$.
 Cette section la met à l'épreuve. Elle demande de comparer ce que la méthode
 retranche à ce qu'il \emph{faudrait} retrancher -- donc de connaître $\Ecal$
 et $\qs$. Nous nous plaçons pour cela sur des instances énumérables, où
@@ -1837,8 +1837,8 @@ la théorie, aurait été en cause.
 efficace qu'on ne le croyait.} $\text{cov}_{\Acal}\ge 99\ \%$ sur $26$
 lignes sur $26$, alors que l'archive ne retient qu'entre $20$ et $35\ \%$
 des vecteurs critères de $\Ecal$ (médiane par échelle). Une petite archive
-domine donc déjà la quasi-totalité de $\Scal^{+}$ : la troisième explication
-tombe comme les deux précédentes. Et le résultat a une portée propre, en
+domine donc déjà la quasi-totalité de $\Scal^{+}$ : la seconde explication
+tombe comme la première. Et le résultat a une portée propre, en
 dehors du diagnostic : il dit qu'\emph{il ne sert à rien de chercher à
 grossir l'archive}. Ce n'est pas en la remplissant qu'on gagnera.
 
@@ -1878,8 +1878,8 @@ l'incumbent. Or rien dans la démonstration ne l'exige.
 
 \begin{theorem}[borne à seuil libre]
 \label{th:seuil}
-Soit $t$ un rationnel quelconque et $G_t=N-tD$. Si
-$\max_{x\in\Rcal}G_t(x)\le v$ avec $v\ge 0$, alors
+Soit $t$ un rationnel quelconque et $G_t=N-tD$. Si l'on a
+$\max_{x\in\Rcal}G_t(x)\le v$ pour un $v\ge 0$, alors
 \[
   \max_{x\in\Rcal}f(x)\ \le\ t+\frac{v}{D_{\min}},
   \qquad D_{\min}=\min_{x\in\Scal}D(x)>0 .
@@ -1887,8 +1887,9 @@ $\max_{x\in\Rcal}G_t(x)\le v$ avec $v\ge 0$, alors
 \end{theorem}
 
 \begin{proof}
-Pour $x\in\Rcal$ : $N(x)-tD(x)\le v$, et $D(x)>0$ sous (A1), donc
-$f(x)=N(x)/D(x)\le t+v/D(x)\le t+v/D_{\min}$ puisque $v\ge0$. \end{proof}
+Pour $x\in\Rcal$ on a $N(x)-tD(x)\le v$, et $D(x)>0$ sous~(A1) ; donc
+$f(x)=N(x)/D(x)\le t+v/D(x)$, et $v\ge0$ donne
+$v/D(x)\le v/D_{\min}$. \end{proof}
 
 Le théorème~5' est le cas $t=q$ : en effet $G_q=F_q/Q$, de sorte que
 $v=U/Q$ et la borne s'écrit $q+U/(QD_{\min})$. Mais tout $t$ convient, et

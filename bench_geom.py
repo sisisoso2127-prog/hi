@@ -38,6 +38,7 @@ Usage :  python bench_geom.py [plafond_appels] [nb_graines] [declencheur]
          la premiere ne ferme pas, 0 pour l'engager systematiquement.
 """
 
+import os
 import sys
 import time
 
@@ -47,7 +48,11 @@ from molfp_core import ORACLE_CALLS, reset_oracle_counter, upper_bound_over_S
 from molfp_instance import generate
 from molfp_matheuristic import matheuristic_P
 
-TAILLES = [20, 30, 40]
+# surchargeable : `MOLFP_TAILLES=40` pour rejouer une seule strate sans
+# refaire les autres. Les tailles n'interagissent pas -- chaque ligne est
+# une instance independante -- donc les rejouer separement ne change rien
+# aux resultats, seulement au temps qu'il faut pour les obtenir.
+TAILLES = [int(v) for v in os.environ.get("MOLFP_TAILLES", "20,30,40").split(",")]
 CORRS = [0.0, 0.5]
 
 
