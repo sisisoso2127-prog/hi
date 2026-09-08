@@ -113,6 +113,14 @@ from molfp_oracle import (ECutModel, HybridResult, max_linear_over_E,
 
 Row = Tuple[np.ndarray, float, float]
 
+# Nombre maximal de tours de la seconde route (Dinkelbach sur le relache).
+# Il borne aussi ce qu'il est utile de lui RESERVER : un tour = un ILP, donc
+# au-dela de TOURS_GEOM appels, la reserve serait du budget immobilise que la
+# route ne peut pas depenser -- et retire aux coupes pour rien. Mesure : la
+# route converge en 2 tours sur les instances a n = 20, alors qu'une reserve
+# en pourcentage lui immobilisait 28 appels.
+TOURS_GEOM = 12
+
 
 # ----------------------------------------------------------------------------
 # Outils
@@ -144,7 +152,7 @@ def d_plus(inst: MOILFP, model: ECutModel,
 
 
 def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
-                      budget: float, max_iter: int = 12,
+                      budget: float, max_iter: int = TOURS_GEOM,
                       Dm: Optional[int] = None
                       ) -> Tuple[Optional[float], str, int]:
     """
@@ -640,8 +648,12 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             max(0.0, budget - (time.time() - t0))
         if _bud_ext is not None:
             libre = max(0, _bud_ext - ORACLE_CALLS["ilp"])
-            set_ilp_budget(ORACLE_CALLS["ilp"]
-                           + max(1, int((1.0 - geom_share) * libre)))
+            # On ne reserve pas une PART, on reserve ce que la route peut
+            # effectivement depenser : au plus TOURS_GEOM appels. Une reserve
+            # en pourcentage immobilisait 28 appels pour une route qui en
+            # consomme 2, et les retirait aux coupes sans contrepartie.
+            garde = min(int(geom_share * libre), TOURS_GEOM)
+            set_ilp_budget(ORACLE_CALLS["ilp"] + max(1, libre - garde))
 
     def _liberer() -> None:
         nonlocal budget_coupes, geom_actif
