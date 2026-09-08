@@ -1,0 +1,20 @@
+============================================================================================================
+COUPE PAR PROGRAMME GENERATEUR - plafond 300 appels entiers, jusqu'a 20 coupes generees
+============================================================================================================
+   n  corr  gr  reprod  ecart sans  ecart avec  gain pts  cglp     ILP s/a        PL s/a  coherent
+------------------------------------------------------------------------------------------------------------
+  20  0.00   1     oui       98.6%       98.5%    +0.11    13   300/300      360/390           ok
+  20  0.50   1     oui        0.0%        0.0%    +0.00     0   143/143      105/105           ok
+  30  0.00   1     oui       93.9%       93.8%    +0.06    12   300/300      315/346           ok
+  30  0.50   1     oui       78.9%       78.9%    +0.00     3   300/300      270/279           ok
+  40  0.00   1     oui       96.6%       96.6%    +0.00    12   300/300      333/375           ok
+  40  0.50   1     oui        0.0%        0.0%    +0.00     9   197/197      171/191           ok
+------------------------------------------------------------------------------------------------------------
+  REPRODUCTIBILITE : 6/6 lignes stables
+  points d'ecart garanti gagnes : median +0.00   moyen +0.03   max +0.11   min +0.00
+  MIEUX 2   PIRE 0   EGAL 4
+  COHERENCE des encadrements : TOUT VALIDE
+
+  Rappel : le budget est compte en appels ENTIERS, or la coupe
+  generee ne coute que des PROGRAMMES LINEAIRES. Sous cette unite
+  elle parait gratuite ; la colonne « PL » dit son cout reel.

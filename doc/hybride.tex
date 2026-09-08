@@ -125,7 +125,10 @@ raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
 Les limites sont énoncées avec la même précision que les gains : la méthode
 est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le lemme
 n'achète aucune preuve supplémentaire -- c'est un gain de coût, non de
-capacité. Deux illustrations numériques entièrement détaillées, à $2$ puis
+capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
+programme générateur, y est construite et vérifiée : elle ne gagne que
+$0{,}11$ point d'écart garanti, ce qui \emph{infirme} le diagnostic que nous
+avions nous-mêmes posé sur l'origine de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
 $3$ variables, exposent le mécanisme pas à pas.
 \end{abstract}
 
@@ -1626,12 +1629,111 @@ dominés pour saturer le plafond \emph{avant} que les points d'archive ne
 soient atteints dans le classement. Aucune coupe d'efficacité n'est donc
 posée.
 
-C'est un résultat négatif utile, et il désigne le verrou suivant sans
-ambiguïté. Ce n'est plus la \emph{disponibilité} des coupes qui limite la
-borne à grande taille, c'est le \emph{plafond} lui-même -- donc le coût de
-$p$ binaires par coupe. Désagréger la disjonction~\eqref{eq:disj} devient la
-priorité, et l'on sait désormais qu'il y a, derrière ce plafond, de la
-matière à couper qui attend.
+C'est un résultat négatif utile, et il paraissait désigner le verrou suivant
+sans ambiguïté : non plus la \emph{disponibilité} des coupes, mais le
+\emph{plafond} lui-même, donc le coût de $p$ binaires par coupe. Désagréger
+la disjonction~\eqref{eq:disj} devenait la priorité. La sous-section
+suivante met cette conclusion à l'épreuve -- et l'infirme.
+
+\subsection{Supprimer le coût en binaires ne suffit pas}
+\label{sec:cglp}
+
+\paragraph{Une coupe disjonctive sans aucune binaire.} Soit $P$ le relâché
+courant dans l'espace des $x$ et, pour un point de coupe $a$, les $p$
+disjoints
+\[
+  P_k=\bigl\{x\in P\ :\ \gamma_k^{\top}x\ \ge\ 1-\delta_k\bigr\},
+  \qquad e^a_k(x)=\gamma_k^{\top}x+\delta_k .
+\]
+Tout point que l'on veut conserver appartient à leur \emph{réunion}. On
+cherche donc $\alpha^{\top}x\ge\beta$ valide sur \emph{chacun} des $P_k$.
+Par le lemme de Farkas, cela équivaut à l'existence de multiplicateurs
+$\lambda^k\ge 0$ et $\mu^k\ge 0$ tels que
+\[
+  \alpha\ \ge\ -\lambda^k A+\mu^k\gamma_k,
+  \qquad
+  \beta\ \le\ -\lambda^k b+\mu^k(1-\delta_k),
+\]
+\emph{pour le même couple $(\alpha,\beta)$ à tous les $k$} -- c'est
+précisément ce qui rend l'inégalité valide pour la réunion. On choisit alors
+le couple le plus \emph{violé} au point courant $x^{\ast}$, ce qui donne un
+programme linéaire de $n+1+p(m+1)$ variables. Un seul programme linéaire,
+une seule ligne, \textbf{aucune binaire} : le plafond ne s'y applique pas.
+
+\begin{remark}[ce qu'elle ne peut pas faire]
+Elle ne domine pas la forme disjonctive. Celle-ci retranche \emph{exactement}
+la région ; la coupe générée n'en retranche qu'un demi-espace. Son seul
+avantage -- mais il était censé être décisif dans ce régime -- est de ne
+consommer aucune place sous le plafond.
+\end{remark}
+
+\paragraph{Vérifiée avant d'être mesurée.} Sur dix instances énumérables :
+aucune violation depuis le polyèdre de base, aucune en chaîne, et les seuls
+points efficaces retranchés sont de même vecteur critères que leur point de
+coupe -- la réserve du théorème~\ref{th:effcut}, non une faute. Un premier
+contrôle avait signalé une violation ; elle n'en était pas une. Les coupes
+s'enchaînent, et chacune est dérivée du polyèdre \emph{déjà} restreint par
+les précédentes : elle n'est donc valide que relativement à \emph{ce}
+polyèdre, et le point incriminé avait déjà été retiré par une coupe
+antérieure. C'est une distinction qu'il faut faire, sous peine de rejeter
+une implémentation correcte -- ou, plus grave, d'en accepter une fausse.
+
+\begin{table}[htbp]
+\centering
+\caption{Coupe par programme générateur, budget déterministe de $300$ appels
+entiers, comparaison appariée, chaque configuration jouée deux fois.}
+\label{tab:cglp}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{ccccccc}
+\toprule
+$n$ & corr & écart sans & écart avec & gain (points) & coupes générées
+ & \textsc{Pl} sans/avec\\
+\midrule
+$20$ & $0$    & $98{,}6\ \%$ & $98{,}5\ \%$ & $+0{,}11$ & $13$ & $360/390$\\
+$20$ & $0{,}5$& $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$ & $0$  & $105/105$\\
+$30$ & $0$    & $93{,}9\ \%$ & $93{,}8\ \%$ & $+0{,}06$ & $12$ & $315/346$\\
+$30$ & $0{,}5$& $78{,}9\ \%$ & $78{,}9\ \%$ & $+0{,}00$ & $3$  & $270/279$\\
+$40$ & $0$    & $96{,}6\ \%$ & $96{,}6\ \%$ & $+0{,}00$ & $12$ & $333/375$\\
+$40$ & $0{,}5$& $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$ & $9$  & $171/191$\\
+\midrule
+\multicolumn{7}{l}{reproductibilité $6/6$ \quad$\bullet$\quad
+ améliorées $2$, dégradées $\mathbf{0}$, inchangées $4$}\\
+\multicolumn{7}{l}{gain médian $+0{,}00$ point, moyen $+0{,}03$,
+ \textbf{maximum $+0{,}11$}}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Le mécanisme fonctionne, et cela ne suffit pas.} Les coupes sont
+bien générées -- $13$, $12$, $12$, $9$, $3$ selon les lignes -- et elles
+mordent : à $n=20$, $\text{corr}=0$, la borne supérieure passe de $230{,}26$
+à $214{,}21$, soit $-7\ \%$. C'est la première fois qu'un levier déplace la
+borne dans ce régime ; tout ce qui avait été essayé auparavant l'y laissait
+strictement inchangée.
+
+Mais l'écart garanti, lui, passe de $98{,}6$ à $98{,}5\ \%$. La raison est
+arithmétique : avec $q_{\text{lb}}\approx 3{,}7$ et $q_{\text{ub}}\approx
+230$, réduire la borne supérieure de $7\ \%$ ne déplace le rapport que d'un
+dixième de point. Sur les six lignes, le gain médian est \emph{nul} et le
+maximum vaut $0{,}11$ point, contre des écarts de $79$ à $99\ \%$.
+
+\paragraph{Ce que ce résultat négatif corrige.} Il ne dit pas seulement que
+la coupe générée est insuffisante ; il infirme le \emph{diagnostic} qui
+l'avait motivée. Nous avions conclu de la section précédente que le verrou
+était le coût en binaires. Or ce coût est ici entièrement supprimé -- les
+coupes générées sont illimitées et n'occupent aucune place -- et l'écart ne
+bouge pas. \textbf{Lever le plafond ne suffit donc pas}, et la conclusion
+précédente était trop rapide.
+
+Ce que la mesure suggère à sa place : à ces tailles, la région que l'on sait
+retrancher -- celle qui entoure les points déjà connus, dominés ou
+archivés -- ne représente qu'une part négligeable de ce qui sépare $\Rcal$
+de $\Ecal$. Le problème n'est pas le nombre de coupes que l'on peut poser,
+ni leur coût, mais le fait qu'aucune ne porte là où il le faudrait. Refermer
+cet écart demanderait un relâché construit autrement, et non davantage de
+coupes du même genre. Nous ne savons pas le construire, et nous préférons
+l'écrire ainsi plutôt que de laisser la section précédente désigner un
+verrou que la mesure a écarté.
 
 % ============================================================================
 % ============================================================================
@@ -2026,7 +2128,9 @@ délimitent exactement ce que ce travail établit.
       recherche produit assez de points dominés pour saturer le plafond
       avant que l'archive ne soit atteinte : aucune coupe d'efficacité n'est
       posée. Le verrou n'est plus la \emph{disponibilité} des coupes mais
-      leur \emph{coût}, $p$ binaires chacune.
+      leur \emph{coût}, $p$ binaires chacune -- et la
+      section~\ref{sec:cglp} montre que lever ce coût ne suffit pas
+      davantage.
 \item \textbf{Aucun progrès sur la qualité des solutions.} Sur le lot figé
       la recherche atteint déjà l'optimum $90$ fois sur $90$ : il n'y a pas
       de place pour un tel progrès, et la contribution porte donc
@@ -2039,15 +2143,19 @@ délimitent exactement ce que ce travail établit.
 
 \subsection*{Directions ouvertes}
 
-La première est le plafond de coupes, que la section~\ref{sec:res} désigne
-comme le verrou suivant : désagréger la disjonction pour ramener le coût
-sous $p$ binaires par coupe. La forme agrégée -- une seule ligne, aucune
-binaire, obtenue en minorant les termes non actifs -- est valide mais
-faible : elle retranche le quart au tiers de ce que retranche la
-disjonction sur les mêmes points. La voie sérieuse est un programme
-générateur de coupes (\emph{lift-and-project}) produisant, par
-programmation linéaire, l'inégalité valide pour la disjonction la plus
-violée par l'optimum courant du relâché.
+La première n'est plus celle que nous pensions. Nous avions désigné le
+plafond de coupes -- donc le coût de $p$ binaires -- comme le verrou
+suivant. La section~\ref{sec:cglp} lève ce coût entièrement, par un
+programme générateur produisant des coupes disjonctives valides sans aucune
+binaire, en nombre illimité : l'écart garanti gagne $0{,}11$ point au mieux,
+zéro en médiane. Le plafond n'était donc pas le verrou.
+
+Ce que la mesure met à sa place est plus difficile et plus honnête : à ces
+tailles, la région que l'on sait retrancher -- celle qui entoure les points
+déjà connus -- ne représente qu'une part négligeable de ce qui sépare
+$\Rcal$ de $\Ecal$. Aucune quantité de coupes de ce genre n'y changera rien,
+puisque aucune ne porte là où il le faudrait. Refermer cet écart demande un
+relâché construit autrement. Nous ne savons pas le construire.
 
 La seconde est la clôture elle-même : nos mesures n'ont jamais rencontré
 deux points efficaces de même vecteur critères, ce qui suggère qu'une
