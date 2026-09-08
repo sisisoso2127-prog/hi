@@ -996,6 +996,40 @@ $|\Rcal|\ge 5$ toujours.}
 \label{fig:i2panels}
 \end{figure}
 
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=11.6cm,height=5.4cm,
+  xlabel={nombre de coupes posées}, ylabel={$|\Rcal_A|$},
+  xmin=-0.3,xmax=5.4, ymin=-2, ymax=40,
+  xtick={0,1,2,3,4,5}, ytick={0,10,20,30},
+  legend style={at={(0.98,0.96)},anchor=north east,font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small},
+  nodes near coords, nodes near coords style={font=\scriptsize}]
+\addplot[color=ceff,mark=*,thick,mark size=2.4pt]
+  coordinates {(0,22) (1,13) (2,9) (3,6) (4,3) (5,0)};
+\addlegendentry{$\mathcal{I}_2$ : coupes d'efficacité}
+\addplot[color=black!55,mark=triangle*,thick,dashed,mark size=2.6pt]
+  coordinates {(0,36) (1,23) (2,16) (3,5) (4,1)};
+\addlegendentry{$\mathcal{I}_3$ : coupes d'efficacité}
+\addplot[color=cdom,mark=square*,thick,dotted,mark size=2.2pt]
+  coordinates {(0,22) (1,21) (2,20) (3,17) (4,17) (5,15)};
+\addlegendentry{$\mathcal{I}_2$ : coupes de dominance}
+\end{axis}
+\end{tikzpicture}
+\caption{Le relâché, coupe après coupe. Sur $\mathcal{I}_2$ la coupe
+d'efficacité le fait fondre de $22$ points à \textbf{zéro} en cinq coupes --
+et un relâché vide \emph{est} la preuve (proposition~\ref{prop:vide}). La
+coupe de dominance, sur la même instance et pour le même nombre de coupes,
+descend de $22$ à $15$ : elle ne peut pas faire mieux, puisqu'elle préserve
+$\Ecal$ et se heurte donc au plancher $|\Rcal|\ge|\Ecal|=5$. Sur
+$\mathcal{I}_3$ la descente s'arrête à $1$ : l'archive y est incomplète, il
+reste le point efficace non trouvé -- et le théorème~\ref{th:archbound}
+conclut malgré tout, dès la deuxième coupe.}
+\label{fig:trajrelache}
+\end{figure}
+
 \subsection{Étape 5 -- la borne, coupe par coupe}
 
 Le tableau~\ref{tab:i2traj} donne, à chaque étape, les quantités exactes du
@@ -1256,6 +1290,43 @@ delta des appels par paire & \multicolumn{2}{c}{médiane $\mathbf{-12}$,
 \end{tabular}
 \end{table}
 
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=13cm,height=5.6cm,
+  ybar, bar width=7pt, enlarge x limits=0.08,
+  symbolic x coords={{n7 p4 c0},{n7 p4 c.25},{n6 p4 c0},{n7 p3 c.25},
+                     {n5 p4 c0},{n8 p3 c0},{n7 p4 c.5},{n6 p2 c.25}},
+  xtick=data, xticklabel style={font=\scriptsize,rotate=25,anchor=north east},
+  ylabel={optimalité prouvée, sur $10$ graines},
+  ymin=0, ymax=11.4, ytick={0,2,4,6,8,10},
+  nodes near coords, nodes near coords style={font=\tiny},
+  legend style={at={(0.5,1.04)},anchor=south,legend columns=2,
+                font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[fill=cdom!45,draw=cdom] coordinates
+  {({n7 p4 c0},10) ({n7 p4 c.25},0) ({n6 p4 c0},10) ({n7 p3 c.25},10)
+   ({n5 p4 c0},0) ({n8 p3 c0},8) ({n7 p4 c.5},10) ({n6 p2 c.25},10)};
+\addlegendentry{sans coupes d'archive}
+\addplot[fill=ceff!35,draw=ceff] coordinates
+  {({n7 p4 c0},10) ({n7 p4 c.25},8) ({n6 p4 c0},10) ({n7 p3 c.25},10)
+   ({n5 p4 c0},10) ({n8 p3 c0},10) ({n7 p4 c.5},10) ({n6 p2 c.25},10)};
+\addlegendentry{avec}
+\end{axis}
+\end{tikzpicture}
+\caption{Régime cible, instance par instance, $10$ graines chacune. Six
+instances sur huit étaient déjà prouvées à toutes les graines : la coupe
+d'efficacité ne pouvait rien y ajouter, et n'y retire rien. Le gain est
+entièrement porté par les trois autres, et deux d'entre elles changent
+d'\emph{état} plutôt que de degré : de \textbf{zéro} preuve sur dix à dix
+sur dix, et de zéro à huit. Elles passent de « solution trouvée, optimalité
+inconnue » à « optimalité établie » -- ce qui n'est pas une amélioration de
+pourcentage mais un changement de ce que la méthode rend.}
+\label{fig:cible}
+\end{figure}
+
 \noindent
 C'est ici que le théorème~\ref{th:hauteur} change le signe du coût. Avant
 lui, les preuves supplémentaires s'\emph{achetaient} : la médiane appariée
@@ -1514,6 +1585,38 @@ relâcher. Régler le déclencheur demande de mesurer les deux, ce qui reste à
 faire.
 
 \subsection{Où elle n'apporte rien, et pourquoi}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=12cm,height=5.4cm,
+  xlabel={$n$}, ylabel={écart garanti (\%)},
+  xmin=15,xmax=45, ymin=0, ymax=105,
+  xtick={20,30,40}, ytick={0,20,40,60,80,100},
+  legend style={at={(0.5,0.35)},anchor=north,font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[color=cdom,mark=*,thick,mark size=2.4pt]
+  coordinates {(20,98.3) (30,97.1) (40,92.5)};
+\addlegendentry{sans coupes d'archive}
+\addplot[color=ceff,mark=square*,thick,dashed,mark size=2.2pt]
+  coordinates {(20,98.3) (30,97.0) (40,92.4)};
+\addlegendentry{avec}
+\addplot[color=black,thick,dotted] coordinates {(15,0) (45,0)};
+\addlegendentry{ce qu'il faudrait atteindre}
+\end{axis}
+\end{tikzpicture}
+\caption{La frontière honnête de la méthode. À front épais et $n\ge 20$, les
+deux courbes sont confondues et restent à $92$--$98\ \%$ : la coupe
+d'efficacité n'y change \emph{rien}, et la borne ne descend pas. La raison
+est mécanique -- la recherche produit assez de points dominés pour saturer
+le plafond avant que l'archive ne soit atteinte, de sorte qu'aucune coupe
+d'efficacité n'est posée. Nous reproduisons cette figure telle quelle plutôt
+que de la reléguer à une note : elle délimite ce que ce travail
+n'accomplit pas.}
+\label{fig:echelle}
+\end{figure}
+
 
 À front épais et $n\ge 20$, les écarts garantis sont \textbf{inchangés} :
 $98{,}3\ \%$, $97{,}1\ \%$ et $92{,}6\ \%$ à $n=20$, $30$, $40$. La raison
