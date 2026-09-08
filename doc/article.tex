@@ -797,16 +797,53 @@ vérifications $C_1$--$C_4$ passent.}
 méthode exacte & 69/90 & 75/90 & 92 & $1{,}8$~s & 0\\
 matheuristique & 84/90 & \textbf{90/90} & 124 & $0{,}9$~s & 0\\
 \textbf{+ coupes d'archive} & $\mathbf{86/90}$ & \textbf{90/90}
- & $\mathbf{97}$ & $\mathbf{0{,}7}$~s & 0\\
+ & $97$ & $0{,}7$~s & 0\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Sur le lot systématique, l'apport est strictement positif sur \emph{tous} les
-axes : deux preuves de plus, même valeur, et un coût moindre -- $97$ appels
-médians contre $124$, pour $0{,}7$~s contre $0{,}9$. La coupe d'archive ne
-s'ajoute pas au travail, elle le remplace avantageusement.
+Sur le lot systématique, l'apport se lit sur l'axe des preuves : deux
+certificats de plus, à valeur inchangée ($90/90$ dans les deux cas).
+
+\paragraph{Ce que le tableau ne dit pas.} Les colonnes \ILP{} et $t$ de ce
+tableau comparent des \emph{médianes de deux échantillons distincts}. Une
+telle comparaison est muette sur ce qui nous intéresse, à savoir l'effet des
+coupes \emph{sur une instance donnée}. Nous avons donc repris les $90$
+instances une à une, en appariant chaque exécution avec et sans coupes. Le
+verdict appariné diffère du verdict marginal :
+%
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+lecture & effet sur \ILP\\
+\midrule
+médianes indépendantes (tableau ci-dessus) & $97$ contre $124$\\
+\textbf{différences appariées, instance par instance} & \textbf{médiane
+ $\mathbf{+1}$ appel}\\
+\bottomrule
+\end{tabular}
+\end{center}
+%
+\noindent
+Autrement dit, l'écart $97$ contre $124$ ne mesure pas une économie : il
+mesure surtout le fait que les deux configurations ne s'arrêtent pas sur les
+mêmes instances -- celle qui prouve davantage prouve aussi plus vite, donc
+sort plus tôt, et sa médiane s'en trouve tirée vers le bas. Sur une même
+instance, les coupes coûtent typiquement \emph{un appel entier de plus},
+pas moins. Nous avions initialement conclu à un « apport strictement positif
+sur tous les axes » ; la lecture appariée infirme cette conclusion sur l'axe
+du coût, et nous ne la maintenons pas. Ce qui subsiste, et qui est solide,
+est l'axe des preuves : $+2$ certificats, sans aucune régression de valeur.
+
+\paragraph{Une seconde réserve : le budget en temps.} Ce lot est arbitré
+par un budget de $12$~s. Or, réexécuté à l'identique, un budget en temps
+fait varier le nombre d'appels entiers d'une exécution à l'autre dans un
+rapport allant jusqu'à $125\ \%$ sur la même instance et la même machine.
+Aucune affirmation de « non-régression » ne peut donc reposer sur ce
+protocole. Les bancs ultérieurs remplacent le budget en secondes par un
+plafond \emph{déterministe} d'appels entiers ; c'est sous ce protocole seul
+que nous énonçons des comparaisons de coût.
 
 \paragraph{Où elle n'apporte rien, et pourquoi.} À $\text{corr}=0$ et
 $n\ge 20$ -- le régime à $\Ecal$ épais -- les écarts garantis sont

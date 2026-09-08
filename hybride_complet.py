@@ -13,20 +13,6 @@ Ce fichier est autonome : numpy et scipy suffisent. Il est ASSEMBLE a partir
 des sources du projet, sans retranscription -- ce qui est mesure est ce qui
 est livre.
 
-VERSION. Verifiez que vous avez bien CETTE version avant de signaler un
-probleme :
-
-    grep -c "raise RuntimeError" hybride_complet.py     doit rendre 0
-    grep -c "def reduce_row"     hybride_complet.py     doit rendre 1
-
-Une version anterieure levait `RuntimeError: Test d'efficacite : statut
-infeasible` sur certaines versions de HiGHS. Le programme de ce test est
-pourtant TOUJOURS realisable -- xbar en est une solution -- donc un tel
-statut ne peut venir que du solveur. Plus aucune fonction ne leve sur un
-statut de solveur : le resultat est simplement declare NON CONCLUANT, ce qui
-ne coute que de ne pas certifier ce point-la et laisse toutes les bornes
-valides.
-
     python hybride_complet.py demo      les deux illustrations, pas a pas
     python hybride_complet.py verify    controles de validite (verite terrain)
     python hybride_complet.py ab        A/B des leviers, sur instances generees
@@ -447,6 +433,19 @@ _MIN_TIME_LIMIT = 0.05
 ORACLE_CALLS = {"ilp": 0, "lp": 0}
 
 
+ORACLE_BUDGET: dict = {"ilp": None}
+
+
+def set_ilp_budget(n: Optional[int]) -> None:
+    """Plafond d'appels au solveur ENTIER, ou None pour l'illimite."""
+    ORACLE_BUDGET["ilp"] = n
+
+
+def ilp_budget_left() -> float:
+    cap = ORACLE_BUDGET["ilp"]
+    return np.inf if cap is None else max(0, cap - ORACLE_CALLS["ilp"])
+
+
 def reset_oracle_counter() -> None:
     ORACLE_CALLS["ilp"] = 0
     ORACLE_CALLS["lp"] = 0
@@ -498,6 +497,13 @@ def solve_milp(obj: np.ndarray,
     `mip_dual_bound`, borne optimiste VALIDE : c'est elle que l'on remonte
     dans `bound`. Un ILP interrompu informe donc encore, au lieu d'etre perdu.
     """
+    if ilp_budget_left() <= 0:
+        # ressource epuisee : on rend le statut d'un ILP interrompu, SANS
+        # consulter le solveur et SANS incrementer le compteur. Le plafond
+        # est ainsi exactement respecte, et la trajectoire ne depend plus de
+        # l'horloge.
+        return ILPResult("limit", None, None, None)
+
     ORACLE_CALLS["ilp"] += 1
     cost = -np.asarray(obj, dtype=float) if maximize else np.asarray(obj, dtype=float)
     if integrality is None:
@@ -929,6 +935,7 @@ class ECutModel:
         self._cut_rows: List[Row] = []                     # espace etendu
         self.n_cuts = 0
         self.n_agg_cuts = 0          # coupes agregees, sans binaire
+        self.n_lin_rows = 0          # coupes lineaires en x, sans binaire
         self.tight_big_m = TIGHT_BIG_M if tight_big_m is None else tight_big_m
         # points de base des coupes posees. Les conserver permet de verifier
         # l'invariant E inclus dans R sans connaitre E : tout point EFFICACE
@@ -972,6 +979,24 @@ class ECutModel:
             if np.isfinite(e_min_lp):
                 e_min = max(e_min_box, e_min_lp)
         return a, b, e_min, e_min_box
+
+    # -- coupe LINEAIRE en espace x, sans binaire --------------------------
+    def add_linear_row(self, coef: np.ndarray, lo: float = -INF,
+                       hi: float = INF) -> None:
+        """
+        Ajoute une inegalite valide portant sur les seules variables x.
+
+        Sert aux coupes disjonctives produites par programme generateur
+        (`molfp_cglp`) : une ligne, aucune binaire, donc aucune place
+        consommee sous le plafond de coupes. Elle entre dans `_rows_x`, si
+        bien qu'elle resserre aussi le calcul du big-M des coupes
+        disjonctives posees ENSUITE -- un effet secondaire souhaitable.
+
+        L'appelant repond de la validite : la ligne doit etre satisfaite par
+        tout point efficace que l'on veut conserver.
+        """
+        self._rows_x.append((np.asarray(coef, dtype=float), lo, hi))
+        self.n_lin_rows = getattr(self, "n_lin_rows", 0) + 1
 
     # -- coupe AGREGEE : la meme region, sans une seule binaire -------------
     def add_aggregated_cut(self, xbar: np.ndarray) -> bool:
@@ -1376,6 +1401,125 @@ def dedup_archive(archive: Sequence[np.ndarray]) -> List[np.ndarray]:
 
 
 # ==========================================================================
+# extrait de molfp_cglp.py
+# ==========================================================================
+
+
+def optimum_relaxation(coef: np.ndarray, rows: Sequence[Row],
+                       ub: np.ndarray) -> Optional[np.ndarray]:
+    """argmax de coef^T x sur la relaxation continue. None si echec."""
+    n = len(coef)
+    A, b = _rows_en_Ax_le_b(rows, n)
+    ORACLE_CALLS["lp"] += 1
+    res = linprog(c=-np.asarray(coef, dtype=float),
+                  A_ub=A if A.size else None, b_ub=b if A.size else None,
+                  bounds=[(0.0, float(u)) for u in ub], method="highs")
+    return np.asarray(res.x, dtype=float) if res.success else None
+
+
+def cglp_cut(inst: MOILFP, a: np.ndarray, rows: Sequence[Row],
+             ub: np.ndarray, x_star: np.ndarray,
+             tol: float = 1e-7) -> Optional[Tuple[np.ndarray, float]]:
+    """
+    Programme generateur de coupes. Renvoie (alpha, beta) tel que
+    alpha^T x >= beta soit valide pour la reunion des P_k et VIOLEE en
+    x_star, ou None si aucune coupe violee n'existe.
+
+    Le cout est d'UN programme lineaire. Sa taille : n + 1 + p(m+1)
+    variables, p*n + p + 1 contraintes -- soit une centaine de chaque a
+    n = 40, m = 21, p = 3.
+    """
+
+    n, p = inst.n, inst.p
+    A, b = _rows_en_Ax_le_b(rows, n)
+    # les bornes de boite font partie du polyedre : x <= u
+    A = np.vstack([A, np.eye(n)]) if A.size else np.eye(n)
+    b = np.concatenate([b, ub.astype(float)])
+    m = A.shape[0]
+
+    gam, dlt = [], []
+    for k in range(p):
+        g, d = e_row(inst, a, k)
+        gam.append(np.asarray(g, dtype=float))
+        dlt.append(float(d))
+
+    # variables : alpha (n, libre) | beta (1, libre) | lambda^k (m) | mu^k (1)
+    nv = n + 1 + p * (m + 1)
+    def i_lam(k): return n + 1 + k * (m + 1)
+    def i_mu(k): return n + 1 + k * (m + 1) + m
+
+    A_ub, b_ub = [], []
+    for k in range(p):
+        # -alpha_j - (lambda^k A)_j + mu^k gamma_{k,j} <= 0
+        for j in range(n):
+            row = np.zeros(nv)
+            row[j] = -1.0
+            row[i_lam(k):i_lam(k) + m] = -A[:, j]
+            row[i_mu(k)] = gam[k][j]
+            A_ub.append(row)
+            b_ub.append(0.0)
+        # beta + lambda^k b - mu^k (1 - delta_k) <= 0
+        row = np.zeros(nv)
+        row[n] = 1.0
+        row[i_lam(k):i_lam(k) + m] = b
+        row[i_mu(k)] = -(1.0 - dlt[k])
+        A_ub.append(row)
+        b_ub.append(0.0)
+
+    # normalisation : somme des multiplicateurs = 1 (sinon non borne)
+    A_eq = np.zeros((1, nv))
+    for k in range(p):
+        A_eq[0, i_lam(k):i_lam(k) + m + 1] = 1.0
+
+    c = np.zeros(nv)
+    c[:n] = np.asarray(x_star, dtype=float)     # on MINIMISE alpha^T x* - beta
+    c[n] = -1.0
+    bounds = [(None, None)] * (n + 1) + [(0.0, None)] * (p * (m + 1))
+
+    ORACLE_CALLS["lp"] += 1
+    res = linprog(c=c, A_ub=np.array(A_ub), b_ub=np.array(b_ub),
+                  A_eq=A_eq, b_eq=np.array([1.0]), bounds=bounds,
+                  method="highs")
+    if not res.success:
+        return None
+    violation = -float(res.fun)                 # = beta - alpha^T x*
+    if violation <= tol:
+        return None
+    alpha = np.asarray(res.x[:n], dtype=float)
+    beta = float(res.x[n])
+    return alpha, beta
+
+
+def verifier_validite(inst: MOILFP, a: np.ndarray,
+                      alpha: np.ndarray, beta: float,
+                      points: Sequence[np.ndarray],
+                      tol: float = 1e-6) -> int:
+    """
+    Compte les points de `points` qui VIOLENT alpha^T x >= beta alors qu'ils
+    devraient la satisfaire, c'est-a-dire ceux qui verifient la disjonction
+    (il existe k tel que e_k^a(x) >= 1). Doit valoir 0.
+
+    C'est le controle de surete de la coupe : on ne peut pas se contenter de
+    la derivation, il faut la confronter aux points que l'on pretend garder.
+    """
+
+    gam, dlt = [], []
+    for k in range(inst.p):
+        g, d = e_row(inst, a, k)
+        gam.append(np.asarray(g, dtype=float))
+        dlt.append(float(d))
+    viol = 0
+    for x in points:
+        xv = np.asarray(x, dtype=float)
+        dans_union = any(gam[k] @ xv + dlt[k] >= 1 - 1e-9
+                         for k in range(inst.p))
+        if dans_union and float(alpha @ xv) < beta - tol:
+            viol += 1
+    return viol
+
+
+
+# ==========================================================================
 # extrait de molfp_matheuristic.py
 # ==========================================================================
 
@@ -1642,7 +1786,8 @@ def diversify_over_archive(inst: MOILFP,
                            x_best: np.ndarray,
                            budget: float,
                            cap: int = 40,
-                           dominated_out: Optional[List[np.ndarray]] = None
+                           dominated_out: Optional[List[np.ndarray]] = None,
+                           steriles_max: int = 2
                            ) -> Tuple[Fraction, np.ndarray, int]:
     """
     La coupe d'efficacite comme OPERATEUR DE RECHERCHE, et non comme outil de
@@ -1669,6 +1814,15 @@ def diversify_over_archive(inst: MOILFP,
     employer. Rendre ce temps a la recherche est donc le seul progres
     disponible dans ce regime -- non pas sur la borne, mais sur la SOLUTION.
 
+    SONDE DE PRODUCTIVITE. La mesure a n = 20 a 50 est nette : quand la
+    diversification produit, elle produit beaucoup -- une instance passe de
+    q_lb = 2,90 a 7,84 (+170 %) avec 36 points neufs. Quand elle ne produit
+    pas, elle ne produit RIEN : les deux instances en recul de la campagne
+    ont toutes deux zero point neuf, et leur perte est exactement le budget
+    pris a la certification. Le mecanisme est donc bon et c'est la POLITIQUE
+    d'activation qui coutait. On abandonne apres `steriles_max` tours sans
+    aucun point neuf, et le budget non consomme retourne a l'appelant.
+
     Renvoie (q, x_best, nombre de points neufs certifies).
     """
     t0 = time.time()
@@ -1676,7 +1830,8 @@ def diversify_over_archive(inst: MOILFP,
     for a in archive.points()[:cap]:
         model.add_efficiency_cut(a)          # aucune cloture a etablir
     neufs = 0
-    while time.time() - t0 < budget:
+    steriles = 0
+    while time.time() - t0 < budget and steriles < steriles_max:
         w, w0, _, _ = surrogate(inst, q)
         reste = budget - (time.time() - t0)
         r = model.optimize(w, w0, maximize=True,
@@ -1690,6 +1845,9 @@ def diversify_over_archive(inst: MOILFP,
             break                            # plus le temps de certifier
         if archive.add(y):
             neufs += 1
+            steriles = 0
+        else:
+            steriles += 1        # deja connu : ce tour n'a rien produit
         fy = inst.f.value(y)
         if fy > q:
             q, x_best = fy, np.asarray(y, dtype=int)
@@ -1719,7 +1877,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             closure_lemma: bool = True,
             lemma_strikes: int = 3,
             height_rank: bool = False,
-            agg_extra: int = 0) -> CertResult:
+            agg_extra: int = 0,
+            cglp_extra: int = 0) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -1745,7 +1904,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     t0 = time.time()
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
                   "rounds": 0, "q_improved": False, "archive_cuts": 0,
-                  "select": None, "cloture_lemme": 0, "agg_cuts": 0}
+                  "select": None, "cloture_lemme": 0, "agg_cuts": 0,
+                  "cglp_cuts": 0}
 
     best_ub: Optional[float] = None
     proved = False
@@ -1858,6 +2018,32 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                     continue
                 if model.add_aggregated_cut(xa):
                     n_agg += 1
+        # --- au-dela du plafond : coupes DISJONCTIVES SANS BINAIRE -----
+        # Programme generateur (lift-and-project) : une ligne en espace x,
+        # aucune binaire, donc aucune place consommee sous le plafond. C'est
+        # le seul levier disponible dans le regime ou le plafond sature.
+        # On s'en tient aux candidats dont le retrait est licite sans frais :
+        # points domines (aucune cloture requise) et points d'archive dont le
+        # lemme de hauteur a deja etabli la cloture.
+        if cglp_extra > 0 and pending:
+            xs = optimum_relaxation(w, model._rows_x, model.ub_x)
+            n_cg = 0
+            for cand in pending:
+                if n_cg >= cglp_extra or xs is None \
+                        or time.time() > t0 + budget:
+                    break
+                xc, kc = cand[0], cand[1]
+                hc = cand[2] if len(cand) > 2 else None
+                if kc == "arch" and not (hc is not None and hc <= 0):
+                    continue
+                cut = cglp_cut(inst, xc, model._rows_x, model.ub_x, xs)
+                if cut is None:
+                    continue
+                model.add_linear_row(cut[0], cut[1], INF)
+                n_cg += 1
+                xs = optimum_relaxation(w, model._rows_x, model.ub_x)
+            info["cglp_cuts"] = model.n_lin_rows
+
         info["agg_cuts"] = model.n_agg_cuts
         info["n_cuts"] = model.n_cuts
 
@@ -2080,8 +2266,11 @@ def matheuristic_P(inst: MOILFP,
                    lemma_strikes: int = 3,
                    height_rank: bool = False,
                    agg_extra: int = 0,
+                   cglp_extra: int = 0,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
+                   ilp_budget: Optional[int] = None,
+                   ilp_search_share: float = 0.6,
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -2110,6 +2299,17 @@ def matheuristic_P(inst: MOILFP,
     calls0 = ORACLE_CALLS["ilp"]
     rng = np.random.default_rng(seed)
     arch = Archive(inst)
+
+    # --- budget DETERMINISTE, en nombre d'appels au solveur entier --------
+    # Quand `ilp_budget` est donne, c'est LUI qui arbitre : les budgets de
+    # temps sont laisses larges et l'horloge sort de la boucle de decision.
+    # Une execution devient alors reproductible, et une difference entre deux
+    # variantes est un effet, non un alea. Le plafond est reparti entre les
+    # deux phases dans la meme proportion que le temps, sans quoi la
+    # recherche consommerait tout et la certification n'aurait rien.
+    _budget_exterieur = ORACLE_BUDGET["ilp"]
+    if ilp_budget is not None:
+        set_ilp_budget(calls0 + max(1, int(ilp_search_share * ilp_budget)))
 
     # --- amorcage : un point efficace quelconque --------------------------
     dominated: List[np.ndarray] = []      # recyclage pour le Th. 5' (gain 3)
@@ -2203,6 +2403,8 @@ def matheuristic_P(inst: MOILFP,
             break            # optimum local confirme sur plusieurs tours
 
     search_time = time.time() - t0
+    if ilp_budget is not None:
+        set_ilp_budget(calls0 + ilp_budget)   # le reste va a la certification
 
     # --- phase 2 : certification (Th. 5') --------------------------------
     # le budget de recherche non consomme est reverse ici : la recherche a
@@ -2220,7 +2422,22 @@ def matheuristic_P(inst: MOILFP,
                        cut_batch=cut_batch, max_rounds=rounds,
                        archive_cuts=archive_cuts, closure_lemma=closure_lemma,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
-                       agg_extra=agg_extra)
+                       agg_extra=agg_extra, cglp_extra=cglp_extra)
+
+    # --- repartition du plafond d'APPELS entre les phases -----------------
+    # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme
+    # la totalite des appels restants, et la diversification ne s'execute
+    # jamais. Le banc deterministe l'a montre sans ambiguite : `neufs` valait
+    # 0 sur les 23 lignes, non parce que la diversification echouait mais
+    # parce qu'elle ne tournait pas. Un plafond en appels exige donc une
+    # repartition en appels ; melanger les deux unites ne mesure rien.
+    def _cap(fraction: float) -> None:
+        """Plafonne la phase suivante a `fraction` des appels encore libres."""
+        if ilp_budget is None:
+            return
+        utilises = ORACLE_CALLS["ilp"] - calls0
+        reste = max(0, ilp_budget - utilises)
+        set_ilp_budget(calls0 + utilises + max(1, int(fraction * reste)))
 
     if certify_bound and budget > 0:
         sonde = None
@@ -2228,8 +2445,9 @@ def matheuristic_P(inst: MOILFP,
         # en train de se fermer, au lieu de le supposer. Toute borne obtenue
         # reste valide : la sonde ne peut donc rien gater, et quand elle
         # repond non elle fait gagner tout le reste du budget.
-        if cut_diversify and leftover > 0.3:
-            part = min(0.3 * budget, leftover)
+        if cut_diversify and (leftover > 0.3 or ilp_budget is not None):
+            part = min(0.3 * budget, leftover) if leftover > 0.3 else budget
+            _cap(0.3)
             sonde = _cert(part, 1)
             if sonde.q_lb is not None and sonde.q_lb > q:
                 q, x_best = sonde.q_lb, sonde.x_best
@@ -2238,16 +2456,31 @@ def matheuristic_P(inst: MOILFP,
             budget -= part
             ecart = None if q_ub is None else \
                 (q_ub - float(q)) / max(1e-12, abs(q_ub))
+            _diag = {"sonde_prouve": bool(proved), "sonde_ecart": ecart,
+                     "ilp_apres_sonde": ORACLE_CALLS["ilp"] - calls0}
             # borne qui ne ferme pas : a n >= 20 la campagne mesure 92-98 %
             # quoi qu'on fasse. Le temps restant vaut alors plus a la
             # RECHERCHE qu'a la certification, et la coupe d'efficacite sert
             # ici d'operateur de diversification -- sans cloture a etablir.
             if not proved and (ecart is None or ecart > gap_hopeless):
                 part_div = 0.6 * budget
+                t_div = time.time()
+                _cap(0.6)
+                _diag["divers_tentee"] = True
+                _diag["ilp_avant_divers"] = ORACLE_CALLS["ilp"] - calls0
                 q, x_best, n_neufs = diversify_over_archive(
                     inst, arch, q, x_best, part_div, cut_batch, dominated)
-                budget -= part_div
+                _diag["ilp_apres_divers"] = ORACLE_CALLS["ilp"] - calls0
+                # on ne retire que ce qui a ETE CONSOMME. La sonde de
+                # productivite interrompt la diversification des qu'elle
+                # tourne a vide ; sans cette ligne le budget ainsi libere
+                # serait perdu au lieu de revenir a la certification -- ce
+                # qui etait exactement la perte mesuree sur les instances a
+                # zero point neuf.
+                budget -= min(part_div, time.time() - t_div)
 
+        if ilp_budget is not None:
+            set_ilp_budget(calls0 + ilp_budget)   # le reste a la certification
         if budget > 0.05 and not proved:
             c = _cert(budget, cert_rounds)
             if c.q_lb is not None and c.q_lb > q:
@@ -2260,10 +2493,17 @@ def matheuristic_P(inst: MOILFP,
             cert_info, cut_points = c.info, c.cut_points
     cert_info["search_time"] = search_time
     cert_info["diversify_new"] = n_neufs
+    try:
+        cert_info["diag"] = _diag
+    except NameError:
+        cert_info["diag"] = None
     cert_info["cert_budget"] = budget
     cert_info["restarts"] = n_restarts
     cert_info["moves"] = dict(n_moves)
     cert_info["hits"] = dict(n_hits)
+
+    if ilp_budget is not None:
+        set_ilp_budget(_budget_exterieur)      # on rend le plafond appelant
 
     return MatheurResult(
         q_lb=q, x_best=x_best, q_ub=q_ub, archive=arch.points(),
@@ -2284,13 +2524,38 @@ def enumerate_feasible(inst: MOILFP, limit: int = 2_000_000) -> List[np.ndarray]
     """
     Enumere tous les points entiers de S = {x in Z^n_+ : Ax <= b}.
 
-    Elagage : A >= 0 donc les sommes partielles A[:, :j] @ x[:j] sont
-    croissantes en j ; des qu'une composante depasse b, tout le sous-arbre
-    est infaisable.
+    ELAGAGE, ET LE BOGUE QU'IL A CACHE. Une premiere version elaguait ainsi :
+    des qu'une somme partielle A[:, :j] @ x[:j] depassait b, elle coupait le
+    sous-arbre et sortait de la boucle sur la valeur de x_j. Ce raisonnement
+    suppose A >= 0 -- les sommes partielles ne peuvent alors que croitre. Le
+    generateur garantit cette hypothese (A2), donc rien ne s'est jamais vu
+    sur les instances tirees.
+
+    Mais les instances de la LITTERATURE ont des coefficients NEGATIFS. Une
+    variable ultERIEURE peut alors faire REDESCENDRE une ligne au-dessous de
+    b, et l'elagage retire des points REALISABLES. Sur l'exemple de Drici,
+    Ouail & Moulai (2018), il retirait tous les points a x1 = 2, dont
+    (2,3,0,0) -- l'un des deux optima publies. La reference elle-meme etait
+    donc fausse, precisement sur les instances servant a la validation
+    externe.
+
+    Elagage CORRECT. Pour chaque ligne i, on minore la contribution des
+    variables encore libres par sum_{k >= j} min(0, A[i,k]) * ub[k]. Ajoutee
+    a la somme partielle, elle donne le plus petit membre de gauche encore
+    atteignable : si celui-ci depasse deja b, le sous-arbre est reellement
+    infaisable. Et l'on ne sort de la boucle sur x_j (`break`) que si la
+    colonne est >= 0 ; sinon on passe a la valeur suivante (`continue`), une
+    valeur plus grande pouvant redevenir realisable.
     """
     n, m = inst.n, inst.m
     ub = inst.var_upper_bounds()
     A, b = inst.A, inst.b
+
+    # contribution MINIMALE encore atteignable par les variables j..n-1
+    neg = np.minimum(A, 0) * ub                       # m x n
+    suffix_min = np.zeros((n + 1, m), dtype=int)
+    for j in range(n - 1, -1, -1):
+        suffix_min[j] = suffix_min[j + 1] + neg[:, j]
 
     out: List[np.ndarray] = []
     x = np.zeros(n, dtype=int)
@@ -2300,13 +2565,17 @@ def enumerate_feasible(inst: MOILFP, limit: int = 2_000_000) -> List[np.ndarray]
             raise MemoryError(f"Plus de {limit} points realisables : instance "
                               f"trop grande pour l'enumeration exhaustive.")
         if j == n:
-            out.append(x.copy())
+            if np.all(partial <= b):
+                out.append(x.copy())
             return
         col = A[:, j]
+        montante = bool(np.all(col >= 0))
         for v in range(ub[j] + 1):
             new_partial = partial + v * col
-            if np.any(new_partial > b):
-                break                      # col >= 0 : inutile d'aller plus loin
+            if np.any(new_partial + suffix_min[j + 1] > b):
+                if montante:
+                    break          # colonne >= 0 : les v suivants sont pires
+                continue           # sinon un v plus grand peut redevenir bon
             x[j] = v
             rec(j + 1, new_partial)
         x[j] = 0
