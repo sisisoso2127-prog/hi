@@ -1932,6 +1932,45 @@ sont précisément les lignes difficiles. Le minimum de deux bornes valides
 étant valide, on les prend toutes les deux.
 \end{remark}
 
+\subsection{Vérifiée avant d'être mesurée}
+
+Une borne supérieure fausse est la seule faute que cette méthode ne peut pas
+se permettre : elle transformerait un « écart garanti » en affirmation vide
+et, pire, une « optimalité prouvée » en mensonge. La
+proposition~\ref{prop:geomvalide} la démontre ; nous la vérifions tout de
+même par énumération exhaustive, en arithmétique rationnelle exacte, sur
+$72$ instances ($n$ de $5$ à $8$, $p$ de $2$ à $4$, $\text{corr}$ dans
+$\{0;0{,}5;0{,}9\}$).
+
+\begin{table}[htbp]
+\centering
+\caption{Validité de la seconde route contre vérité terrain. Le plafond
+serré est nécessaire : sous un plafond confortable ces instances se prouvent
+optimales \emph{avant} que la route ne s'exécute, et le contrôle ne
+contrôlerait rien.}
+\label{tab:geomvalide}
+\begin{tabular}{lccc}
+\toprule
+& plafond $200$ & plafond $40$\\
+\midrule
+$q_{\text{ub}}\ge\qs$, bras « avec »    & $72/72$ & $\mathbf{72/72}$\\
+$q_{\text{ub}}\ge\qs$, bras « sans » (témoin) & $72/72$ & $72/72$\\
+statut « convergée » sain               & $72/72$ & $72/72$\\
+\midrule
+route effectivement engagée             & $1$     & $25$\\
+dont convergée                          & $1$     & $24$\\
+resserrement moyen de la borne          & --      & $+7{,}4\ \%$\\
+resserrement maximal                    & --      & $\mathbf{+88{,}9\ \%}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Aucune violation sur les $144$ exécutions. L'exemple le plus net :
+$n=6$, $p=2$, $\text{corr}=0{,}5$, où la borne passe de $33{,}72$ à
+$9{,}33$ pour un $\qs$ de $5{,}83$ -- resserrée d'un facteur $3{,}6$, et
+toujours majorante.
+
 \subsection{Ce que cela coûte}
 
 La seconde route se paie sur le même plafond d'appels entiers : ce qu'on lui
