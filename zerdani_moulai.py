@@ -78,6 +78,7 @@ class ZMResult:
                                      # infaisable | limite
     iterations: int = 0
     coupes: int = 0
+    gomory: int = 0
     tests_efficacite: int = 0
     ilp_calls: int = 0
     arretes_explorees: int = 0
@@ -91,6 +92,59 @@ def _est_efficace(inst: MOILFP, x: np.ndarray) -> Optional[bool]:
     """Th. 3.6 des auteurs, decide par notre test integral exact."""
     r = efficiency_test(inst, np.asarray(x, dtype=int))
     return r.efficient
+
+
+def _coupe_gomory(tab: Tableau, ligne: int, A: np.ndarray, b: np.ndarray,
+                  n: int) -> Optional[Tuple[np.ndarray, int]]:
+    """
+    Coupe fractionnaire de Gomory tiree d'une ligne du tableau, exprimee dans
+    les variables x d'origine et a coefficients ENTIERS.
+
+    Depuis la ligne de base i :  x_B(i) + somme_{j hors base} y_ij x_j = r_i.
+    Si r_i n'est pas entier, la coupe de Gomory est
+
+        somme_{j hors base} frac(y_ij) . x_j  >=  frac(r_i)
+
+    valide pour tout point ENTIER realisable. Les variables hors base
+    comprennent des ecarts ; on les remplace par s_i = b_i - A_i x pour
+    revenir aux variables d'origine, puis on multiplie par le ppcm des
+    denominateurs afin de rester en entiers -- l'inegalite est inchangee, et
+    tout le reste du programme continue de travailler sur des donnees
+    entieres.
+
+    C'est ce que les auteurs prescrivent aux etapes 3.2 et 3.3 (« dual
+    simplex and Gomory cuts, if necessary ») sans en donner le detail. En
+    l'implementant, la reimplementation cesse de s'arreter au premier sommet
+    fractionnaire et peut mener leur processus a terme.
+    """
+    def frac(v: Frac) -> Frac:
+        return v - Frac(int(v.numerator // v.denominator))
+
+    r = frac(tab.rhs[ligne])
+    if r == 0:
+        return None
+    coef_x = [Frac(0)] * n
+    const = Frac(0)
+    for j in tab.nonbasic():
+        fy = frac(tab.T[ligne][j])
+        if fy == 0:
+            continue
+        if j < n:
+            coef_x[j] += fy
+        else:
+            i = j - n
+            if i >= A.shape[0]:
+                return None            # colonne sans ligne correspondante
+            for t in range(n):
+                coef_x[t] -= fy * _F(int(A[i][t]))
+            const += fy * _F(int(b[i]))
+    # coef_x . x + const >= r   <=>   -coef_x . x <= const - r
+    rhs = const - r
+    den = 1
+    for v in coef_x + [rhs]:
+        den = den * v.denominator // np.gcd(den, v.denominator)
+    ligne_ent = np.array([int(-v * den) for v in coef_x], dtype=int)
+    return ligne_ent, int(rhs * den)
 
 
 def _point_arete(tab: Tableau, jk: int, theta: Frac, n: int) -> List[Frac]:
@@ -107,6 +161,7 @@ def _point_arete(tab: Tableau, jk: int, theta: Frac, n: int) -> List[Frac]:
 
 
 def zerdani_moulai(inst: MOILFP, max_iter: int = 200,
+                   max_gomory: int = 60,
                    verbose: bool = False) -> ZMResult:
     """
     phi doit etre LINEAIRE : c'est le probleme que traitent les auteurs.
@@ -154,10 +209,35 @@ def zerdani_moulai(inst: MOILFP, max_iter: int = 200,
         if st != "optimal":
             res.status = "limite"
             break
+        # -- sommet fractionnaire : coupes de GOMORY, comme prescrit ---
+        n_gom = 0
+        while not tab.est_entiere() and n_gom < max_gomory:
+            ligne = next((i for i in range(tab.m)
+                          if tab.basis[i] < n and tab.rhs[i].denominator != 1),
+                         None)
+            if ligne is None:
+                ligne = next((i for i in range(tab.m)
+                              if tab.rhs[i].denominator != 1), None)
+            if ligne is None:
+                break
+            cg = _coupe_gomory(tab, ligne, A, b, n)
+            if cg is None:
+                break
+            A = np.vstack([A, cg[0]])
+            b = np.append(b, cg[1])
+            res.gomory += 1
+            n_gom += 1
+            tab = tableau_phase_un(A, b)
+            if tab is None:
+                break
+            p = [_F(v) for v in Z1.num] + [Frac(0)] * (tab.nvar - n)
+            q = [_F(v) for v in Z1.den] + [Frac(0)] * (tab.nvar - n)
+            if resoudre_fractionnaire(tab, p, _F(Z1.a), q, _F(Z1.b)) != "optimal":
+                tab = None
+                break
+        if tab is None:
+            break                       # region devenue vide : etape terminale
         if not tab.est_entiere():
-            # les auteurs prescrivent ici « dual simplex et coupes de Gomory
-            # si necessaire », sans en donner le detail : on s'arrete et on
-            # le dit, plutot que d'inventer une variante et la leur attribuer
             res.status = "sommet_fractionnaire"
             break
 
@@ -167,8 +247,22 @@ def zerdani_moulai(inst: MOILFP, max_iter: int = 200,
         x1 = np.array([int(v) for v in tab.x()], dtype=int)
         Jk = [j for j in hors_base if gamma[j] == 0]
 
-        # 2.1 / 2.2 : J_k vide => unique => efficace (cor. 2.3), sinon test
-        if not Jk:
+        # 2.1 / 2.2 : J_k vide => optimum unique => EFFICACE (cor. 2.3).
+        #
+        # ATTENTION, LIMITE DE PORTEE DU COROLLAIRE. Il enonce qu'un optimum
+        # UNIQUE de (P1(S)) est efficace, ou S est le domaine D'ORIGINE. Des
+        # qu'une coupe -- de Dantzig ou de Gomory -- a ete posee, le sommet
+        # obtenu n'optimise plus Z1 que sur la region TRONQUEE, et le
+        # corollaire ne s'applique plus. Les auteurs ne s'en servent
+        # d'ailleurs qu'a l'etape 2, sur la region initiale ; a l'etape 3.3
+        # ils testent l'efficacite explicitement.
+        #
+        # Une premiere version appliquait ce raccourci a chaque iteration.
+        # Sur leur propre exemple publie, elle retenait (4,0) -- realisable
+        # mais DOMINE -- et rendait phi_opt = 8 au lieu des 6 publies. Le
+        # raccourci est donc reserve a la region non tronquee.
+        region_intacte = (res.coupes == 0 and res.gomory == 0)
+        if not Jk and region_intacte:
             efficace = True             # lu dans le tableau, sans ILP
         else:
             res.tests_efficacite += 1
