@@ -829,16 +829,28 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cand = float(q_ref) + U / (Q * denom)
             best_ub = cand if best_ub is None else min(best_ub, cand)
 
-            if not reserve_faite:
-                reserve_faite = True
-                ecart_1 = (best_ub - float(q)) / max(1e-12, abs(best_ub))
-                if (not geom_gate) or ecart_1 > geom_gap:
-                    _reserver()
-                else:
-                    # la premiere route ferme : lui prendre des coupes pour
-                    # financer la seconde serait un troc perdant.
-                    geom_actif = False
-                    info["geom"] = "non engagee"
+        # -- decision de reserver, A LA FIN DU PREMIER TOUR -----------------
+        # Elle est prise ICI, hors du bloc de la borne, et non a l'interieur.
+        # Un premier tour peut tres bien ne produire AUCUNE borne : l'oracle
+        # est interrompu avant sa premiere relaxation et `r.ub` vaut None.
+        # Une premiere version placait la decision dans ce bloc ; sur les
+        # instances ou le tour 1 ne rendait rien, la reservation n'avait donc
+        # jamais lieu, la boucle consommait le plafond entier, et la seconde
+        # route recevait ZERO appel. Mesure : +0,00 point la ou la version
+        # sans declencheur en gagnait 9,82, avec un statut 'limit' a zero
+        # tour -- le declencheur ne choisissait pas mal, il ne s'executait
+        # pas. Une absence de borne vaut borne qui ne ferme pas : on reserve.
+        if not reserve_faite:
+            reserve_faite = True
+            ecart_1 = 1.0 if best_ub is None else \
+                (best_ub - float(q)) / max(1e-12, abs(best_ub))
+            if (not geom_gate) or ecart_1 > geom_gap:
+                _reserver()
+            else:
+                # la premiere route ferme : lui prendre des coupes pour
+                # financer la seconde serait un troc perdant.
+                geom_actif = False
+                info["geom"] = "non engagee"
 
         # Un tour sans amelioration, sans coupe en reserve ET dont l'oracle
         # a conclu se repeterait a l'identique : on s'arrete.
