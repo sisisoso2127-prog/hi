@@ -1328,6 +1328,41 @@ la plus forte baisse atteint $205$ appels sur une seule instance -- et non
 réparti. L'instance médiane ne gagne rien. Écrire « strictement positif sur
 tous les axes », comme le suggérait la première lecture, aurait été faux.
 
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=12.6cm,height=6.6cm,
+  xlabel={les $30$ instances de chaque régime, triées par delta croissant},
+  ylabel={delta apparié des appels \ILP},
+  xmin=0.5,xmax=30.5, ymin=-60, ymax=60,
+  legend style={at={(0.98,0.03)},anchor=south east,font=\small,draw=cgris,
+                fill=white,fill opacity=0.9,text opacity=1},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[color=cdom,mark=*,mark size=1.4pt,thick]
+  coordinates {(1,-205) (2,-81) (3,-15) (4,-4) (5,3) (6,3) (7,4) (8,5) (9,5) (10,6) (11,7) (12,7) (13,7) (14,8) (15,13) (16,14) (17,14) (18,16) (19,17) (20,17) (21,19) (22,21) (23,21) (24,21) (25,24) (26,25) (27,26) (28,27) (29,31) (30,51)};
+\addlegendentry{$\text{corr}=0$ \ (front épais)}
+\addplot[color=black!55,mark=triangle*,mark size=1.6pt,thick]
+  coordinates {(1,-132) (2,-95) (3,-83) (4,-67) (5,-62) (6,-53) (7,-49) (8,-45) (9,-27) (10,-22) (11,-13) (12,-8) (13,-6) (14,-1) (15,1) (16,1) (17,1) (18,2) (19,7) (20,7) (21,8) (22,10) (23,10) (24,13) (25,13) (26,13) (27,15) (28,16) (29,21) (30,24)};
+\addlegendentry{$\text{corr}=0{,}5$}
+\addplot[color=ceff,mark=square*,mark size=1.3pt,thick]
+  coordinates {(1,-129) (2,-48) (3,-36) (4,-32) (5,-21) (6,-15) (7,-12) (8,-12) (9,-10) (10,-9) (11,-9) (12,-9) (13,-9) (14,-6) (15,-6) (16,-6) (17,-3) (18,-3) (19,-3) (20,-3) (21,-1) (22,-1) (23,0) (24,0) (25,0) (26,2) (27,3) (28,4) (29,5) (30,8)};
+\addlegendentry{$\text{corr}=0{,}9$ \ (front mince)}
+\addplot[color=black,thick,dotted,domain=0.5:30.5] {0};
+\end{axis}
+\end{tikzpicture}
+\caption{Lecture appariée du lot de $90$ instances : delta du nombre
+d'appels au solveur entier, instance par instance, trié dans chaque régime.
+Les valeurs hors cadre sont $-205$, $-132$, $-129$, $-95$, $-83$ et $-81$ --
+toutes des \emph{baisses}. La figure dit ce qu'une médiane cache : à front
+mince la courbe est presque entièrement sous zéro, à front épais presque
+entièrement au-dessus, et le gain global tient à une queue courte de très
+fortes baisses plutôt qu'à un progrès réparti. C'est pourquoi la médiane
+appariée vaut $+1$ alors que le total baisse de $5{,}2\ \%$.}
+\label{fig:apparie}
+\end{figure}
+
 \paragraph{Où le gain se trouve, et pourquoi.} Ventilé par corrélation entre
 critères -- c'est-à-dire par épaisseur du front -- le signe est net et
 conforme à la théorie.
@@ -1434,6 +1469,31 @@ gain sur $q_{\text{lb}}$ & médiane $+0{,}00\ \%$, moyenne $+4{,}72\ \%$\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=12.6cm,height=5.6cm,
+  ybar, bar width=3.6pt,
+  xlabel={les $24$ paires, triées par gain croissant},
+  ylabel={gain sur $q_{\text{lb}}$ (\%)},
+  xmin=0.3,xmax=24.7, ymin=-6, ymax=88,
+  ytick={0,20,40,60,80},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[fill=ceff,draw=ceff] coordinates {(1,0.0) (2,0.0) (3,0.0) (4,0.0) (5,0.0) (6,0.0) (7,0.0) (8,0.0) (9,0.0) (10,0.0) (11,0.0) (12,0.0) (13,0.0) (14,0.0) (15,0.0) (16,0.0) (17,0.0) (18,0.0) (19,2.7) (20,4.6) (21,4.9) (22,6.7) (23,13.8) (24,80.6)};
+\addplot[color=black,thick,dotted,domain=0.3:24.7] {0};
+\end{axis}
+\end{tikzpicture}
+\caption{Diversification par coupes d'efficacité, à budget d'appels
+identique. Aucune barre ne descend sous zéro : sur les $24$ paires, la
+valeur rendue n'est \emph{jamais} dégradée. Dix-huit paires sont
+exactement nulles, six montent, de $+2{,}7$ à $+80{,}6\ \%$. C'est cette
+asymétrie -- rien à perdre, parfois beaucoup à gagner -- qui justifie le
+mécanisme, bien plus que sa moyenne.}
+\label{fig:divers}
+\end{figure}
 
 \noindent
 Le minimum vaut $+0{,}0\ \%$ : à budget d'appels égal, la diversification
@@ -1671,6 +1731,38 @@ difficulté du problème. On observe le phénomène directement sur une instance
 \emph{première} itération, et les $150$ coupes suivantes ne servent qu'à
 tenter de le certifier.
 
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{semilogxaxis}[width=12.6cm,height=5.4cm,
+  xlabel={$|\Scal|$ (échelle logarithmique)},
+  xmin=15,xmax=6000, ymin=-0.6, ymax=2.6,
+  ytick={0,1,2},
+  yticklabels={{n'atteint pas $\varphi^\star$},{$\varphi^\star$ atteint,
+    non certifié},{processus achevé}},
+  yticklabel style={font=\small,align=right},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[only marks,mark=*,mark size=2.4pt,color=ceff]
+  coordinates {(23,2) (94,2) (22,2) (412,2) (19,2) (1450,2) (32,2) (121,2) (230,2) (24,2) (185,2) (1428,2)};
+\addplot[only marks,mark=square*,mark size=2.2pt,color=cdom]
+  coordinates {(329,1) (77,1) (371,1) (4657,1) (25,1) (81,1) (527,1) (341,1)};
+\addplot[only marks,mark=triangle*,mark size=2.8pt,color=black]
+  coordinates {(1914,0) (1896,0) (124,0) (2116,0)};
+\end{semilogxaxis}
+\end{tikzpicture}
+\caption{Match sur le terrain de Zerdani \& Moulaï : ce que rend leur
+méthode, en fonction de la taille du domaine entier. La séparation est
+nette. Quand le processus s'achève (en haut), $|\Scal|$ vaut $121$ en
+médiane ; quand il n'y parvient pas, $371$. La cause est mécanique : la
+coupe de Dantzig retire \emph{un sommet à la fois}, de sorte que le coût de
+la certification suit $|\Scal|$ et non la difficulté du problème. Notre
+méthode, elle, se situerait entièrement sur la ligne du haut : elle prouve
+les $24$.}
+\label{fig:matchzm}
+\end{figure}
+
 \paragraph{Troisième enseignement : ce que rend une méthode exacte
 interrompue.} Sur $4$ instances, leur méthode ne trouve pas l'optimum dans
 le plafond ($35$ au lieu de $39$ ; $-7$ au lieu de $8$ ; $-17$ au lieu de
@@ -1748,6 +1840,37 @@ notre lot d'échelle & $40$ & $24$ & $19$ & $\mathbf{51{,}8}$\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=11.4cm,height=5.2cm,
+  ybar, bar width=13pt,
+  symbolic x coords={$n=20$,$n=30$,$n=40$},
+  xtick=data,
+  ylabel={$\log_{10}$ du nombre de points de la boîte},
+  ymin=0, ymax=58,
+  nodes near coords, nodes near coords style={font=\scriptsize},
+  legend style={at={(0.03,0.97)},anchor=north west,font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[fill=cdom!45,draw=cdom] coordinates
+  {($n=20$,7.8) ($n=30$,13.5) ($n=40$,18.2)};
+\addlegendentry{protocole de Drici \emph{et al.}}
+\addplot[fill=ceff!35,draw=ceff] coordinates
+  {($n=20$,20.9) ($n=30$,36.2) ($n=40$,51.8)};
+\addlegendentry{notre lot d'échelle}
+\end{axis}
+\end{tikzpicture}
+\caption{Pourquoi « $n=40$ » ne désigne pas le même problème. Des
+contraintes tirées sur $[1,30]$ avec un second membre sur $[50,100]$
+bornent les variables par $2$ ou $3$ ; les nôtres le sont par $19$ en
+médiane. À la même valeur de $n$, trente-quatre ordres de grandeur séparent
+les deux boîtes. Prouver $80/80$ sur le protocole de gauche ne dit rien du
+régime de droite -- et c'est ce dernier qui nous résiste.}
+\label{fig:boite}
+\end{figure}
 
 \noindent
 Trente-quatre ordres de grandeur séparent les deux boîtes à la même valeur
