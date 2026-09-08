@@ -74,11 +74,12 @@ def main() -> int:
     print(f"cout compte : appels au solveur ENTIER (notre plafond : {cap})")
     print("=" * 112)
     print(f"{'instance':<20}{'|S|':>7}{'|E|':>6}{'phi*':>8}"
-          f"{'  ZM: valeur':>13}{'statut':>22}{'ILP':>6}{'tests':>7}"
+          f"{'  ZM: valeur':>13}{'statut':>22}{'coupes':>7}{'tests':>7}"
           f"{'  nous: valeur':>15}{'prouve':>8}{'ILP':>6}{'ok':>4}")
     print("-" * 112)
 
     zm_exact, zm_termine, nous_exact, nous_prouve = 0, 0, 0, 0
+    zm_trouve_non_prouve = 0
     zm_ilp, nous_ilp, n_ok, total = [], [], 0, 0
     for i in range(n_inst):
         n = 3 + i % 4
@@ -95,6 +96,7 @@ def main() -> int:
         zm_ok = (rz.phi_opt == phi_star)
         zm_exact += int(zm_ok)
         zm_termine += int(rz.status == "optimal")
+        zm_trouve_non_prouve += int(zm_ok and rz.status != "optimal")
 
         reset_oracle_counter()
         rn = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6, seed=0,
@@ -110,7 +112,7 @@ def main() -> int:
 
         vz = "-" if rz.phi_opt is None else str(rz.phi_opt)
         print(f"{inst.name:<20}{len(gt.S):>7}{len(gt.E):>6}{str(phi_star):>8}"
-              f"{vz:>13}{rz.status:>22}{rz.ilp_calls:>6}"
+              f"{vz:>13}{rz.status:>22}{rz.coupes + rz.gomory:>6}"
               f"{rz.tests_efficacite:>7}"
               f"{str(rn.q_lb):>15}{str(rn.proved_optimal):>8}"
               f"{rn.ilp_calls:>6}{'ok' if coherent else 'KO':>4}", flush=True)
@@ -118,6 +120,7 @@ def main() -> int:
     print("-" * 112)
     print(f"  ZERDANI & MOULAI  : optimum trouve {zm_exact}/{total}   "
           f"processus mene a terme {zm_termine}/{total}   "
+          f"(dont {zm_trouve_non_prouve} trouve mais NON certifie)   "
           f"appels entiers medians {int(np.median(zm_ilp))}")
     print(f"  NOTRE METHODE     : optimum trouve {nous_exact}/{total}   "
           f"optimalite PROUVEE {nous_prouve}/{total}   "

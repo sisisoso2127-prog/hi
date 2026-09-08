@@ -160,9 +160,28 @@ def _point_arete(tab: Tableau, jk: int, theta: Frac, n: int) -> List[Frac]:
     return v[:n]
 
 
-def zerdani_moulai(inst: MOILFP, max_iter: int = 200,
+def zerdani_moulai(inst: MOILFP, max_iter: int = 60,
+                   max_coupes: int = 150,
                    max_gomory: int = 60,
                    verbose: bool = False) -> ZMResult:
+    """
+    PLAFOND DE TRAVAIL, ET POURQUOI IL EST DETERMINISTE. La coupe de Dantzig
+    retire UN sommet a la fois : le processus parcourt donc les sommets un a
+    un, et chaque iteration relance une phase I puis un simplexe sur une
+    matrice qui s'allonge. Sur une instance a |S| = 329 on observe 22
+    iterations en une minute, avec un ralentissement continu -- l'optimum
+    etant trouve des la premiere.
+
+    Le plafond porte sur le NOMBRE D'ITERATIONS ET DE COUPES, jamais sur des
+    secondes : une limite temporelle rendrait la mesure irreproductible, ce
+    que ce projet s'interdit depuis qu'un controle a montre 125 % d'ecart
+    entre deux executions du meme code a budget de temps.
+
+    Au plafond, le statut vaut `limite` et `phi_opt` conserve la meilleure
+    valeur EFFICACE trouvee. La distinction compte : l'algorithme peut avoir
+    deja atteint l'optimum sans pouvoir le certifier, et c'est le cas le plus
+    frequent ici.
+    """
     """
     phi doit etre LINEAIRE : c'est le probleme que traitent les auteurs.
     On la lit dans `inst.f`, dont le denominateur doit etre constant.
@@ -199,6 +218,9 @@ def zerdani_moulai(inst: MOILFP, max_iter: int = 200,
 
     for k in range(1, max_iter + 1):
         res.iterations = k
+        if res.coupes + res.gomory >= max_coupes:
+            res.status = "limite"
+            break
         # ---- Etape 2 : resoudre (P1(S)) sur la region courante ----------
         tab = tableau_phase_un(A, b)
         if tab is None:
