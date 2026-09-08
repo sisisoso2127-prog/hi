@@ -107,6 +107,7 @@ from molfp_core import (INF, ORACLE_BUDGET, ORACLE_CALLS, efficiency_test,
                         feasibility_rows, max_over_relaxation, set_ilp_budget,
                         solve_ilp)
 from molfp_instance import MOILFP
+from molfp_cglp import cglp_cut, optimum_relaxation
 from molfp_oracle import (ECutModel, HybridResult, max_linear_over_E,
                           repair_to_efficient)
 
@@ -455,7 +456,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             closure_lemma: bool = True,
             lemma_strikes: int = 3,
             height_rank: bool = False,
-            agg_extra: int = 0) -> CertResult:
+            agg_extra: int = 0,
+            cglp_extra: int = 0) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -481,7 +483,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     t0 = time.time()
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
                   "rounds": 0, "q_improved": False, "archive_cuts": 0,
-                  "select": None, "cloture_lemme": 0, "agg_cuts": 0}
+                  "select": None, "cloture_lemme": 0, "agg_cuts": 0,
+                  "cglp_cuts": 0}
 
     best_ub: Optional[float] = None
     proved = False
@@ -594,6 +597,32 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                     continue
                 if model.add_aggregated_cut(xa):
                     n_agg += 1
+        # --- au-dela du plafond : coupes DISJONCTIVES SANS BINAIRE -----
+        # Programme generateur (lift-and-project) : une ligne en espace x,
+        # aucune binaire, donc aucune place consommee sous le plafond. C'est
+        # le seul levier disponible dans le regime ou le plafond sature.
+        # On s'en tient aux candidats dont le retrait est licite sans frais :
+        # points domines (aucune cloture requise) et points d'archive dont le
+        # lemme de hauteur a deja etabli la cloture.
+        if cglp_extra > 0 and pending:
+            xs = optimum_relaxation(w, model._rows_x, model.ub_x)
+            n_cg = 0
+            for cand in pending:
+                if n_cg >= cglp_extra or xs is None \
+                        or time.time() > t0 + budget:
+                    break
+                xc, kc = cand[0], cand[1]
+                hc = cand[2] if len(cand) > 2 else None
+                if kc == "arch" and not (hc is not None and hc <= 0):
+                    continue
+                cut = cglp_cut(inst, xc, model._rows_x, model.ub_x, xs)
+                if cut is None:
+                    continue
+                model.add_linear_row(cut[0], cut[1], INF)
+                n_cg += 1
+                xs = optimum_relaxation(w, model._rows_x, model.ub_x)
+            info["cglp_cuts"] = model.n_lin_rows
+
         info["agg_cuts"] = model.n_agg_cuts
         info["n_cuts"] = model.n_cuts
 
@@ -940,6 +969,7 @@ def matheuristic_P(inst: MOILFP,
                    lemma_strikes: int = 3,
                    height_rank: bool = False,
                    agg_extra: int = 0,
+                   cglp_extra: int = 0,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
@@ -1096,7 +1126,7 @@ def matheuristic_P(inst: MOILFP,
                        cut_batch=cut_batch, max_rounds=rounds,
                        archive_cuts=archive_cuts, closure_lemma=closure_lemma,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
-                       agg_extra=agg_extra)
+                       agg_extra=agg_extra, cglp_extra=cglp_extra)
 
     # --- repartition du plafond d'APPELS entre les phases -----------------
     # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme
