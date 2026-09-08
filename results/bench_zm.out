@@ -1,0 +1,43 @@
+================================================================================================================
+MATCH SUR LE TERRAIN DE ZERDANI & MOULAI - phi lineaire, criteres fractionnaires, 24 instances
+cout compte : appels au solveur ENTIER (notre plafond : 400)
+================================================================================================================
+instance                |S|   |E|    phi*   ZM: valeur                statut coupes  tests   nous: valeur  prouve   ILP  ok
+----------------------------------------------------------------------------------------------------------------
+zm_n3_m2_p2_s3000        23     5      16           16               optimal     0      1             16    True    81  ok
+zm_n4_m3_p3_s3001        94    41       6            6               optimal     0      1              6    True    43  ok
+zm_n5_m4_p2_s3002       329    14      15           15                limite   150     45             15    True   139  ok
+zm_n6_m2_p3_s3003      1914    29      39           35                limite   168    109             39    True   144  ok
+zm_n3_m3_p2_s3004        22     3       6            6               optimal     0      1              6    True    33  ok
+zm_n4_m4_p3_s3005        77    16      19           19                limite   150     77             19    True    88  ok
+zm_n5_m2_p2_s3006       412    36      18           18               optimal     0      1             18    True    30  ok
+zm_n6_m3_p3_s3007      1896    41       8           -7                limite   160     49              8    True   153  ok
+zm_n3_m4_p2_s3008        19     1      -4           -4               optimal    43     43             -4    True    27  ok
+zm_n4_m2_p3_s3009       124     9     -12          -17                limite   113    110            -12    True   163  ok
+zm_n5_m3_p2_s3010       371    10       8            8  sommet_fractionnaire   167    101              8    True   155  ok
+zm_n6_m4_p3_s3011      1450    60      18           18               optimal     0      1             18    True    51  ok
+zm_n3_m2_p2_s3012        32     1     -15          -15               optimal   124     76            -15    True    22  ok
+zm_n4_m3_p3_s3013       121    84      48           48               optimal     0      1             48    True   182  ok
+zm_n5_m4_p2_s3014       230     7      24           24               optimal     0      1             24    True    32  ok
+zm_n6_m2_p3_s3015      4657   113      35           35                limite   153    188             35    True   181  ok
+zm_n3_m3_p2_s3016        25     3       0            0  sommet_fractionnaire   104     24              0    True    62  ok
+zm_n4_m4_p3_s3017        81     8      -5           -5                limite   157     48             -5    True    59  ok
+zm_n5_m2_p2_s3018       527     1      35           35                limite   150     90             35    True    24  ok
+zm_n6_m3_p3_s3019      2116    76       8            1  sommet_fractionnaire   190     61              8    True   275  ok
+zm_n3_m4_p2_s3020        24    11     -12          -12               optimal    83     39            -12    True   127  ok
+zm_n4_m2_p3_s3021       185     1      60           60               optimal     0      1             60    True    25  ok
+zm_n5_m3_p2_s3022       341     5     -25          -25  sommet_fractionnaire   178     61            -25    True    78  ok
+zm_n6_m4_p3_s3023      1428   151      21           21               optimal     0      1             21    True   158  ok
+----------------------------------------------------------------------------------------------------------------
+  ZERDANI & MOULAI  : optimum trouve 20/24   processus mene a terme 12/24   (dont 8 trouve mais NON certifie)   appels entiers medians 45
+  NOTRE METHODE     : optimum trouve 24/24   optimalite PROUVEE 24/24   appels entiers medians 79
+  COHERENCE (encadrement valide, valeurs <= optimum) : 24/24
+
+  Rappel : l'unite de cout ne compte pas les pivots du simplexe,
+  d'ou leur methode tire l'essentiel de son travail. Elle leur est
+  donc favorable, et volontairement.
+  « processus mene a terme » distingue les instances ou leur
+  algorithme s'acheve de celles ou il atteint le sommet
+  fractionnaire que l'article laisse aux coupes de Gomory sans les
+  detailler -- cas ou il peut avoir DEJA trouve l'optimum, comme
+  sur leur propre exemple publie, sans pouvoir le certifier.
