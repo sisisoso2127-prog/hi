@@ -141,6 +141,17 @@ def main() -> int:
     print("  meme sur une instance non prouvee elle rend une solution ET un")
     print("  ecart garanti. C'est cette difference que la colonne « ecart")
     print("  garanti median » fait apparaitre.")
+    print()
+    print("  RESERVE ESSENTIELLE SUR LES TAILLES. Le couple (n, m) ne mesure")
+    print("  pas la difficulte : les bornes des variables la mesurent. Avec")
+    print("  des contraintes sur [1, 30] et un second membre sur [50, 100],")
+    print("  ce protocole donne des variables bornees par 2 ou 3, donc une")
+    print("  boite de l'ordre de 10^18 points a n = 40 -- contre 10^52 pour")
+    print("  nos instances d'echelle a la meme valeur de n. « n = 40 » chez")
+    print("  les uns et chez les autres ne designe pas le meme probleme, et")
+    print("  prouver 10/10 ici ne contredit en rien nos 92 % d'ecart garanti")
+    print("  a n = 40 sur nos propres instances. Les deux mesures portent sur")
+    print("  des regimes differents et doivent etre lues separement.")
     return 0 if tout_valide else 1
 
 

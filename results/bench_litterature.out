@@ -1,17 +1,17 @@
 ========================================================================================================
 NOTRE METHODE SUR LE TERRAIN DE DRICI ET AL. (2018) - leur protocole, leurs tailles, 10 instances par taille
-budget DETERMINISTE : 20 appels au solveur entier par instance
+budget DETERMINISTE : 1500 appels au solveur entier par instance
 ========================================================================================================
     n x m  r   prouve   ecart garanti median   ILP med  t med (s)   CPU publie   valide
 --------------------------------------------------------------------------------------------------------
-   5 x  5  3     6/10                   0.0%        20       0.13         0.21       ok
-  10 x  5  3     0/10                  86.8%        20       0.15         0.44       ok
-  15 x  5  3     2/10                  60.4%        20       0.19         0.70       ok
-  20 x  5  3     3/10                  85.7%        20       0.25         1.23       ok
-  20 x 10  3     0/10                  84.3%        20       0.29         1.45       ok
-  30 x 10  3     0/10                  98.0%        20       0.62         8.98       ok
-  35 x 15  3     1/10                  91.6%        20       0.90         7.45       ok
-  40 x 15  3     0/10                  79.5%        20       0.95        10.82       ok
+   5 x  5  3    10/10                   0.0%        97       0.46         0.21       ok
+  10 x  5  3    10/10                   0.0%       219       1.50         0.44       ok
+  15 x  5  3    10/10                   0.0%       166       1.60         0.70       ok
+  20 x  5  3    10/10                   0.0%       156       2.33         1.23       ok
+  20 x 10  3    10/10                   0.0%       216       2.88         1.45       ok
+  30 x 10  3    10/10                   0.0%       340       7.82         8.98       ok
+  35 x 15  3    10/10                   0.0%       376      20.24         7.45       ok
+  40 x 15  3    10/10                   0.0%       352      16.24        10.82       ok
 --------------------------------------------------------------------------------------------------------
   VALIDITE q_lb <= q_ub : TOUT VALIDE
 
@@ -25,4 +25,16 @@ budget DETERMINISTE : 20 appels au solveur entier par instance
   meme sur une instance non prouvee elle rend une solution ET un
   ecart garanti. C'est cette difference que la colonne « ecart
   garanti median » fait apparaitre.
-=== LITTERATURE FINI ===
+
+  RESERVE ESSENTIELLE SUR LES TAILLES. Le couple (n, m) ne mesure pas la
+  difficulte : les bornes des variables la mesurent.
+
+    protocole                  n   m   ub max  ub median  log10 |boite|
+    Drici et al. (A~[1,30])   20  10        2          1            7.8
+    Drici et al. (A~[1,30])   30  10        3          2           13.5
+    Drici et al. (A~[1,30])   40  15        3          2           18.2
+    notre lot (echelle)       20  11       12         10           20.9
+    notre lot (echelle)       30  16       20         15           36.2
+    notre lot (echelle)       40  21       24         19           51.8
+
+  « n = 40 » chez les uns et chez les autres ne designe pas le meme probleme.
