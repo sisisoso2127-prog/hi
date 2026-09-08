@@ -145,7 +145,8 @@ def d_plus(inst: MOILFP, model: ECutModel,
 
 def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
                       budget: float, max_iter: int = 12,
-                      Dm: Optional[int] = None) -> Tuple[Optional[float], str]:
+                      Dm: Optional[int] = None
+                      ) -> Tuple[Optional[float], str, int]:
     """
     LE MEME TH. 5 PRIME, EVALUE A UN MEILLEUR SEUIL.
 
@@ -188,8 +189,8 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
     (5') utilise D+ >= Dmin, plus fin, et la structure du test d'efficacite.
     Les deux se prennent donc au MINIMUM, ce qui reste valide.
 
-    Renvoie (borne, statut) ; statut 'optimal' quand max_R f est atteint,
-    'empty' quand R est vide (alors q* = q), 'limit' sinon.
+    Renvoie (borne, statut, tours) ; statut 'optimal' quand max_R f est
+    atteint, 'empty' quand R est vide (alors q* = q), 'limit' sinon.
     """
     f = inst.f
     if Dm is None:
@@ -197,6 +198,7 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
     t = Fraction(q)
     best: Optional[float] = None
     fin = time.time() + budget
+    tours = 0
 
     for it in range(max_iter):
         reste = fin - time.time()
@@ -208,6 +210,7 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
         # n'est plus « anytime » que de nom -- c'est exactement ce qui s'est
         # produit au premier essai, avec un time_limit herite de 10^6 s.
         par_appel = reste / max(1, max_iter - it)
+        tours += 1
         P, Q = t.numerator, t.denominator
         coef = (Q * f.num - P * f.den).astype(float)
         const = float(Q * f.a - P * f.b)
@@ -215,7 +218,7 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
 
         if res.status == "infeasible":
             # R vide : plus aucun point non retire, donc q* <= t.
-            return float(t), "empty"
+            return float(t), "empty", tours
         if res.bound is None or not np.isfinite(res.bound):
             break
 
@@ -223,7 +226,7 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
         cand = float(t) + U / (Q * Dm)
         best = cand if best is None else min(best, cand)
         if U <= 1e-9:
-            return float(t), "optimal"          # max_R f <= t, exactement
+            return float(t), "optimal", tours          # max_R f <= t, exactement
 
         # avancer le seuil sur le point trouve : aucune efficacite requise
         if res.x is None or res.obj is None or res.obj <= 1e-9:
@@ -236,7 +239,7 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
             break
         t = t_new
 
-    return best, "limit"
+    return best, "limit", tours
 
 
 def same_criteria_improves(inst: MOILFP, a: np.ndarray,
@@ -585,7 +588,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
                   "rounds": 0, "q_improved": False, "archive_cuts": 0,
                   "select": None, "cloture_lemme": 0, "agg_cuts": 0,
-                  "cglp_cuts": 0, "geom_ub": None, "geom": None}
+                  "cglp_cuts": 0, "geom_ub": None, "geom": None,
+                  "geom_ilp": 0, "geom_tours": 0}
 
     best_ub: Optional[float] = None
     proved = False
@@ -852,9 +856,12 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         set_ilp_budget(_bud_ext)               # on rend la part reservee
         reste = budget - (time.time() - t0)
         if reste > 0.05:
-            g, st = borne_geometrique(inst, model, q, reste, Dm=Dm)
+            avant = ORACLE_CALLS["ilp"]
+            g, st, tours = borne_geometrique(inst, model, q, reste, Dm=Dm)
             info["geom"] = st
             info["geom_ub"] = g
+            info["geom_ilp"] = ORACLE_CALLS["ilp"] - avant
+            info["geom_tours"] = tours
             if g is not None:
                 best_ub = g if best_ub is None else min(best_ub, g)
 

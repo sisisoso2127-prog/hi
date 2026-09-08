@@ -178,6 +178,7 @@ from scipy.optimize import linprog, milp, LinearConstraint, Bounds
 INF = np.inf
 Row = Tuple[np.ndarray, float, float]
 
+
 # ==========================================================================
 # extrait de molfp_instance.py
 # ==========================================================================
@@ -295,6 +296,7 @@ class MOILFP:
         ub = self.var_upper_bounds()
         if not np.all(np.isfinite(ub)):
             raise ValueError("Domaine non borne.")
+        from molfp_core import min_over_relaxation, feasibility_rows
         rows = feasibility_rows(self)
         for k, obj in enumerate(list(self.Z) + [self.f]):
             lo = min_over_relaxation(obj.den.astype(float), float(obj.b),
@@ -1429,6 +1431,7 @@ def cglp_cut(inst: MOILFP, a: np.ndarray, rows: Sequence[Row],
     variables, p*n + p + 1 contraintes -- soit une centaine de chaque a
     n = 40, m = 21, p = 3.
     """
+    from molfp_matheuristic import e_row
 
     n, p = inst.n, inst.p
     A, b = _rows_en_Ax_le_b(rows, n)
@@ -1502,6 +1505,7 @@ def verifier_validite(inst: MOILFP, a: np.ndarray,
     C'est le controle de surete de la coupe : on ne peut pas se contenter de
     la derivation, il faut la confronter aux points que l'on pretend garder.
     """
+    from molfp_matheuristic import e_row
 
     gam, dlt = [], []
     for k in range(inst.p):
@@ -1561,6 +1565,105 @@ def d_plus(inst: MOILFP, model: ECutModel,
     if not res.ok:
         return None
     return max(1, int(round(res.obj)))
+
+
+def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
+                      budget: float, max_iter: int = 12,
+                      Dm: Optional[int] = None
+                      ) -> Tuple[Optional[float], str, int]:
+    """
+    LE MEME TH. 5 PRIME, EVALUE A UN MEILLEUR SEUIL.
+
+    Ce que fait la certification aujourd'hui. Elle pose q = P/Q, resout
+    U = max_R F_q avec F_q = Q N - P D, et conclut
+
+        q* <= q + U / (Q Dmin).                                        (5')
+
+    Le seuil est donc TOUJOURS l'incumbent. Or (5') n'a rien de particulier
+    a l'incumbent : pour tout seuil t, en posant G_t = N - t D,
+
+        max_R G_t <= v   =>   pour tout x de R, N(x) - t D(x) <= v
+                         =>   f(x) <= t + v / D(x) <= t + v / Dmin,
+
+    donc  max_R f <= t + v/Dmin, et (5') est le cas t = q. Rien n'oblige a
+    s'arreter la : chaque solution x de R rencontree en chemin fournit un
+    seuil t = f(x) STRICTEMENT MEILLEUR, et l'on peut recommencer. C'est un
+    Dinkelbach ordinaire, mais mene SUR LE RELACHE et non sur S.
+
+    Pourquoi la methode ne le faisait pas. La boucle de certification
+    n'avance son seuil que sur des points certifies EFFICACES -- c'etait un
+    reflexe correct pour le LB, ou seul un point efficace peut compter. Mais
+    pour une BORNE SUPERIEURE l'efficacite est inutile : n'importe quel point
+    du relache fait un seuil valide. Le refus d'avancer le seuil sur un point
+    non certifie coutait donc tout l'ecart entre q et max_R f, sans rien
+    acheter.
+
+    VALIDITE. A la convergence (max_R G_t <= 0) on a max_R f <= t. Les coupes
+    de dominance preservent E ; chaque coupe d'efficacite n'est posee qu'apres
+    etablissement de sa condition de cloture, donc aucun point efficace retire
+    ne bat l'incumbent. D'ou
+
+        q* <= max(q, max_R f).
+
+    Interrompue, la procedure reste valide : `res.bound` majore max_R G_t
+    meme quand le solveur n'a pas conclu, et chaque tour produit un candidat
+    valide ; on renvoie le plus petit.
+
+    INCOMPARABLE a (5') telle qu'appliquee aujourd'hui, et non superieure :
+    (5') utilise D+ >= Dmin, plus fin, et la structure du test d'efficacite.
+    Les deux se prennent donc au MINIMUM, ce qui reste valide.
+
+    Renvoie (borne, statut, tours) ; statut 'optimal' quand max_R f est
+    atteint, 'empty' quand R est vide (alors q* = q), 'limit' sinon.
+    """
+    f = inst.f
+    if Dm is None:
+        Dm = d_min(inst)
+    t = Fraction(q)
+    best: Optional[float] = None
+    fin = time.time() + budget
+    tours = 0
+
+    for it in range(max_iter):
+        reste = fin - time.time()
+        if reste <= 0.02 or ilp_budget_left() <= 0:
+            break
+        # Un seul ILP ne doit pas pouvoir consommer tout le budget : le temps
+        # restant est reparti sur les tours restants. Sans cela, la premiere
+        # relaxation d'une instance a n = 20 tourne des heures et la procedure
+        # n'est plus « anytime » que de nom -- c'est exactement ce qui s'est
+        # produit au premier essai, avec un time_limit herite de 10^6 s.
+        par_appel = reste / max(1, max_iter - it)
+        tours += 1
+        P, Q = t.numerator, t.denominator
+        coef = (Q * f.num - P * f.den).astype(float)
+        const = float(Q * f.a - P * f.b)
+        res = model.optimize(coef, const, maximize=True, time_limit=par_appel)
+
+        if res.status == "infeasible":
+            # R vide : plus aucun point non retire, donc q* <= t.
+            return float(t), "empty", tours
+        if res.bound is None or not np.isfinite(res.bound):
+            break
+
+        U = max(0.0, float(res.bound))          # majorant VALIDE de max_R F_t
+        cand = float(t) + U / (Q * Dm)
+        best = cand if best is None else min(best, cand)
+        if U <= 1e-9:
+            return float(t), "optimal", tours          # max_R f <= t, exactement
+
+        # avancer le seuil sur le point trouve : aucune efficacite requise
+        if res.x is None or res.obj is None or res.obj <= 1e-9:
+            break
+        x = np.rint(np.asarray(res.x)[:inst.n]).astype(int)
+        if f.denominator(x) <= 0:
+            break
+        t_new = f.value(x)
+        if t_new <= t:
+            break
+        t = t_new
+
+    return best, "limit", tours
 
 
 def same_criteria_improves(inst: MOILFP, a: np.ndarray,
@@ -1878,7 +1981,11 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             lemma_strikes: int = 3,
             height_rank: bool = False,
             agg_extra: int = 0,
-            cglp_extra: int = 0) -> CertResult:
+            cglp_extra: int = 0,
+            geom_bound: bool = False,
+            geom_share: float = 0.25,
+            geom_gate: bool = True,
+            geom_gap: float = 0.5) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -1905,7 +2012,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     info: dict = {"n_cuts": 0, "U": None, "Dmin": None, "Dplus": None,
                   "rounds": 0, "q_improved": False, "archive_cuts": 0,
                   "select": None, "cloture_lemme": 0, "agg_cuts": 0,
-                  "cglp_cuts": 0}
+                  "cglp_cuts": 0, "geom_ub": None, "geom": None,
+                  "geom_ilp": 0, "geom_tours": 0}
 
     best_ub: Optional[float] = None
     proved = False
@@ -1917,6 +2025,34 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     # l'isolement sur 90 (+3 appels, avec zero cloture etablie par le lemme).
     echecs = 0
     Dm: Optional[int] = None
+
+    # -- reservation pour la SECONDE ROUTE, DECIDEE AU BON MOMENT ---------
+    # Elle coute des ILP comme tout le reste : ce qu'on lui donne, la boucle
+    # de coupes ne l'a pas. Lui laisser le simple reliquat ne marche pas --
+    # la boucle consomme le plafond en entier et la seconde route ne
+    # s'execute jamais, exactement la panne deja mesuree sur la
+    # diversification. Mais reserver EN AVEUGLE est perdant la ou la
+    # premiere route ferme deja : mesure, -0,66 point sur une instance ou
+    # elle suffisait.
+    #
+    # On reserve donc APRES LE PREMIER TOUR, quand la premiere route a
+    # produit sa premiere borne et que l'ecart est donc CONNU. Le seuil est
+    # le meme que celui qui sert deja ailleurs a declarer une borne qui ne
+    # ferme pas. La decision se prend ainsi sur une mesure, non sur un pari,
+    # et elle se prend assez tot pour que la reservation ait un sens.
+    _bud_ext = ORACLE_BUDGET["ilp"]
+    budget_coupes = budget
+    geom_actif = geom_bound
+    reserve_faite = not geom_bound      # rien a reserver si la route est off
+
+    def _reserver() -> None:
+        nonlocal budget_coupes
+        budget_coupes = (time.time() - t0) + (1.0 - geom_share) * \
+            max(0.0, budget - (time.time() - t0))
+        if _bud_ext is not None:
+            libre = max(0, _bud_ext - ORACLE_CALLS["ilp"])
+            set_ilp_budget(ORACLE_CALLS["ilp"]
+                           + max(1, int((1.0 - geom_share) * libre)))
 
     model = ECutModel(inst)
     pending: List[tuple] = []
@@ -1943,7 +2079,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                                       arch_pts, w0_coef)]
 
     for rnd in range(1, max_rounds + 1):
-        left = budget - (time.time() - t0)
+        left = budget_coupes - (time.time() - t0)
         if left <= 0.05:
             break
         info["rounds"] = rnd
@@ -1966,7 +2102,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             for cand in pending:
                 x, kind = cand[0], cand[1]
                 h = cand[2] if len(cand) > 2 else None
-                if posees >= cut_batch or time.time() > t0 + budget:
+                if posees >= cut_batch or time.time() > t0 + budget_coupes:
                     break
                 if kind == "arch":
                     # LEMME DE CLOTURE PAR LA HAUTEUR :
@@ -2010,7 +2146,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         if agg_extra > 0 and pending:
             n_agg = 0
             for cand in pending:
-                if n_agg >= agg_extra or time.time() > t0 + budget:
+                if n_agg >= agg_extra or time.time() > t0 + budget_coupes:
                     break
                 xa, ka = cand[0], cand[1]
                 ha = cand[2] if len(cand) > 2 else None
@@ -2030,7 +2166,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             n_cg = 0
             for cand in pending:
                 if n_cg >= cglp_extra or xs is None \
-                        or time.time() > t0 + budget:
+                        or time.time() > t0 + budget_coupes:
                     break
                 xc, kc = cand[0], cand[1]
                 hc = cand[2] if len(cand) > 2 else None
@@ -2086,11 +2222,13 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         # peut epuiser le relache. Le cas se presente exactement quand E est
         # mince -- le regime a corr eleve -- ou l'archive couvre vite tout E.
         if r.status == "empty" and info.get("archive_cuts", 0) > 0:
+            set_ilp_budget(_bud_ext)   # part reservee rendue
             return CertResult(float(q), True, q, x_cur, info)
 
         # -- optimalite prouvee : F(q) resolu et <= 0 ----------------------
         if r.status == "optimal" and r.value is not None and r.value <= 1e-9 \
                 and not improved:
+            set_ilp_budget(_bud_ext)   # part reservee rendue
             return CertResult(float(q), True, q, x_cur, info)
 
         # -- borne du Th. 5 / 5' -------------------------------------------
@@ -2100,6 +2238,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             U = max(0.0, float(r.ub))
             info["U"] = U
             if U <= 1e-9 and not improved:
+                set_ilp_budget(_bud_ext)   # part reservee rendue
                 return CertResult(float(q_ref), True, q, x_cur, info)
 
             if Dm is None:
@@ -2114,6 +2253,17 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cand = float(q_ref) + U / (Q * denom)
             best_ub = cand if best_ub is None else min(best_ub, cand)
 
+            if not reserve_faite:
+                reserve_faite = True
+                ecart_1 = (best_ub - float(q)) / max(1e-12, abs(best_ub))
+                if (not geom_gate) or ecart_1 > geom_gap:
+                    _reserver()
+                else:
+                    # la premiere route ferme : lui prendre des coupes pour
+                    # financer la seconde serait un troc perdant.
+                    geom_actif = False
+                    info["geom"] = "non engagee"
+
         # Un tour sans amelioration, sans coupe en reserve ET dont l'oracle
         # a conclu se repeterait a l'identique : on s'arrete.
         # En revanche un oracle INTERROMPU ('limit') laisse du travail : il a
@@ -2121,6 +2271,26 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         # tour suivant repart d'une relaxation strictement meilleure.
         if not improved and not pending and r.status != "limit":
             break
+
+    # -- SECONDE ROUTE : le meme Th. 5' a un seuil avance sur le relache --
+    # Les deux routes sont incomparables (la premiere utilise D+ et la
+    # structure du test d'efficacite, la seconde un meilleur seuil), et le
+    # minimum de deux bornes valides est une borne valide.
+    if geom_actif and not proved:
+        set_ilp_budget(_bud_ext)               # on rend la part reservee
+        reste = budget - (time.time() - t0)
+        if reste > 0.05:
+            avant = ORACLE_CALLS["ilp"]
+            g, st, tours = borne_geometrique(inst, model, q, reste, Dm=Dm)
+            info["geom"] = st
+            info["geom_ub"] = g
+            info["geom_ilp"] = ORACLE_CALLS["ilp"] - avant
+            info["geom_tours"] = tours
+            if g is not None:
+                best_ub = g if best_ub is None else min(best_ub, g)
+
+    if geom_bound:
+        set_ilp_budget(_bud_ext)
 
     if best_ub is not None and best_ub <= float(q) + 1e-12:
         proved = True
@@ -2177,6 +2347,7 @@ def move_epsilon_partial(inst: MOILFP, xr: np.ndarray, k: int,
 def move_epsilon_absolute(inst: MOILFP, eps: Sequence[Fraction],
                           w: np.ndarray, w0: float) -> Optional[np.ndarray]:
     """Mouvement B.  max w  s.c. x in S, Z_k(x) >= eps_k (Th. 1)."""
+    from molfp_core import threshold_row
     rows = feasibility_rows(inst)
     for k, v in enumerate(eps):
         if v is not None:
@@ -2194,6 +2365,7 @@ def move_lns(inst: MOILFP, xr: np.ndarray, free_idx: Sequence[int],
     box = inst.var_upper_bounds().astype(float)
     for j in free_idx:
         lb[j], ub[j] = 0.0, box[j]
+    from molfp_core import solve_milp
     rows = [(inst.A[i].astype(float), -INF, float(inst.b[i]))
             for i in range(inst.m)]
     res = solve_milp(w, rows, lb, ub, maximize=True, obj_const=w0)
@@ -2267,6 +2439,8 @@ def matheuristic_P(inst: MOILFP,
                    height_rank: bool = False,
                    agg_extra: int = 0,
                    cglp_extra: int = 0,
+                   geom_bound: bool = False,
+                   geom_gate: bool = True,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
@@ -2322,6 +2496,7 @@ def matheuristic_P(inst: MOILFP,
     x_best = x0
 
     # --- bornes de l'espace des criteres (pour le mouvement B) ------------
+    from molfp_core import ideal_nadir_estimates
     ideal, nadir = ideal_nadir_estimates(inst)
 
     rounds = 0
@@ -2416,13 +2591,15 @@ def matheuristic_P(inst: MOILFP,
     cut_points: List[np.ndarray] = []
     n_neufs = 0
 
-    def _cert(bud: float, rounds: int):
+    def _cert(bud: float, rounds: int, geom: Optional[bool] = None):
         return certify(inst, q, x_best, dominated, bud,
                        use_tightened=tightened, archive=arch,
                        cut_batch=cut_batch, max_rounds=rounds,
                        archive_cuts=archive_cuts, closure_lemma=closure_lemma,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
-                       agg_extra=agg_extra, cglp_extra=cglp_extra)
+                       agg_extra=agg_extra, cglp_extra=cglp_extra,
+                       geom_bound=geom_bound if geom is None else geom,
+                       geom_gate=geom_gate, geom_gap=gap_hopeless)
 
     # --- repartition du plafond d'APPELS entre les phases -----------------
     # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme
@@ -2448,7 +2625,7 @@ def matheuristic_P(inst: MOILFP,
         if cut_diversify and (leftover > 0.3 or ilp_budget is not None):
             part = min(0.3 * budget, leftover) if leftover > 0.3 else budget
             _cap(0.3)
-            sonde = _cert(part, 1)
+            sonde = _cert(part, 1, geom=False)
             if sonde.q_lb is not None and sonde.q_lb > q:
                 q, x_best = sonde.q_lb, sonde.x_best
             q_ub, proved = sonde.q_ub, sonde.proved

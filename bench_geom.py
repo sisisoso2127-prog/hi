@@ -33,7 +33,9 @@ MEME plafond d'appels entiers : une part lui est reservee en amont, donc la
 boucle de coupes en pose moins. Si elle ne rapporte pas plus qu'elle ne
 coute, l'ecart doit EMPIRER -- le banc peut donc conclure contre elle.
 
-Usage :  python bench_geom.py [plafond_appels] [nb_graines]
+Usage :  python bench_geom.py [plafond_appels] [nb_graines] [declencheur]
+         declencheur : 1 (defaut) pour n'engager la seconde route que la ou
+         la premiere ne ferme pas, 0 pour l'engager systematiquement.
 """
 
 import sys
@@ -49,15 +51,18 @@ TAILLES = [20, 30, 40]
 CORRS = [0.0, 0.5]
 
 
-def une(inst, cap, seed, geom):
+def une(inst, cap, seed, geom, gate):
     reset_oracle_counter()
     t0 = time.time()
     r = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6, seed=seed,
                        archive_cuts=True, ilp_budget=cap,
-                       cut_diversify=False, geom_bound=geom)
+                       cut_diversify=False, geom_bound=geom,
+                       geom_gate=gate)
     return {"lb": r.q_lb, "ub": r.q_ub, "ilp": r.ilp_calls,
             "lp": ORACLE_CALLS["lp"], "cuts": r.cert.get("n_cuts", 0),
             "geom": r.cert.get("geom"), "geom_ub": r.cert.get("geom_ub"),
+            "gilp": r.cert.get("geom_ilp", 0),
+            "gtours": r.cert.get("geom_tours", 0),
             "prouve": r.proved_optimal, "t": time.time() - t0}
 
 
@@ -69,16 +74,24 @@ def _sig(d):
 def main() -> int:
     cap = int(sys.argv[1]) if len(sys.argv) > 1 else 900
     n_gr = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+    # `gate` : n'engager la seconde route que la ou la premiere ne ferme
+    # pas. Le banc sait jouer les deux, parce que la question « la route
+    # aide-t-elle ? » et la question « le declencheur evite-t-il ses
+    # rechutes ? » ne se repondent pas par la meme mesure.
+    gate = (len(sys.argv) <= 3) or sys.argv[3].lower() not in ("0", "non",
+                                                              "false")
     graines = list(range(1, n_gr + 1))
 
     largeur = 112
     print("=" * largeur)
     print(f"SECONDE ROUTE (seuil avance sur le relache) - plafond {cap} "
-          f"appels entiers, {n_gr} graines")
+          f"appels entiers, {n_gr} graines, "
+          f"declencheur {'ACTIF' if gate else 'DESACTIVE'}")
     print("=" * largeur)
     print(f"{'n':>4}{'corr':>6}{'gr':>4}{'reprod':>8}"
           f"{'ecart sans':>12}{'ecart avec':>12}{'gain pts':>10}"
-          f"{'statut':>9}{'coupes s/a':>13}{'ILP s/a':>12}{'coherent':>10}")
+          f"{'statut':>9}{'tours':>7}{'ILP 2e':>8}"
+          f"{'coupes s/a':>13}{'ILP s/a':>12}{'coherent':>10}")
     print("-" * largeur)
 
     gains, mieux, pire, egal, alea, ok_tout = [], 0, 0, 0, 0, True
@@ -92,8 +105,10 @@ def main() -> int:
                 inst = generate(n=n, m=m, p=3, seed=g, rhs_scale=1.0,
                                 corr=corr)
                 mS = upper_bound_over_S(inst)
-                A, A2 = une(inst, cap, g, False), une(inst, cap, g, False)
-                B, B2 = une(inst, cap, g, True), une(inst, cap, g, True)
+                A = une(inst, cap, g, False, gate)
+                A2 = une(inst, cap, g, False, gate)
+                B = une(inst, cap, g, True, gate)
+                B2 = une(inst, cap, g, True, gate)
                 reprod = (_sig(A) == _sig(A2) and _sig(B) == _sig(B2))
                 alea += 0 if reprod else 1
 
@@ -124,7 +139,7 @@ def main() -> int:
                 print(f"{n:>4}{corr:>6.2f}{g:>4}"
                       f"{('oui' if reprod else 'NON'):>8}"
                       f"{ea:>11.1f}%{eb:>11.1f}%{d:>+9.2f}"
-                      f"{str(B['geom']):>9}"
+                      f"{str(B['geom']):>9}{B['gtours']:>7}{B['gilp']:>8}"
                       f"{A['cuts']:>7}/{B['cuts']:<5}"
                       f"{A['ilp']:>6}/{B['ilp']:<5}"
                       f"{'ok' if coherent else 'KO':>10}", flush=True)
