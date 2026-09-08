@@ -568,7 +568,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cglp_extra: int = 0,
             geom_bound: bool = False,
             geom_share: float = 0.25,
-            geom_gate: bool = True,
+            geom_gate: bool = False,
             geom_gap: float = 0.5) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
@@ -656,6 +656,31 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             set_ilp_budget(ORACLE_CALLS["ilp"] + max(1, libre - garde))
 
     def _liberer() -> None:
+        """
+        REFUTE PAR SON PROPRE BANC, et desactive par defaut.
+
+        L'idee etait de ne pas financer la seconde route la ou la premiere
+        ferme deja. Elle ne peut pas tenir, pour une raison de sequence : la
+        reserve est prise AVANT la boucle -- elle doit l'etre, le premier
+        tour consommant a lui seul tout le plafond -- et le premier tour a
+        donc DEJA tourne sous le plafond reduit quand la liberation se
+        decide. Rendre la part ne rend pas les coupes que ce tour n'a pas
+        posees.
+
+        Mesure appariee, douze lignes, plafond 300 :
+
+                              ameliorees  degradees  inchangees   median
+          sans declencheur         8          1          3        +3,19
+          avec declencheur         6          2          4        +0,03
+
+        Le detail est plus net que le resume. Sur n=30, corr=0, graine 2, le
+        declencheur refuse d'engager la route -- et la ligne perd tout de
+        meme 0,26 point, contre un GAIN de 6,04 sans lui. Il paie le cout et
+        refuse le benefice. Sur n=20, corr=0, graine 2, il abandonne +0,33.
+
+        Le code reste, desactive : un mecanisme dont on a mesure qu'il nuit
+        se documente mieux en place qu'efface.
+        """
         nonlocal budget_coupes, geom_actif
         budget_coupes = budget
         geom_actif = False
@@ -1177,7 +1202,7 @@ def matheuristic_P(inst: MOILFP,
                    agg_extra: int = 0,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
-                   geom_gate: bool = True,
+                   geom_gate: bool = False,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,

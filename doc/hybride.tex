@@ -1932,33 +1932,63 @@ sont précisément les lignes difficiles. Le minimum de deux bornes valides
 étant valide, on les prend toutes les deux.
 \end{remark}
 
-\subsection{Ce que cela coûte, et quand l'engager}
+\subsection{Ce que cela coûte}
 
 La seconde route se paie sur le même plafond d'appels entiers : ce qu'on lui
-donne, la boucle de coupes ne l'a pas. Une première version réservait sa
-part \emph{en aveugle}, avant de savoir si la première route en avait
-besoin. Le résultat était prévisible après coup : là où la première route
-fermait déjà, le troc était perdant, à hauteur de $-0{,}66$ point.
+donne, la boucle de coupes ne l'a pas. Deux tentatives de réglage ont été
+faites, et le banc les a réfutées toutes les deux. Nous les rapportons parce
+qu'elles disent quelque chose de la structure du problème.
 
-La correction s'est faite en deux temps, et le premier était faux. Nous
-avions voulu prendre la décision \emph{au moment où l'information existe} :
-après le premier tour, la première route a produit une borne, donc l'écart
-est connu ; on réserve alors -- ou non. Cela ne peut pas fonctionner ici,
-parce que le premier tour consomme à lui seul la totalité du plafond :
-l'oracle interne tourne jusqu'à épuisement, et à la fin du tour~$1$ il ne
-reste rien à réserver. Le symptôme était sans équivoque -- statut
-« interrompue », zéro tour, zéro appel, gain $+0{,}00$ là où la réserve en
-amont gagnait $9{,}82$ points. Le déclencheur ne choisissait pas mal, il ne
-s'exécutait pas.
+\paragraph{Première tentative : décider après coup.} Réserver \emph{en
+aveugle} paraissait un pari ; nous avons voulu prendre la décision au moment
+où l'information existe, c'est-à-dire après le premier tour, quand la
+première route a produit une borne. Cela ne peut pas fonctionner ici : le
+premier tour consomme à lui seul la \emph{totalité} du plafond -- l'oracle
+interne tourne jusqu'à épuisement -- de sorte qu'à sa fin il ne reste rien à
+réserver. Le symptôme était sans équivoque : statut « interrompue », zéro
+tour, zéro appel, gain $+0{,}00$ là où la réserve en amont gagnait $9{,}82$
+points. Le mécanisme ne choisissait pas mal, il ne s'exécutait pas.
 
-La réserve est donc prise \emph{avant} la boucle, et le déclencheur change
-de sens : il ne réserve plus, il \emph{libère}. Si le premier tour montre
-une borne déjà serrée, la part réservée est rendue et le tour suivant en
-profite ; sinon elle reste acquise. La décision se prend toujours sur une
-mesure, avec le seuil qui sert déjà ailleurs à déclarer une borne qui ne
-ferme pas -- c'est le sens de la réservation qui s'inverse, pas le moment de
-la décision. Une absence de borne au tour~$1$ compte comme une borne qui ne
-ferme pas : la réserve est conservée.
+\paragraph{Seconde tentative : réserver puis libérer.} La réserve est donc
+prise avant la boucle, et le déclencheur change de sens -- il ne réserve
+plus, il \emph{libère} : si le premier tour montre une borne déjà serrée, la
+part réservée est rendue et le tour suivant en profite. Le banc l'a réfuté
+aussi, et pour la même raison de séquence : quand la libération se décide,
+le premier tour a \emph{déjà} tourné sous le plafond réduit, et rendre la
+part ne rend pas les coupes qu'il n'a pas posées.
+
+\begin{table}[htbp]
+\centering
+\caption{Le déclencheur contre son absence, mêmes douze instances, même
+plafond de $300$ appels entiers, comparaison appariée.}
+\label{tab:porte}
+\begin{tabular}{lcccc}
+\toprule
+& améliorées & dégradées & inchangées & gain médian\\
+\midrule
+\textbf{sans déclencheur} & $\mathbf{8}$ & $\mathbf{1}$ & $3$
+ & $\mathbf{+3{,}19}$\\
+avec déclencheur & $6$ & $2$ & $4$ & $+0{,}03$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le détail est plus net que le résumé. À $n=30$, $\text{corr}=0$, graine~$2$,
+le déclencheur refuse d'engager la route -- et la ligne perd tout de même
+$0{,}26$ point, contre un \emph{gain} de $6{,}04$ sans lui. Il paie le coût
+et refuse le bénéfice. À $n=20$, $\text{corr}=0$, graine~$2$, il abandonne
+$+0{,}33$. Il est donc désactivé par défaut ; le code en est conservé,
+puisqu'un mécanisme dont on a mesuré qu'il nuit se documente mieux en place
+qu'effacé.
+
+\paragraph{Ce qui a réellement corrigé le troc.} Non pas un déclencheur mais
+la \emph{taille} de la réserve. La première version en réservait un
+pourcentage -- $25\ \%$ du budget restant, soit $28$ appels -- à une
+procédure qui en dépense $2$ à $4$. Vingt-six appels étaient retirés aux
+coupes sans contrepartie. Bornée par le nombre de tours que la route peut
+effectivement faire, la réserve ne coûte plus que $3$ à $4$ coupes. Le
+paramètre n'a pas été réglé sur le banc : il a été \emph{dérivé} de la
+procédure qu'il finance.
 
 \subsection{Ce que cela déplace}
 
@@ -2014,17 +2044,6 @@ le test des signes donne $p=0{,}039$.
 « tours », et c'est le chiffre à retenir : un tour de Dinkelbach est un ILP,
 et la route converge en $2$ à $4$ tours. Le reste de l'écart entre $300$ et
 $290$ appels est sa \emph{réserve}, non sa consommation.
-
-\begin{remark}[une réserve doit être bornée par ce qu'elle finance]
-Une première version réservait un \emph{pourcentage} du budget restant --
-$25\ \%$, soit $28$ appels -- à une procédure qui en dépense $2$. Vingt-six
-appels étaient donc retirés aux coupes sans contrepartie, et deux lignes
-reculaient. Bornée par le nombre de tours que la route peut effectivement
-faire, la réserve ne coûte plus que $3$ à $4$ coupes, et la ligne
-$n=20$, $\text{corr}=0$, graine~$2$ passe de $-0{,}66$ à $+0{,}33$. Le
-paramètre n'a pas été réglé : il a été \emph{dérivé} de la procédure qu'il
-finance.
-\end{remark}
 
 \paragraph{Une ligne recule encore.} $-1{,}00$ point, sur une instance dont
 l'écart valait déjà $12{,}7\ \%$ : la première route y fermait convenablement

@@ -1528,6 +1528,9 @@ def verifier_validite(inst: MOILFP, a: np.ndarray,
 # ==========================================================================
 
 
+TOURS_GEOM = 12
+
+
 def e_row(inst: MOILFP, xbar: np.ndarray, k: int) -> Tuple[np.ndarray, float]:
     """Coefficients et constante de e_k (Th. 4), entiers."""
     Zk = inst.Z[k]
@@ -1568,7 +1571,7 @@ def d_plus(inst: MOILFP, model: ECutModel,
 
 
 def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
-                      budget: float, max_iter: int = 12,
+                      budget: float, max_iter: int = TOURS_GEOM,
                       Dm: Optional[int] = None
                       ) -> Tuple[Optional[float], str, int]:
     """
@@ -1984,7 +1987,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cglp_extra: int = 0,
             geom_bound: bool = False,
             geom_share: float = 0.25,
-            geom_gate: bool = True,
+            geom_gate: bool = False,
             geom_gap: float = 0.5) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
@@ -2040,10 +2043,23 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     # le meme que celui qui sert deja ailleurs a declarer une borne qui ne
     # ferme pas. La decision se prend ainsi sur une mesure, non sur un pari,
     # et elle se prend assez tot pour que la reservation ait un sens.
+    # LA RESERVATION DOIT PRECEDER LA BOUCLE. Une version l'a placee apres le
+    # premier tour, pour decider sur une mesure plutot que sur un pari. Elle
+    # ne pouvait pas fonctionner : le premier tour consomme a lui seul la
+    # TOTALITE du plafond -- l'oracle interne tourne jusqu'a epuisement --
+    # de sorte qu'a la fin du tour 1 il ne reste rien a reserver. Mesure du
+    # symptome : statut 'limit', zero tour, zero appel, gain +0,00 la ou la
+    # reservation en amont gagnait 9,82 points.
+    #
+    # On reserve donc EN AMONT, et le declencheur devient une LIBERATION :
+    # si le premier tour montre que la premiere route ferme convenablement,
+    # la part reservee est RENDUE et le tour suivant en profite. La decision
+    # reste prise sur une mesure ; c'est le sens de la reservation qui
+    # s'inverse, pas le moment de la decision.
     _bud_ext = ORACLE_BUDGET["ilp"]
     budget_coupes = budget
     geom_actif = geom_bound
-    reserve_faite = not geom_bound      # rien a reserver si la route est off
+    reserve_faite = not geom_bound      # rien a liberer si la route est off
 
     def _reserver() -> None:
         nonlocal budget_coupes
@@ -2051,8 +2067,47 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             max(0.0, budget - (time.time() - t0))
         if _bud_ext is not None:
             libre = max(0, _bud_ext - ORACLE_CALLS["ilp"])
-            set_ilp_budget(ORACLE_CALLS["ilp"]
-                           + max(1, int((1.0 - geom_share) * libre)))
+            # On ne reserve pas une PART, on reserve ce que la route peut
+            # effectivement depenser : au plus TOURS_GEOM appels. Une reserve
+            # en pourcentage immobilisait 28 appels pour une route qui en
+            # consomme 2, et les retirait aux coupes sans contrepartie.
+            garde = min(int(geom_share * libre), TOURS_GEOM)
+            set_ilp_budget(ORACLE_CALLS["ilp"] + max(1, libre - garde))
+
+    def _liberer() -> None:
+        """
+        REFUTE PAR SON PROPRE BANC, et desactive par defaut.
+
+        L'idee etait de ne pas financer la seconde route la ou la premiere
+        ferme deja. Elle ne peut pas tenir, pour une raison de sequence : la
+        reserve est prise AVANT la boucle -- elle doit l'etre, le premier
+        tour consommant a lui seul tout le plafond -- et le premier tour a
+        donc DEJA tourne sous le plafond reduit quand la liberation se
+        decide. Rendre la part ne rend pas les coupes que ce tour n'a pas
+        posees.
+
+        Mesure appariee, douze lignes, plafond 300 :
+
+                              ameliorees  degradees  inchangees   median
+          sans declencheur         8          1          3        +3,19
+          avec declencheur         6          2          4        +0,03
+
+        Le detail est plus net que le resume. Sur n=30, corr=0, graine 2, le
+        declencheur refuse d'engager la route -- et la ligne perd tout de
+        meme 0,26 point, contre un GAIN de 6,04 sans lui. Il paie le cout et
+        refuse le benefice. Sur n=20, corr=0, graine 2, il abandonne +0,33.
+
+        Le code reste, desactive : un mecanisme dont on a mesure qu'il nuit
+        se documente mieux en place qu'efface.
+        """
+        nonlocal budget_coupes, geom_actif
+        budget_coupes = budget
+        geom_actif = False
+        set_ilp_budget(_bud_ext)
+        info["geom"] = "non engagee"
+
+    if geom_bound:
+        _reserver()
 
     model = ECutModel(inst)
     pending: List[tuple] = []
@@ -2253,16 +2308,20 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cand = float(q_ref) + U / (Q * denom)
             best_ub = cand if best_ub is None else min(best_ub, cand)
 
-            if not reserve_faite:
-                reserve_faite = True
-                ecart_1 = (best_ub - float(q)) / max(1e-12, abs(best_ub))
-                if (not geom_gate) or ecart_1 > geom_gap:
-                    _reserver()
-                else:
-                    # la premiere route ferme : lui prendre des coupes pour
-                    # financer la seconde serait un troc perdant.
-                    geom_actif = False
-                    info["geom"] = "non engagee"
+        # -- decision de LIBERER, a la fin du premier tour ------------------
+        # Hors du bloc de la borne, et non a l'interieur : un premier tour
+        # peut ne produire AUCUNE borne (oracle interrompu avant sa premiere
+        # relaxation, `r.ub` vaut None), et ce cas doit etre traite.
+        if not reserve_faite:
+            reserve_faite = True
+            # Une absence de borne vaut borne qui ne ferme pas : on garde la
+            # reserve. On ne la rend que sur une borne EFFECTIVEMENT serree.
+            ecart_1 = 1.0 if best_ub is None else \
+                (best_ub - float(q)) / max(1e-12, abs(best_ub))
+            if geom_gate and ecart_1 <= geom_gap:
+                # la premiere route ferme : lui prendre des coupes pour
+                # financer la seconde serait un troc perdant.
+                _liberer()
 
         # Un tour sans amelioration, sans coupe en reserve ET dont l'oracle
         # a conclu se repeterait a l'identique : on s'arrete.
@@ -2440,7 +2499,7 @@ def matheuristic_P(inst: MOILFP,
                    agg_extra: int = 0,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
-                   geom_gate: bool = True,
+                   geom_gate: bool = False,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
