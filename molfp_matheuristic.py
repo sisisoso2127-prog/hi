@@ -616,10 +616,23 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     # le meme que celui qui sert deja ailleurs a declarer une borne qui ne
     # ferme pas. La decision se prend ainsi sur une mesure, non sur un pari,
     # et elle se prend assez tot pour que la reservation ait un sens.
+    # LA RESERVATION DOIT PRECEDER LA BOUCLE. Une version l'a placee apres le
+    # premier tour, pour decider sur une mesure plutot que sur un pari. Elle
+    # ne pouvait pas fonctionner : le premier tour consomme a lui seul la
+    # TOTALITE du plafond -- l'oracle interne tourne jusqu'a epuisement --
+    # de sorte qu'a la fin du tour 1 il ne reste rien a reserver. Mesure du
+    # symptome : statut 'limit', zero tour, zero appel, gain +0,00 la ou la
+    # reservation en amont gagnait 9,82 points.
+    #
+    # On reserve donc EN AMONT, et le declencheur devient une LIBERATION :
+    # si le premier tour montre que la premiere route ferme convenablement,
+    # la part reservee est RENDUE et le tour suivant en profite. La decision
+    # reste prise sur une mesure ; c'est le sens de la reservation qui
+    # s'inverse, pas le moment de la decision.
     _bud_ext = ORACLE_BUDGET["ilp"]
     budget_coupes = budget
     geom_actif = geom_bound
-    reserve_faite = not geom_bound      # rien a reserver si la route est off
+    reserve_faite = not geom_bound      # rien a liberer si la route est off
 
     def _reserver() -> None:
         nonlocal budget_coupes
@@ -629,6 +642,16 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             libre = max(0, _bud_ext - ORACLE_CALLS["ilp"])
             set_ilp_budget(ORACLE_CALLS["ilp"]
                            + max(1, int((1.0 - geom_share) * libre)))
+
+    def _liberer() -> None:
+        nonlocal budget_coupes, geom_actif
+        budget_coupes = budget
+        geom_actif = False
+        set_ilp_budget(_bud_ext)
+        info["geom"] = "non engagee"
+
+    if geom_bound:
+        _reserver()
 
     model = ECutModel(inst)
     pending: List[tuple] = []
@@ -829,28 +852,20 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cand = float(q_ref) + U / (Q * denom)
             best_ub = cand if best_ub is None else min(best_ub, cand)
 
-        # -- decision de reserver, A LA FIN DU PREMIER TOUR -----------------
-        # Elle est prise ICI, hors du bloc de la borne, et non a l'interieur.
-        # Un premier tour peut tres bien ne produire AUCUNE borne : l'oracle
-        # est interrompu avant sa premiere relaxation et `r.ub` vaut None.
-        # Une premiere version placait la decision dans ce bloc ; sur les
-        # instances ou le tour 1 ne rendait rien, la reservation n'avait donc
-        # jamais lieu, la boucle consommait le plafond entier, et la seconde
-        # route recevait ZERO appel. Mesure : +0,00 point la ou la version
-        # sans declencheur en gagnait 9,82, avec un statut 'limit' a zero
-        # tour -- le declencheur ne choisissait pas mal, il ne s'executait
-        # pas. Une absence de borne vaut borne qui ne ferme pas : on reserve.
+        # -- decision de LIBERER, a la fin du premier tour ------------------
+        # Hors du bloc de la borne, et non a l'interieur : un premier tour
+        # peut ne produire AUCUNE borne (oracle interrompu avant sa premiere
+        # relaxation, `r.ub` vaut None), et ce cas doit etre traite.
         if not reserve_faite:
             reserve_faite = True
+            # Une absence de borne vaut borne qui ne ferme pas : on garde la
+            # reserve. On ne la rend que sur une borne EFFECTIVEMENT serree.
             ecart_1 = 1.0 if best_ub is None else \
                 (best_ub - float(q)) / max(1e-12, abs(best_ub))
-            if (not geom_gate) or ecart_1 > geom_gap:
-                _reserver()
-            else:
+            if geom_gate and ecart_1 <= geom_gap:
                 # la premiere route ferme : lui prendre des coupes pour
                 # financer la seconde serait un troc perdant.
-                geom_actif = False
-                info["geom"] = "non engagee"
+                _liberer()
 
         # Un tour sans amelioration, sans coupe en reserve ET dont l'oracle
         # a conclu se repeterait a l'identique : on s'arrete.
