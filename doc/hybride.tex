@@ -112,6 +112,16 @@ partout. Un banc à budget \emph{déterministe} -- plafonné en nombre d'appels
 et non en secondes -- confirme la reproductibilité sur $90$ instances sur
 $90$ et l'absence de tout recul.
 
+La méthode est enfin confrontée aux deux méthodes exactes voisines, dont
+aucune ne résout notre problème -- l'une optimise une fonction linéaire sur
+l'ensemble efficace d'un MOILFP, l'autre une fonction fractionnaire sur
+celui d'un MOILP -- ce qui impose de les affronter chacune sur son propre
+terrain. Leurs deux exemples publiés sont reproduits exactement, et celle de
+Zerdani \& Moulaï est réimplémentée, tableau du simplexe compris, en
+arithmétique rationnelle. Sur $24$ instances de sa classe, elle certifie
+$12$ optima quand notre méthode en prouve $24$ ; mais elle dispose d'un
+raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
+
 Les limites sont énoncées avec la même précision que les gains : la méthode
 est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le lemme
 n'achète aucune preuve supplémentaire -- c'est un gain de coût, non de
@@ -189,6 +199,15 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       deux coupes en concurrence sous un plafond global, et non leur allouer
       des budgets séparés -- point où une mise en \oe uvre naïve perd
       $28$ preuves sur $90$.
+\item \textbf{La coupe d'efficacité comme opérateur de recherche}
+      (\S\ref{sec:divers}) : couper autour de toute l'archive rend un point
+      \emph{garanti neuf} en vecteur critères, et cet usage-là n'exige
+      aucune condition de clôture. Sur $24$ paires à budget déterministe,
+      $6$ instances améliorées, $\mathbf{0}$ dégradée.
+\item \textbf{Une comparaison sur le terrain de chacun}
+      (\S\ref{sec:comparaison}) : réimplémentation de Zerdani \& Moulaï avec
+      son simplexe rationnel à tableau, reproduction des deux exemples
+      publiés, et match à unité de coût indépendante de la machine.
 \item \textbf{Un protocole de mesure qui se contrôle lui-même}
       (\S\ref{sec:determ}) : lecture appariée plutôt que comparaison de
       médianes, budget plafonné en \emph{appels} et non en secondes, et
@@ -1380,6 +1399,60 @@ plus}, alors même que le plafond est serré ($6$ instances ne se prouvent
 pas). Le théorème~\ref{th:hauteur} est donc bien ce que la
 remarque~\ref{rem:lemme} annonçait : un gain de coût, et rien de plus.
 
+\subsection{La coupe d'efficacité comme opérateur de recherche}
+\label{sec:divers}
+
+Le théorème~\ref{th:effcut} n'a pas servi qu'à borner. Couper autour de
+\emph{tout} l'archive laisse exactement les points que l'archive ne domine
+ni n'égale ; maximiser le substitut sur ce reste rend donc un point
+\textbf{garanti neuf en vecteur critères} -- ce qu'aucun redémarrage
+aléatoire ne garantit. On le répare en un point efficace certifié, on
+l'archive, on coupe autour, on recommence.
+
+\begin{remark}[aucune clôture n'est requise ici]
+Employée comme opérateur de recherche, la coupe n'exige pas la
+condition~\eqref{eq:cloture}. Celle-ci n'est nécessaire que pour tirer une
+\emph{borne} d'un relâché amputé. Ici la coupe ne fait que diriger
+l'exploration, et la validité du résultat ne tient qu'au test d'efficacité,
+qui certifie chaque point rendu. Cette variante est donc \emph{gratuite} :
+zéro programme entier de clôture.
+\end{remark}
+
+\begin{table}[htbp]
+\centering
+\caption{Diversification par coupes d'efficacité. $24$ paires,
+$n=20$ à $50$, budget déterministe de $700$ appels, comparaison appariée.}
+\label{tab:divers}
+\begin{tabular}{lc}
+\toprule
+reproductibilité & $24/24$ lignes stables\\
+instances \textbf{améliorées} & $\mathbf{6}$\\
+instances dégradées & $\mathbf{0}$\\
+inchangées & $18$\\
+gain sur $q_{\text{lb}}$ & médiane $+0{,}00\ \%$, moyenne $+4{,}72\ \%$\\
+                         & \textbf{maximum $+80{,}6\ \%$, minimum $+0{,}0\ \%$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le minimum vaut $+0{,}0\ \%$ : à budget d'appels égal, la diversification
+n'a dégradé la valeur rendue sur \emph{aucune} des $24$ paires. Les six
+gains vont de $+2{,}7$ à $+80{,}6\ \%$ et se répartissent sur $n=20$, $30$
+et $40$ ainsi que sur les deux corrélations. Test des signes : $6$ contre
+$0$, soit $p=0{,}016$.
+
+Deux réserves, sans lesquelles ce tableau serait mal lu. D'abord il mesure
+le \emph{mécanisme} et non son déclencheur : le réglage de production ne
+l'active que si la borne paraît sans espoir, et sous ce réglage un banc
+antérieur ne l'a jamais activé -- la sonde mesurait un écart de $23\ \%$ là
+où le seuil est à $50\ \%$, et refusait donc de tirer, très correctement.
+Ensuite il ne compare que $q_{\text{lb}}$ : les appels donnés à la
+diversification sont autant d'appels retirés à la certification, et un
+contrôle ponctuel montre que la borne \emph{supérieure}, elle, peut se
+relâcher. Régler le déclencheur demande de mesurer les deux, ce qui reste à
+faire.
+
 \subsection{Où elle n'apporte rien, et pourquoi}
 
 À front épais et $n\ge 20$, les écarts garantis sont \textbf{inchangés} :
@@ -1398,6 +1471,307 @@ priorité, et l'on sait désormais qu'il y a, derrière ce plafond, de la
 matière à couper qui attend.
 
 % ============================================================================
+% ============================================================================
+\section{Comparaison avec les méthodes du domaine}
+\label{sec:comparaison}
+
+\subsection{Trois problèmes voisins, et pourquoi aucun n'est le nôtre}
+
+Deux méthodes exactes encadrent directement ce travail. Il faut commencer
+par dire, très précisément, ce qu'elles résolvent -- car cela commande la
+forme que toute comparaison peut prendre.
+
+\begin{table}[htbp]
+\centering
+\caption{Le problème traité, chez les uns et chez les autres.}
+\label{tab:positionnement}
+\begin{tabular}{lcc}
+\toprule
+& critères $\Zk$ & fonction à optimiser sur $\Ecal$\\
+\midrule
+Zerdani \& Moulaï (2011) & \textbf{fractionnaires} & linéaire\\
+Drici, Ouail \& Moulaï (2018) & linéaires & \textbf{fractionnaire}\\
+\midrule
+\textbf{notre problème (P)} & \textbf{fractionnaires} & \textbf{fractionnaire}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Notre problème est la \emph{réunion} des deux généralisations : fractionnaire
+des deux côtés. Aucune des deux méthodes ne le couvre. Il en découle une
+contrainte méthodologique dont ce mémoire tire parti plutôt que de la
+subir : \textbf{la comparaison ne peut se faire que sur le terrain de
+chacun}. On restreint donc notre méthode à leur classe -- $f$ linéaire pour
+l'une, critères linéaires pour l'autre -- et on les affronte là où elles
+sont chez elles. C'est la forme la plus exigeante de comparaison : si notre
+méthode tient dans la spécialité de l'autre, le cas général suit
+\emph{a fortiori}.
+
+\subsection{Validation externe : reproduire, avant de comparer}
+\label{sec:externe}
+
+Avant de mesurer quoi que ce soit, il faut établir que nos objets sont bien
+les leurs. Les deux articles donnent un exemple entièrement résolu ; nous
+les reprenons à l'identique.
+
+\begin{table}[htbp]
+\centering
+\caption{Les deux exemples publiés, reproduits.}
+\label{tab:exemples}
+\begin{tabular}{lcc}
+\toprule
+& Zerdani \& Moulaï, \S5 & Drici \emph{et al.}, \S5\\
+\midrule
+$|\Scal|$ / $|\Ecal|$ & $6$ / $5$ & $14$ / $7$\\
+ensemble efficace & \textbf{identique au publié} & les deux optima publiés\\
+                  &                              & sont efficaces chez nous\\
+optimum publié & $\varphi=6$ en $(3,0)$ & $f=-5$\\
+optimum calculé & $\varphi=6$ en $(3,0)$ & $f=-5$\\
+notre méthode & prouve $6$, $10$ \ILP & prouve $-5$, $101$ \ILP\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Un contrôle supplémentaire confirme la transcription de la seconde instance :
+les auteurs donnent l'optimum de la relaxation continue, $x=(0,\frac{14}{5},
+\frac{2}{5},0)$ de valeur $-\frac{85}{21}$ ; notre instance rend exactement
+cette valeur en ce point.
+
+\paragraph{Ce que la reproduction a révélé, et qui n'était pas prévu.} La
+première exécution sur l'exemple de Drici \emph{et al.} donnait $|\Scal|=12$
+et un optimum de $-\frac{19}{4}$, en désaccord avec les $-5$ publiés ; pis,
+l'un des deux optima publiés, $(2,3,0,0)$, n'apparaissait même pas efficace.
+Avant de mettre en cause l'article, nous avons compté $\Scal$ à la main :
+$14$ points, pas $12$. Les manquants étaient tous ceux à $x_1=2$, dont
+$(2,3,0,0)$ lui-même.
+
+La faute était dans \emph{notre} énumérateur. Son élagage coupait le
+sous-arbre dès qu'une somme partielle dépassait $b$ -- raisonnement exact
+sous (A2), que notre générateur garantit, si bien que rien ne s'était jamais
+vu sur les instances tirées. Mais les instances de la littérature ont des
+coefficients \emph{négatifs} : une variable ultérieure peut alors faire
+redescendre une ligne sous $b$, et l'élagage retirait des points réalisables.
+
+La portée mérite d'être énoncée : \texttt{ground\_truth} est la référence de
+\emph{toutes} les vérifications de ce travail, et elle était fausse
+exactement là où l'on validait contre l'extérieur. L'élagage a été remplacé
+par une minoration valide de la contribution des variables encore libres ;
+les campagnes sur instances générées sont inchangées, ce que confirme la
+batterie $V_1$--$V_4$.
+
+\subsection{Réimplémenter, plutôt que citer}
+\label{sec:reimpl}
+
+Comparer à une méthode exige de la faire tourner. Celle de Zerdani \& Moulaï
+ne se lit pas dans la valeur d'un optimum mais dans le \textbf{tableau du
+simplexe} : l'ensemble hors base $N_k$, le gradient réduit $\gamma_{k,j}$,
+les colonnes $y_{k,ij}$, les arêtes $E_{j_k}$ qu'elles définissent, le pas
+entier $\theta_{j_k}$ le long de ces arêtes. Aucun solveur industriel
+n'expose cela.
+
+\paragraph{Un simplexe rationnel, et pourquoi rationnel.} Les tests de leur
+méthode portent sur des \emph{égalités} : « $\gamma_{k,j}=0$ » décide de
+l'unicité de l'optimum -- donc de son efficacité par leur corollaire~2.3 --
+et « $\theta$ entier » décide de l'existence d'un point entier sur une
+arête. En flottant, ces tests réclament un $\varepsilon$, et un $\varepsilon$
+mal choisi change le \emph{résultat} de l'algorithme, non sa précision. Les
+données étant entières, tout le tableau reste rationnel : l'exactitude
+s'obtient sans rien supposer. L'objectif fractionnaire est traité par le
+gradient réduit de Martos, sous la forme même de leur section~2 ; la règle
+de Bland des deux côtés garantit la terminaison sans perturbation, la
+dégénérescence étant fréquente sur ces données. Une phase~I a dû être
+ajoutée : leurs coupes $\sum_{j\in N_k}x_j\ge 1$ rendent la base des écarts
+irréalisable, ce pour quoi ils prescrivent le simplexe dual.
+
+\paragraph{Deux endroits où il a fallu trancher.} Le premier est le test
+d'efficacité : les auteurs invoquent leur théorème~3.6, nous employons notre
+test intégral, qui décide le \emph{même} prédicat de façon exacte. Le second
+est le sommet fractionnaire : les étapes 3.2 et 3.3 prescrivent « dual
+simplex and Gomory cuts, if necessary » sans détailler ces coupes. Nous
+avons implémenté la coupe fractionnaire de Gomory en arithmétique exacte --
+c'est bien ce qu'ils prescrivent -- et signalé les cas où le processus
+n'aboutit pas malgré elle.
+
+\paragraph{Un bogue de portée, et ce qu'il a coûté.} Une fois les coupes de
+Gomory en place, notre réimplémentation rendait $\varphi_{\text{opt}}=8$ en
+$(4,0)$ \emph{sur leur propre exemple}, contre les $6$ en $(3,0)$ publiés --
+et $(4,0)$ est réalisable mais \emph{dominé}. La cause : nous appliquions le
+corollaire~2.3 à chaque itération, alors qu'il porte sur le domaine
+d'\emph{origine}. Dès qu'une coupe est posée, le sommet n'optimise plus
+$Z_1$ que sur la région tronquée et le corollaire ne s'applique plus ; les
+auteurs ne s'en servent d'ailleurs qu'à l'étape~2, et testent explicitement
+l'efficacité à l'étape~3.3.
+
+C'est le genre d'erreur qui rend une réimplémentation inutilisable sans
+qu'on s'en aperçoive : elle tournait, terminait, et rendait un nombre
+plausible. Seule la confrontation à l'exemple publié l'a révélée -- ce qui
+justifie rétrospectivement d'avoir commencé par là. Après correction :
+statut \emph{optimal}, $\varphi_{\text{opt}}=6$ en $(3,0)$, en $7$
+itérations, $6$ coupes et $14$ tests d'efficacité.
+
+\subsection{Le match sur le terrain de Zerdani \& Moulaï}
+\label{sec:matchzm}
+
+\paragraph{Protocole.} $24$ instances de leur classe -- $\varphi$ linéaire,
+critères fractionnaires -- avec vérité terrain par énumération exhaustive.
+L'unité de coût est le nombre d'appels au solveur \emph{en nombres entiers},
+indépendante de la machine et du langage : les secondes ne compareraient
+rien, un simplexe rationnel exact d'un côté et HiGHS de l'autre. Le plafond
+de travail de leur méthode porte sur le nombre d'itérations et de coupes
+($60$ et $150$), jamais sur des secondes, pour rester reproductible.
+
+\begin{remark}[l'unité choisie les favorise, et c'est voulu]
+Leur algorithme tire l'essentiel de son travail du tableau -- unicité lue
+dans $\gamma$, arêtes lues dans les colonnes -- opérations que cette unité
+ne compte \emph{pas}, alors qu'elle compte tout ce que nous faisons. Le
+désavantage est assumé : si notre méthode tient malgré cela, la conclusion
+est solide.
+\end{remark}
+
+\begin{table}[htbp]
+\centering
+\caption{Match, $24$ instances, vérité terrain par énumération.}
+\label{tab:match}
+\begin{tabular}{lcc}
+\toprule
+& Zerdani \& Moulaï & notre méthode\\
+\midrule
+optimum \emph{trouvé} & $20/24$ & $\mathbf{24/24}$\\
+optimalité \textbf{prouvée} & $12/24$ & $\mathbf{24/24}$\\
+\quad dont trouvé mais non certifié & $8$ & --\\
+coût médian & $45$ tests d'efficacité & $79$ \ILP\\
+encadrement valide & \multicolumn{2}{c}{$24/24$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Premier enseignement : un raccourci qui leur appartient.} Sur
+$9$ instances sur $24$, leur méthode conclut en \textbf{zéro coupe et un
+seul test d'efficacité}. L'optimum de $\varphi$ sur $\Scal$, calculé à
+l'étape~0, se trouve déjà efficace, et l'étape~1 termine. Nous dépensons
+entre $25$ et $158$ appels sur ces mêmes instances.
+
+C'est un avantage réel de leur construction, et il faut le dire nettement :
+sur ces instances-là, ils sont imbattables. Il tient à ce que $\varphi$ est
+\emph{linéaire} -- un seul programme entier donne son maximum sur $\Scal$,
+et il n'y a plus qu'à tester ce point. Notre $f$ fractionnaire n'a pas
+d'équivalent de cette étape : le maximum de $f$ sur $\Scal$ demande déjà un
+Dinkelbach complet. Aucune de nos mesures antérieures ne pouvait révéler cet
+écart, puisqu'elles ne comparaient la méthode qu'à elle-même.
+
+\paragraph{Deuxième enseignement : une coupure nette selon $|\Scal|$.}
+Quand leur processus s'achève, $|\Scal|$ médian vaut $121$ ; quand il ne
+s'achève pas, $371$. Le mécanisme est identifié et tient à la coupe de
+Dantzig : elle retire \textbf{un sommet à la fois}. La certification
+parcourt donc les sommets, et son coût suit $|\Scal|$ plutôt que la
+difficulté du problème. On observe le phénomène directement sur une instance
+à $|\Scal|=329$ : l'optimum $\varphi^\star=15$ est atteint dès la
+\emph{première} itération, et les $150$ coupes suivantes ne servent qu'à
+tenter de le certifier.
+
+\paragraph{Troisième enseignement : ce que rend une méthode exacte
+interrompue.} Sur $4$ instances, leur méthode ne trouve pas l'optimum dans
+le plafond ($35$ au lieu de $39$ ; $-7$ au lieu de $8$ ; $-17$ au lieu de
+$-12$ ; $1$ au lieu de $8$), toutes à $|\Scal|$ grand. Sur $8$ autres elle
+le trouve sans pouvoir le certifier. Au total, sur \textbf{$12$ instances
+sur $24$}, elle ne rend rien d'exploitable au plafond -- non par défaut de
+mise en \oe uvre, mais par nature : une méthode exacte rend l'optimum
+certifié ou rien.
+
+C'est exactement l'axe sur lequel les deux approches diffèrent, et le seul
+qui ne dépende ni de la machine ni de l'implémentation. Notre méthode rend
+en permanence un couple $(q_{\text{lb}}, q_{\text{ub}})$ : sur ces mêmes
+$12$ instances elle rend une solution \emph{et} un écart garanti, ici nul
+puisqu'elle les prouve toutes.
+
+\subsection{Le terrain de Drici, Ouail \& Moulaï}
+\label{sec:matchdrici}
+
+Sur l'autre bord -- critères linéaires, $f$ fractionnaire -- nous reprenons
+leur protocole de génération, cité à leur section~6 : contraintes uniformes
+sur $[1,30]$, second membre sur $[50,100]$, coefficients des critères et du
+numérateur de $f$ sur $[-10,10]$, et $q$, $\beta$ tels que
+$q^{\top}x+\beta>0$ sur le domaine. Leurs tailles sont reprises telles
+quelles.
+
+\begin{table}[htbp]
+\centering
+\caption{Notre méthode sur le protocole et les tailles de Drici
+\emph{et al.}, $10$ instances par taille, budget déterministe de $1500$
+appels.}
+\label{tab:drici}
+\begin{tabular}{lcccc}
+\toprule
+$n\times m$ & optimalité prouvée & écart garanti médian & \ILP\ méd.
+ & CPU publié\\
+\midrule
+$5\times 5$   & $10/10$ & $0{,}0\ \%$ & $97$  & $0{,}21$~s\\
+$10\times 5$  & $10/10$ & $0{,}0\ \%$ & $219$ & $0{,}44$~s\\
+$15\times 5$  & $10/10$ & $0{,}0\ \%$ & $166$ & $0{,}70$~s\\
+$20\times 5$  & $10/10$ & $0{,}0\ \%$ & $156$ & $1{,}23$~s\\
+$20\times 10$ & $10/10$ & $0{,}0\ \%$ & $216$ & $1{,}45$~s\\
+$30\times 10$ & $10/10$ & $0{,}0\ \%$ & $340$ & $8{,}98$~s\\
+$35\times 15$ & $10/10$ & $0{,}0\ \%$ & $376$ & $7{,}45$~s\\
+$40\times 15$ & $10/10$ & $0{,}0\ \%$ & $352$ & $10{,}82$~s\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Quatre-vingts instances sur quatre-vingts à optimalité prouvée, et
+$q_{\text{lb}}\le\qs\le q_{\text{ub}}$ partout. La colonne « CPU publié »
+est le temps moyen rapporté par les auteurs (\textsc{Matlab}, MacBook Pro,
+$r=3$) : elle situe l'ordre de grandeur des tailles atteintes, elle
+\textbf{ne départage pas} des implémentations mesurées sur des machines et
+des langages différents à des années d'intervalle, et nous ne l'utilisons
+pas ainsi.
+
+\paragraph{Une réserve qui doit précéder toute lecture de ce tableau.} Le
+couple $(n,m)$ ne mesure pas la difficulté : les \emph{bornes des variables}
+la mesurent. Des contraintes sur $[1,30]$ avec un second membre sur
+$[50,100]$ donnent des variables bornées par $2$ ou $3$.
+
+\begin{table}[htbp]
+\centering
+\caption{« $n=40$ » ne désigne pas le même problème d'un protocole à
+l'autre.}
+\label{tab:boite}
+\begin{tabular}{lcccc}
+\toprule
+protocole & $n$ & $\overline{x}$ max & $\overline{x}$ méd.
+ & $\log_{10}$ de la boîte\\
+\midrule
+Drici \emph{et al.} ($A\sim[1,30]$) & $40$ & $3$ & $2$ & $18{,}2$\\
+notre lot d'échelle & $40$ & $24$ & $19$ & $\mathbf{51{,}8}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Trente-quatre ordres de grandeur séparent les deux boîtes à la même valeur
+de $n$. Prouver $80/80$ ici ne contredit donc \emph{en rien} les
+$92\ \%$ d'écart garanti à $n=40$ mesurés à la
+section~\ref{sec:res} sur nos propres instances, et il serait malhonnête de
+présenter ce tableau comme une résolution du régime qui nous résiste. Les
+deux mesures portent sur des régimes différents et se lisent séparément.
+
+\subsection{Ce que la comparaison établit, et ce qu'elle n'établit pas}
+
+\textbf{Établi.} Sur la classe de Drici \emph{et al.}, avec leur règle de
+génération et leurs tailles, la méthode prouve l'optimalité partout. Sur
+celle de Zerdani \& Moulaï, elle prouve $24/24$ là où leur méthode certifie
+$12/24$, et cela sous une unité de coût qui leur est favorable. Les deux
+exemples publiés sont reproduits exactement.
+
+\textbf{Non établi.} Rien n'est dit des temps de calcul, qui ne se comparent
+pas ici. Rien n'est dit non plus des grandes instances \emph{de notre}
+protocole, où aucune des trois méthodes ne conclut. Et le raccourci de
+l'étape~1 de Zerdani \& Moulaï reste un avantage net de leur construction
+sur les instances où il s'applique : notre fonction objectif étant
+fractionnaire, nous n'en disposons pas.
+
 \section{Conclusion}
 
 La coupe d'efficacité repose sur une observation d'une ligne -- deux points
@@ -1456,10 +1830,12 @@ plutôt qu'une fois par point d'archive -- rendrait la coupe entièrement
 gratuite, le théorème~\ref{th:hauteur} n'en étant qu'une approximation
 bon marché.
 
-La troisième est une comparaison directe avec les méthodes exactes du
-domaine sur un jeu d'instances commun. Ce mémoire compare la méthode à
-elle-même, variante par variante, ce qui est la seule façon d'attribuer un
-effet à un mécanisme ; il ne la situe pas encore par rapport à
-l'état de l'art.
+La troisième porte sur le raccourci de l'étape~1 de Zerdani \& Moulaï,
+mis au jour par la section~\ref{sec:matchzm} : lorsque $\varphi$ est
+linéaire, un seul programme entier donne son maximum sur $\Scal$, et si ce
+point est efficace tout est fini. Notre $f$ étant fractionnaire, nous n'en
+disposons pas -- le maximum de $f$ sur $\Scal$ demande un Dinkelbach
+complet. Reste à savoir si un test bon marché, appliqué au \emph{premier}
+itéré de ce Dinkelbach, en récupérerait une partie du bénéfice.
 
 \end{document}
