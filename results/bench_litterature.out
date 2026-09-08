@@ -1,0 +1,28 @@
+========================================================================================================
+NOTRE METHODE SUR LE TERRAIN DE DRICI ET AL. (2018) - leur protocole, leurs tailles, 10 instances par taille
+budget DETERMINISTE : 20 appels au solveur entier par instance
+========================================================================================================
+    n x m  r   prouve   ecart garanti median   ILP med  t med (s)   CPU publie   valide
+--------------------------------------------------------------------------------------------------------
+   5 x  5  3     6/10                   0.0%        20       0.13         0.21       ok
+  10 x  5  3     0/10                  86.8%        20       0.15         0.44       ok
+  15 x  5  3     2/10                  60.4%        20       0.19         0.70       ok
+  20 x  5  3     3/10                  85.7%        20       0.25         1.23       ok
+  20 x 10  3     0/10                  84.3%        20       0.29         1.45       ok
+  30 x 10  3     0/10                  98.0%        20       0.62         8.98       ok
+  35 x 15  3     1/10                  91.6%        20       0.90         7.45       ok
+  40 x 15  3     0/10                  79.5%        20       0.95        10.82       ok
+--------------------------------------------------------------------------------------------------------
+  VALIDITE q_lb <= q_ub : TOUT VALIDE
+
+  LECTURE. La colonne « CPU publie » est le temps moyen rapporte par
+  les auteurs (MATLAB, MacBook Pro, r = 3). Elle situe l'ordre de
+  grandeur des tailles atteintes ; elle NE DEPARTAGE PAS les
+  implementations, mesurees sur des machines et des langages
+  differents a des annees d'intervalle.
+  Ce qui se compare vraiment : leur methode est EXACTE et ne rend
+  rien si on l'interrompt ; la notre encadre q* a tout instant, donc
+  meme sur une instance non prouvee elle rend une solution ET un
+  ecart garanti. C'est cette difference que la colonne « ecart
+  garanti median » fait apparaitre.
+=== LITTERATURE FINI ===
