@@ -556,7 +556,9 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             agg_extra: int = 0,
             cglp_extra: int = 0,
             geom_bound: bool = False,
-            geom_share: float = 0.25) -> CertResult:
+            geom_share: float = 0.25,
+            geom_gate: bool = True,
+            geom_gap: float = 0.5) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -596,17 +598,29 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     echecs = 0
     Dm: Optional[int] = None
 
-    # -- reservation pour la SECONDE ROUTE --------------------------------
-    # Elle coute des ILP comme tout le reste. Lui laisser le reliquat ne
-    # marche pas : la boucle de coupes consomme le plafond en entier et la
-    # seconde route ne s'execute jamais -- exactement la panne deja mesuree
-    # sur la diversification. On lui reserve donc une part EN AMONT, dans
-    # l'unite qui arbitre reellement (les appels entiers), et une part
-    # symetrique du temps.
+    # -- reservation pour la SECONDE ROUTE, DECIDEE AU BON MOMENT ---------
+    # Elle coute des ILP comme tout le reste : ce qu'on lui donne, la boucle
+    # de coupes ne l'a pas. Lui laisser le simple reliquat ne marche pas --
+    # la boucle consomme le plafond en entier et la seconde route ne
+    # s'execute jamais, exactement la panne deja mesuree sur la
+    # diversification. Mais reserver EN AVEUGLE est perdant la ou la
+    # premiere route ferme deja : mesure, -0,66 point sur une instance ou
+    # elle suffisait.
+    #
+    # On reserve donc APRES LE PREMIER TOUR, quand la premiere route a
+    # produit sa premiere borne et que l'ecart est donc CONNU. Le seuil est
+    # le meme que celui qui sert deja ailleurs a declarer une borne qui ne
+    # ferme pas. La decision se prend ainsi sur une mesure, non sur un pari,
+    # et elle se prend assez tot pour que la reservation ait un sens.
     _bud_ext = ORACLE_BUDGET["ilp"]
     budget_coupes = budget
-    if geom_bound:
-        budget_coupes = (1.0 - geom_share) * budget
+    geom_actif = geom_bound
+    reserve_faite = not geom_bound      # rien a reserver si la route est off
+
+    def _reserver() -> None:
+        nonlocal budget_coupes
+        budget_coupes = (time.time() - t0) + (1.0 - geom_share) * \
+            max(0.0, budget - (time.time() - t0))
         if _bud_ext is not None:
             libre = max(0, _bud_ext - ORACLE_CALLS["ilp"])
             set_ilp_budget(ORACLE_CALLS["ilp"]
@@ -811,6 +825,17 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cand = float(q_ref) + U / (Q * denom)
             best_ub = cand if best_ub is None else min(best_ub, cand)
 
+            if not reserve_faite:
+                reserve_faite = True
+                ecart_1 = (best_ub - float(q)) / max(1e-12, abs(best_ub))
+                if (not geom_gate) or ecart_1 > geom_gap:
+                    _reserver()
+                else:
+                    # la premiere route ferme : lui prendre des coupes pour
+                    # financer la seconde serait un troc perdant.
+                    geom_actif = False
+                    info["geom"] = "non engagee"
+
         # Un tour sans amelioration, sans coupe en reserve ET dont l'oracle
         # a conclu se repeterait a l'identique : on s'arrete.
         # En revanche un oracle INTERROMPU ('limit') laisse du travail : il a
@@ -823,7 +848,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
     # Les deux routes sont incomparables (la premiere utilise D+ et la
     # structure du test d'efficacite, la seconde un meilleur seuil), et le
     # minimum de deux bornes valides est une borne valide.
-    if geom_bound and not proved:
+    if geom_actif and not proved:
         set_ilp_budget(_bud_ext)               # on rend la part reservee
         reste = budget - (time.time() - t0)
         if reste > 0.05:
@@ -1106,6 +1131,7 @@ def matheuristic_P(inst: MOILFP,
                    agg_extra: int = 0,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
+                   geom_gate: bool = True,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
@@ -1256,14 +1282,15 @@ def matheuristic_P(inst: MOILFP,
     cut_points: List[np.ndarray] = []
     n_neufs = 0
 
-    def _cert(bud: float, rounds: int):
+    def _cert(bud: float, rounds: int, geom: Optional[bool] = None):
         return certify(inst, q, x_best, dominated, bud,
                        use_tightened=tightened, archive=arch,
                        cut_batch=cut_batch, max_rounds=rounds,
                        archive_cuts=archive_cuts, closure_lemma=closure_lemma,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
-                       geom_bound=geom_bound)
+                       geom_bound=geom_bound if geom is None else geom,
+                       geom_gate=geom_gate, geom_gap=gap_hopeless)
 
     # --- repartition du plafond d'APPELS entre les phases -----------------
     # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme
@@ -1289,7 +1316,7 @@ def matheuristic_P(inst: MOILFP,
         if cut_diversify and (leftover > 0.3 or ilp_budget is not None):
             part = min(0.3 * budget, leftover) if leftover > 0.3 else budget
             _cap(0.3)
-            sonde = _cert(part, 1)
+            sonde = _cert(part, 1, geom=False)
             if sonde.q_lb is not None and sonde.q_lb > q:
                 q, x_best = sonde.q_lb, sonde.x_best
             q_ub, proved = sonde.q_ub, sonde.proved

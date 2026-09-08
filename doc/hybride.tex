@@ -1725,15 +1725,227 @@ coupes générées sont illimitées et n'occupent aucune place -- et l'écart ne
 bouge pas. \textbf{Lever le plafond ne suffit donc pas}, et la conclusion
 précédente était trop rapide.
 
-Ce que la mesure suggère à sa place : à ces tailles, la région que l'on sait
-retrancher -- celle qui entoure les points déjà connus, dominés ou
-archivés -- ne représente qu'une part négligeable de ce qui sépare $\Rcal$
-de $\Ecal$. Le problème n'est pas le nombre de coupes que l'on peut poser,
-ni leur coût, mais le fait qu'aucune ne porte là où il le faudrait. Refermer
-cet écart demanderait un relâché construit autrement, et non davantage de
-coupes du même genre. Nous ne savons pas le construire, et nous préférons
-l'écrire ainsi plutôt que de laisser la section précédente désigner un
-verrou que la mesure a écarté.
+Nous avions alors avancé une explication de remplacement : à ces tailles, la
+région que l'on sait retrancher ne représenterait qu'une part négligeable de
+ce qui sépare $\Rcal$ de $\Ecal$. La section suivante la met à l'épreuve --
+et la réfute à son tour. Nous la laissons écrite ici, avec sa réfutation à la
+page suivante, parce qu'une explication avancée puis abandonnée fait partie
+du raisonnement et non de ses déchets.
+
+% ============================================================================
+% ============================================================================
+\section{Ce que les coupes peuvent atteindre}
+\label{sec:couverture}
+
+Deux explications de l'écart résiduel ont été avancées, et les deux ont été
+réfutées par la mesure : le plafond de coupes
+(§\ref{sec:cglp}) et leur ordre. Une troisième restait : la région que l'on
+sait retrancher serait négligeable devant ce qui sépare $\Rcal$ de $\Ecal$.
+Cette section la met à l'épreuve. Elle demande de comparer ce que la méthode
+retranche à ce qu'il \emph{faudrait} retrancher -- donc de connaître $\Ecal$
+et $\qs$. Nous nous plaçons pour cela sur des instances énumérables, où
+l'énumération exhaustive en arithmétique rationnelle exacte les fournit sans
+la moindre approximation.
+
+\subsection{La quantité à mesurer}
+
+Posons
+\[
+  \Scal^{+}\ =\ \{\,x\in\Scal\ :\ f(x)>\qs\,\}.
+\]
+Ce sont exactement les points qui rendent la borne lâche : au-dessus de
+$\qs$, une borne supérieure ne peut aller chercher qu'eux.
+
+\begin{proposition}[l'outil de coupe est suffisant en principe]
+\label{prop:suffisant}
+Aucun point de $\Scal^{+}$ n'est efficace. Par conséquent, les coupes
+d'efficacité centrées sur $\Ecal$ tout entier retranchent $\Scal^{+}$
+en totalité.
+\end{proposition}
+
+\begin{proof}
+Soit $x\in\Scal^{+}$. Si $x$ était efficace, on aurait $f(x)>\qs$ avec
+$x\in\Ecal$, ce qui contredit $\qs=\max_{\Ecal}f$. Donc $x$ est dominé :
+il existe $e\in\Ecal$ avec $Z(x)\le Z(e)$, $Z(x)\ne Z(e)$. Or la coupe
+centrée en $e$ retranche exactement $\{y:Z(y)\le Z(e)\}$, qui contient $x$.
+\end{proof}
+
+L'outil n'est donc pas en cause : ce que l'on peut perdre, on le perd en
+\emph{couverture}. Nous en mesurons deux niveaux,
+\[
+  \text{cov}_{\Acal}=\frac{|\{x\in\Scal^{+}:\exists a\in\Acal,\ Z(x)\le Z(a)\}|}
+                         {|\Scal^{+}|},
+  \qquad
+  \text{cov}_{\text{coupes}}=\text{idem, centres réellement posés},
+\]
+le premier étant le plafond de l'archive, le second ce qui est effectivement
+retranché. La lecture est sans ambiguïté : si $\text{cov}_{\Acal}$ s'effondre
+avec $n$, le verrou est la couverture ; sinon, il est ailleurs.
+
+\begin{remark}[arithmétique]
+Les comparaisons de dominance sont exactes. Chaque coordonnée du vecteur
+critères est remplacée par son \emph{rang} dans la liste triée des valeurs
+distinctes prises sur $\Scal$ ; l'application étant strictement croissante
+coordonnée par coordonnée, elle préserve l'ordre partiel. La comparaison
+devient entière -- donc vectorisable -- sans rien perdre de l'exactitude des
+fractions.
+\end{remark}
+
+\subsection{La mesure}
+
+\begin{table}[htbp]
+\centering
+\caption{Couverture et bornes sur vérité terrain, $\text{corr}=0$, $p=3$,
+plafond déterministe de $300$ appels entiers. $\kappa$ désigne l'échelle du
+second membre. Échelle A à $\kappa$ fixé, le
+seul régime rigoureusement comparable d'un $n$ à l'autre ; échelle B à
+$\kappa$ décroissant pour garder $\Scal$ énumérable, indicative.}
+\label{tab:couverture}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ccrrrccrrr}
+\toprule
+& $\kappa$ & $|\Scal|$ & $|Z(\Ecal)|$ & $|Z(\Acal)|$
+ & $\text{cov}_{\Ecal}$ & $\text{cov}_{\Acal}$
+ & $\qs$ & $q_{\text{ub}}$ & $U_{\text{coupes}}$\\
+\midrule
+\multicolumn{10}{l}{\emph{Échelle A -- $\kappa$ fixé}}\\
+$6$  & $1{,}0$ & $250$    & $28$  & $16$ & $100\%$ & $100\%$ & $5{,}07$ & $5{,}07$ & $5{,}07$\\
+$8$  & $1{,}0$ & $2\,387$ & $46$  & $15$ & $100\%$ & $100\%$ & $3{,}17$ & $3{,}17$ & $9{,}00$\\
+$10$ & $1{,}0$ & $24\,152$& $70$  & $13$ & $100\%$ & $100\%$ & $37{,}67$& $37{,}67$& $39{,}33$\\
+$12$ & $1{,}0$ & $304\,497$&$202$ & $24$ & $100\%$ & $100\%$ & $4{,}35$ & $\mathbf{32{,}27}$ & $\mathbf{8{,}53}$\\
+\midrule
+\multicolumn{10}{l}{\emph{Échelle B -- $\kappa$ décroissant}}\\
+$12$ & $0{,}65$& $10\,486$& $78$  & $25$ & $100\%$ & $100\%$ & $4{,}15$ & $5{,}61$ & $4{,}15$\\
+$14$ & $0{,}55$& $15\,411$& $127$ & $25$ & $100\%$ & $100\%$ & $5{,}00$ & $5{,}00$ & $5{,}75$\\
+$16$ & $0{,}48$& $30\,861$& $94$  & $16$ & $100\%$ & $100\%$ & $11{,}50$& $11{,}50$& $28{,}50$\\
+$18$ & $0{,}42$& $48\,703$& $139$ & $17$ & $100\%$ & $100\%$ & $14{,}20$& $14{,}20$& $17{,}60$\\
+$20$ & $0{,}38$& $64\,268$& $136$ & $20$ & $100\%$ & $100\%$ & $8{,}13$ & $\mathbf{38{,}79}$ & $\mathbf{9{,}33}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Sur les $26$ lignes du lot complet ($n$ de $6$ à $20$, trois graines),
+trois faits ressortent.
+
+\paragraph{La proposition~\ref{prop:suffisant} se vérifie, $26$ fois sur
+$26$.} $\text{cov}_{\Ecal}=100\ \%$ partout. Ce n'est pas une surprise --
+c'est une démonstration -- mais c'est le contrôle qui donne son sens au
+reste : si cette colonne avait montré autre chose, l'implémentation, et non
+la théorie, aurait été en cause.
+
+\paragraph{La couverture n'est pas le verrou, et l'archive est bien plus
+efficace qu'on ne le croyait.} $\text{cov}_{\Acal}\ge 99\ \%$ sur $26$
+lignes sur $26$, alors que l'archive ne retient qu'entre $20$ et $35\ \%$
+des vecteurs critères de $\Ecal$ (médiane par échelle). Une petite archive
+domine donc déjà la quasi-totalité de $\Scal^{+}$ : la troisième explication
+tombe comme les deux précédentes. Et le résultat a une portée propre, en
+dehors du diagnostic : il dit qu'\emph{il ne sert à rien de chercher à
+grossir l'archive}. Ce n'est pas en la remplissant qu'on gagnera.
+
+\paragraph{Une perte que rien n'avait isolée : la recherche.} Sur $3$ des
+$26$ lignes, toutes à $n\ge 12$, l'incumbent n'atteint pas $\qs$. Aucun banc
+antérieur ne pouvait le voir : sans vérité terrain, un écart garanti de
+$90\ \%$ ne dit pas s'il vient d'une borne trop haute ou d'un minorant trop
+bas. Ici on lit les deux. À $n=12$, $\kappa=1$ : $\qs=4{,}35$ et
+$q_{\text{lb}}=3{,}10$. Une partie de l'écart affiché n'est donc pas un
+défaut de certification du tout.
+
+\paragraph{Et le reste, que rien n'explique encore.} Regardons les deux
+lignes en gras. À $n=12$, la borne annoncée vaut $32{,}27$ alors que le
+maximum de $f$ sur la région \emph{réellement survivante} vaut $8{,}53$. À
+$n=20$ : $38{,}79$ contre $9{,}33$. Les coupes ont fait leur travail --
+$\text{cov}_{\text{coupes}}$ vaut $99{,}4\ \%$ et $100\ \%$ sur ces deux
+lignes -- et la borne n'en tient pas compte. L'écart n'est donc ni dans le
+nombre de coupes, ni dans leur placement, ni dans l'archive. Il est dans le
+passage de la région à la borne. C'est là qu'il faut regarder, et c'est
+l'objet de la section suivante.
+
+% ============================================================================
+% ============================================================================
+\section{Le verrou était le seuil}
+\label{sec:seuil}
+
+La section précédente laisse une question précise : les coupes retranchent
+la quasi-totalité de $\Scal^{+}$, et la borne n'en tient pas compte --
+$32{,}27$ annoncé quand la région survivante plafonne à $8{,}53$. Le défaut
+n'est donc pas dans le relâché mais dans la façon dont on en tire un nombre.
+
+\subsection{Le théorème 5' ne parle pas de l'incumbent}
+
+La certification pose $q=P/Q$, résout $U\ \ge\ \max_{\Rcal}F_q$ avec
+$F_q=QN-PD$, et conclut $\qs\le q+U/(Q D^{+})$. Le seuil est \emph{toujours}
+l'incumbent. Or rien dans la démonstration ne l'exige.
+
+\begin{theorem}[borne à seuil libre]
+\label{th:seuil}
+Soit $t$ un rationnel quelconque et $G_t=N-tD$. Si
+$\max_{x\in\Rcal}G_t(x)\le v$ avec $v\ge 0$, alors
+\[
+  \max_{x\in\Rcal}f(x)\ \le\ t+\frac{v}{D_{\min}},
+  \qquad D_{\min}=\min_{x\in\Scal}D(x)>0 .
+\]
+\end{theorem}
+
+\begin{proof}
+Pour $x\in\Rcal$ : $N(x)-tD(x)\le v$, et $D(x)>0$ sous (A1), donc
+$f(x)=N(x)/D(x)\le t+v/D(x)\le t+v/D_{\min}$ puisque $v\ge0$. \end{proof}
+
+Le théorème~5' est le cas $t=q$ : en effet $G_q=F_q/Q$, de sorte que
+$v=U/Q$ et la borne s'écrit $q+U/(QD_{\min})$. Mais tout $t$ convient, et
+\emph{chaque point du relâché en fournit un meilleur} : si l'ILP rend un
+$x_t\in\Rcal$ avec $G_t(x_t)>0$, alors $f(x_t)>t$, et l'on recommence en
+$t\leftarrow f(x_t)$. C'est un Dinkelbach ordinaire -- mené sur $\Rcal$ et
+non sur $\Scal$. À la convergence ($v\le 0$), $\max_{\Rcal}f\le t$
+exactement.
+
+\begin{proposition}[validité]
+\label{prop:geomvalide}
+$\qs\ \le\ \max\bigl(q,\ \max_{\Rcal}f\bigr)$.
+\end{proposition}
+
+\begin{proof}
+Les coupes de dominance préservent $\Ecal$ (Th.~4). Une coupe d'efficacité
+n'est posée qu'après établissement de sa condition de clôture : les seuls
+points efficaces qu'elle retranche ont le vecteur critères de son centre, et
+aucun ne bat $q$. Donc tout $x\in\Ecal$ est soit dans $\Rcal$ -- et
+$f(x)\le\max_{\Rcal}f$ -- soit retranché, et $f(x)\le q$. \end{proof}
+
+\paragraph{Pourquoi la méthode ne le faisait pas.} La boucle de
+certification n'avance son seuil que sur des points \emph{certifiés
+efficaces}. Le réflexe est correct pour le minorant, où seul un point
+efficace peut compter -- c'est la seule propriété que la matheuristique ne
+peut pas perdre. Mais pour un \emph{majorant}, l'efficacité ne sert à rien :
+n'importe quel point du relâché fait un seuil valide. Refuser d'avancer le
+seuil sur un point non certifié coûtait donc tout l'écart entre $q$ et
+$\max_{\Rcal}f$, sans rien acheter. C'est une garde utile appliquée au
+mauvais endroit, et c'est le genre d'erreur qu'aucune relecture ne trouve :
+il a fallu mesurer la région survivante pour la voir.
+
+\begin{remark}[les deux routes sont incomparables]
+La première utilise $D^{+}\ge D_{\min}$, plus fin, et la structure du test
+d'efficacité -- elle peut donc descendre \emph{sous} $\max_{\Scal}f$, et
+elle le fait. La seconde utilise un meilleur seuil. Aucune ne majore
+l'autre : sur les $26$ lignes de vérité terrain, la seconde est meilleure
+$3$ fois, moins bonne $20$ fois, égale $3$ fois -- mais ses trois victoires
+sont précisément les lignes difficiles. Le minimum de deux bornes valides
+étant valide, on les prend toutes les deux.
+\end{remark}
+
+\subsection{Ce que cela coûte, et quand l'engager}
+
+La seconde route se paie sur le même plafond d'appels entiers : ce qu'on lui
+donne, la boucle de coupes ne l'a pas. Une première version réservait sa
+part \emph{en aveugle}, avant de savoir si la première route en avait
+besoin. Le résultat était prévisible après coup : là où la première route
+fermait déjà, le troc était perdant, à hauteur de $-0{,}66$ point.
+
+La correction ne consiste pas à régler une constante. Elle consiste à
+prendre la décision \emph{au moment où l'information existe} : après le
+premier tour, la première route a produit une borne, donc l'écart est connu.
+On réserve alors -- ou non -- selon que cet écart dépasse le seuil qui sert
+déjà, ailleurs dans l'algorithme, à déclarer une borne qui ne ferme pas.
+Aucun paramètre nouveau, et la décision repose sur une mesure au lieu d'un
+pari.
 
 % ============================================================================
 % ============================================================================
