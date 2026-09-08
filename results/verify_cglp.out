@@ -1,0 +1,21 @@
+================================================================================================
+VERIFICATION DE LA COUPE PAR PROGRAMME GENERATEUR (lift-and-project)
+================================================================================================
+instance                      |S|   |E|  coupes  viol. base  viol. chaine  pts retranches  dont eff.
+------------------------------------------------------------------------------------------------
+molfp_n4_m3_p3_c000_s500       93     9       2           0             0              61          0
+molfp_n5_m3_p3_c050_s501      364     2       2           0             0             333          0
+molfp_n6_m4_p3_c090_s502     1524     1       1           0             0            1524          1
+molfp_n4_m3_p3_c000_s503      149    21       0           0             0               0          0
+molfp_n5_m3_p3_c050_s504      354     9       2           0             0              86          0
+molfp_n6_m4_p3_c090_s505     2115     1       1           0             0            2112          0
+molfp_n4_m3_p3_c000_s506      106    16       0           0             0               0          0
+molfp_n5_m3_p3_c050_s507      418     1       1           0             0             418          1
+molfp_n6_m4_p3_c090_s508     1677    15       3           0             0            1603          0
+molfp_n4_m3_p3_c000_s509       97    13       0           0             0               0          0
+------------------------------------------------------------------------------------------------
+  V-CGLP-1 validite depuis le polyedre de base : 0 violation(s) -> OK
+  V-CGLP-2 validite en chaine                  : 0 violation(s) -> OK
+  V-CGLP-3 force : 12 coupes retranchent 6137 points, dont 2 efficaces
+     (les efficaces retranches sont de MEME vecteur criteres que
+      le point de coupe : c'est la reserve du theoreme, pas une faute)

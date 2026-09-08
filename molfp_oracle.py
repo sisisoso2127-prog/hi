@@ -101,6 +101,7 @@ class ECutModel:
         self._cut_rows: List[Row] = []                     # espace etendu
         self.n_cuts = 0
         self.n_agg_cuts = 0          # coupes agregees, sans binaire
+        self.n_lin_rows = 0          # coupes lineaires en x, sans binaire
         self.tight_big_m = TIGHT_BIG_M if tight_big_m is None else tight_big_m
         # points de base des coupes posees. Les conserver permet de verifier
         # l'invariant E inclus dans R sans connaitre E : tout point EFFICACE
@@ -144,6 +145,24 @@ class ECutModel:
             if np.isfinite(e_min_lp):
                 e_min = max(e_min_box, e_min_lp)
         return a, b, e_min, e_min_box
+
+    # -- coupe LINEAIRE en espace x, sans binaire --------------------------
+    def add_linear_row(self, coef: np.ndarray, lo: float = -INF,
+                       hi: float = INF) -> None:
+        """
+        Ajoute une inegalite valide portant sur les seules variables x.
+
+        Sert aux coupes disjonctives produites par programme generateur
+        (`molfp_cglp`) : une ligne, aucune binaire, donc aucune place
+        consommee sous le plafond de coupes. Elle entre dans `_rows_x`, si
+        bien qu'elle resserre aussi le calcul du big-M des coupes
+        disjonctives posees ENSUITE -- un effet secondaire souhaitable.
+
+        L'appelant repond de la validite : la ligne doit etre satisfaite par
+        tout point efficace que l'on veut conserver.
+        """
+        self._rows_x.append((np.asarray(coef, dtype=float), lo, hi))
+        self.n_lin_rows = getattr(self, "n_lin_rows", 0) + 1
 
     # -- coupe AGREGEE : la meme region, sans une seule binaire -------------
     def add_aggregated_cut(self, xbar: np.ndarray) -> bool:
