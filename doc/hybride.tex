@@ -1948,6 +1948,91 @@ déjà, ailleurs dans l'algorithme, à déclarer une borne qui ne ferme pas.
 Aucun paramètre nouveau, et la décision repose sur une mesure au lieu d'un
 pari.
 
+\subsection{Ce que cela déplace}
+
+\begin{table}[htbp]
+\centering
+\caption{Seconde route, budget déterministe de $300$ appels entiers,
+comparaison appariée, chaque configuration jouée deux fois. La colonne
+« coupes » dit ce que la boucle a dû céder pour financer la seconde route ;
+la colonne \ILP{} dit le coût total. Déclencheur désactivé : la route est
+engagée systématiquement, y compris là où elle n'a rien à apporter.}
+\label{tab:geom}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{ccccrccc}
+\toprule
+$n$ & corr & écart sans & écart avec & gain (pts) & statut
+ & coupes s/a & \ILP{} s/a\\
+\midrule
+$20$ & $0$     & $98{,}6\ \%$ & $88{,}8\ \%$ & $\mathbf{+9{,}82}$  & convergée & $119/109$ & $300/272$\\
+$20$ & $0$     & $42{,}7\ \%$ & $43{,}3\ \%$ & $-0{,}66$           & convergée & $108/100$ & $300/272$\\
+$20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --        & $32/32$   & $143/143$\\
+$20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --        & $57/57$   & $217/217$\\
+$30$ & $0$     & $93{,}9\ \%$ & $78{,}6\ \%$ & $\mathbf{+15{,}26}$ & convergée & $104/97$  & $300/274$\\
+$30$ & $0$     & $33{,}2\ \%$ & $27{,}1\ \%$ & $+6{,}04$           & convergée & $110/102$ & $300/272$\\
+$30$ & $0{,}5$ & $78{,}9\ \%$ & $\mathbf{8{,}0\ \%}$ & $\mathbf{+70{,}86}$ & convergée & $89/79$ & $300/273$\\
+$30$ & $0{,}5$ & $12{,}7\ \%$ & $14{,}7\ \%$ & $-1{,}97$           & convergée & $97/88$   & $300/272$\\
+$40$ & $0$     & $96{,}6\ \%$ & $96{,}5\ \%$ & $+0{,}06$           & convergée & $110/102$ & $300/273$\\
+$40$ & $0$     & $94{,}0\ \%$ & $87{,}3\ \%$ & $+6{,}74$           & convergée & $98/90$   & $300/274$\\
+$40$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --        & $56/56$   & $197/197$\\
+$40$ & $0{,}5$ & $82{,}6\ \%$ & $43{,}9\ \%$ & $\mathbf{+38{,}64}$ & convergée & $93/85$   & $300/274$\\
+\midrule
+\multicolumn{8}{l}{reproductibilité $12/12$ \quad$\bullet$\quad
+ cohérence des encadrements : toutes valides}\\
+\multicolumn{8}{l}{améliorées $7$, dégradées $2$, inchangées $3$
+ \quad$\bullet$\quad convergée $9/12$}\\
+\multicolumn{8}{l}{gain médian $\mathbf{+3{,}05}$ point, moyen
+ $\mathbf{+12{,}07}$, maximum $+70{,}86$, minimum $-1{,}97$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{L'ordre de grandeur change.} Le levier précédent -- la coupe
+générée sans binaire -- rapportait au mieux $0{,}11$ point
+(§\ref{sec:cglp}). Celui-ci en rapporte $70{,}86$ sur sa meilleure ligne,
+$38{,}64$ sur la suivante, $15{,}26$ et $9{,}82$ ensuite. Ce n'est pas le
+même phénomène mesuré plus finement, c'est un autre phénomène. Et il agit là
+où la section d'échelle disait que rien n'agissait : à $n=30$,
+$\text{corr}=0{,}5$, l'écart garanti tombe de $78{,}9$ à $8{,}0\ \%$ --
+c'est-à-dire qu'on passe d'une borne qui n'apprenait rien à un encadrement
+serré.
+
+\paragraph{Et il ne coûte rien.} La colonne \ILP{} se lit de gauche à
+droite : $300$ appels sans, $272$ à $274$ avec. La seconde route consomme
+\emph{moins} d'appels entiers que la première n'en dépensait, parce qu'elle
+s'arrête dès qu'elle a convergé -- statut « convergée » sur $9$ lignes
+sur~$12$, c'est-à-dire que $\max_{\Rcal}f$ y est atteint exactement et que
+la borne annoncée ne peut plus descendre sans coupes nouvelles.
+
+\paragraph{Deux lignes reculent, et l'on sait pourquoi.} $-0{,}66$ et
+$-1{,}97$, sur des instances dont l'écart valait déjà $42{,}7$ et
+$12{,}7\ \%$ : la première route y fermait convenablement, et lui prendre
+$8$ à $9$ coupes pour financer la seconde est un mauvais échange. C'est
+exactement le cas que le déclencheur de la section précédente vise. Nous
+donnons ici la mesure \emph{sans} lui, parce qu'un levier doit d'abord être
+jugé sur ce qu'il fait quand on ne l'aide pas.
+
+\paragraph{Ce que ce tableau n'établit pas.} Sur $12$ lignes dont $3$ nulles,
+le test des signes porte sur $9$ paires : $7$ contre $2$ donne
+$p=0{,}18$. \textbf{La supériorité n'est donc pas établie au sens
+statistique}, et deux graines par configuration n'y suffiront pas. Ce qui
+est établi, c'est l'\emph{amplitude} -- un gain médian de $3$ points et
+moyen de $12$, contre un maximum de $0{,}11$ pour le levier précédent -- et
+la reproductibilité exacte des douze lignes. La significativité demande le
+lot à trois graines ; nous ne l'annonçons pas avant de l'avoir.
+
+\paragraph{Une limite honnête, et la question qu'elle ouvre.} À $n=40$,
+$\text{corr}=0$, graine~$1$, l'écart ne bouge que de $0{,}06$ point --
+$96{,}6$ contre $96{,}5$ -- alors même que le statut « convergée » certifie
+que la borne annoncée \emph{est} $\max_{\Rcal}f$. Si le majorant ne peut
+plus descendre, ce qui reste tient à l'autre terme de l'écart : $q_{\text{lb}}$.
+Or la section~\ref{sec:couverture} a précisément établi, là où la vérité
+terrain existe, que l'incumbent manque $\qs$ sur $3$ lignes de $26$, toutes
+à $n\ge 12$. L'hypothèse est donc que ce qui reste à ces tailles n'est plus
+un défaut de certification mais un défaut de \emph{recherche} -- ce qui
+déplacerait l'effort à l'opposé exact de là où nous l'avons porté jusqu'ici.
+Nous ne l'avons pas encore mesuré.
+
 % ============================================================================
 % ============================================================================
 \section{Comparaison avec les méthodes du domaine}
