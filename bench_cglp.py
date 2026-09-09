@@ -24,6 +24,7 @@ un PL est d'un ordre de grandeur moins cher qu'un ILP, pas gratuit.
 Usage :  python bench_cglp.py [plafond_appels] [nb_cglp]
 """
 
+import os
 import sys
 import time
 
@@ -32,6 +33,26 @@ import numpy as np
 from molfp_core import ORACLE_CALLS, reset_oracle_counter, upper_bound_over_S
 from molfp_instance import generate
 from molfp_matheuristic import matheuristic_P
+
+# ---------------------------------------------------------------------------
+# CONFIGURATION MESUREE
+# ---------------------------------------------------------------------------
+# Ce banc a d'abord ete lance en configuration d'origine : vivier a
+# classement commun, sans seconde route. Son ecart de reference etait alors
+# 98,6 % a n = 20 ; la configuration courante donne 77,2 % sur la meme
+# instance. La conclusion du banc -- lever le plafond ne suffit pas -- doit
+# donc etre reexaminee sur la base ou elle porte reellement.
+#
+#   MOLFP_CFG=ooo   vivier commun, sans seconde route  (config d'origine)
+#   MOLFP_CFG=eee   vivier alterne, seconde route      (defaut, courant)
+CFG = os.environ.get("MOLFP_CFG", "eee").lower()
+CFG_ALT = CFG[0:1] in ("e", "*", "1")
+CFG_GEOM = CFG[1:2] in ("e", "*", "1")
+
+
+def marqueur() -> str:
+    return f"[V{'*' if CFG_ALT else 'o'} S{'*' if CFG_GEOM else 'o'} D*]"
+
 
 TAILLES = [20, 30, 40]
 CORRS = [0.0, 0.5]
@@ -43,7 +64,8 @@ def une(inst, cap, seed, n_cglp):
     t0 = time.time()
     r = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6, seed=seed,
                        archive_cuts=True, ilp_budget=cap,
-                       cut_diversify=False, cglp_extra=n_cglp)
+                       cut_diversify=False, cglp_extra=n_cglp,
+                       pool_alterne=CFG_ALT, geom_bound=CFG_GEOM)
     return {"lb": r.q_lb, "ub": r.q_ub, "ilp": r.ilp_calls,
             "lp": ORACLE_CALLS["lp"], "cglp": r.cert.get("cglp_cuts", 0),
             "cuts": r.cert.get("n_cuts", 0), "t": time.time() - t0}
@@ -57,10 +79,15 @@ def _sig(d):
 def main() -> int:
     cap = int(sys.argv[1]) if len(sys.argv) > 1 else 900
     n_cglp = int(sys.argv[2]) if len(sys.argv) > 2 else 60
+    # GRAINES restait a 1 : six lignes pour un resultat negatif, c'est peu.
+    # Le troisieme argument permet d'en ajouter sans changer le protocole.
+    global GRAINES
+    GRAINES = list(range(1, (int(sys.argv[3]) if len(sys.argv) > 3 else 1) + 1))
 
     print("=" * 108)
     print(f"COUPE PAR PROGRAMME GENERATEUR - plafond {cap} appels entiers, "
           f"jusqu'a {n_cglp} coupes generees")
+    print(f"configuration mesuree : {marqueur()}   graines : {len(GRAINES)}")
     print("=" * 108)
     print(f"{'n':>4}{'corr':>6}{'gr':>4}{'reprod':>8}"
           f"{'ecart sans':>12}{'ecart avec':>12}{'gain pts':>10}"
