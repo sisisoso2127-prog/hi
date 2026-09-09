@@ -1639,16 +1639,32 @@ et~\ref{sec:seuil}. Le marqueur \confna{} signale un tableau qui n'est pas
 une mesure de performance : une trajectoire d'illustration, un
 positionnement bibliographique.
 
-\begin{remark}[ce que cette hétérogénéité coûte, et à qui]
-Elle joue \emph{contre} la méthode, non en sa faveur. Les tableaux de
-comparaison avec la littérature (§\ref{sec:matchzm}, §\ref{sec:matchdrici})
-sont en \conf{0}{0}{0} : ils opposent aux méthodes publiées la plus faible
-des trois versions de la nôtre. De même la section~\ref{sec:cglp} raisonne
-sur un écart de $98{,}6\ \%$ là où la configuration courante en donne
-$77{,}2$ sur la même instance -- ce qui ne change pas sa conclusion
-(\emph{lever le plafond ne suffit pas}) mais en change les chiffres. Les
-remesurer est le premier des travaux restants ; nous préférons le marquer
-que le taire.
+\begin{remark}[ce que cette hétérogénéité coûte, et où elle ne coûte rien]
+Nous avons d'abord écrit que le marquage jouait \emph{contre} la méthode,
+les tableaux de comparaison avec la littérature étant en \conf{0}{0}{0},
+donc opposant aux travaux publiés la plus faible des trois versions de la
+nôtre. Nous les avons remesurés en \conf{1}{1}{1}, et c'était faux.
+
+Sur le terrain de Zerdani \& Moulaï, les chiffres sont \emph{identiques} --
+$24/24$ trouvés, $24/24$ prouvés, $79$ appels médians dans les deux
+configurations. Sur celui de Drici \emph{et al.}, les preuves sont
+identiques ($10/10$ partout, écart $0{,}0\ \%$) et le coût ne bouge que sur
+les trois plus grandes tailles, de $3$ à $11\ \%$.
+
+La raison est structurelle et vaut d'être dite : les trois leviers
+n'agissent que là où la borne \emph{ne ferme pas}. La seconde route avance
+un seuil sur un relâché non vidé ; l'alternance empêche l'affamement de
+l'archive quand la concurrence est vive. Or sur ces deux terrains la
+méthode prouve l'optimalité sur \emph{chaque} instance : il n'y a rien à
+améliorer, et les trois versions coïncident. Les gains de ce travail
+appartiennent au régime difficile ($\text{corr}=0$, $n\ge 20$ sur nos
+propres instances) et n'y débordent pas.
+
+Reste le cas où l'hétérogénéité compte réellement : la
+section~\ref{sec:cglp} raisonne sur un écart de $98{,}6\ \%$ là où la
+configuration courante en donne $77{,}2$ sur la même instance. Cela ne
+change pas sa conclusion -- \emph{lever le plafond ne suffit pas} -- mais en
+change les chiffres, et cette remesure-là reste à faire.
 \end{remark}
 
 \medskip\noindent
@@ -2707,7 +2723,9 @@ est solide.
 
 \begin{table}[htbp]
 \centering
-\caption{Match, $24$ instances, vérité terrain par énumération.\ \conf{0}{0}{0}}
+\caption{Match, $24$ instances, vérité terrain par énumération. Mesuré
+dans \emph{les deux} configurations : chiffres identiques.\
+\conf{0}{0}{0}\,=\,\conf{1}{1}{1}}
 \label{tab:match}
 \begin{tabular}{lcc}
 \toprule
@@ -2807,7 +2825,8 @@ quelles.
 \centering
 \caption{Notre méthode sur le protocole et les tailles de Drici
 \emph{et al.}, $10$ instances par taille, budget déterministe de $1500$
-appels.\ \conf{0}{0}{0}}
+appels. Colonne \ILP{} remesurée en configuration courante ; l'ancienne
+valeur suit entre parenthèses là où elle diffère.\ \conf{1}{1}{1}}
 \label{tab:drici}
 \begin{tabular}{lcccc}
 \toprule
@@ -2819,9 +2838,9 @@ $10\times 5$  & $10/10$ & $0{,}0\ \%$ & $219$ & $0{,}44$~s\\
 $15\times 5$  & $10/10$ & $0{,}0\ \%$ & $166$ & $0{,}70$~s\\
 $20\times 5$  & $10/10$ & $0{,}0\ \%$ & $156$ & $1{,}23$~s\\
 $20\times 10$ & $10/10$ & $0{,}0\ \%$ & $216$ & $1{,}45$~s\\
-$30\times 10$ & $10/10$ & $0{,}0\ \%$ & $340$ & $8{,}98$~s\\
-$35\times 15$ & $10/10$ & $0{,}0\ \%$ & $376$ & $7{,}45$~s\\
-$40\times 15$ & $10/10$ & $0{,}0\ \%$ & $352$ & $10{,}82$~s\\
+$30\times 10$ & $10/10$ & $0{,}0\ \%$ & $\mathbf{329}$~{\tiny$(340)$} & $8{,}98$~s\\
+$35\times 15$ & $10/10$ & $0{,}0\ \%$ & $\mathbf{350}$~{\tiny$(376)$} & $7{,}45$~s\\
+$40\times 15$ & $10/10$ & $0{,}0\ \%$ & $\mathbf{315}$~{\tiny$(352)$} & $10{,}82$~s\\
 \bottomrule
 \end{tabular}
 \end{table}
