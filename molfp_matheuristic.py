@@ -334,7 +334,7 @@ def rank_dominated(dominated: Sequence[np.ndarray],
 def build_cut_pool(dominated: Sequence[np.ndarray],
                    archive: Sequence[np.ndarray],
                    w: np.ndarray,
-                   alterne: bool = False) -> List[tuple]:
+                   alterne: bool = True) -> List[tuple]:
     """
     UN SEUL vivier de coupes, alimente par DEUX sources.
 
@@ -468,7 +468,7 @@ def select_cuts(inst: MOILFP,
                 q: Fraction,
                 cap: int,
                 max_lp: Optional[int] = None,
-                alterne: bool = False) -> Tuple[List[tuple], dict]:
+                alterne: bool = True) -> Tuple[List[tuple], dict]:
     """
     Choisit et ordonne les coupes a poser, les deux sources sur la MEME
     echelle : la hauteur de region `region_height`.
@@ -640,7 +640,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
-            pool_alterne: bool = False) -> CertResult:
+            pool_alterne: bool = True) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -1276,7 +1276,7 @@ def matheuristic_P(inst: MOILFP,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
                    geom_gate: bool = False,
-                   pool_alterne: bool = False,
+                   pool_alterne: bool = True,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
