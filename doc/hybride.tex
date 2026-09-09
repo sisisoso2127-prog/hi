@@ -1660,11 +1660,13 @@ améliorer, et les trois versions coïncident. Les gains de ce travail
 appartiennent au régime difficile ($\text{corr}=0$, $n\ge 20$ sur nos
 propres instances) et n'y débordent pas.
 
-Reste le cas où l'hétérogénéité compte réellement : la
-section~\ref{sec:cglp} raisonne sur un écart de $98{,}6\ \%$ là où la
-configuration courante en donne $77{,}2$ sur la même instance. Cela ne
-change pas sa conclusion -- \emph{lever le plafond ne suffit pas} -- mais en
-change les chiffres, et cette remesure-là reste à faire.
+Restait le cas où l'hétérogénéité pouvait compter : la
+section~\ref{sec:cglp} raisonnait sur un écart de $98{,}6\ \%$ là où la
+configuration courante en donne $77{,}2$ sur la même instance. Elle a été
+remesurée, et sa conclusion s'en trouve \emph{renforcée} plutôt que
+corrigée : sur la base améliorée, le gain de la coupe générée tombe de
+$+0{,}11$ à $+0{,}00$ point sur les six lignes. Le tableau~\ref{tab:cglp}
+porte les deux configurations.
 \end{remark}
 
 \medskip\noindent
@@ -2088,25 +2090,37 @@ une implémentation correcte -- ou, plus grave, d'en accepter une fausse.
 \begin{table}[htbp]
 \centering
 \caption{Coupe par programme générateur, budget déterministe de $300$ appels
-entiers, comparaison appariée, chaque configuration jouée deux fois.\ \conf{0}{0}{0}}
+entiers, comparaison appariée, chaque exécution jouée deux fois. Écarts en
+pourcentage. Remesuré dans les \emph{deux} configurations.\
+\conf{0}{0}{0} \emph{et} \conf{1}{1}{1}}
 \label{tab:cglp}
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{ccccccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{cc cccc cccc}
 \toprule
-$n$ & corr & écart sans & écart avec & gain (points) & coupes générées
- & \textsc{Pl} sans/avec\\
+& & \multicolumn{4}{c}{\conf{0}{0}{0}} & \multicolumn{4}{c}{\conf{1}{1}{1}}\\
+\cmidrule(lr){3-6}\cmidrule(l){7-10}
+$n$ & corr & sans & avec & gain & coupes & sans & avec & gain & coupes\\
 \midrule
-$20$ & $0$    & $98{,}6\ \%$ & $98{,}5\ \%$ & $+0{,}11$ & $13$ & $360/390$\\
-$20$ & $0{,}5$& $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$ & $0$  & $105/105$\\
-$30$ & $0$    & $93{,}9\ \%$ & $93{,}8\ \%$ & $+0{,}06$ & $12$ & $315/346$\\
-$30$ & $0{,}5$& $78{,}9\ \%$ & $78{,}9\ \%$ & $+0{,}00$ & $3$  & $270/279$\\
-$40$ & $0$    & $96{,}6\ \%$ & $96{,}6\ \%$ & $+0{,}00$ & $12$ & $333/375$\\
-$40$ & $0{,}5$& $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$ & $9$  & $171/191$\\
+$20$ & $0$    & $98{,}6$ & $98{,}5$ & $+0{,}11$ & $13$
+              & $77{,}2$ & $77{,}2$ & $\mathbf{+0{,}00}$ & $20$\\
+$20$ & $0{,}5$& $0{,}0$  & $0{,}0$  & $+0{,}00$ & $0$
+              & $0{,}0$  & $0{,}0$  & $+0{,}00$ & $0$\\
+$30$ & $0$    & $93{,}9$ & $93{,}8$ & $+0{,}06$ & $12$
+              & $78{,}6$ & $78{,}6$ & $\mathbf{+0{,}00}$ & $16$\\
+$30$ & $0{,}5$& $78{,}9$ & $78{,}9$ & $+0{,}00$ & $3$
+              & $\mathbf{1{,}2}$ & $\mathbf{1{,}2}$ & $\mathbf{+0{,}00}$ & $6$\\
+$40$ & $0$    & $96{,}6$ & $96{,}6$ & $+0{,}00$ & $12$
+              & $96{,}5$ & $96{,}5$ & $+0{,}00$ & $11$\\
+$40$ & $0{,}5$& $0{,}0$  & $0{,}0$  & $+0{,}00$ & $9$
+              & $0{,}0$  & $0{,}0$  & $+0{,}00$ & $11$\\
 \midrule
-\multicolumn{7}{l}{reproductibilité $6/6$ \quad$\bullet$\quad
- améliorées $2$, dégradées $\mathbf{0}$, inchangées $4$}\\
-\multicolumn{7}{l}{gain médian $+0{,}00$ point, moyen $+0{,}03$,
- \textbf{maximum $+0{,}11$}}\\
+\multicolumn{10}{l}{reproductibilité $6/6$ dans les deux configurations
+ \quad$\bullet$\quad tous les encadrements valides}\\
+\multicolumn{10}{l}{\conf{0}{0}{0} : améliorées $2$, dégradées $0$,
+ inchangées $4$ ; maximum $+0{,}11$}\\
+\multicolumn{10}{l}{\conf{1}{1}{1} : améliorées $\mathbf{0}$, dégradées
+ $\mathbf{0}$, inchangées $\mathbf{6}$ ; maximum
+ $\mathbf{+0{,}00}$}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2124,13 +2138,32 @@ arithmétique : avec $q_{\text{lb}}\approx 3{,}7$ et $q_{\text{ub}}\approx
 dixième de point. Sur les six lignes, le gain médian est \emph{nul} et le
 maximum vaut $0{,}11$ point, contre des écarts de $79$ à $99\ \%$.
 
+\paragraph{Remesuré sur une base bien meilleure, le résultat se
+\emph{durcit}.} Ce banc a d'abord été mené en \conf{0}{0}{0}, dont les
+écarts de référence allaient de $79$ à $99\ \%$. On pouvait objecter qu'un
+levier ne se juge pas sur un socle aussi lâche : $0{,}11$ point s'y perd
+dans le bruit. La configuration courante retire cette objection. Les écarts
+de référence y sont $77{,}2$, $78{,}6$, $\mathbf{1{,}2}$ et $96{,}5\ \%$, et
+le gain de la coupe générée vaut alors $\mathbf{+0{,}00}$ point sur les
+\emph{six} lignes -- pas une améliorée, pas une dégradée. Les coupes
+continuent pourtant d'être produites, et en plus grand nombre qu'avant
+($20$, $16$, $11$, $11$, $6$) : le mécanisme n'est pas en défaut, son effet
+est nul.
+
+Le cas décisif est la ligne $n=30$, $\text{corr}=0{,}5$. Son écart de
+référence est passé de $78{,}9$ à $\mathbf{1{,}2\ \%}$ : la borne y est à un
+point de fermer. Six coupes générées ne la ferment pas. Tant que l'écart
+valait $79\ \%$, on pouvait croire que la coupe agissait sans qu'on le voie ;
+à $1{,}2\ \%$, cet argument tombe.
+
 \paragraph{Ce que ce résultat négatif corrige.} Il ne dit pas seulement que
 la coupe générée est insuffisante ; il infirme le \emph{diagnostic} qui
 l'avait motivée. Nous avions conclu de la section précédente que le verrou
 était le coût en binaires. Or ce coût est ici entièrement supprimé -- les
 coupes générées sont illimitées et n'occupent aucune place -- et l'écart ne
-bouge pas. \textbf{Lever le plafond ne suffit donc pas}, et la conclusion
-précédente était trop rapide.
+bouge pas, dans \emph{aucune} des deux configurations.
+\textbf{Lever le plafond ne suffit donc pas}, et la conclusion précédente
+était trop rapide.
 
 Nous avions alors avancé une explication de remplacement : à ces tailles, la
 région que l'on sait retrancher ne représenterait qu'une part négligeable de
