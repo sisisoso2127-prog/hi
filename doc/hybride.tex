@@ -48,6 +48,13 @@
 \newcommand{\Acal}{\mathcal{A}}
 \newcommand{\ILP}{\textsc{Pline}}
 \newcommand{\qs}{q^{\star}}
+% --- marqueur de CONFIGURATION -------------------------------------------
+% Trois leviers ont change en cours de travail, et tous trois deplacent les
+% chiffres. Un tableau ne veut donc rien dire sans dire lequel il mesure.
+\newcommand{\cfgm}[1]{\ifnum#1=1$\bullet$\else$\circ$\fi}
+\newcommand{\conf}[3]{%
+  \textsf{\footnotesize[\,V\cfgm{#1}\ S\cfgm{#2}\ D\cfgm{#3}\,]}}
+\newcommand{\confna}{\textsf{\footnotesize[\,sans mesure\,]}}
 
 % ---------------------------------------------------------------- couleurs
 \definecolor{ceff}{RGB}{0,102,153}     % coupe d'efficacité
@@ -550,7 +557,7 @@ recherche, donc en récoltant davantage de points dominés :
 \centering
 \caption{Effet du triplement du plafond sous classement commun. L'archive
 double, le nombre total de coupes augmente, et les coupes \emph{d'archive}
-s'effondrent.}
+s'effondrent.\ \conf{0}{1}{0}}
 \label{tab:famine}
 \begin{tabular}{lcccccc}
 \toprule
@@ -596,7 +603,7 @@ pouvant condamner l'alternance.
 \begin{table}[htbp]
 \centering
 \caption{Classement commun contre alternance, sur les six lignes portant le
-défaut. « arch. » compte les coupes d'archive effectivement posées.}
+défaut. « arch. » compte les coupes d'archive effectivement posées.\ \conf{0}{1}{1} contre \conf{1}{1}{1}}
 \label{tab:alternance}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{cccccccc}
@@ -923,7 +930,7 @@ $12$ instances à plafond déterministe de $300$ appels :
 \centering
 \caption{Rendement des structures de voisinage et profondeur des chaînes de
 réparation. Un « succès » est une amélioration \emph{stricte} de
-l'incumbent.}
+l'incumbent.\ \conf{0}{1}{1}}
 \label{tab:voisinage}
 \begin{tabular}{llcc}
 \toprule
@@ -1383,7 +1390,7 @@ faire tomber $U$ à $0$, donc à prouver l'optimalité.
 \centering
 \caption{$\mathcal{I}_2$ : trajectoire des deux coupes, $q=14/5$,
 $U=\max_{\Rcal}\{QN-PD\}$, borne $=q+U/(QD^{+})$. Les valeurs sont exactes
-(rationnelles).}
+(rationnelles).\ \confna}
 \label{tab:i2traj}
 \setlength{\tabcolsep}{6pt}
 \begin{tabular}{clccc@{\qquad}lccc}
@@ -1534,7 +1541,7 @@ pas ici : il finit \emph{exactement} sur ce point.}
 \centering
 \caption{$\mathcal{I}_3$ : trajectoire, $q=3$. La borne atteint $\qs$ après
 \textbf{deux} coupes d'efficacité, contre \textbf{huit} coupes de dominance
--- prises, une fois de plus, dans un vivier que la recherche n'a pas produit.}
+-- prises, une fois de plus, dans un vivier que la recherche n'a pas produit.\ \confna}
 \label{tab:i3traj}
 \setlength{\tabcolsep}{6pt}
 \begin{tabular}{clccc@{\qquad}lccc}
@@ -1601,6 +1608,50 @@ méthode robuste à la qualité de l'archive.
 
 \subsection{Protocole}
 
+\paragraph{Trois leviers ont changé en cours de travail.} Ce n'est pas un
+détail d'exposition : chacun des trois déplace les chiffres, l'un d'eux de
+plus de $70$ points sur une instance. Un tableau ne dit donc rien sans dire
+\emph{quelle} version de la méthode il mesure, et nous n'avons pas tout
+remesuré. Chaque tableau porte donc un marqueur à trois positions.
+
+\begin{table}[htbp]
+\centering
+\caption{Les trois leviers. $\circ$ = absent, $\bullet$ = présent.}
+\label{tab:config}
+\begin{tabular}{clll}
+\toprule
+& levier & $\circ$ & $\bullet$\\
+\midrule
+\textsf{V} & vivier (§\ref{sec:vivier})
+ & classement commun & \textbf{alterné}\\
+\textsf{S} & seconde route (§\ref{sec:seuil})
+ & absente & \textbf{présente}\\
+\textsf{D} & dénominateur $D^{+}$
+ & inopérant en pratique & \textbf{réparé}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Ainsi \conf{0}{0}{0} désigne la méthode telle qu'elle était au début de ce
+travail, et \conf{1}{1}{1} celle que décrivent les sections~\ref{sec:vivier}
+et~\ref{sec:seuil}. Le marqueur \confna{} signale un tableau qui n'est pas
+une mesure de performance : une trajectoire d'illustration, un
+positionnement bibliographique.
+
+\begin{remark}[ce que cette hétérogénéité coûte, et à qui]
+Elle joue \emph{contre} la méthode, non en sa faveur. Les tableaux de
+comparaison avec la littérature (§\ref{sec:matchzm}, §\ref{sec:matchdrici})
+sont en \conf{0}{0}{0} : ils opposent aux méthodes publiées la plus faible
+des trois versions de la nôtre. De même la section~\ref{sec:cglp} raisonne
+sur un écart de $98{,}6\ \%$ là où la configuration courante en donne
+$77{,}2$ sur la même instance -- ce qui ne change pas sa conclusion
+(\emph{lever le plafond ne suffit pas}) mais en change les chiffres. Les
+remesurer est le premier des travaux restants ; nous préférons le marquer
+que le taire.
+\end{remark}
+
+\medskip\noindent
 Deux jeux d'instances, générés sous (A1)--(A2), gelés avant toute mesure :
 un \emph{régime cible} de $8$ instances à vérité terrain énumérable, jouées
 sur $10$ graines, et un \emph{lot systématique} de $90$ instances. Les deux
@@ -1615,7 +1666,7 @@ croisées inter-méthodes.
 \begin{table}[htbp]
 \centering
 \caption{Régime cible, $8$ instances $\times$ $10$ graines, budget identique
-de $7+5$~s, vérité terrain disponible.}
+de $7+5$~s, vérité terrain disponible.\ \conf{0}{0}{0}}
 \label{tab:res1}
 \begin{tabular}{lcc}
 \toprule
@@ -1690,7 +1741,7 @@ coupes pour prouver par l'oracle exact seul.
 \begin{table}[htbp]
 \centering
 \caption{Lot figé, $90$ instances, budget identique de $12$~s. Toutes les
-vérifications croisées passent.}
+vérifications croisées passent.\ \conf{0}{0}{0}}
 \label{tab:res2}
 \setlength{\tabcolsep}{6pt}
 \begin{tabular}{lccccc}
@@ -1719,7 +1770,7 @@ correcte est \textbf{appariée} : même instance, même graine, on retranche.
 
 \begin{table}[htbp]
 \centering
-\caption{Lecture appariée du même lot. Le signe change.}
+\caption{Lecture appariée du même lot. Le signe change.\ \conf{0}{0}{0}}
 \label{tab:apparie}
 \begin{tabular}{lcc}
 \toprule
@@ -1783,7 +1834,7 @@ conforme à la théorie.
 
 \begin{table}[htbp]
 \centering
-\caption{Delta apparié des appels au solveur entier, par régime.}
+\caption{Delta apparié des appels au solveur entier, par régime.\ \conf{0}{0}{0}}
 \label{tab:corr}
 \begin{tabular}{lccc}
 \toprule
@@ -1827,7 +1878,7 @@ de la conclusion.
 
 \begin{table}[htbp]
 \centering
-\caption{Banc déterministe, plafond de $100$ appels, $90$ instances.}
+\caption{Banc déterministe, plafond de $100$ appels, $90$ instances.\ \conf{0}{0}{0}}
 \label{tab:determ}
 \begin{tabular}{lc}
 \toprule
@@ -1870,7 +1921,7 @@ zéro programme entier de clôture.
 \begin{table}[htbp]
 \centering
 \caption{Diversification par coupes d'efficacité. $24$ paires,
-$n=20$ à $50$, budget déterministe de $700$ appels, comparaison appariée.}
+$n=20$ à $50$, budget déterministe de $700$ appels, comparaison appariée.\ \conf{0}{0}{0}}
 \label{tab:divers}
 \begin{tabular}{lc}
 \toprule
@@ -2021,7 +2072,7 @@ une implémentation correcte -- ou, plus grave, d'en accepter une fausse.
 \begin{table}[htbp]
 \centering
 \caption{Coupe par programme générateur, budget déterministe de $300$ appels
-entiers, comparaison appariée, chaque configuration jouée deux fois.}
+entiers, comparaison appariée, chaque configuration jouée deux fois.\ \conf{0}{0}{0}}
 \label{tab:cglp}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{ccccccc}
@@ -2139,7 +2190,7 @@ fractions.
 plafond déterministe de $300$ appels entiers. $\kappa$ désigne l'échelle du
 second membre. Échelle A à $\kappa$ fixé, le
 seul régime rigoureusement comparable d'un $n$ à l'autre ; échelle B à
-$\kappa$ décroissant pour garder $\Scal$ énumérable, indicative.}
+$\kappa$ décroissant pour garder $\Scal$ énumérable, indicative.\ \conf{0}{0}{0}}
 \label{tab:couverture}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{ccrrrccrrr}
@@ -2308,7 +2359,7 @@ $\{0;0{,}5;0{,}9\}$).
 \caption{Validité de la seconde route contre vérité terrain. Le plafond
 serré est nécessaire : sous un plafond confortable ces instances se prouvent
 optimales \emph{avant} que la route ne s'exécute, et le contrôle ne
-contrôlerait rien.}
+contrôlerait rien.\ \conf{1}{1}{1}}
 \label{tab:geomvalide}
 \begin{tabular}{lccc}
 \toprule
@@ -2360,7 +2411,7 @@ part ne rend pas les coupes qu'il n'a pas posées.
 \begin{table}[htbp]
 \centering
 \caption{Le déclencheur contre son absence, mêmes douze instances, même
-plafond de $300$ appels entiers, comparaison appariée.}
+plafond de $300$ appels entiers, comparaison appariée.\ \conf{0}{1}{0}}
 \label{tab:porte}
 \begin{tabular}{lcccc}
 \toprule
@@ -2395,8 +2446,7 @@ procédure qu'il finance.
 \begin{table}[htbp]
 \centering
 \caption{Seconde route, budget déterministe de $300$ appels entiers,
-comparaison appariée, chaque configuration jouée deux fois. Mesuré avec le
-vivier \emph{alterné} (§\ref{sec:vivier}).}
+comparaison appariée, chaque configuration jouée deux fois.\ \conf{1}{1}{1}}
 \label{tab:geom}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{ccccrccc}
@@ -2508,7 +2558,7 @@ forme que toute comparaison peut prendre.
 
 \begin{table}[htbp]
 \centering
-\caption{Le problème traité, chez les uns et chez les autres.}
+\caption{Le problème traité, chez les uns et chez les autres.\ \confna}
 \label{tab:positionnement}
 \begin{tabular}{lcc}
 \toprule
@@ -2542,7 +2592,7 @@ les reprenons à l'identique.
 
 \begin{table}[htbp]
 \centering
-\caption{Les deux exemples publiés, reproduits.}
+\caption{Les deux exemples publiés, reproduits.\ \confna}
 \label{tab:exemples}
 \begin{tabular}{lcc}
 \toprule
@@ -2657,7 +2707,7 @@ est solide.
 
 \begin{table}[htbp]
 \centering
-\caption{Match, $24$ instances, vérité terrain par énumération.}
+\caption{Match, $24$ instances, vérité terrain par énumération.\ \conf{0}{0}{0}}
 \label{tab:match}
 \begin{tabular}{lcc}
 \toprule
@@ -2757,7 +2807,7 @@ quelles.
 \centering
 \caption{Notre méthode sur le protocole et les tailles de Drici
 \emph{et al.}, $10$ instances par taille, budget déterministe de $1500$
-appels.}
+appels.\ \conf{0}{0}{0}}
 \label{tab:drici}
 \begin{tabular}{lcccc}
 \toprule
@@ -2793,7 +2843,7 @@ $[50,100]$ donnent des variables bornées par $2$ ou $3$.
 \begin{table}[htbp]
 \centering
 \caption{« $n=40$ » ne désigne pas le même problème d'un protocole à
-l'autre.}
+l'autre.\ \conf{0}{0}{0}}
 \label{tab:boite}
 \begin{tabular}{lcccc}
 \toprule
