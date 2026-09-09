@@ -972,24 +972,39 @@ mêmes instances à plafond identique : le laisser tel quel, l'ancrer par des
 planchers $e_j(x)\ge0$ -- ce qui fait marcher A --, ou le retirer du menu.
 
 \begin{center}
-\begin{tabular}{lccc}
+\begin{tabular}{lcclcc}
 \toprule
-& médiane & moyenne & contre \emph{libre}\\
+& médiane & moyenne & contre \emph{libre} & signes & Wilcoxon\\
 \midrule
-\textbf{libre} & $0{,}6\ \%$ & $\mathbf{19{,}8\ \%}$ & --\\
-ancré & $\mathbf{0{,}0\ \%}$ & $22{,}9\ \%$ & mieux $3$, pire $3$, égal $6$\\
-retiré & $\mathbf{0{,}0\ \%}$ & $21{,}5\ \%$ & mieux $3$, pire $3$, égal $6$\\
+\textbf{libre} & $0{,}0\ \%$ & $17{,}1\ \%$ & -- & -- & --\\
+ancré & $0{,}0\ \%$ & $19{,}5\ \%$ & mieux $4$, pire $4$
+ & $1{,}00$ & $0{,}84$\\
+retiré & $0{,}0\ \%$ & $\mathbf{16{,}6\ \%}$ & mieux $5$, pire $3$
+ & $0{,}73$ & $0{,}74$\\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent
-\textbf{Le banc ne tranche pas.} La médiane favorise les deux traitements,
-la moyenne favorise la version libre, et le compte est de $3$ contre $3$
-dans les deux cas. Nous gardons donc la version libre, sans prétendre avoir
-conclu. Notre diagnostic, lui, est réfuté : l'ancrage est le \emph{plus
-mauvais} des trois en moyenne et effondre l'incumbent sur deux lignes
+\textbf{Le banc ne tranche pas}, sur dix-huit lignes et trois graines. Le
+retrait prend la tête en moyenne et au comptage, mais à $p=0{,}73$ ; les
+sommes appariées le disent mieux que les tests, $+51{,}3$ points gagnés
+contre $-42{,}5$ perdus. Nous gardons la version libre : l'écart ne se
+distingue pas de zéro, et les pires cas du retrait sont réels -- l'incumbent
+tombe de $32{,}25$ à $23{,}00$ sur une ligne, de $12{,}40$ à $8{,}69$ sur
+une autre. Notre diagnostic, lui, est réfuté : l'ancrage est le \emph{plus
+mauvais} des trois en moyenne, $-64{,}3$ points perdus contre $+20{,}1$
+gagnés, et il effondre l'incumbent sur deux lignes
 ($4{,}39\to2{,}27$ et $32{,}25\to15{,}24$).
+
+\begin{remark}[pourquoi trois graines suffisent là et pas ici]
+Trois graines établissent l'effet de la borne à seuil libre
+(§\ref{sec:defauts}) et ne suffisent pas pour le mouvement C. La différence
+tient à la forme de l'effet : un levier qui ne peut qu'aider produit des
+écarts de même signe, qu'une petite série révèle ; retirer un opérateur de
+recherche change la \emph{trajectoire}, et les écarts changent de signe
+d'une instance à l'autre.
+\end{remark}
 
 \begin{remark}[le rendement mesure le nombre des succès, non leur valeur]
 Retirer C fait tomber l'incumbent de $12{,}40$ à $8{,}69$ sur une ligne, de

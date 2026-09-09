@@ -971,33 +971,59 @@ simple.
 \begin{table}[htbp]
 \centering
 \caption{Trois traitements du mouvement C, mêmes instances, plafond
-identique. Écarts garantis.\ \conf{1}{1}{1}}
+identique, \textbf{trois graines} ($18$ lignes). Écarts garantis.\
+\conf{1}{1}{1}}
 \label{tab:mouvementc}
-\begin{tabular}{lccc}
+\begin{tabular}{lcclcc}
 \toprule
-& médiane & moyenne & contre \emph{libre}\\
+& médiane & moyenne & contre \emph{libre} & signes & Wilcoxon\\
 \midrule
-\textbf{libre} (tel quel) & $0{,}6\ \%$ & $\mathbf{19{,}8\ \%}$ & --\\
-ancré ($e_j\ge0$) & $\mathbf{0{,}0\ \%}$ & $22{,}9\ \%$
- & mieux $3$, pire $3$, égal $6$\\
-retiré & $\mathbf{0{,}0\ \%}$ & $21{,}5\ \%$
- & mieux $3$, pire $3$, égal $6$\\
+\textbf{libre} (tel quel) & $0{,}0\ \%$ & $17{,}1\ \%$ & -- & -- & --\\
+ancré ($e_j\ge0$) & $0{,}0\ \%$ & $19{,}5\ \%$
+ & mieux $4$, pire $4$ & $1{,}00$ & $0{,}84$\\
+retiré & $0{,}0\ \%$ & $\mathbf{16{,}6\ \%}$
+ & mieux $5$, pire $3$ & $0{,}73$ & $0{,}74$\\
+\midrule
+\multicolumn{6}{l}{sommes appariées contre \emph{libre} :
+ ancré $+20{,}1$ / $\mathbf{-64{,}3}$ \quad$\bullet$\quad
+ retiré $+51{,}3$ / $-42{,}5$}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-\textbf{Le banc ne tranche pas, et c'est le résultat.} Les deux traitements
-donnent $3$ améliorées contre $3$ dégradées ; la médiane les favorise, la
-moyenne favorise la version libre. Sur $12$ lignes et deux graines, rien ne
-départage. Nous gardons donc la version libre -- changer un défaut demande
-une preuve, pas une égalité -- et nous ne prétendons pas avoir conclu.
+\textbf{Le banc ne tranche pas, et c'est le résultat.} Avec deux graines,
+les deux traitements donnaient $3$ améliorées contre $3$ dégradées. La
+troisième graine déplace l'aiguille sans la faire basculer : le retrait
+prend la tête, en moyenne ($16{,}6$ contre $17{,}1\ \%$) comme au comptage
+($5$ contre $3$), mais à $p=0{,}73$ -- c'est-à-dire à rien. Les sommes
+appariées le disent mieux que les tests : $+51{,}3$ points gagnés contre
+$-42{,}5$ perdus. Retirer C gagne et perd à peu près autant, ce qui est la
+définition d'une absence de conclusion.
 
-Deux choses sont acquises malgré tout. La première est que notre diagnostic
-était faux : l'ancrage est le \emph{plus mauvais} des trois en moyenne, et
-il effondre l'incumbent sur deux lignes ($4{,}39\to 2{,}27$ et
+Nous gardons donc la version libre. Non parce qu'elle est la meilleure --
+le retrait la devance d'un cheveu -- mais parce que l'écart ne se distingue
+pas de zéro, et que les pires cas du retrait, eux, sont réels et mesurés :
+l'incumbent tombe de $32{,}25$ à $23{,}00$ sur une ligne, de $12{,}40$ à
+$8{,}69$ sur une autre.
+
+Une chose est en revanche acquise, et elle est contre nous : notre
+diagnostic était faux. L'ancrage est le \emph{plus mauvais} des trois en
+moyenne, avec $-64{,}3$ points perdus contre $+20{,}1$ gagnés, et il
+effondre l'incumbent sur deux lignes ($4{,}39\to 2{,}27$ et
 $32{,}25\to 15{,}24$). Les planchers contraignent le LNS au point de
 l'empêcher d'atteindre les bonnes solutions.
+
+\begin{remark}[ce qu'il faut pour trancher ce genre de question]
+Trois graines suffisent à établir l'effet d'un levier
+(§\ref{sec:seuil}) et ne suffisent pas ici. La différence tient à la forme
+de l'effet : un levier qui ne peut qu'aider produit des gains de même
+signe, qu'une petite série révèle ; retirer un opérateur de recherche
+change la \emph{trajectoire}, et les écarts changent de signe d'une
+instance à l'autre. Il faut alors bien davantage d'instances pour que la
+moyenne se dégage du bruit. Nous ne les avons pas jouées, et nous
+préférons l'écrire.
+\end{remark}
 
 \begin{remark}[le rendement mesure le nombre des succès, non leur valeur]
 La seconde est une erreur de lecture qui nous était propre. Retirer C fait
