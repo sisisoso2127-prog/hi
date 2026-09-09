@@ -142,13 +142,36 @@ def d_plus(inst: MOILFP, model: ECutModel,
     Un seul ILP. La region n'est jamais vide (l'incumbent y est), donc un
     statut infaisable signale un probleme et on renvoie None pour laisser
     l'appelant retomber sur Dmin.
+
+    UN ILP INTERROMPU RESTE EXPLOITABLE, et une premiere version le jetait.
+    Elle exigeait `res.ok`, c'est-a-dire le statut 'optimal'. Or ce
+    programme-ci est pose sur le modele de coupes complet, sans limite de
+    temps, et il arrive DERNIER dans le tour : sous plafond deterministe le
+    budget est deja epuise quand on l'appelle. Diagnostic sur neuf executions
+    a n = 20, 30, 40 : `Dplus = None` sur les NEUF, aux deux plafonds. Le
+    gain 2 du Th. 5' -- D+ au lieu de Dmin -- n'etait donc jamais realise en
+    pratique, alors que l'article le compte parmi ses trois apports.
+
+    Ce qu'il faut retenir d'un ILP interrompu depend du SENS de
+    l'optimisation. Ici on MINIMISE : `res.bound` est le cote optimiste,
+    c'est-a-dire un MINORANT valide de min D sur la region. Or c'est
+    exactement ce dont le Th. 5' a besoin : la borne s'ecrit
+    q + U/(Q*denom) et n'exige de `denom` que de minorer D(x) sur toute la
+    region ou elle agit. Un minorant interrompu est donc aussi legitime que
+    l'optimum, seulement moins fin -- et toujours meilleur que rien, puisque
+    l'appelant prend max(Dmin, D+), maximum de deux minorants valides.
     """
     extra = [(np.asarray(w, dtype=float), -float(w0), INF)]
     res = model.optimize(inst.f.den.astype(float), float(inst.f.b),
                          maximize=False, extra_rows=extra)
-    if not res.ok:
+    if res.status == "infeasible":
         return None
-    return max(1, int(round(res.obj)))
+    val = res.obj if res.ok else res.bound
+    if val is None or not np.isfinite(val):
+        return None
+    # minorant : on arrondit VERS LE BAS, jamais vers le haut -- un `denom`
+    # surestime rendrait la borne fausse.
+    return max(1, int(np.floor(val + 1e-9)))
 
 
 def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,

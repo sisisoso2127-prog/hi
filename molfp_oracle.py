@@ -327,6 +327,17 @@ class ECutModel:
 # Reparation par chaine de dominance
 # ----------------------------------------------------------------------------
 
+# Profondeurs des chaines de reparation observees. Instrumentation pure :
+# la methode n'en depend pas, mais une affirmation sur la profondeur des
+# chaines doit se mesurer et non se supposer -- c'est sur elle que repose
+# le diagnostic « la coupe de dominance n'a presque rien a mordre ».
+CHAINES: List[int] = []
+
+
+def reset_chaines() -> None:
+    CHAINES.clear()
+
+
 def repair_to_efficient(inst: MOILFP, x: np.ndarray,
                         max_steps: int = 100,
                         dominated_out: Optional[list] = None,
@@ -350,7 +361,7 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
     `dominated_out`.
     """
     cur = x
-    for _ in range(max_steps):
+    for pas in range(max_steps):
         tl = None
         if deadline is not None:
             tl = deadline - time.time()
@@ -360,6 +371,7 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
         if not r.conclusive:
             return None
         if r.efficient:
+            CHAINES.append(pas)      # 0 = le point etait deja efficace
             return cur
         if dominated_out is not None:
             dominated_out.append(np.array(cur, dtype=int))

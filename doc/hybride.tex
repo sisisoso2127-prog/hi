@@ -627,6 +627,188 @@ fait l'hybridation.}
 \label{fig:flow}
 \end{figure}
 
+\subsection{La phase 1 en détail : la recherche}
+\label{sec:recherche}
+
+Le carré « phase~1 » de la figure~\ref{fig:flow} cache la moitié de la
+méthode. Nous la détaillons ici, car c'est elle qui produit les trois
+sorties dont tout le reste dépend : l'incumbent $q$, l'archive $\Acal$ et
+l'ensemble $\mathcal{D}$ des points dominés.
+
+\paragraph{Pourquoi chercher dans l'espace des critères.} Un voisinage
+défini sur $x$ -- échanger deux composantes, en incrémenter une -- ignore
+que le problème est \emph{multiobjectif} : deux points voisins dans $x$
+peuvent avoir des vecteurs critères sans rapport, et surtout un voisin
+réalisable n'a aucune raison d'être efficace. Nous définissons donc les
+voisinages sur $Z(x)$, et nous les résolvons \emph{exactement}. Le choix de
+la région est heuristique ; ce qu'on en tire est exact. C'est la première
+moitié de l'hybridation, la seconde étant l'oracle de la phase~2.
+
+\paragraph{L'objectif commun : le substitut de Dinkelbach.} Tous les
+mouvements maximisent la même fonction linéaire, celle qui linéarise $f$ au
+seuil courant $q=P/Q$ :
+\[
+  w^{\top}x+w_0 \;=\; Q\,N(x)-P\,D(x),
+  \qquad\text{de sorte que}\quad
+  w^{\top}x+w_0>0 \iff f(x)>q .
+\]
+Chercher le maximum de $w^{\top}x+w_0$ dans une région, c'est donc y
+chercher le point qui bat le plus nettement l'incumbent. Le substitut est
+recalculé \emph{à chaque amélioration} de $q$ : la direction de recherche
+suit l'incumbent au lieu d'être fixée une fois pour toutes.
+
+\paragraph{Le pas $+1$ est exact.} Le théorème~\ref{th:effcut} fournit
+$e_k(x)=\bar D_k D_k(x)\,(Z_k(x)-Z_k(\bar x))$, entière, donc
+\[
+  Z_k(x)\ \ge\ Z_k(\bar x)\iff e_k(x)\ge 0,
+  \qquad
+  Z_k(x)\ >\ Z_k(\bar x)\iff e_k(x)\ge 1 .
+\]
+Aucun $\varepsilon$ n'est à régler, contrairement aux schémas
+$\varepsilon$-contrainte usuels où un $\varepsilon$ trop grand saute des
+points efficaces et un $\varepsilon$ trop petit ne progresse pas.
+
+\subsubsection*{Trois structures de voisinage}
+
+\begin{description}
+\item[\textbf{A -- $\varepsilon$ partiel.}] Autour d'un point de base $x^r$,
+  d'un critère $k$ et d'un sous-ensemble $J\subsetneq\{1,\dots,p\}
+  \setminus\{k\}$ tiré au hasard :
+  \[
+    V^A_k(x^r,J)=\bigl\{x\in\Scal:\ e_k(x)\ge 1,\ \
+      e_j(x)\ge 0\ \ \forall j\in J\bigr\}.
+  \]
+  « Strictement mieux sur $k$, sans rien perdre sur $J$, libre ailleurs. »
+  La taille de $J$ règle l'intensification : $J=\emptyset$ donne le
+  mouvement le plus explorateur.
+
+\item[\textbf{B -- plancher absolu.}] Indépendant de tout point de base :
+  on tire un seuil $\varepsilon_j$ dans l'intervalle
+  $[\,\text{nadir}_j,\ \text{idéal}_j\,]$ pour un sous-ensemble aléatoire
+  de critères, et l'on pose
+  $V^B(\varepsilon)=\{x\in\Scal:\ Z_j(x)\ge\varepsilon_j\}$
+  via le théorème~1. C'est le mouvement qui permet d'atteindre une région
+  du front que l'archive n'a jamais visitée.
+
+\item[\textbf{C -- LNS / \emph{fix-and-optimize}.}] On gèle
+  $x_j=x^r_j$ hors d'un sous-ensemble aléatoire de variables et l'on résout
+  exactement le reste. Voisinage défini dans $x$ mais de taille contrôlée,
+  seul des trois à pouvoir réorganiser plusieurs variables d'un coup.
+\end{description}
+
+\begin{remark}[l'erreur de conception qu'il faut éviter]
+Une première version prenait $J=\{1,\dots,p\}\setminus\{k\}$ tout entier :
+« mieux sur $k$ sans rien perdre ailleurs ». C'est exactement l'ensemble des
+points qui \emph{dominent} $x^r$ -- donc vide dès que $x^r$ est efficace, ce
+qu'il est toujours ici puisqu'il sort de l'archive. Le voisinage était vide
+par construction et la recherche ne progressait pas. Le sous-ensemble
+\emph{strict} n'est pas un raffinement : c'est la condition pour que le
+mouvement existe.
+\end{remark}
+
+\subsubsection*{Réparation : ce qui rend l'incumbent incontestable}
+
+Un point $y$ sorti d'un mouvement est réalisable, pas nécessairement
+efficace. On suit alors la \emph{chaîne de réparation} : le test
+d'efficacité (théorème~2) est exact et, lorsqu'il déclare $y$ non efficace,
+il exhibe un dominateur $y'$. On remplace $y$ par $y'$ et l'on
+recommence.
+
+\begin{proposition}[terminaison]
+La chaîne s'arrête, en un nombre fini de pas, sur un point efficace.
+\end{proposition}
+\begin{proof}
+Chaque pas passe à un point qui domine strictement le précédent au sens de
+Pareto ; l'ordre est strict, donc sans cycle, et $\Scal$ est fini.
+\end{proof}
+
+La chaîne rend \emph{deux} produits, et le second n'est pas un sous-produit
+mineur :
+\begin{enumerate}
+\item son point terminal est efficace \emph{certifié}, donc
+  $f$ y est une borne inférieure valide de $\qs$ ;
+\item tous les points \emph{traversés} sont dominés, donc chacun est un
+  centre légitime de coupe de dominance (théorème~4) -- déjà payé par la
+  recherche.
+\end{enumerate}
+Si la chaîne est interrompue faute de budget, on ne retient \emph{pas} le
+dernier point atteint : il n'est pas certifié, et le rendre comme s'il
+l'était rendrait la borne inférieure optimiste. C'est la seule propriété
+que cette méthode ne peut pas se permettre de perdre. Les points dominés
+déjà traversés, eux, restent acquis.
+
+\subsubsection*{Stagnation, redémarrage, arrêt}
+
+Il n'y a pas de \emph{shaking} au sens de la VNS classique, et pas de
+redémarrage aléatoire non plus. Un tour se déroule ainsi :
+
+\begin{enumerate}
+\item \textbf{sélection des bases.} On prend les $8$ meilleurs points de
+  l'archive pour $f$, plus $4$ tirés au hasard parmi les autres.
+\item \textbf{tirage des mouvements.} Pour chaque base et chaque critère
+  dans un ordre aléatoire, un mouvement est tiré dans un \emph{menu}
+  pondéré : $\{A,A,B,C\}$ en régime normal.
+\item \textbf{stagnation.} Si un tour entier n'améliore pas $q$, le tour
+  suivant bascule en régime de diversification : le menu devient
+  $\{B,B,C,A\}$ -- $A$ reste ancré sur sa base et explore peu -- les
+  fractions libérées par le LNS passent de $0{,}4$ à $0{,}6\,n$, et surtout
+  les bases sont choisies parmi les points de l'archive \emph{les moins
+  souvent utilisés} au lieu des meilleurs.
+\item \textbf{arrêt.} Après \texttt{max\_stall} tours stériles consécutifs,
+  la recherche rend la main. Le budget qu'elle n'a pas consommé est
+  \emph{reversé} à la certification.
+\end{enumerate}
+
+\begin{remark}[pourquoi repartir de l'archive plutôt qu'au hasard]
+Un redémarrage aléatoire jetterait tout le travail déjà fait, et rien ne
+garantit que le point tiré soit efficace -- il faudrait le réparer, donc le
+payer. L'archive, elle, ne contient que des points efficaces certifiés :
+ce sont des bases légitimes et \emph{gratuites}. Trier par usage croissant
+plutôt que par valeur de $f$ suffit à changer de région sans rien perdre.
+C'est le mécanisme qui remplace le \emph{shaking}, et il est propre à ce
+problème : il n'existe que parce que la certification produit une archive.
+\end{remark}
+
+\begin{algorithm}[htbp]
+\caption{\textsc{Recherche} -- phase~1}
+\label{alg:recherche}
+\KwIn{instance, budget, \texttt{max\_stall}}
+\KwOut{$q$, $\bar x$ (efficace certifié), archive $\Acal$, dominés
+       $\mathcal{D}$}
+$\bar x\leftarrow\textsc{Réparer}(0)$\;
+$\Acal\leftarrow\{\bar x\}$;\quad $q\leftarrow f(\bar x)$;\quad
+$\textit{stall}\leftarrow 0$\;
+\While{budget restant}{
+  $(w,w_0)\leftarrow$ substitut de Dinkelbach en $q$\;
+  \textit{divers}$\leftarrow(\textit{stall}>0)$;\quad
+  \textit{amélioré}$\leftarrow$ faux\;
+  \ForEach{base $x^r$ tirée de $\Acal$ (§ ci-dessus)}{
+    \ForEach{critère $k$ en ordre aléatoire}{
+      tirer un mouvement dans le menu ; $y\leftarrow$ son optimum exact\;
+      \lIf{$y$ est \textup{None}}{continuer}
+      $y\leftarrow\textsc{Réparer}(y)$ \tcp*{dominés traversés $\to\mathcal{D}$}
+      \lIf{$y$ est \textup{None}}{continuer \tcp*{non certifié : rien retenu}}
+      $\Acal\leftarrow\Acal\cup\{y\}$\;
+      \If{$f(y)>q$}{
+        $q\leftarrow f(y)$;\ $\bar x\leftarrow y$;\
+        \textit{amélioré}$\leftarrow$ vrai\;
+        recalculer $(w,w_0)$\;
+      }
+    }
+  }
+  \lIf{\textup{\textit{amélioré}}}{$\textit{stall}\leftarrow 0$}
+  \lElse{$\textit{stall}\leftarrow\textit{stall}+1$}
+  \lIf{$\textit{stall}\ge\texttt{max\_stall}$}{\textbf{sortir}}
+}
+\end{algorithm}
+
+\begin{remark}[l'invariant]
+À tout instant, $\bar x$ est efficace \emph{certifié}. Donc $q=f(\bar x)$
+minore $\qs$ \emph{quelle que soit} la manière dont la recherche est
+interrompue -- budget épuisé, chaîne abandonnée, solveur en échec. C'est ce
+qui permet à la phase~2 d'annoncer un encadrement, et non une estimation.
+\end{remark}
+
 \subsection{Pseudo-code}
 
 Trois procédures suffisent. La première établit la clôture, la deuxième
