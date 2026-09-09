@@ -925,6 +925,13 @@ def ideal_nadir_estimates(inst: MOILFP) -> Tuple[List[Fraction], List[Fraction]]
 TIGHT_BIG_M = True
 
 
+CHAINES: List[int] = []
+
+
+def reset_chaines() -> None:
+    CHAINES.clear()
+
+
 class ECutModel:
     """Relaxation R de E, enrichie de coupes de dominance exactes."""
 
@@ -1182,7 +1189,7 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
     `dominated_out`.
     """
     cur = x
-    for _ in range(max_steps):
+    for pas in range(max_steps):
         tl = None
         if deadline is not None:
             tl = deadline - time.time()
@@ -1192,6 +1199,7 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
         if not r.conclusive:
             return None
         if r.efficient:
+            CHAINES.append(pas)      # 0 = le point etait deja efficace
             return cur
         if dominated_out is not None:
             dominated_out.append(np.array(cur, dtype=int))
@@ -1561,13 +1569,36 @@ def d_plus(inst: MOILFP, model: ECutModel,
     Un seul ILP. La region n'est jamais vide (l'incumbent y est), donc un
     statut infaisable signale un probleme et on renvoie None pour laisser
     l'appelant retomber sur Dmin.
+
+    UN ILP INTERROMPU RESTE EXPLOITABLE, et une premiere version le jetait.
+    Elle exigeait `res.ok`, c'est-a-dire le statut 'optimal'. Or ce
+    programme-ci est pose sur le modele de coupes complet, sans limite de
+    temps, et il arrive DERNIER dans le tour : sous plafond deterministe le
+    budget est deja epuise quand on l'appelle. Diagnostic sur neuf executions
+    a n = 20, 30, 40 : `Dplus = None` sur les NEUF, aux deux plafonds. Le
+    gain 2 du Th. 5' -- D+ au lieu de Dmin -- n'etait donc jamais realise en
+    pratique, alors que l'article le compte parmi ses trois apports.
+
+    Ce qu'il faut retenir d'un ILP interrompu depend du SENS de
+    l'optimisation. Ici on MINIMISE : `res.bound` est le cote optimiste,
+    c'est-a-dire un MINORANT valide de min D sur la region. Or c'est
+    exactement ce dont le Th. 5' a besoin : la borne s'ecrit
+    q + U/(Q*denom) et n'exige de `denom` que de minorer D(x) sur toute la
+    region ou elle agit. Un minorant interrompu est donc aussi legitime que
+    l'optimum, seulement moins fin -- et toujours meilleur que rien, puisque
+    l'appelant prend max(Dmin, D+), maximum de deux minorants valides.
     """
     extra = [(np.asarray(w, dtype=float), -float(w0), INF)]
     res = model.optimize(inst.f.den.astype(float), float(inst.f.b),
                          maximize=False, extra_rows=extra)
-    if not res.ok:
+    if res.status == "infeasible":
         return None
-    return max(1, int(round(res.obj)))
+    val = res.obj if res.ok else res.bound
+    if val is None or not np.isfinite(val):
+        return None
+    # minorant : on arrondit VERS LE BAS, jamais vers le haut -- un `denom`
+    # surestime rendrait la borne fausse.
+    return max(1, int(np.floor(val + 1e-9)))
 
 
 def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
@@ -1729,7 +1760,8 @@ def rank_dominated(dominated: Sequence[np.ndarray],
 
 def build_cut_pool(dominated: Sequence[np.ndarray],
                    archive: Sequence[np.ndarray],
-                   w: np.ndarray) -> List[tuple]:
+                   w: np.ndarray,
+                   alterne: bool = True) -> List[tuple]:
     """
     UN SEUL vivier de coupes, alimente par DEUX sources.
 
@@ -1748,24 +1780,68 @@ def build_cut_pool(dominated: Sequence[np.ndarray],
     decroissante du substitut : ce sont ceux qui tirent U vers le haut, quelle
     que soit leur origine. Le plafond global reste celui qui a ete regle.
 
-    Cette mise en commun a un effet automatique et souhaitable : la ou les
-    points domines abondent, ils occupent le vivier ; la ou ils sont rares --
-    le regime a E epais, ou la profondeur des chaines de reparation vaut 1 --
-    l'archive le remplit a leur place.
+    LE CLASSEMENT COMMUN AFFAME L'ARCHIVE, ET C'EST MESURE. Nous avons
+    ecrit que l'effet du vivier commun etait « automatique et souhaitable :
+    la ou les points domines abondent, ils occupent le vivier ; la ou ils
+    sont rares, l'archive le remplit a leur place ». Le diagnostic du banc
+    de budget dit le contraire. En triplant le plafond -- donc en allongeant
+    la recherche, donc en recoltant plus de points domines -- sur six
+    executions a n = 20, 30, 40 :
+
+        archive        39->80   26->50   24->52   50->99   19->36   29->63
+        coupes totales 105->167 115->176 101->161 107->161 90->171  95->240
+        coupes ARCHIVE  28->12   26->0    20->2    33->10   16->0    22->15
+
+    L'archive double, les coupes posees augmentent, et les coupes D'ARCHIVE
+    s'effondrent -- jusqu'a ZERO sur deux lignes. Or ce sont les SEULES qui
+    peuvent vider le relache (Prop. du relache vide) ; les coupes de
+    dominance, elles, preservent E par construction et ne le videront
+    jamais. Les affamer, c'est renoncer a la seule preuve forte.
+
+    L'ecart garanti suit : il EMPIRE sur cinq de ces six lignes quand on
+    triple le budget. C'est le mecanisme de la non-monotonie en budget.
+
+    LA FAUTE N'EST PAS LE PLAFOND UNIQUE, C'EST L'ECHELLE UNIQUE. Les deux
+    sources sont classees sur le meme critere, w^T x, alors que leurs
+    CAPACITES different en nature : une coupe de dominance retrecit R, une
+    coupe d'efficacite peut le VIDER. Trier sur une seule echelle traite
+    comme equivalent ce qui ne l'est pas.
+
+    LA CORRECTION, SANS PARAMETRE NOUVEAU. On classe a l'interieur de
+    chaque source, puis on ALTERNE. Aucune fraction a regler : l'alternance
+    donne la moitie des places a chaque source quand les deux ont des
+    candidats, et la TOTALITE a celle qui reste quand l'autre est epuisee --
+    l'effet « automatique » que le vivier commun promettait sans le tenir.
 
     Renvoie une liste de couples (point, origine) avec origine dans
     {"dom", "arch"}.
     """
     wv = np.asarray(w, dtype=float)
-    seen, pool = set(), []
+    seen, par_source = set(), {"dom": [], "arch": []}
     for pts, kind in ((dominated, "dom"), (archive or [], "arch")):
         for x in pts:
             key = (kind, tuple(int(v) for v in x))
             if key in seen:
                 continue
             seen.add(key)
-            pool.append((np.asarray(x, dtype=int), kind))
-    pool.sort(key=lambda t: -float(wv @ t[0]))
+            par_source[kind].append((np.asarray(x, dtype=int), kind))
+    for k in par_source:
+        par_source[k].sort(key=lambda t: -float(wv @ t[0]))
+
+    if not alterne:
+        pool = par_source["dom"] + par_source["arch"]
+        pool.sort(key=lambda t: -float(wv @ t[0]))
+        return pool
+
+    d, a = par_source["dom"], par_source["arch"]
+    pool, i, j = [], 0, 0
+    while i < len(d) or j < len(a):
+        if i < len(d):
+            pool.append(d[i])
+            i += 1
+        if j < len(a):
+            pool.append(a[j])
+            j += 1
     return pool
 
 
@@ -1818,7 +1894,8 @@ def select_cuts(inst: MOILFP,
                 archive: Sequence[np.ndarray],
                 q: Fraction,
                 cap: int,
-                max_lp: Optional[int] = None) -> Tuple[List[tuple], dict]:
+                max_lp: Optional[int] = None,
+                alterne: bool = True) -> Tuple[List[tuple], dict]:
     """
     Choisit et ordonne les coupes a poser, les deux sources sur la MEME
     echelle : la hauteur de region `region_height`.
@@ -1856,7 +1933,8 @@ def select_cuts(inst: MOILFP,
     Renvoie (vivier ordonne, diagnostic).
     """
     w, w0, _, _ = surrogate(inst, q)
-    pool = build_cut_pool(rank_dominated(dominated, w), archive or [], w)
+    pool = build_cut_pool(rank_dominated(dominated, w), archive or [], w,
+                          alterne=alterne)
     serre = len(pool) > cap
 
     if not serre and not any(k == "arch" for _, k in pool):
@@ -1988,7 +2066,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             geom_bound: bool = False,
             geom_share: float = 0.25,
             geom_gate: bool = False,
-            geom_gap: float = 0.5) -> CertResult:
+            geom_gap: float = 0.5,
+            pool_alterne: bool = True) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -2125,13 +2204,15 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             # `cap` = le plafond qui ARBITRE reellement, c'est-a-dire le lot
             # pose en un tour, et non le total sur tous les tours.
             pending, sel = select_cuts(inst, dominated, arch_pts, q,
-                                       cap=cut_batch)
+                                       cap=cut_batch,
+                                       alterne=pool_alterne)
             info["select"] = sel
         else:
             w0_coef, _, _, _ = surrogate(inst, q)
             pending = [(x, k, None) for x, k in
                        build_cut_pool(rank_dominated(dominated, w0_coef),
-                                      arch_pts, w0_coef)]
+                                      arch_pts, w0_coef,
+                                      alterne=pool_alterne)]
 
     for rnd in range(1, max_rounds + 1):
         left = budget_coupes - (time.time() - t0)
@@ -2500,6 +2581,7 @@ def matheuristic_P(inst: MOILFP,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
                    geom_gate: bool = False,
+                   pool_alterne: bool = True,
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
@@ -2658,7 +2740,8 @@ def matheuristic_P(inst: MOILFP,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
-                       geom_gate=geom_gate, geom_gap=gap_hopeless)
+                       geom_gate=geom_gate, geom_gap=gap_hopeless,
+                       pool_alterne=pool_alterne)
 
     # --- repartition du plafond d'APPELS entre les phases -----------------
     # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme

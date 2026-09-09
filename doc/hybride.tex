@@ -530,16 +530,128 @@ que la mesure le confirme brutalement : poser $40$ coupes d'archive
 $84$ à $56$ sur $90$ instances.
 
 \medskip\noindent
-La règle correcte est donc : \textbf{un seul vivier, un seul plafond, les
-deux sources en concurrence}, classées par valeur décroissante du substitut
-linéaire $w^{\top}x$ où $w=Qc-Pd$. Ce sont les points de plus grande valeur
-du substitut qui tirent $U$ vers le haut, quelle que soit leur origine ;
-les couper est ce qui resserre le plus.
+La règle est donc : \textbf{un seul vivier, un seul plafond, les deux
+sources en concurrence}. Reste à dire \emph{comment} elles concourent, et
+c'est là que nous nous sommes trompés.
 
-L'effet est automatique et souhaitable : là où les points dominés abondent,
-ils occupent le vivier ; là où ils sont rares -- le régime à $\Ecal$ épais,
+\subsection{Le classement commun affame l'archive}
+
+Nous avions écrit que les deux sources devaient être classées ensemble, par
+valeur décroissante du substitut $w^{\top}x$, et que l'effet en serait
+« automatique et souhaitable : là où les points dominés abondent, ils
+occupent le vivier ; là où ils sont rares -- le régime à $\Ecal$ épais,
 justement -- l'archive le remplit à leur place. Aucun réglage n'arbitre :
-le classement le fait.
+le classement le fait. »
+
+La mesure dit le contraire. En triplant le plafond -- donc en allongeant la
+recherche, donc en récoltant davantage de points dominés :
+
+\begin{table}[htbp]
+\centering
+\caption{Effet du triplement du plafond sous classement commun. L'archive
+double, le nombre total de coupes augmente, et les coupes \emph{d'archive}
+s'effondrent.}
+\label{tab:famine}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{6}{c}{six exécutions, $n=20,30,40$}\\
+\cmidrule(l){2-7}
+archive $|\Acal|$        & $39\!\to\!80$ & $26\!\to\!50$ & $24\!\to\!52$
+                         & $50\!\to\!99$ & $19\!\to\!36$ & $29\!\to\!63$\\
+coupes posées            & $105\!\to\!167$ & $115\!\to\!176$ & $101\!\to\!161$
+                         & $107\!\to\!161$ & $90\!\to\!171$ & $95\!\to\!240$\\
+\textbf{dont d'archive}  & $28\!\to\!12$ & $\mathbf{26\!\to\!0}$
+                         & $\mathbf{20\!\to\!2}$ & $33\!\to\!10$
+                         & $\mathbf{16\!\to\!0}$ & $22\!\to\!15$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Or les coupes d'archive sont les \emph{seules} qui puissent vider le
+relâché (proposition~\ref{prop:vide}) ; les coupes de dominance préservent
+$\Ecal$ par construction et ne le videront jamais. Les affamer, c'est
+renoncer à la seule preuve forte. L'écart garanti suit : il \emph{empire}
+sur cinq de ces six lignes quand on triple le budget.
+
+\begin{remark}[la faute n'est pas le plafond unique, c'est l'échelle unique]
+Les deux sources sont classées sur un seul critère, $w^{\top}x$, alors que
+leurs \emph{capacités} diffèrent en nature : une coupe de dominance
+rétrécit $\Rcal$, une coupe d'efficacité peut le \emph{vider}. Trier sur une
+échelle unique traite comme équivalent ce qui ne l'est pas. Quand la
+recherche s'allonge, les points dominés deviennent nombreux \emph{et} bien
+placés, et ils raflent le vivier.
+\end{remark}
+
+\subsection{L'alternance, et ce qu'elle rétablit}
+
+La correction ne demande aucun paramètre nouveau : on classe à l'intérieur
+de \emph{chaque} source, puis on \textbf{alterne}. Chaque source obtient la
+moitié des places quand les deux ont des candidats, et la totalité quand
+l'autre est épuisée -- l'effet automatique que le vivier commun promettait
+sans le tenir.
+
+Trois conditions avaient été posées \emph{avant} la mesure, la troisième
+pouvant condamner l'alternance.
+
+\begin{table}[htbp]
+\centering
+\caption{Classement commun contre alternance, sur les six lignes portant le
+défaut. « arch. » compte les coupes d'archive effectivement posées.}
+\label{tab:alternance}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{cccccccc}
+\toprule
+$n$ & corr & vivier & écart @$300$ & écart @$900$ & monotone
+ & arch.@$300$ & arch.@$900$\\
+\midrule
+$20$ & $0$ & commun & $88{,}8\ \%$ & $93{,}6\ \%$ & non & $26$ & $0$\\
+$20$ & $0$ & \textbf{alterné} & $\mathbf{77{,}2\ \%}$ & $\mathbf{71{,}5\ \%}$ & oui & $26$ & $40$\\
+\midrule
+$20$ & $0$ & commun & $42{,}3\ \%$ & $31{,}5\ \%$ & oui & $28$ & $12$\\
+$20$ & $0$ & \textbf{alterné} & $43{,}6\ \%$ & $\mathbf{26{,}6\ \%}$ & oui & $29$ & $40$\\
+\midrule
+$30$ & $0$ & commun & $78{,}6\ \%$ & $93{,}0\ \%$ & non & $20$ & $2$\\
+$30$ & $0$ & \textbf{alterné} & $78{,}6\ \%$ & $93{,}0\ \%$ & non & $20$ & $40$\\
+\midrule
+$30$ & $0$ & commun & $27{,}1\ \%$ & $41{,}5\ \%$ & non & $33$ & $10$\\
+$30$ & $0$ & \textbf{alterné} & $\mathbf{22{,}8\ \%}$ & $\mathbf{23{,}0\ \%}$ & non & $39$ & $40$\\
+\midrule
+$40$ & $0$ & commun & $87{,}3\ \%$ & $93{,}8\ \%$ & non & $22$ & $15$\\
+$40$ & $0$ & \textbf{alterné} & $87{,}3\ \%$ & $\mathbf{85{,}9\ \%}$ & oui & $22$ & $35$\\
+\midrule
+$40$ & $0{,}5$ & commun & $43{,}9\ \%$ & $88{,}1\ \%$ & non & $16$ & $0$\\
+$40$ & $0{,}5$ & \textbf{alterné} & $43{,}9\ \%$ & $\mathbf{0{,}0\ \%}$ & oui & $16$ & $36$\\
+\midrule
+\multicolumn{8}{l}{plafond $300$ : mieux $2$, pire $1$, égal $3$
+ \quad$\bullet$\quad gain médian $+0{,}00$, moyen $+2{,}44$}\\
+\multicolumn{8}{l}{plafond $900$ : mieux $\mathbf{5}$, pire $\mathbf{0}$,
+ égal $1$ \quad$\bullet$\quad gain médian $\mathbf{+13{,}17}$, moyen
+ $+23{,}56$}\\
+\multicolumn{8}{l}{monotonie $1/6\to 4/6$ \quad$\bullet$\quad coupes
+ d'archive à $900$ : $[0,12,2,10,15,0]\to[40,40,40,40,35,36]$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{enumerate}
+\item \textbf{ne pas dégrader au plafond nominal} -- tenue : mieux $2$,
+  pire $1$ (de $1{,}3$ point), égal $3$ ;
+\item \textbf{empêcher l'effondrement} -- tenue complètement : le plafond de
+  lot est atteint sur toutes les lignes ;
+\item \textbf{rétablir la monotonie} -- tenue à moitié : $1/6\to 4/6$.
+\end{enumerate}
+
+La ligne $n=40$, $\text{corr}=0{,}5$ passe de $88{,}1\ \%$ à
+$\mathbf{0{,}0\ \%}$ : l'optimalité y est \emph{prouvée}. C'est précisément
+ce qu'une coupe de dominance ne peut pas produire -- vider le relâché -- et
+il a suffi que l'archive cesse d'être affamée.
+
+\begin{remark}[ce qui n'est pas guéri]
+Deux lignes sur six reculent encore quand on triple le budget, dont une
+($n=30$, $\text{corr}=0$) dont les coupes d'archive sont pourtant passées de
+$2$ à $40$. L'affamement était une cause réelle de la non-monotonie ; ce
+n'était pas la seule. Nous ne savons pas nommer l'autre.
+\end{remark}
 
 % ============================================================================
 \section{L'algorithme}
@@ -801,6 +913,52 @@ $\textit{stall}\leftarrow 0$\;
   \lIf{$\textit{stall}\ge\texttt{max\_stall}$}{\textbf{sortir}}
 }
 \end{algorithm}
+
+\subsubsection*{Ce que chaque pièce rapporte réellement}
+
+Décrire une recherche ne dit pas laquelle de ses pièces travaille. Sur
+$12$ instances à plafond déterministe de $300$ appels :
+
+\begin{table}[htbp]
+\centering
+\caption{Rendement des structures de voisinage et profondeur des chaînes de
+réparation. Un « succès » est une amélioration \emph{stricte} de
+l'incumbent.}
+\label{tab:voisinage}
+\begin{tabular}{llcc}
+\toprule
+& structure & succès / tentatives & rendement\\
+\midrule
+A & $\varepsilon$ partiel        & $18/453$ & $4{,}0\ \%$\\
+B & plancher absolu              & $15/500$ & $3{,}0\ \%$\\
+C & LNS / \emph{fix-and-optimize} & $\mathbf{4/316}$ & $\mathbf{1{,}3\ \%}$\\
+\midrule
+\multicolumn{4}{l}{\emph{profondeur des chaînes, sur $751$ réparations}}\\
+\multicolumn{2}{l}{$0$ -- le point était déjà efficace}
+ & $214$ & $\mathbf{28{,}5\ \%}$\\
+\multicolumn{2}{l}{$1$ pas} & $384$ & $51{,}1\ \%$\\
+\multicolumn{2}{l}{$2$ pas ou plus} & $153$ & $20{,}4\ \%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Le mouvement C est presque stérile.} Quatre améliorations pour
+$316$ appels entiers -- près d'un cinquième du budget de recherche pour un
+rendement trois fois moindre que A. Nous le laissons en place et le
+signalons plutôt que de le retirer discrètement : sa faiblesse est un
+résultat, et il reste le seul des trois à pouvoir réorganiser plusieurs
+variables d'un coup. Mais il ne mérite pas le rang que la description lui
+donnait.
+
+\paragraph{La profondeur médiane vaut bien $1$, et ce n'est pas la bonne
+lecture.} L'affirmation sur laquelle repose le diagnostic du verrou
+(§\ref{sec:verrou}) est confirmée -- $51{,}1\ \%$ des chaînes ont exactement
+un pas. Mais $\mathbf{28{,}5\ \%}$ sont de profondeur \emph{zéro} : le point
+sorti du mouvement était déjà efficace, aucun point dominé n'a été traversé,
+\textbf{aucune coupe du théorème~\ref{th:effcut} n'a été récoltée}. Plus du
+quart du travail de recherche ne produit donc aucune munition pour la
+certification. C'est une raison de plus, et mesurée celle-là, pour que
+l'archive alimente le vivier.
 
 \begin{remark}[l'invariant]
 À tout instant, $\bar x$ est efficace \emph{certifié}. Donc $q=f(\bar x)$
@@ -2073,6 +2231,27 @@ Pour $x\in\Rcal$ on a $N(x)-tD(x)\le v$, et $D(x)>0$ sous~(A1) ; donc
 $f(x)=N(x)/D(x)\le t+v/D(x)$, et $v\ge0$ donne
 $v/D(x)\le v/D_{\min}$. \end{proof}
 
+\begin{remark}[le gain $D^{+}$ n'était jamais réalisé]
+Le théorème~5' compte trois apports sur le théorème~5, dont le deuxième est
+de remplacer $D_{\min}$ par $D^{+}\ge D_{\min}$, minimum pris sur la seule
+région où la borne agit. L'instrumentation montre qu'il ne s'appliquait
+\emph{jamais} : sur neuf exécutions à $n=20,30,40$ et aux deux plafonds,
+$D^{+}$ vaut \texttt{None} les neuf fois, et la borne retombe sur
+$D_{\min}$. La cause est d'implémentation, non de théorie : le programme qui
+calcule $D^{+}$ est posé sur le modèle de coupes complet, sans limite de
+temps, et il est appelé \emph{en dernier} dans le tour -- le budget est
+épuisé quand son tour vient, et un statut non optimal était rejeté.
+
+Or ce programme \emph{minimise}, et la borne optimiste d'une minimisation
+interrompue est un \emph{minorant} valide de $\min D$. C'est exactement ce
+que le théorème~5' demande à son dénominateur, qui n'a qu'à minorer $D(x)$
+là où la borne agit. Un minorant interrompu est donc aussi légitime que
+l'optimum, seulement moins fin -- et l'appelant prenant
+$\max(D_{\min},D^{+})$, maximum de deux minorants valides, il ne peut que
+resserrer. L'arrondi se fait \emph{vers le bas} : un dénominateur surestimé
+rendrait la borne fausse.
+\end{remark}
+
 Le théorème~5' est le cas $t=q$ : en effet $G_q=F_q/Q$, de sorte que
 $v=U/Q$ et la borne s'écrit $q+U/(QD_{\min})$. Mais tout $t$ convient, et
 \emph{chaque point du relâché en fournit un meilleur} : si l'ILP rend un
@@ -2216,9 +2395,8 @@ procédure qu'il finance.
 \begin{table}[htbp]
 \centering
 \caption{Seconde route, budget déterministe de $300$ appels entiers,
-comparaison appariée, chaque configuration jouée deux fois. « tours » et
-« \ILP{}~2\textsuperscript{e} » donnent le coût \emph{propre} de la seconde
-route ; « coupes » ce que la boucle a cédé pour la financer.}
+comparaison appariée, chaque configuration jouée deux fois. Mesuré avec le
+vivier \emph{alterné} (§\ref{sec:vivier}).}
 \label{tab:geom}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{ccccrccc}
@@ -2226,40 +2404,73 @@ route ; « coupes » ce que la boucle a cédé pour la financer.}
 $n$ & corr & écart sans & écart avec & gain (pts) & tours
  & coupes s/a & \ILP{} s/a\\
 \midrule
-$20$ & $0$     & $98{,}6\ \%$ & $88{,}8\ \%$ & $\mathbf{+9{,}82}$  & $2$ & $119/115$ & $300/290$\\
-$20$ & $0$     & $42{,}7\ \%$ & $42{,}3\ \%$ & $+0{,}33$           & $2$ & $108/105$ & $300/290$\\
+$20$ & $0$     & $97{,}6\ \%$ & $\mathbf{77{,}2\ \%}$ & $\mathbf{+20{,}36}$ & $2$ & $113/109$ & $300/290$\\
+$20$ & $0$     & $43{,}6\ \%$ & $43{,}6\ \%$ & $+0{,}00$           & $2$ & $105/102$ & $300/290$\\
 $20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $32/32$   & $143/143$\\
-$20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $57/57$   & $217/217$\\
-$30$ & $0$     & $93{,}9\ \%$ & $78{,}6\ \%$ & $\mathbf{+15{,}26}$ & $4$ & $104/101$ & $300/292$\\
-$30$ & $0$     & $33{,}2\ \%$ & $27{,}1\ \%$ & $+6{,}04$           & $2$ & $110/107$ & $300/290$\\
-$30$ & $0{,}5$ & $78{,}9\ \%$ & $\mathbf{8{,}0\ \%}$ & $\mathbf{+70{,}86}$ & $3$ & $89/85$ & $300/291$\\
-$30$ & $0{,}5$ & $12{,}7\ \%$ & $13{,}7\ \%$ & $-1{,}00$           & $2$ & $97/93$   & $300/290$\\
-$40$ & $0$     & $96{,}6\ \%$ & $96{,}5\ \%$ & $+0{,}06$           & $3$ & $110/107$ & $300/291$\\
-$40$ & $0$     & $94{,}0\ \%$ & $87{,}3\ \%$ & $+6{,}74$           & $4$ & $98/95$   & $300/292$\\
+$20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $56/56$   & $214/214$\\
+$30$ & $0$     & $93{,}1\ \%$ & $78{,}6\ \%$ & $\mathbf{+14{,}52}$ & $3$ & $95/93$   & $300/291$\\
+$30$ & $0$     & $22{,}8\ \%$ & $22{,}8\ \%$ & $+0{,}00$           & $2$ & $110/106$ & $300/290$\\
+$30$ & $0{,}5$ & $16{,}1\ \%$ & $\mathbf{1{,}2\ \%}$ & $\mathbf{+14{,}85}$ & $2$ & $87/83$ & $300/290$\\
+$30$ & $0{,}5$ & $13{,}7\ \%$ & $13{,}7\ \%$ & $+0{,}00$           & $2$ & $95/91$   & $300/290$\\
+$40$ & $0$     & $96{,}6\ \%$ & $96{,}5\ \%$ & $+0{,}02$           & $3$ & $105/102$ & $300/291$\\
+$40$ & $0$     & $93{,}2\ \%$ & $87{,}3\ \%$ & $+5{,}93$           & $4$ & $101/97$  & $300/292$\\
 $40$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $56/56$   & $197/197$\\
-$40$ & $0{,}5$ & $82{,}6\ \%$ & $43{,}9\ \%$ & $\mathbf{+38{,}64}$ & $4$ & $93/90$   & $300/292$\\
+$40$ & $0{,}5$ & $82{,}7\ \%$ & $\mathbf{43{,}9\ \%}$ & $\mathbf{+38{,}77}$ & $3$ & $90/87$ & $300/291$\\
 \midrule
 \multicolumn{8}{l}{reproductibilité $12/12$ \quad$\bullet$\quad
  cohérence des encadrements : toutes valides}\\
-\multicolumn{8}{l}{améliorées $\mathbf{8}$, dégradées $\mathbf{1}$,
- inchangées $3$ \quad$\bullet$\quad convergée $9/12$
- \quad$\bullet$\quad test des signes $p=0{,}039$}\\
-\multicolumn{8}{l}{gain médian $\mathbf{+3{,}19}$ point, moyen
- $\mathbf{+12{,}23}$, maximum $+70{,}86$, minimum $-1{,}00$}\\
+\multicolumn{8}{l}{améliorées $\mathbf{6}$, dégradées $\mathbf{0}$,
+ inchangées $6$ \quad$\bullet$\quad convergée $9/12$
+ \quad$\bullet$\quad test des signes $p=0{,}031$}\\
+\multicolumn{8}{l}{gain médian $+0{,}01$ point, moyen $+7{,}87$,
+ maximum $+38{,}77$, minimum $\mathbf{+0{,}00}$}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{L'ordre de grandeur change.} Le levier précédent -- la coupe
-générée sans binaire -- rapportait au mieux $0{,}11$ point
-(§\ref{sec:cglp}). Celui-ci en rapporte $70{,}86$ sur sa meilleure ligne,
-$38{,}64$ sur la suivante, $15{,}26$ et $9{,}82$ ensuite. Ce n'est pas le
-même phénomène mesuré plus finement, c'est un autre phénomène. Et il agit là
-où la section d'échelle disait que rien n'agissait : à $n=30$,
-$\text{corr}=0{,}5$, l'écart garanti tombe de $78{,}9$ à $8{,}0\ \%$ --
-c'est-à-dire qu'on passe d'une borne qui n'apprenait rien à un encadrement
-serré. Sur les $9$ lignes non nulles, $8$ progressent et une seule recule :
-le test des signes donne $p=0{,}039$.
+\paragraph{Aucune ligne ne recule.} C'est la propriété la plus solide du
+tableau : $6$ améliorées, $\mathbf{0}$ dégradée, $6$ inchangées, sur douze
+lignes toutes reproductibles à l'identique. Le test des signes sur les six
+paires non nulles donne $p=0{,}031$.
+
+\paragraph{L'ordre de grandeur.} Le levier précédent -- la coupe générée
+sans binaire -- rapportait au mieux $0{,}11$ point (§\ref{sec:cglp}).
+Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, $20{,}36$,
+$14{,}85$ et $14{,}52$ ensuite. Ce n'est pas le même phénomène mesuré plus
+finement, c'est un autre phénomène.
+
+\begin{remark}[les deux corrections se recouvrent, et il faut le dire]
+Le gain \emph{médian} de la seconde route est tombé de $+3{,}19$ à
+$+0{,}01$ point entre la version à vivier commun et celle-ci. Ce n'est pas
+une dégradation : c'est que la colonne « sans » a elle aussi changé.
+L'alternance améliore la \emph{base} -- à $n=30$, $\text{corr}=0{,}5$, elle
+la fait passer de $78{,}9$ à $16{,}1\ \%$ à elle seule -- et ce que l'une
+gagne ne reste pas à gagner pour l'autre. Les deux corrections attaquent le
+même écart par deux côtés ; leurs gains ne s'additionnent pas, et les
+annoncer séparément sans cette réserve reviendrait à compter deux fois.
+\end{remark}
+
+\paragraph{L'effet cumulé, de l'état publié à celui-ci.} En comparant la
+configuration d'origine (vivier commun, sans seconde route) à la
+configuration courante :
+%
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+& $20$/$0$ & $30$/$0$ & $30$/$0{,}5$ & $40$/$0$ & $40$/$0{,}5$\\
+\midrule
+avant & $98{,}6$ & $93{,}9$ & $78{,}9$ & $96{,}6$ & $82{,}6$\\
+après & $\mathbf{77{,}2}$ & $\mathbf{78{,}6}$ & $\mathbf{1{,}2}$
+ & $96{,}5$ & $\mathbf{43{,}9}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+%
+\noindent
+Sur les douze lignes, $7$ progressent, $2$ reculent (de $0{,}9$ et $1{,}0$
+point), gain médian $+10{,}4$, moyen $+18{,}7$. Les trois chiffres que la
+section d'échelle donnait pour immuables -- $98{,}6$, $93{,}9$, $96{,}6$ --
+sont devenus $77{,}2$, $78{,}6$ et $96{,}5$.
 
 \paragraph{Elle coûte deux à quatre appels entiers.} C'est la colonne
 « tours », et c'est le chiffre à retenir : un tour de Dinkelbach est un ILP,
@@ -2699,12 +2910,37 @@ programme générateur produisant des coupes disjonctives valides sans aucune
 binaire, en nombre illimité : l'écart garanti gagne $0{,}11$ point au mieux,
 zéro en médiane. Le plafond n'était donc pas le verrou.
 
-Ce que la mesure met à sa place est plus difficile et plus honnête : à ces
-tailles, la région que l'on sait retrancher -- celle qui entoure les points
-déjà connus -- ne représente qu'une part négligeable de ce qui sépare
-$\Rcal$ de $\Ecal$. Aucune quantité de coupes de ce genre n'y changera rien,
-puisque aucune ne porte là où il le faudrait. Refermer cet écart demande un
-relâché construit autrement. Nous ne savons pas le construire.
+Nous avions alors avancé, à sa place, que la région retranchable serait
+négligeable devant ce qui sépare $\Rcal$ de $\Ecal$. La
+section~\ref{sec:couverture} réfute cela aussi : les coupes centrées sur
+$\Ecal$ retranchent $100\ \%$ des points fautifs, et l'archive -- qui n'en
+retient que $20$ à $35\ \%$ -- en domine déjà la quasi-totalité. Ce
+n'étaient donc ni le plafond, ni la couverture. C'était le \emph{seuil}
+auquel le théorème~5' est évalué (§\ref{sec:seuil}), et l'\emph{échelle} sur
+laquelle le vivier classe ses deux sources (§\ref{sec:vivier}).
+
+Ce qui reste ouvert, après ces deux corrections, se dit en trois points.
+
+\paragraph{La borne à $n=40$, $\text{corr}=0$.} Elle ne bouge pas --
+$96{,}6\to 96{,}5\ \%$ -- alors que le statut « convergée » certifie qu'elle
+\emph{est} $\max_{\Rcal}f$. Ce qui reste tient donc à $q_{\text{lb}}$, et la
+recherche y est effectivement déficiente : en triplant son budget,
+l'incumbent y gagne $49{,}6\ \%$. Mais cela n'achète que $1{,}7$ point
+d'écart, parce que $q_{\text{ub}}\approx 103$ y dilue tout gain sur le
+numérateur. Les deux termes sont déficients et aucun ne suffit seul.
+
+\paragraph{La non-monotonie en budget.} Tripler le plafond dégradait
+l'écart garanti sur six lignes sur douze. L'alternance en supprime la cause
+principale -- l'affamement de l'archive -- et fait passer la monotonie de
+$1/6$ à $4/6$ sur les lignes portant le défaut. Deux lignes reculent encore,
+dont une dont les coupes d'archive sont pourtant passées de $2$ à $40$.
+Nous ne savons pas nommer la cause restante. Une méthode dont le résultat
+peut empirer quand on lui donne plus de temps reste une méthode à corriger.
+
+\paragraph{Le mouvement C.} Quatre améliorations pour $316$ appels entiers
+(tableau~\ref{tab:voisinage}). Soit sa conception est à revoir, soit sa
+place dans le menu ; en l'état il consomme près d'un cinquième du budget de
+recherche pour un rendement trois fois moindre que le mouvement A.
 
 La seconde est la clôture elle-même : nos mesures n'ont jamais rencontré
 deux points efficaces de même vecteur critères, ce qui suggère qu'une
