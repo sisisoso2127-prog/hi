@@ -231,6 +231,196 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
 \end{enumerate}
 
 % ============================================================================
+\section{Revue de la littérature}
+\label{sec:revue}
+
+Quatre courants se rejoignent dans (P), et il faut les parcourir séparément
+avant de dire ce que notre travail y ajoute : l'optimisation \emph{sur}
+l'ensemble efficace, le traitement du fractionnaire, l'énumération de
+$\Ecal$ dans le cas entier multiobjectif, et l'hybridation exact
+$\times$ métaheuristique. Le dernier est celui où nous plaçons une
+revendication, et c'est donc celui qu'il faut le plus soigneusement
+instrumenter.
+
+\subsection{Optimiser sur l'ensemble efficace : cinquante ans de problème}
+
+Le problème remonte à Philip~\cite{philip1972}, qui le pose en même temps
+qu'il donne le premier algorithme de maximisation vectorielle : une fois
+$\Ecal$ caractérisé, on peut vouloir y choisir un point selon un critère
+supplémentaire. La difficulté est structurelle et fut identifiée tôt :
+$\Ecal$ est en général \emph{non convexe} et \emph{non connexe}, même quand
+le domaine est un polyèdre. Maximiser une fonction linéaire sur $\Ecal$ est
+donc un problème d'optimisation globale, non un programme linéaire.
+
+Benson~\cite{benson1984,benson1986} en donne la première étude
+systématique dans le cas continu, avec un algorithme de type
+\emph{branch-and-bound} sur le cône des directions efficaces.
+Bolintineanu~\cite{bolintineanu1993} étend au cas quasi concave.
+Ecker et Song~\cite{eckersong1994} proposent une méthode par faces, qui
+explore les faces efficaces du polyèdre plutôt que ses points.
+Isermann et Steuer~\cite{isermann1988} traitent le problème connexe du
+calcul des valeurs minimales des critères sur $\Ecal$ -- le point nadir --
+dont la difficulté est du même ordre et pour la même raison.
+La synthèse de Yamamoto~\cite{yamamoto2002} recense l'état du domaine au
+tournant des années deux mille et classe les approches en trois familles :
+celles qui travaillent dans l'espace des décisions, celles qui passent par
+l'espace des critères, et celles qui reformulent en un programme
+non convexe unique. Notre méthode appartient à la deuxième famille par sa
+recherche et à aucune par sa certification.
+
+\paragraph{Le cas entier.} Il change la nature du problème plutôt que son
+énoncé : $\Ecal$ devient un ensemble fini mais sans structure faciale, et
+les algorithmes fondés sur les faces perdent leur prise.
+Jorge~\cite{jorge2009} optimise une fonction linéaire sur l'ensemble
+efficace entier par ajout successif de contraintes de coupe.
+Sylva et Crema~\cite{sylva2004} énumèrent les vecteurs non dominés d'un
+programme entier multiobjectif -- travail voisin mais distinct, puisqu'il
+\emph{engendre} $\Ecal$ au lieu d'optimiser dessus. Cette distinction est
+celle qui commande tout notre travail : nous supposons l'énumération hors
+de portée.
+
+\subsection{Le fractionnaire : deux réductions classiques}
+
+Une fonction linéaire fractionnaire $N(x)/D(x)$ avec $D>0$ se traite par
+deux voies, toutes deux antérieures au problème qui nous occupe.
+Charnes et Cooper~\cite{charnes1962} montrent qu'un \emph{programme}
+linéaire fractionnaire se ramène à un programme linéaire par le changement
+de variables $y=x/D(x)$, $t=1/D(x)$ ; la transformation est exacte mais
+détruit l'intégralité, ce qui la rend inutilisable ici -- c'est la première
+raison pour laquelle le cas entier n'hérite pas du cas continu.
+Dinkelbach~\cite{dinkelbach1967} procède autrement, par la fonction
+paramétrique $F(q)=\max\{N(x)-qD(x)\}$, dont l'unique racine est l'optimum ;
+Schaible~\cite{schaible1976} en établit la convergence superlinéaire et le
+rattache à la méthode de Newton. C'est cette seconde voie que nous
+employons, avec une particularité : le paramètre $q$ étant \emph{rationnel}
+et le domaine entier, la valeur du sous-problème est un entier, et le test
+d'arrêt $F(q)\le 0$ devient exact -- aucun $\varepsilon$ n'est à régler.
+Martos~\cite{martos1964,martos1975} donne enfin la règle de pivotage propre
+au simplexe fractionnaire, dont nous avons besoin pour réimplémenter la
+méthode de Zerdani et Moulaï (§\ref{sec:matchzm}).
+
+\subsection{Énumérer \texorpdfstring{$\Ecal$}{E} pour un MOILFP}
+
+Le problème multiobjectif entier \emph{fractionnaire} a sa propre
+littérature, plus récente. Abbas et Moulaï~\cite{abbas2002} en donnent une
+méthode d'énumération par coupes ; Chergui et Moulaï~\cite{chergui2008}
+une méthode exacte fondée sur une exploration arborescente de l'espace des
+critères. Ces travaux \emph{produisent} $\Ecal$. Ils sont, pour nous, à la
+fois la référence et le repoussoir : la référence parce que leurs tests
+d'efficacité et leurs coupes sont ceux que nous réutilisons ; le repoussoir
+parce que le régime qui nous intéresse -- $\Ecal$ épais, $n\ge 20$ -- est
+exactement celui où leur énumération n'aboutit pas.
+
+Deux méthodes optimisent enfin \emph{sur} $\Ecal$ dans un cadre voisin du
+nôtre. Zerdani et Moulaï~\cite{zerdani2011} maximisent une fonction
+\emph{linéaire} sur l'ensemble efficace d'un MOILFP ; Drici, Ouail et
+Moulaï~\cite{drici2018} maximisent une fonction \emph{fractionnaire} sur
+celui d'un MOILP ; Mahdi et Chaabane~\cite{mahdi2015} traitent le second
+cas par une autre voie. Aucune ne place le fractionnaire des deux côtés à
+la fois. C'est cette conjonction qui définit (P), et c'est elle qui
+supprime les raccourcis dont chacune dispose : la section~\ref{sec:matchzm}
+en donne l'exemple le plus net, l'étape~1 de Zerdani et Moulaï concluant
+parfois en \emph{un seul} test d'efficacité là où notre $f$ fractionnaire
+exige un Dinkelbach complet.
+
+\subsection{Métaheuristiques multiobjectif}
+
+La recherche approchée en multiobjectif est un domaine constitué :
+NSGA-II~\cite{deb2002}, SPEA2~\cite{zitzler2001} et MOEA/D~\cite{zhang2007}
+en sont les représentants les plus employés. Tous produisent une
+\emph{approximation} du front, et c'est précisément ce que nous ne pouvons
+pas utiliser tel quel : notre coupe d'efficacité exige des points
+\emph{prouvés} efficaces, faute de quoi elle retrancherait des solutions
+admissibles. Un front approché ne fournit pas cette garantie.
+
+Nous empruntons en revanche leur vocabulaire de voisinages. La recherche à
+voisinage variable de Mladenović et Hansen~\cite{mladenovic1997} donne la
+structure d'ensemble de notre phase~1 ; la recherche à grand voisinage de
+Shaw~\cite{shaw1998}, systématisée par Pisinger et
+Ropke~\cite{pisinger2010}, donne le mouvement C. La différence tient à ce
+que chaque voisinage est ici résolu \emph{exactement}, ce qui nous conduit
+au dernier courant.
+
+\subsection{Hybridation : où se situe ce travail dans les taxonomies}
+\label{sec:taxonomie}
+
+Nous avons écrit que notre méthode réalise une « hybridation au sens fort ».
+Une telle formule ne vaut rien si l'auteur la définit lui-même. Deux
+classifications font autorité et permettent de la situer de l'extérieur.
+
+\paragraph{Talbi~\cite{talbi2002}.} Sa taxonomie hiérarchique croise deux
+axes : le \emph{niveau} (bas, si un composant fonctionnel d'une
+métaheuristique est remplacé par une autre méthode ; haut, si les méthodes
+gardent leur intégrité) et le \emph{mode} (relais, si elles s'exécutent en
+séquence ; coéquipier, si elles coopèrent en parallèle sur le même
+problème). Notre phase~1 est un \textsf{LTH} -- \emph{low-level teamwork
+hybrid} -- puisque l'opérateur de voisinage de la métaheuristique \emph{est}
+un programme entier résolu à l'optimum, et que le test d'efficacité, exact
+lui aussi, filtre chaque point produit. L'ensemble des deux phases est un
+\textsf{HTH}, les deux méthodes conservant leur identité et échangeant de
+l'information dans les deux sens.
+
+\paragraph{Puchinger et Raidl~\cite{puchinger2005}.} Leur classification
+distingue les combinaisons \emph{collaboratives} -- les deux méthodes
+s'exécutent l'une après l'autre ou en parallèle, sans s'imbriquer -- des
+combinaisons \emph{intégratives}, où l'une devient un composant de l'autre.
+La très grande majorité des matheuristiques publiées sont collaboratives et
+séquentielles : une métaheuristique fournit une solution de départ à un
+solveur exact, ou un solveur exact résout un sous-problème pour une
+métaheuristique. C'est le cas de \emph{local branching}~\cite{fischetti2003}
+et de \textsc{Rins}~\cite{danna2005}, deux hybridations intégratives mais
+\emph{unidirectionnelles} : l'exact sert la recherche.
+
+\begin{table}[htbp]
+\centering
+\caption{Position de ce travail dans la classification de Puchinger et
+Raidl. Ce qui est revendiqué n'est pas l'intégration -- elle est courante --
+mais sa \emph{bidirectionnalité}.\ \confna}
+\label{tab:taxo}
+\begin{tabular}{lll}
+\toprule
+sens de l'intégration & mécanisme & précédents\\
+\midrule
+exact $\to$ métaheuristique
+ & chaque voisinage est un \ILP{} résolu à l'optimum
+ & \cite{fischetti2003,danna2005}\\
+ & le test d'efficacité certifie chaque point & \cite{chergui2008}\\
+\midrule
+métaheuristique $\to$ exact
+ & l'archive fournit les \emph{centres de coupe} & \textbf{--}\\
+ & les points dominés traversés en fournissent d'autres & \textbf{--}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Ce qui est revendiqué, et ce qui ne l'est pas.} Le premier sens
+n'a rien d'original : résoudre exactement le voisinage d'une
+métaheuristique est la définition même d'une matheuristique intégrative, et
+la littérature en est riche. Notre revendication porte sur le second, et
+elle est étroite : \emph{les sous-produits de la recherche deviennent des
+coupes valides pour la méthode exacte}. Ce transfert n'est possible que
+parce que les points de l'archive sont \emph{prouvés} efficaces -- une
+propriété que les métaheuristiques multiobjectif usuelles ne fournissent
+pas, puisqu'elles rendent une approximation du front. C'est la certification
+exacte de la phase~1 qui rend la phase~2 possible, et c'est pourquoi les
+deux moitiés ne se séparent pas.
+
+La signature en est la proposition~\ref{prop:vide} : lorsque le relâché se
+vide, l'optimalité est \emph{prouvée} par le fait d'avoir épuisé $\Ecal$
+avec des points trouvés heuristiquement. Aucune des deux moitiés ne produit
+seule cette preuve. Dans le vocabulaire de Blum et
+collaborateurs~\cite{blum2011}, c'est une intégration où le flux
+d'information est réciproque et où le composant exact dépend d'une garantie
+produite par le composant heuristique -- configuration que leur revue
+mentionne comme rare et dont ils ne donnent pas d'exemple en multiobjectif.
+
+\begin{remark}[une revendication vérifiable, non une auto-évaluation]
+Formulée ainsi, l'affirmation est réfutable : il suffirait d'exhiber une
+matheuristique où un sous-produit \emph{certifié} de la recherche alimente
+la relaxation d'une méthode exacte. Nous n'en connaissons pas en
+multiobjectif entier ; nous n'affirmons pas qu'il n'en existe pas.
+\end{remark}
+
 \section{Cadre et briques réutilisées}
 \label{sec:cadre}
 
@@ -3180,6 +3370,124 @@ complet. Reste à savoir si un test bon marché, appliqué au \emph{premier}
 itéré de ce Dinkelbach, en récupérerait une partie du bénéfice.
 
 \begin{thebibliography}{99}
+
+\bibitem{philip1972}
+J.~Philip.
+\newblock Algorithms for the vector maximization problem.
+\newblock \emph{Mathematical Programming}, 2:207--229, 1972.
+
+\bibitem{charnes1962}
+A.~Charnes et W.~W.~Cooper.
+\newblock Programming with linear fractional functionals.
+\newblock \emph{Naval Research Logistics Quarterly}, 9(3--4):181--186, 1962.
+
+\bibitem{benson1984}
+H.~P.~Benson.
+\newblock Optimization over the efficient set.
+\newblock \emph{Journal of Mathematical Analysis and Applications},
+  98:562--580, 1984.
+
+\bibitem{benson1986}
+H.~P.~Benson.
+\newblock An algorithm for optimizing over the weakly-efficient set.
+\newblock \emph{European Journal of Operational Research}, 25:192--199,
+  1986.
+
+\bibitem{isermann1988}
+H.~Isermann et R.~E.~Steuer.
+\newblock Computational experience concerning payoff tables and minimum
+  criterion values over the efficient set.
+\newblock \emph{European Journal of Operational Research}, 33:91--97, 1988.
+
+\bibitem{bolintineanu1993}
+S.~Bolintineanu.
+\newblock Minimization of a quasi-concave function over an efficient set.
+\newblock \emph{Mathematical Programming}, 61:89--110, 1993.
+
+\bibitem{eckersong1994}
+J.~G.~Ecker et J.~H.~Song.
+\newblock Optimizing a linear function over an efficient set.
+\newblock \emph{Journal of Optimization Theory and Applications},
+  83(3):541--563, 1994.
+
+\bibitem{yamamoto2002}
+Y.~Yamamoto.
+\newblock Optimization over the efficient set: overview.
+\newblock \emph{Journal of Global Optimization}, 22:285--317, 2002.
+
+\bibitem{schaible1976}
+S.~Schaible.
+\newblock Fractional programming~II: on Dinkelbach's algorithm.
+\newblock \emph{Management Science}, 22(8):868--873, 1976.
+
+\bibitem{abbas2002}
+M.~Abbas et M.~Moulaï.
+\newblock Integer linear fractional programming with multiple objective.
+\newblock \emph{Journal of Information and Optimization Sciences},
+  23(1):1--18, 2002.
+
+\bibitem{mladenovic1997}
+N.~Mladenović et P.~Hansen.
+\newblock Variable neighborhood search.
+\newblock \emph{Computers \& Operations Research}, 24(11):1097--1100, 1997.
+
+\bibitem{shaw1998}
+P.~Shaw.
+\newblock Using constraint programming and local search methods to solve
+  vehicle routing problems.
+\newblock Dans \emph{Principles and Practice of Constraint Programming},
+  LNCS 1520, pages 417--431. Springer, 1998.
+
+\bibitem{pisinger2010}
+D.~Pisinger et S.~Ropke.
+\newblock Large neighborhood search.
+\newblock Dans M.~Gendreau et J.-Y.~Potvin, éditeurs, \emph{Handbook of
+  Metaheuristics}, pages 399--419. Springer, 2010.
+
+\bibitem{deb2002}
+K.~Deb, A.~Pratap, S.~Agarwal et T.~Meyarivan.
+\newblock A fast and elitist multiobjective genetic algorithm: NSGA-II.
+\newblock \emph{IEEE Transactions on Evolutionary Computation},
+  6(2):182--197, 2002.
+
+\bibitem{zitzler2001}
+E.~Zitzler, M.~Laumanns et L.~Thiele.
+\newblock SPEA2: improving the strength Pareto evolutionary algorithm.
+\newblock Rapport technique 103, ETH Zürich, 2001.
+
+\bibitem{zhang2007}
+Q.~Zhang et H.~Li.
+\newblock MOEA/D: a multiobjective evolutionary algorithm based on
+  decomposition.
+\newblock \emph{IEEE Transactions on Evolutionary Computation},
+  11(6):712--731, 2007.
+
+\bibitem{talbi2002}
+E.-G.~Talbi.
+\newblock A taxonomy of hybrid metaheuristics.
+\newblock \emph{Journal of Heuristics}, 8(5):541--564, 2002.
+
+\bibitem{puchinger2005}
+J.~Puchinger et G.~R.~Raidl.
+\newblock Combining metaheuristics and exact algorithms in combinatorial
+  optimization: a survey and classification.
+\newblock Dans \emph{IWINAC 2005}, LNCS 3562, pages 41--53. Springer, 2005.
+
+\bibitem{blum2011}
+C.~Blum, J.~Puchinger, G.~R.~Raidl et A.~Roli.
+\newblock Hybrid metaheuristics in combinatorial optimization: a survey.
+\newblock \emph{Applied Soft Computing}, 11(6):4135--4151, 2011.
+
+\bibitem{fischetti2003}
+M.~Fischetti et A.~Lodi.
+\newblock Local branching.
+\newblock \emph{Mathematical Programming}, 98:23--47, 2003.
+
+\bibitem{danna2005}
+E.~Danna, E.~Rothberg et C.~Le~Pape.
+\newblock Exploring relaxation induced neighborhoods to improve MIP
+  solutions.
+\newblock \emph{Mathematical Programming}, 102(1):71--90, 2005.
 
 \bibitem{dinkelbach1967}
 W.~Dinkelbach.
