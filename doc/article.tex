@@ -1956,11 +1956,24 @@ région survivante a rendue visible : sur une instance à $n=12$, la borne
 annoncée valait $32{,}27$ quand le maximum de $f$ sur la région réellement
 non retranchée valait $8{,}53$.
 
-\paragraph{Effet.} Sur douze instances à budget déterministe de $300$
-appels : $6$ améliorées, $\mathbf{0}$ dégradée, $6$ inchangées, gain maximal
-$+38{,}77$ points, test des signes $p=0{,}031$. Coût propre : $2$ à $4$
-appels entiers. Validité vérifiée par énumération exacte sur $72$ instances
-à deux plafonds, $144$ exécutions, aucune violation.
+\paragraph{Effet.} Sur dix-huit instances (trois graines) à budget
+déterministe de $300$ appels : $8$ améliorées, $2$ dégradées, $8$
+inchangées, gain maximal $+38{,}77$ points. Coût propre : $2$ à $4$ appels
+entiers. Validité vérifiée par énumération exacte sur $72$ instances à deux
+plafonds, $144$ exécutions, aucune violation.
+
+\begin{remark}[deux tests, deux réponses]
+Avec deux graines nous annoncions $p=0{,}031$ au test des signes. La
+troisième graine retire cette conclusion : $8$ contre $2$ sur dix paires non
+nulles donne $p=0{,}109$, et \textbf{le test des signes ne conclut pas}.
+Mais il n'est pas le bon test : les deux dégradations valent $-0{,}23$ et
+$-0{,}19$ point, et il les compte à égalité avec un gain de $+38{,}77$. La
+somme des gains atteint $+137{,}1$ points contre $-0{,}42$ pour celle des
+pertes, et le test des rangs signés de Wilcoxon donne
+$\mathbf{p=0{,}020}$. Leur désaccord n'est pas un artefact : il dit la
+nature de l'effet, \emph{rare et énorme} plutôt que fréquent et petit. Sur
+huit lignes il ne fait rien ; sur quatre il retire de $14$ à $39$ points.
+\end{remark}
 
 \subsection{Le vivier affamait la source qui seule peut vider le relâché}
 

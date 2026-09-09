@@ -2550,48 +2550,68 @@ procédure qu'il finance.
 \begin{table}[htbp]
 \centering
 \caption{Seconde route, budget déterministe de $300$ appels entiers,
-comparaison appariée, chaque configuration jouée deux fois.\ \conf{1}{1}{1}}
+comparaison appariée, chaque exécution jouée deux fois, \textbf{trois
+graines}.\ \conf{1}{1}{1}}
 \label{tab:geom}
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{ccccrccc}
+\setlength{\tabcolsep}{3pt}\small
+\begin{tabular}{cccccc|cccccc}
 \toprule
-$n$ & corr & écart sans & écart avec & gain (pts) & tours
- & coupes s/a & \ILP{} s/a\\
+$n$ & corr & sans & avec & gain & t & $n$ & corr & sans & avec & gain & t\\
 \midrule
-$20$ & $0$     & $97{,}6\ \%$ & $\mathbf{77{,}2\ \%}$ & $\mathbf{+20{,}36}$ & $2$ & $113/109$ & $300/290$\\
-$20$ & $0$     & $43{,}6\ \%$ & $43{,}6\ \%$ & $+0{,}00$           & $2$ & $105/102$ & $300/290$\\
-$20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $32/32$   & $143/143$\\
-$20$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $56/56$   & $214/214$\\
-$30$ & $0$     & $93{,}1\ \%$ & $78{,}6\ \%$ & $\mathbf{+14{,}52}$ & $3$ & $95/93$   & $300/291$\\
-$30$ & $0$     & $22{,}8\ \%$ & $22{,}8\ \%$ & $+0{,}00$           & $2$ & $110/106$ & $300/290$\\
-$30$ & $0{,}5$ & $16{,}1\ \%$ & $\mathbf{1{,}2\ \%}$ & $\mathbf{+14{,}85}$ & $2$ & $87/83$ & $300/290$\\
-$30$ & $0{,}5$ & $13{,}7\ \%$ & $13{,}7\ \%$ & $+0{,}00$           & $2$ & $95/91$   & $300/290$\\
-$40$ & $0$     & $96{,}6\ \%$ & $96{,}5\ \%$ & $+0{,}02$           & $3$ & $105/102$ & $300/291$\\
-$40$ & $0$     & $93{,}2\ \%$ & $87{,}3\ \%$ & $+5{,}93$           & $4$ & $101/97$  & $300/292$\\
-$40$ & $0{,}5$ & $0{,}0\ \%$  & $0{,}0\ \%$  & $+0{,}00$           & --  & $56/56$   & $197/197$\\
-$40$ & $0{,}5$ & $82{,}7\ \%$ & $\mathbf{43{,}9\ \%}$ & $\mathbf{+38{,}77}$ & $3$ & $90/87$ & $300/291$\\
+$20$ & $0$   & $97{,}6$ & $77{,}2$ & $\mathbf{+20{,}36}$ & $2$
+ & $30$ & $0{,}5$ & $16{,}1$ & $1{,}2$ & $\mathbf{+14{,}85}$ & $2$\\
+$20$ & $0$   & $43{,}6$ & $43{,}6$ & $+0{,}00$ & $2$
+ & $30$ & $0{,}5$ & $13{,}7$ & $13{,}7$ & $+0{,}00$ & $2$\\
+$20$ & $0$   & $72{,}0$ & $37{,}4$ & $\mathbf{+34{,}63}$ & $3$
+ & $30$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --\\
+$20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --
+ & $40$ & $0$ & $96{,}6$ & $96{,}5$ & $+0{,}02$ & $3$\\
+$20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --
+ & $40$ & $0$ & $93{,}2$ & $87{,}3$ & $+5{,}93$ & $4$\\
+$20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --
+ & $40$ & $0$ & $57{,}1$ & $57{,}4$ & $\mathbf{-0{,}23}$ & $2$\\
+$30$ & $0$ & $93{,}1$ & $78{,}6$ & $\mathbf{+14{,}52}$ & $3$
+ & $40$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --\\
+$30$ & $0$ & $22{,}8$ & $22{,}8$ & $+0{,}00$ & $2$
+ & $40$ & $0{,}5$ & $82{,}7$ & $43{,}9$ & $\mathbf{+38{,}77}$ & $3$\\
+$30$ & $0$ & $41{,}0$ & $32{,}5$ & $+8{,}48$ & $3$
+ & $40$ & $0{,}5$ & $16{,}6$ & $16{,}7$ & $\mathbf{-0{,}19}$ & $2$\\
 \midrule
-\multicolumn{8}{l}{reproductibilité $12/12$ \quad$\bullet$\quad
- cohérence des encadrements : toutes valides}\\
-\multicolumn{8}{l}{améliorées $\mathbf{6}$, dégradées $\mathbf{0}$,
- inchangées $6$ \quad$\bullet$\quad convergée $9/12$
- \quad$\bullet$\quad test des signes $p=0{,}031$}\\
-\multicolumn{8}{l}{gain médian $+0{,}01$ point, moyen $+7{,}87$,
- maximum $+38{,}77$, minimum $\mathbf{+0{,}00}$}\\
+\multicolumn{12}{l}{reproductibilité $18/18$ \quad$\bullet$\quad
+ encadrements tous valides \quad$\bullet$\quad convergée $13/18$}\\
+\multicolumn{12}{l}{améliorées $8$, dégradées $2$, inchangées $8$
+ \quad$\bullet$\quad gain médian $+0{,}00$, moyen $+7{,}62$,
+ maximum $+38{,}77$}\\
+\multicolumn{12}{l}{somme des gains $\mathbf{+137{,}1}$ points, somme des
+ pertes $\mathbf{-0{,}42}$ point}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Aucune ligne ne recule.} C'est la propriété la plus solide du
-tableau : $6$ améliorées, $\mathbf{0}$ dégradée, $6$ inchangées, sur douze
-lignes toutes reproductibles à l'identique. Le test des signes sur les six
-paires non nulles donne $p=0{,}031$.
+\paragraph{Deux tests, deux réponses, et c'est le résultat.} Avec deux
+graines nous annoncions $p=0{,}031$ au test des signes. La troisième graine
+retire cette conclusion : $8$ améliorées contre $2$ dégradées sur $10$
+paires non nulles donne $p=0{,}109$. \textbf{Le test des signes ne conclut
+pas.}
+
+Mais il n'est pas le bon test ici, et la raison se lit dans le tableau. Les
+deux dégradations valent $-0{,}23$ et $-0{,}19$ point ; le test des signes
+les compte à égalité avec un gain de $+38{,}77$. Or la somme des gains vaut
+$+137{,}1$ points contre $-0{,}42$ pour celle des pertes -- un rapport de
+$326$ pour un. Le test des rangs signés de Wilcoxon, qui pèse les
+amplitudes, donne $W=5$ et $\mathbf{p=0{,}020}$.
+
+Nous rapportons les deux. Ce que leur désaccord dit n'est pas un artefact
+statistique mais la nature de l'effet : il est \emph{rare et énorme} plutôt
+que fréquent et petit. Sur huit lignes il ne fait rien du tout ; sur quatre
+il retire de $14$ à $39$ points. Un levier de cette forme ne se juge pas au
+comptage des signes.
 
 \paragraph{L'ordre de grandeur.} Le levier précédent -- la coupe générée
 sans binaire -- rapportait au mieux $0{,}11$ point (§\ref{sec:cglp}).
-Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, $20{,}36$,
-$14{,}85$ et $14{,}52$ ensuite. Ce n'est pas le même phénomène mesuré plus
-finement, c'est un autre phénomène.
+Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, puis $34{,}63$,
+$20{,}36$, $14{,}85$ et $14{,}52$. Ce n'est pas le même phénomène mesuré
+plus finement, c'est un autre phénomène.
 
 \begin{remark}[les deux corrections se recouvrent, et il faut le dire]
 Le gain \emph{médian} de la seconde route est tombé de $+3{,}19$ à
