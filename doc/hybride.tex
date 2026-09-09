@@ -957,13 +957,57 @@ C & LNS / \emph{fix-and-optimize} & $\mathbf{4/316}$ & $\mathbf{1{,}3\ \%}$\\
 \end{tabular}
 \end{table}
 
-\paragraph{Le mouvement C est presque stérile.} Quatre améliorations pour
-$316$ appels entiers -- près d'un cinquième du budget de recherche pour un
-rendement trois fois moindre que A. Nous le laissons en place et le
-signalons plutôt que de le retirer discrètement : sa faiblesse est un
-résultat, et il reste le seul des trois à pouvoir réorganiser plusieurs
-variables d'un coup. Mais il ne mérite pas le rang que la description lui
-donnait.
+\paragraph{Le mouvement C a le rendement le plus faible, et cela ne
+suffisait pas à le condamner.} Quatre améliorations pour $316$ appels
+entiers -- près d'un cinquième du budget de recherche pour un rendement
+trois fois moindre que A. Nous en avons d'abord conclu qu'il ne méritait pas
+sa place, et proposé un diagnostic : contrairement à A et B, il maximise
+\emph{librement} le substitut de $f$, or les points de $f$ élevé sont
+dominés et la réparation défait donc ce qu'il gagne. La correction
+correspondante -- l'ancrer par des planchers $e_j(x)\ge 0$, exactement ce
+qui fait marcher A -- a été mise à l'épreuve contre son retrait pur et
+simple.
+
+\begin{table}[htbp]
+\centering
+\caption{Trois traitements du mouvement C, mêmes instances, plafond
+identique. Écarts garantis.\ \conf{1}{1}{1}}
+\label{tab:mouvementc}
+\begin{tabular}{lccc}
+\toprule
+& médiane & moyenne & contre \emph{libre}\\
+\midrule
+\textbf{libre} (tel quel) & $0{,}6\ \%$ & $\mathbf{19{,}8\ \%}$ & --\\
+ancré ($e_j\ge0$) & $\mathbf{0{,}0\ \%}$ & $22{,}9\ \%$
+ & mieux $3$, pire $3$, égal $6$\\
+retiré & $\mathbf{0{,}0\ \%}$ & $21{,}5\ \%$
+ & mieux $3$, pire $3$, égal $6$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Le banc ne tranche pas, et c'est le résultat.} Les deux traitements
+donnent $3$ améliorées contre $3$ dégradées ; la médiane les favorise, la
+moyenne favorise la version libre. Sur $12$ lignes et deux graines, rien ne
+départage. Nous gardons donc la version libre -- changer un défaut demande
+une preuve, pas une égalité -- et nous ne prétendons pas avoir conclu.
+
+Deux choses sont acquises malgré tout. La première est que notre diagnostic
+était faux : l'ancrage est le \emph{plus mauvais} des trois en moyenne, et
+il effondre l'incumbent sur deux lignes ($4{,}39\to 2{,}27$ et
+$32{,}25\to 15{,}24$). Les planchers contraignent le LNS au point de
+l'empêcher d'atteindre les bonnes solutions.
+
+\begin{remark}[le rendement mesure le nombre des succès, non leur valeur]
+La seconde est une erreur de lecture qui nous était propre. Retirer C fait
+tomber l'incumbent de $12{,}40$ à $8{,}69$ sur une ligne, de $32{,}25$ à
+$23{,}00$ sur une autre. Le mouvement dont le rendement vaut $1{,}3\ \%$ est
+donc celui qui a trouvé la meilleure solution sur ces instances-là. Quatre
+succès sur $316$ peuvent valoir davantage que dix-huit, si ce sont les
+quatre qui changent de région. Un taux de succès ne mesure pas ce qu'un
+opérateur rapporte.
+\end{remark}
 
 \paragraph{La profondeur médiane vaut bien $1$, et ce n'est pas la bonne
 lecture.} L'affirmation sur laquelle repose le diagnostic du verrou
@@ -3065,10 +3109,14 @@ dont une dont les coupes d'archive sont pourtant passées de $2$ à $40$.
 Nous ne savons pas nommer la cause restante. Une méthode dont le résultat
 peut empirer quand on lui donne plus de temps reste une méthode à corriger.
 
-\paragraph{Le mouvement C.} Quatre améliorations pour $316$ appels entiers
-(tableau~\ref{tab:voisinage}). Soit sa conception est à revoir, soit sa
-place dans le menu ; en l'état il consomme près d'un cinquième du budget de
-recherche pour un rendement trois fois moindre que le mouvement A.
+\paragraph{Le mouvement C.} Sa conception a été mise à l'épreuve contre son
+retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché : $3$
+améliorées contre $3$ dégradées dans les deux cas, médiane et moyenne en
+désaccord. Ce qui est acquis est négatif de notre côté -- l'ancrage que nous
+proposions est le plus mauvais des trois -- et méthodologique : le rendement
+d'un opérateur compte ses succès, pas ce qu'ils valent, et le retirer coûte
+jusqu'à un tiers de l'incumbent. Trancher demande davantage de graines que
+nous n'en avons jouées.
 
 La seconde est la clôture elle-même : nos mesures n'ont jamais rencontré
 deux points efficaces de même vecteur critères, ce qui suggère qu'une
