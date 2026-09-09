@@ -44,6 +44,15 @@
 \newcommand{\Rcal}{\mathcal{R}}
 \newcommand{\ILP}{\textsc{Pline}}
 \newcommand{\qs}{q^{\star}}
+\newcommand{\Acal}{\mathcal{A}}
+% --- marqueur de CONFIGURATION -------------------------------------------
+% Trois leviers ont change en cours de travail (§ Trois defauts trouves par
+% la mesure) et tous trois deplacent les chiffres. Un tableau ne dit rien
+% sans dire lequel il mesure.
+\newcommand{\cfgm}[1]{\ifnum#1=1$\bullet$\else$\circ$\fi}
+\newcommand{\conf}[3]{%
+  \textsf{\footnotesize[\,V\cfgm{#1}\ S\cfgm{#2}\ D\cfgm{#3}\,]}}
+\newcommand{\confna}{\textsf{\footnotesize[\,sans mesure\,]}}
 
 \title{\bfseries Une matheuristique certifiée pour l'optimisation d'une
 fonction fractionnaire sur l'ensemble efficace\\d'un programme linéaire
@@ -145,7 +154,7 @@ optimisée sur son ensemble efficace.
 \begin{table}[htbp]
 \centering
 \caption{Deux axes, quatre cases. Notre problème occupe la case que ni
-Zerdani et Moulaï ni Drici et collaborateurs ne couvrent.}
+Zerdani et Moulaï ni Drici et collaborateurs ne couvrent.\ \conf{0}{0}{0}}
 \label{tab:position}
 \begin{tabular}{lll}
 \toprule
@@ -443,7 +452,7 @@ comptabilisé séparément des programmes en nombres entiers.
 \begin{table}[htbp]
 \centering
 \caption{Renforcement du big-M, 8 instances, 8 coupes chacune. $M_{\text{réel}}$
-est calculé sur $\Scal$ \emph{énuméré} : la validité n'est pas postulée.}
+est calculé sur $\Scal$ \emph{énuméré} : la validité n'est pas postulée.\ \conf{0}{0}{0}}
 \label{tab:bigm}
 \begin{tabular}{lc}
 \toprule
@@ -582,7 +591,7 @@ défaut d'implémentation, non une preuve d'optimalité.
 \centering
 \caption{Théorème naïf contre théorème~\ref{th:bound}, à budget identique,
 8 instances du régime cible. Les deux colonnes sont produites par le même
-code : seule la formule de la borne diffère.}
+code : seule la formule de la borne diffère.\ \conf{0}{0}{0}}
 \label{tab:bound}
 \begin{tabular}{lcc}
 \toprule
@@ -763,7 +772,7 @@ abondent ils occupent le vivier, là où ils sont rares l'archive le remplit.
 \begin{table}[htbp]
 \centering
 \caption{Régime cible, 8 instances $\times$ 10 graines, budget identique de
-$7+5$~s, vérité terrain disponible.}
+$7+5$~s, vérité terrain disponible.\ \conf{0}{0}{0}}
 \label{tab:archcut}
 \begin{tabular}{lcc}
 \toprule
@@ -786,7 +795,7 @@ prouver par l'oracle seul.
 \begin{table}[htbp]
 \centering
 \caption{Lot figé, 90 instances, budget identique de 12~s. Toutes les
-vérifications $C_1$--$C_4$ passent.}
+vérifications $C_1$--$C_4$ passent.\ \conf{0}{0}{0}}
 \label{tab:archlot}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccccc}
@@ -917,6 +926,51 @@ les autres critères est indispensable.
 La taille de $J$ règle l'intensification : $J$ vide donne le mouvement le
 plus explorateur, $J$ plein redonne le voisinage vide ci-dessus.
 
+\subsection{Ce que chaque mouvement rapporte réellement}
+
+Décrire trois mouvements ne dit pas lequel travaille. Sur douze instances à
+plafond déterministe de $300$ appels :
+
+\begin{table}[htbp]
+\centering
+\caption{Rendement des mouvements et profondeur des chaînes de réparation.
+Un « succès » est une amélioration \emph{stricte} de l'incumbent.\ \conf{0}{1}{1}}
+\label{tab:rendement}
+\begin{tabular}{llcc}
+\toprule
+& mouvement & succès / tentatives & rendement\\
+\midrule
+A & $\varepsilon$ partiel & $18/453$ & $4{,}0\ \%$\\
+B & plancher absolu & $15/500$ & $3{,}0\ \%$\\
+C & LNS / \emph{fix-and-optimize} & $\mathbf{4/316}$ & $\mathbf{1{,}3\ \%}$\\
+\midrule
+\multicolumn{4}{l}{\emph{profondeur des chaînes, sur $751$ réparations}}\\
+\multicolumn{2}{l}{$0$ -- le point était déjà efficace} & $214$
+ & $\mathbf{28{,}5\ \%}$\\
+\multicolumn{2}{l}{$1$ pas} & $384$ & $51{,}1\ \%$\\
+\multicolumn{2}{l}{$2$ pas ou plus} & $153$ & $20{,}4\ \%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Le mouvement C est presque stérile.} Quatre améliorations pour
+$316$ appels entiers -- près d'un cinquième du budget de recherche, pour un
+rendement trois fois moindre que A. Nous le laissons en place et le
+signalons plutôt que de le retirer discrètement : sa faiblesse est un
+résultat, et il reste le seul des trois à pouvoir réorganiser plusieurs
+variables d'un coup. Mais il ne mérite pas le rang que sa description lui
+donnait.
+
+\paragraph{La profondeur médiane vaut $1$, et ce n'est pas la bonne
+lecture.} L'affirmation sur laquelle repose le diagnostic du verrou est
+confirmée : $51{,}1\ \%$ des chaînes ont exactement un pas. Mais
+$\mathbf{28{,}5\ \%}$ sont de profondeur \emph{zéro} -- le point sorti du
+mouvement était déjà efficace, aucun point dominé n'a été traversé,
+\textbf{aucune coupe de dominance n'a été récoltée}. Plus du quart du
+travail de recherche ne produit donc aucune munition pour la certification.
+C'est une raison de plus, et mesurée celle-là, pour que l'archive alimente
+le vivier (§\ref{sec:defauts}).
+
 \subsection{Redémarrages guidés par l'archive}
 
 Une version antérieure arrêtait la recherche au premier tour sans
@@ -1004,7 +1058,7 @@ $\overline{x}=(3,4)$, et $|\Scal|=14$.
 \centering
 \caption{Le domaine $\Scal$ en entier. Les cinq points efficaces forment
 $\Ecal$. Noter que $f$ est maximale sur $\Scal$ en $x=(0,0)$, point
-\emph{dominé} : la relaxation $\Ecal\to\Scal$ pointe hors de $\Ecal$.}
+\emph{dominé} : la relaxation $\Ecal\to\Scal$ pointe hors de $\Ecal$.\ \conf{0}{0}{0}}
 \label{tab:ex2S}
 \small
 \begin{tabular}{ccccc}
@@ -1220,7 +1274,7 @@ d'intérêt, seul $\Ecal$ est reproduit.
 
 \begin{table}[htbp]
 \centering
-\caption{L'ensemble efficace de l'exemple à trois variables.}
+\caption{L'ensemble efficace de l'exemple à trois variables.\ \conf{0}{0}{0}}
 \label{tab:ex3E}
 \small
 \begin{tabular}{cccccc}
@@ -1365,6 +1419,30 @@ seule de certificat de qualité, ce qui est la justification empirique du
 théorème~\ref{th:bound}.
 
 \section{Protocole de validation}
+
+\paragraph{Quelle version de la méthode chaque tableau mesure-t-il ?} La
+section~\ref{sec:defauts} corrige trois défauts, et les trois déplacent les
+chiffres -- l'un de plus de $70$ points sur une instance. Les tableaux qui
+précèdent cette section ont été mesurés \emph{avant} ces corrections. Chacun
+porte donc un marqueur à trois positions : \textsf{V} pour le vivier
+($\circ$ classement commun, $\bullet$ alterné), \textsf{S} pour la borne à
+seuil libre ($\circ$ absente, $\bullet$ présente), \textsf{D} pour le
+dénominateur $D^{+}$ ($\circ$ inopérant en pratique, $\bullet$ réparé).
+Ainsi \conf{0}{0}{0} désigne la méthode telle qu'elle était, et
+\conf{1}{1}{1} celle de la section~\ref{sec:defauts}.
+
+\begin{remark}[où cette hétérogénéité compte, et où elle ne compte pas]
+Elle ne joue pas uniformément contre la méthode, contrairement à ce que nous
+avions d'abord supposé. Remesurées en \conf{1}{1}{1}, les deux
+confrontations externes donnent des chiffres identiques
+chez~\cite{zerdani2011} et un coût amélioré de $3$ à $11\ \%$ sur les trois
+plus grandes tailles seulement chez~\cite{drici2018} : sur ces terrains la
+méthode prouve déjà l'optimalité partout, et les trois versions coïncident.
+L'hétérogénéité ne compte que dans le régime difficile, où elle joue en
+effet contre les chiffres publiés ici.
+\end{remark}
+
+
 \label{sec:validation}
 
 Aucune brique n'est réputée correcte tant qu'elle n'a pas été confrontée à
@@ -1496,7 +1574,7 @@ linéaire. C'est exactement l'hypothèse des auteurs.
 
 \begin{table}[htbp]
 \centering
-\caption{Confrontation à~\cite[section~5]{zerdani2011}.}
+\caption{Confrontation à~\cite[section~5]{zerdani2011}.\ \conf{0}{0}{0}}
 \label{tab:externe}
 \begin{tabular}{lll}
 \toprule
@@ -1683,7 +1761,7 @@ l'argument n'est pas circulaire.
 
 \begin{table}[htbp]
 \centering
-\caption{Lot figé, 90 instances, budget identique de 12~s par méthode.}
+\caption{Lot figé, 90 instances, budget identique de 12~s par méthode.\ \conf{0}{0}{0}}
 \label{tab:lot}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccccc}
@@ -1747,7 +1825,7 @@ vérifié sur \textbf{80/80}.
 
 \begin{table}[htbp]
 \centering
-\caption{Écart garanti médian, grille $n\times\text{corr}$, 30~s par méthode.}
+\caption{Écart garanti médian, grille $n\times\text{corr}$, 30~s par méthode.\ \conf{0}{0}{0}}
 \label{tab:echelle}
 \begin{tabular}{lccc}
 \toprule
@@ -1796,6 +1874,127 @@ permettent pas de trancher entre effet et bruit. Une validation prenant le
 meilleur de trois exécutions donne $0{,}0\ \%$ sur cette même cellule : la
 variance entre graines est au moins aussi grande que l'effet de la taille.
 Conclusion à ne pas dépasser : corr domine, $n$ compte moins qu'il n'y paraît.
+\end{remark}
+
+\section{Trois défauts trouvés par la mesure}
+\label{sec:defauts}
+
+Les résultats qui précèdent ont été obtenus avec une version de la méthode
+que la suite a corrigée sur trois points. Chacun a été trouvé en mesurant, et
+non en relisant le code ; chacun a d'abord été diagnostiqué à tort. Nous les
+rapportons dans cet ordre parce que c'est celui où ils se sont présentés.
+
+\subsection{Le théorème de certification était évalué au mauvais seuil}
+
+La certification pose $q=P/Q$, borne $U\ge\max_{\Rcal}F_q$ avec
+$F_q=QN-PD$, et conclut $\qs\le q+U/(QD^{+})$. Le seuil est toujours
+l'incumbent. Or rien dans la démonstration ne l'exige.
+
+\begin{theorem}[borne à seuil libre]
+\label{th:seuillibre}
+Soit $t$ rationnel et $G_t=N-tD$. Si $\max_{x\in\Rcal}G_t(x)\le v$ avec
+$v\ge0$, alors $\max_{x\in\Rcal}f(x)\le t+v/D_{\min}$.
+\end{theorem}
+\begin{proof}
+Pour $x\in\Rcal$ : $N(x)-tD(x)\le v$ et $D(x)>0$ sous (A1), donc
+$f(x)\le t+v/D(x)\le t+v/D_{\min}$ puisque $v\ge0$.
+\end{proof}
+
+Le théorème usuel est le cas $t=q$. Mais \emph{chaque point du relâché
+fournit un meilleur seuil} : si l'oracle rend $x_t\in\Rcal$ avec
+$G_t(x_t)>0$, alors $f(x_t)>t$ et l'on recommence. C'est un Dinkelbach
+ordinaire, mené sur $\Rcal$ et non sur $\Scal$ ; à convergence,
+$\max_{\Rcal}f\le t$ exactement. La validité tient car les coupes de
+dominance préservent $\Ecal$ et chaque coupe d'efficacité n'est posée
+qu'après clôture établie, d'où $\qs\le\max(q,\max_{\Rcal}f)$.
+
+\paragraph{Pourquoi la méthode ne le faisait pas.} Sa boucle n'avance son
+seuil que sur des points \emph{certifiés efficaces}. Le réflexe est correct
+pour le minorant -- seul un point efficace peut y compter -- et inutile pour
+un majorant, où n'importe quel point du relâché fait un seuil valide. Une
+garde légitime appliquée au mauvais endroit, que seule la mesure de la
+région survivante a rendue visible : sur une instance à $n=12$, la borne
+annoncée valait $32{,}27$ quand le maximum de $f$ sur la région réellement
+non retranchée valait $8{,}53$.
+
+\paragraph{Effet.} Sur douze instances à budget déterministe de $300$
+appels : $6$ améliorées, $\mathbf{0}$ dégradée, $6$ inchangées, gain maximal
+$+38{,}77$ points, test des signes $p=0{,}031$. Coût propre : $2$ à $4$
+appels entiers. Validité vérifiée par énumération exacte sur $72$ instances
+à deux plafonds, $144$ exécutions, aucune violation.
+
+\subsection{Le vivier affamait la source qui seule peut vider le relâché}
+
+Nous avions posé que les deux sources de coupes -- points dominés et points
+d'archive -- devaient concourir dans un vivier unique, classées par
+$w^{\top}x$ décroissant, et que l'effet en serait « automatique et
+souhaitable ». La mesure dit le contraire. En triplant le plafond, donc en
+allongeant la recherche, donc en récoltant plus de points dominés :
+
+\begin{table}[htbp]
+\centering
+\caption{Six exécutions, $n=20,30,40$, plafond triplé.}
+\begin{tabular}{lcccccc}
+\toprule
+archive $|\Acal|$ & $39\!\to\!80$ & $26\!\to\!50$ & $24\!\to\!52$
+ & $50\!\to\!99$ & $19\!\to\!36$ & $29\!\to\!63$\\
+coupes posées & $105\!\to\!167$ & $115\!\to\!176$ & $101\!\to\!161$
+ & $107\!\to\!161$ & $90\!\to\!171$ & $95\!\to\!240$\\
+\textbf{dont d'archive} & $28\!\to\!12$ & $\mathbf{26\!\to\!0}$
+ & $\mathbf{20\!\to\!2}$ & $33\!\to\!10$ & $\mathbf{16\!\to\!0}$
+ & $22\!\to\!15$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Or les coupes d'archive sont les \emph{seules} qui puissent vider $\Rcal$ ;
+les coupes de dominance préservent $\Ecal$ par construction. Les affamer,
+c'est renoncer à la seule preuve forte, et l'écart garanti empire alors sur
+cinq de ces six lignes.
+
+\paragraph{La faute n'est pas le plafond unique, c'est l'échelle unique.}
+Deux sources dont les \emph{capacités} diffèrent en nature -- rétrécir
+$\Rcal$, ou le vider -- étaient triées sur un seul critère. La correction ne
+demande aucun paramètre : classer à l'intérieur de chaque source, puis
+\textbf{alterner}. Chaque source obtient la moitié des places quand les deux
+ont des candidats, et la totalité quand l'autre est épuisée.
+
+\paragraph{Effet.} Au plafond nominal : mieux $2$, pire $1$, égal $3$. Au
+plafond triplé : mieux $\mathbf{5}$, pire $\mathbf{0}$, égal $1$, gain
+médian $+13{,}17$ points. Les coupes d'archive posées passent de
+$[0,\,12,\,2,\,10,\,15,\,0]$ à $[40,\,40,\,40,\,40,\,35,\,36]$ : le plafond
+de lot est désormais atteint partout. Une ligne passe de $88{,}1\ \%$
+d'écart à $\mathbf{0{,}0\ \%}$ : l'optimalité y est \emph{prouvée}, par
+épuisement du relâché.
+
+\subsection{Le gain $D^{+}$ n'était jamais réalisé}
+
+Le troisième défaut est d'implémentation, et il touche un apport que
+l'article compte parmi ses trois. Le dénominateur $D^{+}\ge D_{\min}$ vaut
+\texttt{None} sur neuf exécutions sur neuf, aux deux plafonds : la borne
+retombe systématiquement sur $D_{\min}$. La cause est que le programme
+calculant $D^{+}$ est posé sur le modèle de coupes complet, sans limite de
+temps, et appelé \emph{en dernier} dans le tour -- le budget est épuisé
+quand son tour vient, et un statut non optimal était rejeté.
+
+Or ce programme \emph{minimise} : la borne optimiste d'une minimisation
+interrompue est un \emph{minorant} valide de $\min D$, c'est-à-dire
+exactement ce que le théorème demande à son dénominateur. Un minorant
+interrompu est donc aussi légitime que l'optimum, seulement moins fin --
+l'arrondi se faisant vers le bas, un dénominateur surestimé rendant la borne
+fausse.
+
+\begin{remark}[les corrections se recouvrent]
+Les gains ci-dessus ne s'additionnent pas. L'alternance améliore la
+\emph{base} sur laquelle la borne à seuil libre est ensuite mesurée -- de
+$78{,}9$ à $16{,}1\ \%$ sur une instance à elle seule -- et le gain médian de
+la seconde route tombe alors de $+3{,}19$ à $+0{,}01$ point. Les deux
+attaquent le même écart par deux côtés ; les annoncer séparément sans cette
+réserve reviendrait à compter deux fois. L'effet cumulé, de la configuration
+d'origine à la courante, se lit ainsi sur les trois régimes que la
+section~\ref{sec:echelle} donnait pour immuables :
+$98{,}6\to\mathbf{77{,}2}$, $93{,}9\to\mathbf{78{,}6}$,
+$96{,}6\to 96{,}5\ \%$, et $78{,}9\to\mathbf{1{,}2}$ à $\text{corr}=0{,}5$.
 \end{remark}
 
 \section{Jusqu'où hybrider ? une expérience}
@@ -1847,7 +2046,7 @@ désormais celle qui aboutit.
 \begin{table}[htbp]
 \centering
 \caption{Lot figé, 90 instances, budget identique de 12~s. Toutes les
-vérifications $C_1$--$C_4$ passent pour les trois méthodes.}
+vérifications $C_1$--$C_4$ passent pour les trois méthodes.\ \conf{0}{0}{0}}
 \label{tab:hybride}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccccc}
@@ -1927,6 +2126,56 @@ lot unique de 80 & $0{,}00\ \%$ & 12/16\\
 La leçon n'est pas le chiffre mais le sens : \textbf{plus de coupes n'est pas
 mieux}. Tant que chaque coupe coûte $p$ binaires, en ajouter davantage se
 paie. Désagréger la disjonction conditionne donc tout gain supplémentaire.
+
+\paragraph{Deux diagnostics du verrou, tous deux réfutés par la mesure.}
+Nous avions successivement désigné le \emph{plafond de coupes}, puis la
+\emph{couverture de l'archive}, comme ce qui bloquait l'écart garanti à
+$92$--$98\ \%$ dans le régime à $\Ecal$ épais. Les deux sont tombés.
+
+Le premier a été levé entièrement : une coupe disjonctive obtenue par
+programme générateur est valide sans aucune binaire, donc illimitée. Les
+coupes sont bien produites -- de $6$ à $20$ selon les lignes -- et l'écart
+garanti gagne $+0{,}11$ point au mieux dans la configuration d'origine,
+$\mathbf{+0{,}00}$ sur les six lignes dans la configuration courante. Le cas
+décisif est une instance dont l'écart de référence est tombé à
+$\mathbf{1{,}2\ \%}$ : la borne y est à un point de fermer, et six coupes
+générées ne la ferment pas. Tant que l'écart valait $79\ \%$ on pouvait
+croire que la coupe agissait sans qu'on le voie ; à $1{,}2\ \%$, l'argument
+tombe.
+
+Le second a été testé sur vérité terrain. Posons
+$\Scal^{+}=\{x\in\Scal: f(x)>\qs\}$, l'ensemble des points qui rendent la
+borne lâche. Aucun n'est efficace -- sinon $\qs$ ne serait pas le maximum de
+$f$ sur $\Ecal$ -- donc chacun est dominé par un point efficace, et les
+coupes centrées sur $\Ecal$ tout entier retranchent $\Scal^{+}$ en totalité.
+Vérifié $26$ fois sur $26$. Reste à savoir ce que l'archive en atteint :
+$\text{cov}_{\Acal}\ge 99\ \%$ sur $26$ lignes sur $26$, alors qu'elle ne
+retient que $20$ à $35\ \%$ des vecteurs critères de $\Ecal$. \textbf{Une
+petite archive domine déjà la quasi-totalité de $\Scal^{+}$} : la chercher
+plus grande ne servirait à rien, et la couverture n'était pas le verrou.
+
+\paragraph{Une perte que rien n'avait isolée : la recherche.} La même mesure
+montre que l'incumbent manque $\qs$ sur $3$ lignes de $26$, toutes à
+$n\ge12$. Sans vérité terrain, un écart de $90\ \%$ ne dit pas s'il vient
+d'une borne trop haute ou d'un minorant trop bas ; ici on lit les deux. En
+triplant le budget de la seule recherche, l'incumbent progresse sur $5$
+lignes sur $12$, jusqu'à $+49{,}6\ \%$. Mais cela n'achète que $1{,}7$ point
+d'écart sur la ligne concernée, parce que $q_{\text{ub}}\approx 103$ y
+dilue tout gain porté au numérateur. \textbf{Les deux termes sont
+déficients, et aucun ne suffit seul.}
+
+\paragraph{La méthode n'est pas monotone en budget.} Tripler le plafond
+dégradait l'écart garanti sur six lignes sur douze, et la décomposition est
+sans ambiguïté : la part imputable à l'incumbent n'est \emph{jamais}
+négative, celle imputable à la borne n'est \emph{jamais} positive. Plus de
+budget donnait donc un incumbent meilleur ou égal et une borne pire ou
+égale. La cause principale -- l'affamement de l'archive dans le vivier
+(§\ref{sec:defauts}) -- est corrigée, et la monotonie passe de $1/6$ à
+$4/6$ sur les lignes portant le défaut. Deux lignes reculent encore, dont
+une dont les coupes d'archive sont pourtant passées de $2$ à $40$. Nous ne
+savons pas nommer la cause restante. \textbf{Une méthode dont le résultat
+peut empirer quand on lui donne plus de temps reste une méthode à
+corriger.}
 
 \paragraph{Le big-M est une piste fermée.} Le tableau~\ref{tab:bigm} le
 montre : le minorant continu atteint pratiquement le minimum entier.
@@ -2017,21 +2266,55 @@ méthode exacte de référence.
 
 Deux directions se dégagent, dans cet ordre.
 
-\paragraph{Resserrer la borne dans le régime à $\Ecal$ épais.} C'est le
-verrou, établi de deux côtés indépendants : à petite taille sur une instance
-où prouver $F(\qs)\le 0$ demande 433~s, 177 coupes et 533 appels, soit
-43~fois le budget de certification ; et à grande taille par le
-tableau~\ref{tab:echelle}. Le préalable est de \textbf{désagréger la coupe de
-dominance} : tant que chaque coupe coûte $p$ binaires, aucune stratégie de
-coupes ne fera mieux.
+\paragraph{Resserrer la borne dans le régime à $\Ecal$ épais.} C'était le
+verrou, et nous en avons donné deux diagnostics successifs, tous deux
+réfutés : le coût en binaires, puis la couverture de l'archive
+(§\ref{sec:negatif}). Ce que la mesure a désigné à leur place est ailleurs :
+le \emph{seuil} auquel la borne est évaluée, et l'\emph{échelle} sur
+laquelle le vivier classe ses deux sources (§\ref{sec:defauts}). Les corriger
+fait passer les trois régimes que le tableau~\ref{tab:echelle} donnait pour
+immuables de $98{,}6$, $93{,}9$ et $96{,}6\ \%$ à $77{,}2$, $78{,}6$ et
+$96{,}5\ \%$, et une instance à $\text{corr}=0{,}5$ de $78{,}9$ à
+$1{,}2\ \%$.
 
-\paragraph{Établir la comparaison externe.} Réimplémenter~\cite{zerdani2011}
-et~\cite{drici2018} sur le lot figé, avec la vérification $C_1$--$C_4$
-appliquée à tous de la même manière. Le préalable technique est un simplexe
-donnant accès au tableau, ainsi qu'un simplexe fractionnaire ; le préalable
-méthodologique est de restreindre la comparaison avec~\cite{drici2018} aux
-instances à critères linéaires, seule intersection des deux classes de
-problèmes.
+Ce qui reste ouvert est mieux posé qu'avant, et se dit en trois points. À
+$n=40$, $\text{corr}=0$, la borne ne bouge pas alors que la procédure
+certifie qu'elle \emph{est} $\max_{\Rcal}f$ : ce qui reste tient au
+minorant, où la recherche est effectivement déficiente sans que la corriger
+suffise. La méthode n'est pas monotone en budget, et deux lignes sur six le
+restent après correction de la cause principale. Enfin le mouvement C ne
+rapporte que quatre améliorations pour $316$ appels : sa conception ou sa
+place dans le menu est à revoir.
+
+\paragraph{Établir la comparaison externe.} Elle est faite.
+\cite{zerdani2011} a été réimplémenté -- simplexe rationnel exact révélant
+le tableau, gradient réduit de Martos, coupes de Gomory -- et confronté à
+notre méthode sur son propre terrain ($\varphi$ linéaire, critères
+fractionnaires) : $20/24$ optima trouvés et $12/24$ processus menés à terme
+contre $24/24$ et $\mathbf{24/24}$, sous une unité de coût qui \emph{leur}
+est favorable puisqu'elle ne compte pas les pivots du simplexe, d'où leur
+algorithme tire l'essentiel de son travail. Sur le terrain
+de~\cite{drici2018} -- leur protocole de génération, leurs tailles --
+l'optimalité est prouvée $10/10$ à chaque taille jusqu'à $40\times15$.
+
+\begin{remark}[une réserve sur les tailles, qui vaut d'être dite]
+Le couple $(n,m)$ ne mesure pas la difficulté ; les bornes des variables la
+mesurent. Le protocole de~\cite{drici2018} donne des variables bornées par
+$2$ ou $3$, donc une boîte de l'ordre de $10^{18}$ points à $n=40$, contre
+$10^{52}$ pour nos instances d'échelle au même $n$. Prouver $10/10$ là-bas
+ne contredit en rien nos $96\ \%$ d'écart garanti ici : « $n=40$ » ne désigne
+pas le même problème.
+\end{remark}
+
+\begin{remark}[ces deux confrontations ne bougent pas avec la méthode]
+Remesurées en configuration courante, elles donnent des chiffres
+\emph{identiques} chez~\cite{zerdani2011} et n'améliorent le coût que sur
+les trois plus grandes tailles de~\cite{drici2018}, de $3$ à $11\ \%$. La
+raison est structurelle : les corrections de la section~\ref{sec:defauts}
+n'agissent que là où la borne \emph{ne ferme pas}, et sur ces deux terrains
+l'optimalité est prouvée sur chaque instance. Les gains de ce travail
+appartiennent au régime difficile et n'y débordent pas.
+\end{remark}
 
 \begin{thebibliography}{99}
 \bibitem{dinkelbach1967}
