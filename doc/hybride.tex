@@ -124,7 +124,8 @@ aucune ne résout notre problème -- l'une optimise une fonction linéaire sur
 l'ensemble efficace d'un MOILFP, l'autre une fonction fractionnaire sur
 celui d'un MOILP -- ce qui impose de les affronter chacune sur son propre
 terrain. Leurs deux exemples publiés sont reproduits exactement, et celle de
-Zerdani \& Moulaï est réimplémentée, tableau du simplexe compris, en
+Zerdani \& Moulaï~\cite{zerdani2011} est réimplémentée, tableau du simplexe
+compris, en
 arithmétique rationnelle. Sur $24$ instances de sa classe, elle certifie
 $12$ optima quand notre méthode en prouve $24$ ; mais elle dispose d'un
 raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
@@ -158,7 +159,9 @@ fonction fractionnaire $f=(c^{\top}x+a)/(d^{\top}x+b)$, on cherche
 \[
   \text{(P)}\qquad \qs=\max_{x\in\Ecal} f(x).
 \]
-La difficulté n'est pas $f$, qui se traiterait par Dinkelbach ; elle est le
+La difficulté n'est pas $f$, qui se traiterait par
+Dinkelbach~\cite{dinkelbach1967} ou par les transformations équivalentes du
+fractionnaire linéaire~\cite{cambini1992} ; elle est le
 domaine, $\Ecal$, qui n'est ni convexe, ni connexe, ni décrit par des
 contraintes. Toute méthode doit donc \emph{représenter} $\Ecal$ d'une
 manière ou d'une autre.
@@ -215,7 +218,8 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       aucune condition de clôture. Sur $24$ paires à budget déterministe,
       $6$ instances améliorées, $\mathbf{0}$ dégradée.
 \item \textbf{Une comparaison sur le terrain de chacun}
-      (\S\ref{sec:comparaison}) : réimplémentation de Zerdani \& Moulaï avec
+      (\S\ref{sec:comparaison}) : réimplémentation de Zerdani \&
+      Moulaï~\cite{zerdani2011} avec
       son simplexe rationnel à tableau, reproduction des deux exemples
       publiés, et match à unité de coût indépendante de la machine.
 \item \textbf{Un protocole de mesure qui se contrôle lui-même}
@@ -257,7 +261,11 @@ utilisées de façon répétée.
 
 \subsection{Trois briques}
 
-\paragraph{Brique 1 -- test d'efficacité intégral.} Pour $\bar x\in\Scal$, en
+\paragraph{Brique 1 -- test d'efficacité intégral.} Le test classique
+d'Ecker et Kouada caractérise l'efficacité par un programme auxiliaire dont
+l'optimum est nul~\cite{ecker1975} ; nous en transportons la structure sur
+des critères $\Zk$ rationnels, par multiplication croisée. Pour
+$\bar x\in\Scal$, en
 posant $\bar N_k=\Nk(\bar x)$, $\bar D_k=\Dk(\bar x)$ et
 \[
   e^{\bar x}_k(x)\ :=\ \bar D_k\,\Nk(x)-\bar N_k\,\Dk(x)
@@ -2056,7 +2064,10 @@ disjoints
 \]
 Tout point que l'on veut conserver appartient à leur \emph{réunion}. On
 cherche donc $\alpha^{\top}x\ge\beta$ valide sur \emph{chacun} des $P_k$.
-Par le lemme de Farkas, cela équivaut à l'existence de multiplicateurs
+Par le lemme de Farkas -- c'est la construction de Balas, Ceria et
+Cornuéjols~\cite{balas1993}, elle-même issue de la programmation
+disjonctive~\cite{balas1979} -- cela équivaut à l'existence de
+multiplicateurs
 $\lambda^k\ge 0$ et $\mu^k\ge 0$ tels que
 \[
   \alpha\ \ge\ -\lambda^k A+\mu^k\gamma_k,
@@ -2605,6 +2616,19 @@ Deux méthodes exactes encadrent directement ce travail. Il faut commencer
 par dire, très précisément, ce qu'elles résolvent -- car cela commande la
 forme que toute comparaison peut prendre.
 
+Le problème d'optimisation \emph{sur} l'ensemble efficace a une littérature
+propre. Dans le cas entier et pour une fonction linéaire,
+Jorge~\cite{jorge2009} procède par contraintes de coupe successives, et
+Sylva et Crema~\cite{sylva2004} énumèrent les vecteurs non dominés d'un
+programme entier multiobjectif. Du côté fractionnaire, Chergui et
+Moulaï~\cite{chergui2008} résolvent le MOILFP lui-même -- c'est-à-dire
+engendrent $\Ecal$, non optimisent dessus -- et Mahdi et
+Chaabane~\cite{mahdi2015} optimisent une fonction linéaire fractionnaire
+sur l'ensemble efficace d'un programme entier à critères \emph{linéaires}.
+Aucun de ces travaux ne place le fractionnaire des deux côtés à la fois ;
+c'est cette conjonction qui définit (P), et c'est elle qui interdit les
+raccourcis dont chacun d'eux dispose.
+
 \begin{table}[htbp]
 \centering
 \caption{Le problème traité, chez les uns et chez les autres.\ \confna}
@@ -2613,8 +2637,8 @@ forme que toute comparaison peut prendre.
 \toprule
 & critères $\Zk$ & fonction à optimiser sur $\Ecal$\\
 \midrule
-Zerdani \& Moulaï (2011) & \textbf{fractionnaires} & linéaire\\
-Drici, Ouail \& Moulaï (2018) & linéaires & \textbf{fractionnaire}\\
+Zerdani \& Moulaï~\cite{zerdani2011} & \textbf{fractionnaires} & linéaire\\
+Drici, Ouail \& Moulaï~\cite{drici2018} & linéaires & \textbf{fractionnaire}\\
 \midrule
 \textbf{notre problème (P)} & \textbf{fractionnaires} & \textbf{fractionnaire}\\
 \bottomrule
@@ -2703,7 +2727,8 @@ arête. En flottant, ces tests réclament un $\varepsilon$, et un $\varepsilon$
 mal choisi change le \emph{résultat} de l'algorithme, non sa précision. Les
 données étant entières, tout le tableau reste rationnel : l'exactitude
 s'obtient sans rien supposer. L'objectif fractionnaire est traité par le
-gradient réduit de Martos, sous la forme même de leur section~2 ; la règle
+gradient réduit de Martos~\cite{martos1964,martos1975}, sous la forme même de
+leur section~2 ; la règle
 de Bland des deux côtés garantit la terminaison sans perturbation, la
 dégénérescence étant fréquente sur ces données. Une phase~I a dû être
 ajoutée : leurs coupes $\sum_{j\in N_k}x_j\ge 1$ rendent la base des écarts
@@ -2714,7 +2739,8 @@ d'efficacité : les auteurs invoquent leur théorème~3.6, nous employons notre
 test intégral, qui décide le \emph{même} prédicat de façon exacte. Le second
 est le sommet fractionnaire : les étapes 3.2 et 3.3 prescrivent « dual
 simplex and Gomory cuts, if necessary » sans détailler ces coupes. Nous
-avons implémenté la coupe fractionnaire de Gomory en arithmétique exacte --
+avons implémenté la coupe fractionnaire de Gomory~\cite{gomory1958} en
+arithmétique exacte --
 c'est bien ce qu'ils prescrivent -- et signalé les cas où le processus
 n'aboutit pas malgré elle.
 
@@ -3058,5 +3084,88 @@ point est efficace tout est fini. Notre $f$ étant fractionnaire, nous n'en
 disposons pas -- le maximum de $f$ sur $\Scal$ demande un Dinkelbach
 complet. Reste à savoir si un test bon marché, appliqué au \emph{premier}
 itéré de ce Dinkelbach, en récupérerait une partie du bénéfice.
+
+\begin{thebibliography}{99}
+
+\bibitem{dinkelbach1967}
+W.~Dinkelbach.
+\newblock On nonlinear fractional programming.
+\newblock \emph{Management Science}, 13(7):492--498, 1967.
+
+\bibitem{martos1964}
+B.~Martos.
+\newblock Hyperbolic programming.
+\newblock \emph{Naval Research Logistics Quarterly}, 11(2):135--155, 1964.
+
+\bibitem{martos1975}
+B.~Martos.
+\newblock \emph{Nonlinear Programming, Theory and Methods}.
+\newblock North-Holland, Amsterdam, 1975.
+
+\bibitem{cambini1992}
+A.~Cambini et L.~Martein.
+\newblock Equivalence in linear fractional programming.
+\newblock \emph{Optimization}, 23:41--51, 1992.
+
+\bibitem{ecker1975}
+J.~G.~Ecker et I.~A.~Kouada.
+\newblock Finding efficient points for linear multiple objective programs.
+\newblock \emph{Mathematical Programming}, 8:375--377, 1975.
+
+\bibitem{gomory1958}
+R.~E.~Gomory.
+\newblock Outline of an algorithm for integer solutions to linear programs.
+\newblock \emph{Bulletin of the American Mathematical Society},
+  64(5):275--278, 1958.
+
+\bibitem{balas1979}
+E.~Balas.
+\newblock Disjunctive programming.
+\newblock \emph{Annals of Discrete Mathematics}, 5:3--51, 1979.
+
+\bibitem{balas1993}
+E.~Balas, S.~Ceria et G.~Cornuéjols.
+\newblock A lift-and-project cutting plane algorithm for mixed 0--1 programs.
+\newblock \emph{Mathematical Programming}, 58:295--324, 1993.
+
+\bibitem{chergui2008}
+M.~E.~A.~Chergui et M.~Moulaï.
+\newblock An exact method for a discrete multiobjective linear fractional
+  optimization.
+\newblock \emph{Journal of Applied Mathematics and Decision Sciences}, 2008,
+  article 760191.
+
+\bibitem{jorge2009}
+J.~M.~Jorge.
+\newblock An algorithm for optimizing a linear function over an integer
+  efficient set.
+\newblock \emph{European Journal of Operational Research}, 195:98--103, 2009.
+
+\bibitem{sylva2004}
+J.~Sylva et A.~Crema.
+\newblock A method for finding the set of non-dominated vectors for multiple
+  objective integer linear programs.
+\newblock \emph{European Journal of Operational Research},
+  158(1):46--55, 2004.
+
+\bibitem{zerdani2011}
+O.~Zerdani et M.~Moulaï.
+\newblock Optimization over an integer efficient set of a multiple objective
+  linear fractional problem.
+\newblock \emph{Applied Mathematical Sciences}, 5(50):2451--2466, 2011.
+
+\bibitem{mahdi2015}
+S.~Mahdi et D.~Chaabane.
+\newblock A linear fractional optimization over an integer efficient set.
+\newblock \emph{RAIRO -- Operations Research}, 49:265--278, 2015.
+
+\bibitem{drici2018}
+W.~Drici, F.~Z.~Ouail et M.~Moulaï.
+\newblock Optimizing a linear fractional function over the integer efficient
+  set.
+\newblock \emph{Annals of Operations Research}, 267(1--2):135--151, 2018.
+\newblock \texttt{doi:10.1007/s10479-017-2691-0}.
+
+\end{thebibliography}
 
 \end{document}

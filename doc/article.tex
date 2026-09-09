@@ -149,7 +149,13 @@ $0{,}001$ à $0{,}34$ sur des instances de même taille.
 La littérature du domaine traite des problèmes que l'on confond aisément.
 La distinction porte sur \emph{deux axes indépendants} : la nature des
 critères du programme multi-objectif, et celle de la fonction d'utilité
-optimisée sur son ensemble efficace.
+optimisée sur son ensemble efficace. Un troisième axe la traverse, souvent
+implicite : \emph{engendrer} l'ensemble efficace n'est pas \emph{optimiser}
+dessus. Sylva et Crema~\cite{sylva2004} énumèrent les vecteurs non dominés
+d'un programme entier multiobjectif ; Chergui et Moulaï~\cite{chergui2008}
+font de même pour un MOILFP. Notre problème suppose ce travail impossible à
+l'échelle visée -- c'est précisément parce que $\Ecal$ est trop gros pour
+être énuméré qu'il faut optimiser sans l'engendrer.
 
 \begin{table}[htbp]
 \centering
@@ -360,6 +366,11 @@ optimiste, c'est-à-dire la méthode inutilisable.
 \end{remark}
 
 \subsection{Dinkelbach à paramètre rationnel}
+
+Le schéma est celui de Dinkelbach~\cite{dinkelbach1967}, mené ici en
+arithmétique rationnelle exacte : la valeur optimale du sous-problème étant
+\emph{entière}, le test d'arrêt devient exact et aucun $\varepsilon$ n'est à
+régler.
 
 \begin{theorem}[Convergence finie]\label{th:dink}
 Soit $X$ un ensemble fini non vide et
@@ -2133,7 +2144,8 @@ Nous avions successivement désigné le \emph{plafond de coupes}, puis la
 $92$--$98\ \%$ dans le régime à $\Ecal$ épais. Les deux sont tombés.
 
 Le premier a été levé entièrement : une coupe disjonctive obtenue par
-programme générateur est valide sans aucune binaire, donc illimitée. Les
+programme générateur~\cite{balas1993} est valide sans aucune binaire, donc
+illimitée. Les
 coupes sont bien produites -- de $6$ à $20$ selon les lignes -- et l'écart
 garanti gagne $+0{,}11$ point au mieux dans la configuration d'origine,
 $\mathbf{+0{,}00}$ sur les six lignes dans la configuration courante. Le cas
@@ -2288,7 +2300,8 @@ place dans le menu est à revoir.
 
 \paragraph{Établir la comparaison externe.} Elle est faite.
 \cite{zerdani2011} a été réimplémenté -- simplexe rationnel exact révélant
-le tableau, gradient réduit de Martos, coupes de Gomory -- et confronté à
+le tableau, gradient réduit de Martos~\cite{martos1975}, coupes de
+Gomory~\cite{gomory1958} -- et confronté à
 notre méthode sur son propre terrain ($\varphi$ linéaire, critères
 fractionnaires) : $20/24$ optima trouvés et $12/24$ processus menés à terme
 contre $24/24$ et $\mathbf{24/24}$, sous une unité de coût qui \emph{leur}
@@ -2367,6 +2380,17 @@ B.~Martos.
 A.~Cambini et L.~Martein.
 \newblock Equivalence in linear fractional programming.
 \newblock \emph{Optimization}, 23:41--51, 1992.
+
+\bibitem{gomory1958}
+R.~E.~Gomory.
+\newblock Outline of an algorithm for integer solutions to linear programs.
+\newblock \emph{Bulletin of the American Mathematical Society},
+  64(5):275--278, 1958.
+
+\bibitem{balas1993}
+E.~Balas, S.~Ceria et G.~Cornuéjols.
+\newblock A lift-and-project cutting plane algorithm for mixed 0--1 programs.
+\newblock \emph{Mathematical Programming}, 58:295--324, 1993.
 
 \bibitem{sylva2004}
 J.~Sylva et A.~Crema.
