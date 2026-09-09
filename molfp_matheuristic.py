@@ -1093,8 +1093,29 @@ def move_epsilon_absolute(inst: MOILFP, eps: Sequence[Fraction],
 
 
 def move_lns(inst: MOILFP, xr: np.ndarray, free_idx: Sequence[int],
-             w: np.ndarray, w0: float) -> Optional[np.ndarray]:
-    """Mouvement C.  Fige x_j = xr_j hors de `free_idx`, resout le reste."""
+             w: np.ndarray, w0: float,
+             keep: Optional[Sequence[int]] = None) -> Optional[np.ndarray]:
+    """
+    Mouvement C.  Fige x_j = xr_j hors de `free_idx`, resout le reste.
+
+    `keep` : criteres sur lesquels le point produit ne doit RIEN perdre par
+    rapport a la base, au sens e_j(x) >= 0. Sans eux, le mouvement maximise
+    librement le substitut de f -- et le substitut de f est maximal sur des
+    points DOMINES. Le detail compte, parce qu'il explique un rendement.
+
+    CE QUE LA MESURE REPROCHE A LA VERSION LIBRE. Sur douze instances,
+    4 succes pour 316 tentatives, soit 1,3 % -- trois fois moins que le
+    mouvement A, pour pres d'un cinquieme du budget de recherche. Le
+    diagnostic tient en une phrase deja etablie ailleurs dans ce travail :
+    les points de f eleve sont domines, donc hors de E, et leurs voisins
+    efficaces ont reellement un f faible. La reparation defait donc ce que
+    le mouvement vient de gagner.
+
+    A et B n'ont pas ce defaut parce qu'ils CONTRAIGNENT les criteres --
+    e_k(x) >= 1 pour A, Z_k(x) >= eps_k pour B -- et atterrissent donc pres
+    de la frontiere efficace. Ancrer C de la meme facon n'est pas un reglage
+    de plus : c'est lui donner ce qui fait marcher les deux autres.
+    """
     lb = np.array(xr, dtype=float)
     ub = np.array(xr, dtype=float)
     box = inst.var_upper_bounds().astype(float)
@@ -1103,6 +1124,9 @@ def move_lns(inst: MOILFP, xr: np.ndarray, free_idx: Sequence[int],
     from molfp_core import solve_milp
     rows = [(inst.A[i].astype(float), -INF, float(inst.b[i]))
             for i in range(inst.m)]
+    for j in (keep or []):
+        cj, kj = e_row(inst, xr, j)
+        rows.append((cj, -kj, INF))
     res = solve_milp(w, rows, lb, ub, maximize=True, obj_const=w0)
     return res.x if res.ok else None
 
@@ -1277,6 +1301,7 @@ def matheuristic_P(inst: MOILFP,
                    geom_bound: bool = False,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
+                   mouvement_c: str = "libre",
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
@@ -1354,6 +1379,8 @@ def matheuristic_P(inst: MOILFP,
         # en diversification on tire davantage vers B (plancher absolu) et C
         # (LNS) : A reste ancre sur le point de base, donc explore peu
         menu = ["B", "B", "C", "A"] if diversify else ["A", "A", "B", "C"]
+        if mouvement_c == "sans":
+            menu = [m for m in menu if m != "C"] or ["A"]
 
         for xr in _select_pool(arch, usage, rng, inst, diversify):
             usage[tuple(int(v) for v in xr)] = \
@@ -1384,7 +1411,17 @@ def matheuristic_P(inst: MOILFP,
                     frac = 0.6 if diversify else 0.4
                     n_free = max(1, int(frac * inst.n))
                     free = rng.choice(inst.n, size=n_free, replace=False)
-                    y = move_lns(inst, xr, free, w, w0)
+                    keep_c = None
+                    if mouvement_c == "ancre":
+                        # meme regle que le mouvement A : un sous-ensemble
+                        # STRICT, sinon le voisinage ne contient que les
+                        # points qui dominent la base, donc rien.
+                        autres = [j for j in range(inst.p)]
+                        n_keep = int(rng.integers(0, max(1, len(autres))))
+                        keep_c = list(rng.choice(autres, size=n_keep,
+                                                 replace=False)) \
+                            if n_keep else []
+                    y = move_lns(inst, xr, free, w, w0, keep=keep_c)
 
                 n_moves[mv] += 1
                 if y is None:
