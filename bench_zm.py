@@ -28,6 +28,7 @@ CE QUI EST VERIFIE A CHAQUE INSTANCE, par enumeration exhaustive :
 Usage :  python bench_zm.py [n_instances] [plafond_appels]
 """
 
+import os
 import sys
 from fractions import Fraction
 
@@ -37,6 +38,30 @@ from molfp_core import ORACLE_CALLS, reset_oracle_counter
 from molfp_enum import ground_truth
 from molfp_instance import FracObj, MOILFP
 from molfp_matheuristic import matheuristic_P
+
+# ---------------------------------------------------------------------------
+# CONFIGURATION MESUREE
+# ---------------------------------------------------------------------------
+# Trois leviers ont change en cours de travail et tous trois deplacent les
+# chiffres. Un banc de comparaison doit donc dire LEQUEL il mesure, sinon il
+# oppose a la litterature une version arbitraire de notre methode -- et,
+# telle que ce banc a ete lance la premiere fois, la PLUS FAIBLE des trois.
+#
+#   V  vivier          : alterne (defaut courant) ou classement commun
+#   S  seconde route   : geom_bound
+#   D  denominateur D+ : repare (plus de drapeau, c'est le code)
+#
+# `MOLFP_CFG=ooo` rejoue la configuration d'origine, `eee` (defaut) la
+# configuration courante. Le banc imprime le marqueur dans son en-tete.
+CFG = os.environ.get("MOLFP_CFG", "eee").lower()
+CFG_ALT = CFG[0:1] in ("e", "*", "1")
+CFG_GEOM = CFG[1:2] in ("e", "*", "1")
+
+
+def marqueur() -> str:
+    return (f"[V{'*' if CFG_ALT else 'o'} "
+            f"S{'*' if CFG_GEOM else 'o'} D*]")
+
 from zerdani_moulai import zerdani_moulai
 
 
@@ -72,6 +97,7 @@ def main() -> int:
     print(f"MATCH SUR LE TERRAIN DE ZERDANI & MOULAI - phi lineaire, "
           f"criteres fractionnaires, {n_inst} instances")
     print(f"cout compte : appels au solveur ENTIER (notre plafond : {cap})")
+    print(f"configuration mesuree : {marqueur()}")
     print("=" * 112)
     print(f"{'instance':<20}{'|S|':>7}{'|E|':>6}{'phi*':>8}"
           f"{'  ZM: valeur':>13}{'statut':>22}{'coupes':>7}{'tests':>7}"
@@ -100,7 +126,8 @@ def main() -> int:
 
         reset_oracle_counter()
         rn = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6, seed=0,
-                            archive_cuts=True, ilp_budget=cap)
+                            archive_cuts=True, ilp_budget=cap,
+                            pool_alterne=CFG_ALT, geom_bound=CFG_GEOM)
         nous_ilp.append(rn.ilp_calls)
         nous_ok = (rn.q_lb == phi_star)
         nous_exact += int(nous_ok)

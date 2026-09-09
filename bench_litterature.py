@@ -55,6 +55,7 @@ en meme temps qu'un autre sans que le partage du processeur ne fausse rien.
 Usage :  python bench_litterature.py [plafond_appels] [n_par_taille]
 """
 
+import os
 import sys
 import time
 
@@ -63,6 +64,30 @@ import numpy as np
 from molfp_core import ORACLE_CALLS, reset_oracle_counter
 from molfp_instance import FracObj, MOILFP
 from molfp_matheuristic import matheuristic_P
+
+# ---------------------------------------------------------------------------
+# CONFIGURATION MESUREE
+# ---------------------------------------------------------------------------
+# Trois leviers ont change en cours de travail et tous trois deplacent les
+# chiffres. Un banc de comparaison doit donc dire LEQUEL il mesure, sinon il
+# oppose a la litterature une version arbitraire de notre methode -- et,
+# telle que ce banc a ete lance la premiere fois, la PLUS FAIBLE des trois.
+#
+#   V  vivier          : alterne (defaut courant) ou classement commun
+#   S  seconde route   : geom_bound
+#   D  denominateur D+ : repare (plus de drapeau, c'est le code)
+#
+# `MOLFP_CFG=ooo` rejoue la configuration d'origine, `eee` (defaut) la
+# configuration courante. Le banc imprime le marqueur dans son en-tete.
+CFG = os.environ.get("MOLFP_CFG", "eee").lower()
+CFG_ALT = CFG[0:1] in ("e", "*", "1")
+CFG_GEOM = CFG[1:2] in ("e", "*", "1")
+
+
+def marqueur() -> str:
+    return (f"[V{'*' if CFG_ALT else 'o'} "
+            f"S{'*' if CFG_GEOM else 'o'} D*]")
+
 
 # (n, m, r) et le temps CPU moyen publie par Drici et al., table 11, r = 3
 TAILLES_DRICI = [
@@ -97,6 +122,7 @@ def main() -> int:
     print("=" * 104)
     print(f"NOTRE METHODE SUR LE TERRAIN DE DRICI ET AL. (2018) - "
           f"leur protocole, leurs tailles, {n_seeds} instances par taille")
+    print(f"configuration mesuree : {marqueur()}")
     print(f"budget DETERMINISTE : {cap} appels au solveur entier par instance")
     print("=" * 104)
     print(f"{'n x m':>9}{'r':>3}{'prouve':>9}{'ecart garanti median':>23}"
@@ -112,7 +138,8 @@ def main() -> int:
             reset_oracle_counter()
             t0 = time.time()
             res = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6,
-                                 seed=0, archive_cuts=True, ilp_budget=cap)
+                                 seed=0, archive_cuts=True, ilp_budget=cap,
+                                 pool_alterne=CFG_ALT, geom_bound=CFG_GEOM)
             temps.append(time.time() - t0)
             ilps.append(res.ilp_calls)
             prouves += int(res.proved_optimal)
