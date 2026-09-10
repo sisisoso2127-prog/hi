@@ -342,12 +342,19 @@ def build_cut_pool(dominated: Sequence[np.ndarray],
     "il existe k tel que e_k(x) >= 1" -- donc le meme cout : p binaires
     chacune. Seule leur precondition differe (Th. 4 pour un point domine,
     Th. 6 pour un point efficace). Il n'y a donc aucune raison de leur
-    allouer des budgets separes, et une bonne raison de ne pas le faire : la
-    mesure du plafond de coupes montre qu'au-dela d'une quarantaine, chaque
-    coupe supplementaire coute plus qu'elle ne rapporte. Poser 40 coupes
-    d'archive EN PLUS des 40 de dominance a d'ailleurs fait chuter
-    l'optimalite prouvee de 84 a 57 sur 90 instances -- exactement l'effet de
-    saturation deja documente.
+    allouer des budgets separes. Nous invoquions ici une mesure -- poser 40
+    coupes d'archive EN PLUS des 40 de dominance aurait fait chuter
+    l'optimalite prouvee de 84 a 57 sur 90 instances. CE CHIFFRE EST RETIRE.
+    Ce fichier en portait 57 et l'article 56 pour la meme experience ; il a
+    ete obtenu sous budget en TEMPS, qui varie de 125 % d'une execution a
+    l'autre ; et le chemin de code correspondant avait ete supprime.
+
+    Remesure sous plafond DETERMINISTE (bench_budgets.py, 18 instances,
+    trois graines) : ecart median 27,6 % contre 27,4 %, optimalite prouvee
+    5/18 DANS LES DEUX BRAS, mieux 3 / pire 3 / egal 12. Aucun effondrement,
+    alors que le bras a budgets separes pose jusqu'a 60 % de coupes en plus
+    sur cinq lignes. La regle du plafond unique est conservee pour sa
+    simplicite, non sur la foi d'une mesure qui ne se reproduit pas.
 
     On classe donc les candidats des deux sources ensemble, par valeur
     decroissante du substitut : ce sont ceux qui tirent U vers le haut, quelle

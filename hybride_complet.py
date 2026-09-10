@@ -1769,12 +1769,19 @@ def build_cut_pool(dominated: Sequence[np.ndarray],
     "il existe k tel que e_k(x) >= 1" -- donc le meme cout : p binaires
     chacune. Seule leur precondition differe (Th. 4 pour un point domine,
     Th. 6 pour un point efficace). Il n'y a donc aucune raison de leur
-    allouer des budgets separes, et une bonne raison de ne pas le faire : la
-    mesure du plafond de coupes montre qu'au-dela d'une quarantaine, chaque
-    coupe supplementaire coute plus qu'elle ne rapporte. Poser 40 coupes
-    d'archive EN PLUS des 40 de dominance a d'ailleurs fait chuter
-    l'optimalite prouvee de 84 a 57 sur 90 instances -- exactement l'effet de
-    saturation deja documente.
+    allouer des budgets separes. Nous invoquions ici une mesure -- poser 40
+    coupes d'archive EN PLUS des 40 de dominance aurait fait chuter
+    l'optimalite prouvee de 84 a 57 sur 90 instances. CE CHIFFRE EST RETIRE.
+    Ce fichier en portait 57 et l'article 56 pour la meme experience ; il a
+    ete obtenu sous budget en TEMPS, qui varie de 125 % d'une execution a
+    l'autre ; et le chemin de code correspondant avait ete supprime.
+
+    Remesure sous plafond DETERMINISTE (bench_budgets.py, 18 instances,
+    trois graines) : ecart median 27,6 % contre 27,4 %, optimalite prouvee
+    5/18 DANS LES DEUX BRAS, mieux 3 / pire 3 / egal 12. Aucun effondrement,
+    alors que le bras a budgets separes pose jusqu'a 60 % de coupes en plus
+    sur cinq lignes. La regle du plafond unique est conservee pour sa
+    simplicite, non sur la foi d'une mesure qui ne se reproduit pas.
 
     On classe donc les candidats des deux sources ensemble, par valeur
     decroissante du substitut : ce sont ceux qui tirent U vers le haut, quelle
@@ -2067,7 +2074,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
-            pool_alterne: bool = True) -> CertResult:
+            pool_alterne: bool = True,
+            budgets_separes: bool = False) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -2204,7 +2212,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             # `cap` = le plafond qui ARBITRE reellement, c'est-a-dire le lot
             # pose en un tour, et non le total sur tous les tours.
             pending, sel = select_cuts(inst, dominated, arch_pts, q,
-                                       cap=cut_batch,
+                                       cap=2 * cut_batch if budgets_separes
+                                       else cut_batch,
                                        alterne=pool_alterne)
             info["select"] = sel
         else:
@@ -2235,10 +2244,15 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         improved_by_closure = None
         if pending:
             posees = 0
+            # BUDGETS SEPARES : chaque source recoit son propre plafond, au
+            # lieu de les mettre en concurrence sous un plafond unique. C'est
+            # la variante que la regle du vivier unique rejette ; elle est
+            # conservee pour que ce rejet soit MESURE et non postule.
+            cap_tour = 2 * cut_batch if budgets_separes else cut_batch
             for cand in pending:
                 x, kind = cand[0], cand[1]
                 h = cand[2] if len(cand) > 2 else None
-                if posees >= cut_batch or time.time() > t0 + budget_coupes:
+                if posees >= cap_tour or time.time() > t0 + budget_coupes:
                     break
                 if kind == "arch":
                     # LEMME DE CLOTURE PAR LA HAUTEUR :
@@ -2498,8 +2512,29 @@ def move_epsilon_absolute(inst: MOILFP, eps: Sequence[Fraction],
 
 
 def move_lns(inst: MOILFP, xr: np.ndarray, free_idx: Sequence[int],
-             w: np.ndarray, w0: float) -> Optional[np.ndarray]:
-    """Mouvement C.  Fige x_j = xr_j hors de `free_idx`, resout le reste."""
+             w: np.ndarray, w0: float,
+             keep: Optional[Sequence[int]] = None) -> Optional[np.ndarray]:
+    """
+    Mouvement C.  Fige x_j = xr_j hors de `free_idx`, resout le reste.
+
+    `keep` : criteres sur lesquels le point produit ne doit RIEN perdre par
+    rapport a la base, au sens e_j(x) >= 0. Sans eux, le mouvement maximise
+    librement le substitut de f -- et le substitut de f est maximal sur des
+    points DOMINES. Le detail compte, parce qu'il explique un rendement.
+
+    CE QUE LA MESURE REPROCHE A LA VERSION LIBRE. Sur douze instances,
+    4 succes pour 316 tentatives, soit 1,3 % -- trois fois moins que le
+    mouvement A, pour pres d'un cinquieme du budget de recherche. Le
+    diagnostic tient en une phrase deja etablie ailleurs dans ce travail :
+    les points de f eleve sont domines, donc hors de E, et leurs voisins
+    efficaces ont reellement un f faible. La reparation defait donc ce que
+    le mouvement vient de gagner.
+
+    A et B n'ont pas ce defaut parce qu'ils CONTRAIGNENT les criteres --
+    e_k(x) >= 1 pour A, Z_k(x) >= eps_k pour B -- et atterrissent donc pres
+    de la frontiere efficace. Ancrer C de la meme facon n'est pas un reglage
+    de plus : c'est lui donner ce qui fait marcher les deux autres.
+    """
     lb = np.array(xr, dtype=float)
     ub = np.array(xr, dtype=float)
     box = inst.var_upper_bounds().astype(float)
@@ -2508,6 +2543,9 @@ def move_lns(inst: MOILFP, xr: np.ndarray, free_idx: Sequence[int],
     from molfp_core import solve_milp
     rows = [(inst.A[i].astype(float), -INF, float(inst.b[i]))
             for i in range(inst.m)]
+    for j in (keep or []):
+        cj, kj = e_row(inst, xr, j)
+        rows.append((cj, -kj, INF))
     res = solve_milp(w, rows, lb, ub, maximize=True, obj_const=w0)
     return res.x if res.ok else None
 
@@ -2582,6 +2620,8 @@ def matheuristic_P(inst: MOILFP,
                    geom_bound: bool = False,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
+                   budgets_separes: bool = False,
+                   mouvement_c: str = "libre",
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
@@ -2659,6 +2699,8 @@ def matheuristic_P(inst: MOILFP,
         # en diversification on tire davantage vers B (plancher absolu) et C
         # (LNS) : A reste ancre sur le point de base, donc explore peu
         menu = ["B", "B", "C", "A"] if diversify else ["A", "A", "B", "C"]
+        if mouvement_c == "sans":
+            menu = [m for m in menu if m != "C"] or ["A"]
 
         for xr in _select_pool(arch, usage, rng, inst, diversify):
             usage[tuple(int(v) for v in xr)] = \
@@ -2689,7 +2731,17 @@ def matheuristic_P(inst: MOILFP,
                     frac = 0.6 if diversify else 0.4
                     n_free = max(1, int(frac * inst.n))
                     free = rng.choice(inst.n, size=n_free, replace=False)
-                    y = move_lns(inst, xr, free, w, w0)
+                    keep_c = None
+                    if mouvement_c == "ancre":
+                        # meme regle que le mouvement A : un sous-ensemble
+                        # STRICT, sinon le voisinage ne contient que les
+                        # points qui dominent la base, donc rien.
+                        autres = [j for j in range(inst.p)]
+                        n_keep = int(rng.integers(0, max(1, len(autres))))
+                        keep_c = list(rng.choice(autres, size=n_keep,
+                                                 replace=False)) \
+                            if n_keep else []
+                    y = move_lns(inst, xr, free, w, w0, keep=keep_c)
 
                 n_moves[mv] += 1
                 if y is None:
@@ -2741,7 +2793,8 @@ def matheuristic_P(inst: MOILFP,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
                        geom_gate=geom_gate, geom_gap=gap_hopeless,
-                       pool_alterne=pool_alterne)
+                       pool_alterne=pool_alterne,
+                       budgets_separes=budgets_separes)
 
     # --- repartition du plafond d'APPELS entre les phases -----------------
     # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme

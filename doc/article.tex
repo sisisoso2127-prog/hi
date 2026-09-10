@@ -860,6 +860,17 @@ coûte cher : dans une version antérieure, un relâché vide était lu comme un
 au lieu de 86, la totalité de l'écart provenant d'instances à
 $\text{corr}=0{,}9$.
 
+\begin{remark}[chiffre non reproductible, conservé pour son sens]
+Cette mesure exige le bogue qu'elle décrit, depuis corrigé, et elle a été
+prise sous budget en \emph{temps} : son unité n'engage rien. Ce qu'elle
+établit et qui n'en dépend pas est qualitatif -- ne pas traiter le relâché
+vide coûte la majorité des preuves dans le régime à front mince, puisque
+c'est là, et seulement là, qu'il se vide. Le $56$ qui apparaît ici et celui
+de la remarque sur les budgets séparés relèvent d'expériences distinctes,
+de bases distinctes ($86$ et $84$) : leur coïncidence numérique n'a pas de
+sens.
+\end{remark}
+
 \subsection{Établir la clôture coûte un programme, pas un optimum}
 
 La condition de clôture semble demander, pour chaque $a\in A$, un maximum de
@@ -910,15 +921,43 @@ seule ce résultat.
 \subsection{Effet mesuré}
 
 \paragraph{Un vivier, deux sources.} Les deux coupes ont la même forme et
-donc le même coût, $p$ binaires chacune. Leur allouer des budgets séparés
-serait doublement fautif : la mesure du plafond
+donc le même coût, $p$ binaires chacune. La mesure du plafond
 (section~\ref{sec:negatif}) établit qu'au-delà d'une quarantaine de coupes
-chacune coûte plus qu'elle ne rapporte, et poser $40$ coupes d'archive
-\emph{en plus} des $40$ de dominance a fait tomber l'optimalité prouvée de
-$84$ à $56$ sur les $90$ instances du lot. On classe donc les candidats des
-deux sources ensemble, par valeur décroissante du substitut, sous le plafond
-global déjà réglé. L'effet est automatique : là où les points dominés
-abondent ils occupent le vivier, là où ils sont rares l'archive le remplit.
+chacune coûte plus qu'elle ne rapporte ; nous en avions conclu que leur
+allouer des \emph{budgets séparés} serait fautif, et nous appuyions cette
+règle sur une mesure : poser $40$ coupes d'archive en plus des $40$ de
+dominance aurait fait tomber l'optimalité prouvée de $84$ à $56$ sur les
+$90$ instances du lot.
+
+\begin{remark}[ce chiffre est retiré]
+Il ne peut pas porter une décision de conception. Le code de la méthode en
+portait $57$ et ce mémoire $56$ pour la même expérience -- l'un des deux est
+recopié de travers et rien ne dit lequel ; il a été obtenu sous un budget en
+\emph{temps}, dont nous établissons qu'il varie de $125\ \%$ d'une exécution
+à l'autre ; et le chemin de code correspondant avait été supprimé, rendant
+la mesure irreproductible. Nous l'avons reconstruit et remesuré sous plafond
+déterministe, sur $18$ instances et trois graines : écart médian
+$27{,}6\ \%$ contre $27{,}4\ \%$, écart moyen $33{,}8$ contre $33{,}9$,
+optimalité prouvée $5/18$ \emph{dans les deux bras}, et mieux $3$ / pire $3$
+/ égal $12$. \textbf{Aucun effondrement.} Le mécanisme est pourtant
+sollicité : sur cinq lignes le bras à budgets séparés pose jusqu'à
+$60\ \%$ de coupes en plus, et l'écart y bouge de $+0{,}47$ à $-0{,}34$
+point.
+
+Le lot n'étant pas le même -- l'ancienne mesure portait sur $90$ instances à
+$12$~s, incluant $\text{corr}=0{,}9$ --, nous ne concluons pas que la règle
+est fausse, mais qu'elle est \textbf{sans support empirique reproductible}
+dans le régime mesuré. Elle est conservée pour sa simplicité, non sur la foi
+du chiffre retiré. Cela s'accorde du reste avec la
+section~\ref{sec:defauts} : ce qu'il faut éviter est que l'archive soit
+privée de places, et un plafond par source l'empêche tout autant que
+l'alternance.
+\end{remark}
+
+\noindent
+On classe donc les candidats des deux sources ensemble sous le plafond
+global déjà réglé -- et c'est le \emph{classement} commun, non le plafond
+commun, qui se révélera fautif (§\ref{sec:defauts}).
 
 \begin{table}[htbp]
 \centering

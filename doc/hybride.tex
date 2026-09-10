@@ -634,6 +634,18 @@ uvre, un relâché vide était lu comme un \emph{échec} de la borne, et
 l'optimalité prouvée tombait à $56$ instances sur $90$ au lieu de $86$, la
 totalité de l'écart provenant d'instances à front mince.
 
+\begin{remark}[chiffre non reproductible, conservé pour son sens]
+Cette mesure exige le bogue qu'elle décrit, depuis corrigé, et elle a été
+prise sous budget en \emph{temps} : nous ne pouvons donc ni la rejouer ni la
+vérifier, et son unité n'engage rien. Ce qu'elle établit et qui n'en dépend
+pas est qualitatif : \emph{ne pas traiter le cas du relâché vide coûte la
+majorité des preuves dans le régime à front mince}, puisque c'est là, et
+seulement là, que le relâché se vide. Le lecteur ne doit pas rapprocher ce
+$56$ de celui du tableau~\ref{tab:budgets} : les deux expériences sont
+distinctes, leurs bases diffèrent ($86$ et $84$), et la coïncidence des deux
+nombres n'a pas de sens.
+\end{remark}
+
 % ============================================================================
 \section{La condition de clôture coûte un programme, pas un optimum}
 \label{sec:cloture}
@@ -727,17 +739,82 @@ Les deux coupes ont exactement la même forme -- la disjonction~\eqref{eq:disj}
 -- donc exactement le même coût, $p$ binaires chacune. Leur allouer des
 budgets séparés serait doublement fautif.
 
-D'abord parce qu'un plafond existe : au-delà d'une quarantaine de coupes,
-chaque coupe supplémentaire alourdit le programme entier plus qu'elle ne
-resserre le relâché, et l'oracle n'a plus le temps de conclure. Ensuite parce
-que la mesure le confirme brutalement : poser $40$ coupes d'archive
-\emph{en plus} des $40$ de dominance fait tomber l'optimalité prouvée de
-$84$ à $56$ sur $90$ instances.
+Un plafond existe : au-delà d'une quarantaine de coupes, chaque coupe
+supplémentaire alourdit le programme entier plus qu'elle ne resserre le
+relâché, et l'oracle n'a plus le temps de conclure. Nous en avions conclu
+qu'il fallait \textbf{un seul plafond pour les deux sources}, et nous
+appuyions cette règle sur une mesure : donner à chacune son propre plafond
+de $40$ coupes ferait tomber l'optimalité prouvée de $84$ à $56$ sur $90$
+instances. Cette mesure ne tient pas.
+
+\subsection{Un chiffre qui ne peut pas porter une décision}
+
+Trois défauts, dont le dernier est rédhibitoire.
+
+D'abord, le chiffre lui-même est incertain : le code de la méthode en
+portait $57$ et ce mémoire $56$, pour la même expérience. L'un des deux est
+recopié de travers et rien ne permet de dire lequel. Ensuite, il a été
+obtenu sous un budget en \emph{temps}, dont nous établissons
+(§\ref{sec:determ}) qu'il fait varier le résultat d'une exécution à l'autre
+dans un rapport atteignant $125\ \%$. Enfin, le chemin de code
+correspondant avait été supprimé : la mesure n'était plus reproductible du
+tout.
+
+Nous l'avons donc reconstruit et remesuré sous plafond déterministe.
+
+\begin{table}[htbp]
+\centering
+\caption{Un plafond commun contre un plafond par source, $18$ instances,
+trois graines, plafond déterministe de $300$ appels entiers.\
+\conf{1}{1}{1}}
+\label{tab:budgets}
+\begin{tabular}{lccc}
+\toprule
+& écart médian & écart moyen & optimalité prouvée\\
+\midrule
+plafond commun & $27{,}6\ \%$ & $33{,}8\ \%$ & $5/18$\\
+un plafond par source & $27{,}4\ \%$ & $33{,}9\ \%$ & $5/18$\\
+\midrule
+\multicolumn{4}{l}{séparés contre commun : mieux $3$, pire $3$, égal $12$}\\
+\multicolumn{4}{l}{écart extrême : $-3{,}56$ et $+2{,}68$ point}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Aucun effondrement.} Les preuves sont identiques -- $5/18$ dans les
+deux bras -- et l'écart médian diffère de deux dixièmes de point. Le
+mécanisme est pourtant bien sollicité : sur cinq lignes, le bras à budgets
+séparés pose nettement plus de coupes ($106\!\to\!126$, $108\!\to\!115$,
+$40\!\to\!64$, $102\!\to\!114$, $106\!\to\!121$, soit jusqu'à $+60\ \%$), et
+sur ces cinq lignes précisément l'écart bouge de $+0{,}47$, $0$, $0$, $0$ et
+$-0{,}34$ point. La saturation que le chiffre publié décrivait ne se produit
+pas.
+
+\begin{remark}[ce que nous retirons, et ce que nous ne retirons pas]
+Le lot n'est pas le même : l'ancienne mesure portait sur $90$ instances à
+$12$~s, incluant $\text{corr}=0{,}9$ et de petites tailles, et nous ne
+pouvons pas la rejouer fidèlement puisqu'elle était arbitrée par le temps.
+Nous ne concluons donc pas que la règle est fausse, mais qu'elle est
+\textbf{sans support empirique reproductible} dans le régime mesuré ici. Le
+chiffre $84\to 56$ est retiré ; il n'est pas corrigé en $57$, il est
+remplacé par le tableau~\ref{tab:budgets}.
+\end{remark}
+
+\begin{remark}[et ceci s'accorde avec la suite]
+La section qui suit établit que la configuration réellement fautive n'est
+pas le plafond unique mais le \emph{classement} unique, qui affame
+l'archive. Or donner à chaque source son propre plafond empêche cet
+affamement tout autant que l'alternance. Les deux mesures disent donc la
+même chose par deux chemins : ce qu'il faut éviter est que l'archive soit
+privée de places, non que les deux sources partagent un plafond.
+\end{remark}
 
 \medskip\noindent
-La règle est donc : \textbf{un seul vivier, un seul plafond, les deux
-sources en concurrence}. Reste à dire \emph{comment} elles concourent, et
-c'est là que nous nous sommes trompés.
+La règle retenue reste \textbf{un seul vivier, un seul plafond}, pour une
+raison de simplicité et non plus sur la foi du chiffre retiré. Reste à dire
+\emph{comment} les deux sources y concourent, et c'est là que nous nous
+sommes trompés.
 
 \subsection{Le classement commun affame l'archive}
 
