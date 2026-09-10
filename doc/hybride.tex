@@ -3169,24 +3169,40 @@ itérations, $6$ coupes et $14$ tests d'efficacité.
 
 \paragraph{Protocole.} $24$ instances de leur classe -- $\varphi$ linéaire,
 critères fractionnaires -- avec vérité terrain par énumération exhaustive.
-L'unité de coût est le nombre d'appels au solveur \emph{en nombres entiers},
-indépendante de la machine et du langage : les secondes ne compareraient
-rien, un simplexe rationnel exact d'un côté et HiGHS de l'autre. Le plafond
-de travail de leur méthode porte sur le nombre d'itérations et de coupes
-($60$ et $150$), jamais sur des secondes, pour rester reproductible.
+L'unité de coût est, \textbf{des deux côtés}, le nombre d'appels au solveur
+\emph{en nombres entiers} : elle est indépendante de la machine et du
+langage, là où les secondes ne compareraient rien -- un simplexe rationnel
+exact d'un côté, HiGHS de l'autre. Chez eux, ces appels sont la relaxation
+initiale et les tests d'efficacité, chacun étant un programme entier ; chez
+nous, ils sont \emph{tout} ce que la méthode fait. Le même compteur les
+enregistre. Le plafond de travail de leur méthode porte sur le nombre
+d'itérations et de coupes ($60$ et $150$), jamais sur des secondes, pour
+rester reproductible.
 
 \begin{remark}[l'unité choisie les favorise, et c'est voulu]
-Leur algorithme tire l'essentiel de son travail du tableau -- unicité lue
-dans $\gamma$, arêtes lues dans les colonnes -- opérations que cette unité
-ne compte \emph{pas}, alors qu'elle compte tout ce que nous faisons. Le
-désavantage est assumé : si notre méthode tient malgré cela, la conclusion
-est solide.
+Une unité commune n'est pas une unité neutre. Celle-ci ne compte
+\emph{pas} :
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item les \textbf{pivots du simplexe} rationnel, ni les lectures du
+  tableau dont leur algorithme tire l'essentiel de son travail -- unicité
+  de l'optimum lue dans $\gamma$, arêtes lues dans les colonnes ;
+\item la génération et la gestion des \textbf{coupes de Gomory}, dont ils
+  posent $108$ en médiane et jusqu'à $190$, soit $2\,090$ au total sur les
+  $24$ instances.
+\end{itemize}
+Elle compte en revanche \emph{tout} ce que nous faisons. Le désavantage est
+assumé et il est important : si notre méthode tient malgré cela, la
+conclusion est solide ; si elle ne tenait pas, il faudrait le dire. Les
+$45$ appels médians de leur côté ne sont donc pas leur coût réel, mais la
+part de leur coût que cette unité sait voir.
 \end{remark}
 
 \begin{table}[htbp]
 \centering
-\caption{Match, $24$ instances, vérité terrain par énumération. Mesuré
-dans \emph{les deux} configurations : chiffres identiques.\
+\caption{Match, $24$ instances, vérité terrain par énumération. Les deux
+colonnes de coût sont dans la \emph{même} unité ; les lignes suivantes
+disent ce qu'elle ne compte pas. Mesuré dans \emph{les deux}
+configurations : chiffres identiques.\
 \conf{0}{0}{0}\,=\,\conf{1}{1}{1}}
 \label{tab:match}
 \begin{tabular}{lcc}
@@ -3196,7 +3212,16 @@ dans \emph{les deux} configurations : chiffres identiques.\
 optimum \emph{trouvé} & $20/24$ & $\mathbf{24/24}$\\
 optimalité \textbf{prouvée} & $12/24$ & $\mathbf{24/24}$\\
 \quad dont trouvé mais non certifié & $8$ & --\\
-coût médian & $45$ tests d'efficacité & $79$ \ILP\\
+\midrule
+\multicolumn{3}{l}{\emph{coût, dans la même unité : appels au solveur en
+ nombres entiers}}\\
+médiane & $45$ & $79$\\
+\midrule
+\multicolumn{3}{l}{\emph{ce que cette unité ne compte pas, chez eux}}\\
+coupes de Gomory posées (méd.) & $108$ & --\\
+pivots du simplexe, lectures du tableau
+ & \multicolumn{2}{c}{non instrumentés}\\
+\midrule
 encadrement valide & \multicolumn{2}{c}{$24/24$}\\
 \bottomrule
 \end{tabular}

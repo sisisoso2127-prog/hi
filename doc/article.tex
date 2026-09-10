@@ -2565,9 +2565,14 @@ le tableau, gradient réduit de Martos~\cite{martos1975}, coupes de
 Gomory~\cite{gomory1958} -- et confronté à
 notre méthode sur son propre terrain ($\varphi$ linéaire, critères
 fractionnaires) : $20/24$ optima trouvés et $12/24$ processus menés à terme
-contre $24/24$ et $\mathbf{24/24}$, sous une unité de coût qui \emph{leur}
-est favorable puisqu'elle ne compte pas les pivots du simplexe, d'où leur
-algorithme tire l'essentiel de son travail. Sur le terrain
+contre $24/24$ et $\mathbf{24/24}$. Le coût est compté des \emph{deux}
+côtés dans la même unité -- l'appel au solveur en nombres entiers, chaque
+test d'efficacité en étant un : $45$ appels médians chez eux, $79$ chez
+nous. Cette unité leur est franchement favorable, puisqu'elle ne compte ni
+les pivots du simplexe et les lectures de tableau dont leur algorithme tire
+l'essentiel de son travail, ni les coupes de Gomory qu'il pose -- $108$ en
+médiane, $2\,090$ au total sur les $24$ instances. Les $45$ ne sont donc pas
+leur coût réel, mais la part que cette unité sait voir. Sur le terrain
 de~\cite{drici2018} -- leur protocole de génération, leurs tailles --
 l'optimalité est prouvée $10/10$ à chaque taille jusqu'à $40\times15$.
 
