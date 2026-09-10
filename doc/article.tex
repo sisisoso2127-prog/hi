@@ -874,14 +874,37 @@ forme voisine mais \emph{un seul théorème} sous deux régimes de sa condition
 de clôture : automatique pour un centre dominé, à établir pour un centre
 efficace.
 
-Cela ouvre une possibilité que nous n'avons pas exploitée : \textbf{un point
-de $\Scal$ au statut indéterminé peut servir de centre de coupe}. La
-précondition n'est plus « certifié dominé ou certifié efficace » mais
-« réalisable, et clôture établie ». Or la recherche \emph{jette} aujourd'hui
-les points dont la chaîne de réparation a été interrompue faute de budget.
-Le théorème dit qu'ils restent des centres légitimes. Nous ne l'avons pas
-mesuré et ne prétendons donc pas que cela rapporte -- seulement que la
-version restreinte l'interdisait à tort.
+Cela ouvre une possibilité : \textbf{un point de $\Scal$ au statut
+indéterminé peut servir de centre de coupe}. La précondition n'est plus
+« certifié dominé ou certifié efficace » mais « réalisable, et clôture
+établie ». Or la recherche \emph{jette} aujourd'hui les points dont la
+chaîne de réparation a été interrompue faute de budget.
+\end{remark}
+
+\begin{remark}[l'ouverture est réelle et sans matière : nous l'avons
+comptée]\label{rem:indetermines}
+Avant de bâtir la récupération, nous avons instrumenté la chaîne de
+réparation pour compter ce qu'elle abandonne. Sur $18$ exécutions à plafond
+déterministe de $300$ appels : \textbf{douze points indéterminés au total},
+soit zéro ou un par exécution, face à des viviers de $32$ à $109$ points.
+Récupérer ces points ajouterait \emph{un} centre à un vivier qui dépasse
+déjà son plafond. La raison est structurelle : sous un plafond compté en
+appels, le budget s'épuise \emph{entre} deux mouvements et non au milieu
+d'une chaîne, qui n'est donc presque jamais interrompue.
+
+Le théorème autorise aussi à prendre pour centre le \emph{résultat brut}
+d'un mouvement, sans test d'efficacité, et la matière y est abondante. Mais
+le gain s'évanouit à l'examen : la réparation est faite de toute façon,
+l'archive et l'incumbent en ayant besoin. Elle ne deviendrait un gain que
+dans un algorithme qui ne réparerait qu'une \emph{fraction} des résultats --
+une autre répartition du budget, non l'ajout d'une source. Et trois mesures
+de ce mémoire indiquent que \textbf{le nombre de centres candidats n'est pas
+le verrou} : la coupe générée ne gagne rien sur $18$ lignes malgré $180$
+coupes, doubler le plafond ne change ni preuves ni écart, et le vivier
+sature déjà.
+
+L'ouverture théorique est donc réelle et pratiquement vide. Nous le
+rapportons plutôt que de laisser croire à un gain que rien n'étaie.
 \end{remark}
 
 \noindent

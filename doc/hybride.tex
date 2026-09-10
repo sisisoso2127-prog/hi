@@ -684,17 +684,50 @@ l'incumbent.
 Les deux coupes ne sont donc pas « deux sources de forme algébrique
 identique » comme nous l'écrivions, mais \emph{un seul théorème} et deux
 régimes de sa condition de clôture -- automatique pour un point dominé, à
-établir pour un point efficace. Cela a une conséquence pratique que nous
-n'avons pas exploitée : \textbf{un point de $\Scal$ dont le statut n'a pas
-été déterminé peut servir de centre de coupe}. La précondition n'est plus
-« être certifié dominé ou certifié efficace », mais seulement « être
-réalisable, et voir sa clôture établie ». Or notre recherche \emph{jette}
-aujourd'hui les points dont la chaîne de réparation a été interrompue faute
-de budget : ils ne sont ni archivés ni retenus comme incumbents
-(§\ref{sec:recherche}). Le théorème~\ref{th:effcut} dit qu'ils restent des
-centres de coupe légitimes. Nous ne l'avons pas mesuré, et nous ne
-prétendons donc pas que cela rapporte -- seulement que le théorème
-l'autorise, et que la version restreinte l'interdisait à tort.
+établir pour un point efficace. Cela a une conséquence pratique :
+\textbf{un point de $\Scal$ dont le statut n'a pas été déterminé peut servir
+de centre de coupe}. La précondition n'est plus « être certifié dominé ou
+certifié efficace », mais seulement « être réalisable, et voir sa clôture
+établie ». Or notre recherche \emph{jette} aujourd'hui les points dont la
+chaîne de réparation a été interrompue faute de budget
+(§\ref{sec:recherche}) : le théorème~\ref{th:effcut} dit qu'ils restent des
+centres légitimes.
+\end{remark}
+
+\begin{remark}[l'ouverture est réelle et sans matière : nous l'avons
+comptée]\label{rem:indetermines}
+Avant de bâtir la machinerie de récupération, nous avons instrumenté la
+chaîne de réparation pour compter ce qu'elle abandonne. Sur $18$ exécutions
+à plafond déterministe de $300$ appels : \textbf{douze points indéterminés
+au total}, soit zéro ou un par exécution, face à des viviers de $32$ à
+$109$ points et des archives de $5$ à $59$. Récupérer ces points ajouterait
+\emph{un} centre à un vivier qui dépasse déjà son plafond.
+
+La raison est structurelle : sous un plafond compté en appels, le budget de
+recherche s'épuise \emph{entre} deux mouvements et non au milieu d'une
+chaîne, qui n'est donc presque jamais interrompue. L'ouverture théorique est
+réelle et pratiquement vide, et c'est la mesure qui le dit. Nous la
+rapportons plutôt que de construire un mécanisme sans objet.
+\end{remark}
+
+\begin{remark}[une seconde lecture, et pourquoi nous n'en attendons rien]
+Le théorème autorise aussi à prendre pour centre le \emph{résultat brut}
+d'un mouvement, sans aucun test d'efficacité ; la matière est alors
+abondante -- $1\,269$ mouvements tentés pour $751$ réparations
+(tableau~\ref{tab:voisinage}). Mais le gain supposé s'évanouit à l'examen :
+la réparation est faite \emph{de toute façon}, l'archive et l'incumbent en
+ayant besoin, si bien qu'aucun appel n'est économisé. Elle ne deviendrait un
+gain que dans un algorithme différent, qui ne réparerait qu'une
+\emph{fraction} des résultats et prendrait les autres comme centres --
+c'est-à-dire une autre répartition du budget, non l'ajout d'une source.
+
+Trois mesures de ce mémoire suggèrent en outre un rendement faible : la
+coupe générée ne gagne $\mathbf{0{,}00}$ point sur $18$ lignes malgré $180$
+coupes posées (§\ref{sec:cglp}) ; doubler le plafond de coupes ne change ni
+les preuves ni l'écart (tableau~\ref{tab:budgets}) ; et le vivier dépasse
+déjà son plafond sur la plupart des lignes. \textbf{Le nombre de centres
+candidats n'est pas le verrou.} Nous énonçons cette attente \emph{avant} de
+mesurer, pour qu'elle soit réfutable.
 \end{remark}
 
 \noindent
