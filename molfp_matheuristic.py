@@ -640,7 +640,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
-            pool_alterne: bool = True) -> CertResult:
+            pool_alterne: bool = True,
+            budgets_separes: bool = False) -> CertResult:
     """
     Convertit un budget de calcul en borne superieure VALIDE sur q*.
 
@@ -777,7 +778,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             # `cap` = le plafond qui ARBITRE reellement, c'est-a-dire le lot
             # pose en un tour, et non le total sur tous les tours.
             pending, sel = select_cuts(inst, dominated, arch_pts, q,
-                                       cap=cut_batch,
+                                       cap=2 * cut_batch if budgets_separes
+                                       else cut_batch,
                                        alterne=pool_alterne)
             info["select"] = sel
         else:
@@ -808,10 +810,15 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         improved_by_closure = None
         if pending:
             posees = 0
+            # BUDGETS SEPARES : chaque source recoit son propre plafond, au
+            # lieu de les mettre en concurrence sous un plafond unique. C'est
+            # la variante que la regle du vivier unique rejette ; elle est
+            # conservee pour que ce rejet soit MESURE et non postule.
+            cap_tour = 2 * cut_batch if budgets_separes else cut_batch
             for cand in pending:
                 x, kind = cand[0], cand[1]
                 h = cand[2] if len(cand) > 2 else None
-                if posees >= cut_batch or time.time() > t0 + budget_coupes:
+                if posees >= cap_tour or time.time() > t0 + budget_coupes:
                     break
                 if kind == "arch":
                     # LEMME DE CLOTURE PAR LA HAUTEUR :
@@ -1301,6 +1308,7 @@ def matheuristic_P(inst: MOILFP,
                    geom_bound: bool = False,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
+                   budgets_separes: bool = False,
                    mouvement_c: str = "libre",
                    cut_diversify: bool = True,
                    gap_hopeless: float = 0.5,
@@ -1473,7 +1481,8 @@ def matheuristic_P(inst: MOILFP,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
                        geom_gate=geom_gate, geom_gap=gap_hopeless,
-                       pool_alterne=pool_alterne)
+                       pool_alterne=pool_alterne,
+                       budgets_separes=budgets_separes)
 
     # --- repartition du plafond d'APPELS entre les phases -----------------
     # Sans elle, la sonde -- dont la regle d'arret est TEMPORELLE -- consomme
