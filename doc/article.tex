@@ -2341,15 +2341,19 @@ $92$--$98\ \%$ dans le régime à $\Ecal$ épais. Les deux sont tombés.
 
 Le premier a été levé entièrement : une coupe disjonctive obtenue par
 programme générateur~\cite{balas1993} est valide sans aucune binaire, donc
-illimitée. Les
-coupes sont bien produites -- de $6$ à $20$ selon les lignes -- et l'écart
-garanti gagne $+0{,}11$ point au mieux dans la configuration d'origine,
-$\mathbf{+0{,}00}$ sur les six lignes dans la configuration courante. Le cas
-décisif est une instance dont l'écart de référence est tombé à
+illimitée. Le banc, d'abord mené sur six lignes et une graine, l'a été
+ensuite sur \textbf{dix-huit lignes et trois graines} en configuration
+courante. Le gain de la coupe générée y vaut $\mathbf{+0{,}00}$ point
+\emph{partout} : pas une ligne améliorée, pas une dégradée, maximum comme
+minimum nuls. Et ce n'est pas faute de coupes -- $\mathbf{180}$ sont
+produites au total, jusqu'à $24$ sur une seule ligne -- ni sans coût, la
+colonne des programmes linéaires passant par exemple de $330$ à $388$.
+
+Le cas décisif est une instance dont l'écart de référence est tombé à
 $\mathbf{1{,}2\ \%}$ : la borne y est à un point de fermer, et six coupes
 générées ne la ferment pas. Tant que l'écart valait $79\ \%$ on pouvait
 croire que la coupe agissait sans qu'on le voie ; à $1{,}2\ \%$, l'argument
-tombe.
+n'est plus disponible.
 
 Le second a été testé sur vérité terrain. Posons
 $\Scal^{+}=\{x\in\Scal: f(x)>\qs\}$, l'ensemble des points qui rendent la
