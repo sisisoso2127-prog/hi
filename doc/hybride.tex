@@ -1954,6 +1954,7 @@ croisées inter-méthodes.
 \caption{Régime cible, $8$ instances $\times$ $10$ graines, budget identique
 de $7+5$~s, vérité terrain disponible.\ \conf{0}{0}{0}}
 \label{tab:res1}
+% budget en TEMPS : non reproductible, cf. la remarque qui suit
 \begin{tabular}{lcc}
 \toprule
 & sans coupes d'archive & avec\\
@@ -1996,16 +1997,30 @@ delta des appels par paire & \multicolumn{2}{c}{médiane $\mathbf{-12}$,
 \addlegendentry{avec}
 \end{axis}
 \end{tikzpicture}
-\caption{Régime cible, instance par instance, $10$ graines chacune. Six
-instances sur huit étaient déjà prouvées à toutes les graines : la coupe
-d'efficacité ne pouvait rien y ajouter, et n'y retire rien. Le gain est
-entièrement porté par les trois autres, et deux d'entre elles changent
-d'\emph{état} plutôt que de degré : de \textbf{zéro} preuve sur dix à dix
-sur dix, et de zéro à huit. Elles passent de « solution trouvée, optimalité
-inconnue » à « optimalité établie » -- ce qui n'est pas une amélioration de
-pourcentage mais un changement de ce que la méthode rend.}
+\caption{Régime cible, instance par instance, $10$ graines chacune.
+\textbf{Cinq} instances sur huit étaient déjà prouvées à toutes les
+graines : la coupe d'efficacité ne pouvait rien y ajouter, et n'y retire
+rien. Le gain -- $+20$ preuves, de $58/80$ à $78/80$ -- est entièrement
+porté par les trois autres : $+10$, $+8$ et $+2$. Les deux premières
+changent d'\emph{état} plutôt que de degré, passant de \textbf{zéro} preuve
+sur dix à dix sur dix et de zéro à huit : de « solution trouvée, optimalité
+inconnue » à « optimalité établie », ce qui n'est pas une amélioration de
+pourcentage mais un changement de ce que la méthode rend. La troisième,
+déjà prouvée $8$ fois sur $10$, complète simplement sa série.}
 \label{fig:cible}
 \end{figure}
+
+\begin{remark}[ce tableau n'est pas reproductible]
+Il est arbitré par un budget en \emph{temps} ($7+5$~s), non par un plafond
+d'appels -- or un tel budget fait varier le nombre d'appels entiers d'une
+exécution à l'autre dans un rapport atteignant $125\ \%$
+(§\ref{sec:determ}). Une version antérieure portait $57/80$ et $75/80$ pour
+la \emph{même} expérience : autre tirage du même processus, non faute de
+recopie. C'est pourquoi tous les bancs ultérieurs comptent en appels
+entiers. Les valeurs retenues sont celles que la figure~\ref{fig:cible}
+détaille instance par instance, et dont les sommes valent bien $58$ et
+$78$.
+\end{remark}
 
 \noindent
 C'est ici que le théorème~\ref{th:hauteur} change le signe du coût. Avant
@@ -2015,12 +2030,16 @@ appel entier non dépensé, et le temps ainsi rendu retourne à la
 certification, qui ferme davantage de bornes. Les preuves montent
 \emph{et} le coût baisse, non l'un malgré l'autre.
 
-Deux instances changent d'\emph{état}, et non seulement de chiffre : l'une
-passe de $0/10$ preuves et $17{,}3\ \%$ d'écart garanti à $8/10$ et
-$0{,}0\ \%$ ; l'autre de $0/10$ et $6{,}7\ \%$ à $10/10$ et $0{,}0\ \%$.
-Elles passent donc de « solution trouvée, optimalité inconnue » à
-« optimalité prouvée ». La première est celle qu'il faut $433$~s et $177$
-coupes pour prouver par l'oracle exact seul.
+Les $20$ preuves gagnées se répartissent sur \emph{trois} instances, et
+non deux. Deux d'entre elles changent d'\emph{état} et non seulement de
+chiffre : l'une passe de $0/10$ preuves et $17{,}3\ \%$ d'écart garanti à
+$8/10$ et $0{,}0\ \%$ ; l'autre de $0/10$ et $6{,}7\ \%$ à $10/10$ et
+$0{,}0\ \%$. Elles passent donc de « solution trouvée, optimalité inconnue »
+à « optimalité prouvée ». La première est celle qu'il faut $433$~s et $177$
+coupes pour prouver par l'oracle exact seul. La troisième instance apporte
+les $2$ preuves restantes, de $8/10$ à $10/10$ : un gain de degré, moins
+spectaculaire, mais qui manquait au compte -- $8+10=18$, et le tableau en
+annonce $20$.
 
 \subsection{Lot systématique}
 

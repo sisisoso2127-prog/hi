@@ -930,11 +930,27 @@ $7+5$~s, vérité terrain disponible.\ \conf{0}{0}{0}}
 & sans coupes d'archive & avec\\
 \midrule
 écart garanti médian & $0{,}00\ \%$ & $0{,}00\ \%$\\
-optimalité \textbf{prouvée} & 57/80 exécutions & $\mathbf{75/80}$\\
+optimalité \textbf{prouvée} & $58/80$ exécutions & $\mathbf{78/80}$\\
 validité $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ & 80/80 & \textbf{80/80}\\
+\midrule
+\multicolumn{3}{l}{\emph{lecture appariée} : preuves gagnées / perdues
+ $\mathbf{20}$ / $\mathbf{0}$}\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{remark}[ce tableau n'est pas reproductible, et il faut le dire]
+Il est arbitré par un budget en \emph{temps} ($7+5$~s), non par un plafond
+d'appels. Or nous établissons plus loin (§\ref{sec:negatif}) qu'un tel
+budget fait varier le nombre d'appels entiers d'une exécution à l'autre dans
+un rapport atteignant $125\ \%$, sur la même instance et la même machine.
+Une version antérieure de ce mémoire portait $57/80$ et $75/80$ pour la
+\emph{même} expérience : ce n'était pas une faute de recopie mais un autre
+tirage du même processus. C'est précisément pourquoi tous les bancs
+ultérieurs remplacent les secondes par un plafond déterministe d'appels
+entiers. Les valeurs retenues ici sont celles que détaille, instance par
+instance, la figure du régime cible.
+\end{remark}
 
 \noindent
 Les deux instances dont la borne ne fermait jamais voient leur écart garanti
@@ -2012,7 +2028,11 @@ comportement mais ne le mesure pas. Sur 8 instances $\times$ 10 graines à
 budget identique : écart garanti médian $\mathbf{0{,}00\ \%}$, optimum
 atteint sur \textbf{78 exécutions sur 80}, optimalité prouvée sur
 \textbf{57/80}, et l'encadrement $q_{\text{lb}}\le\qs\le q_{\text{ub}}$
-vérifié sur \textbf{80/80}.
+vérifié sur \textbf{80/80}. Le tableau~\ref{tab:archcut} porte $58$ pour
+cette même quantité : l'écart d'une unité entre les deux est un autre
+tirage du budget en temps, non une divergence de mesure -- c'est le défaut
+que la remarque de la page~\pageref{tab:archcut} décrit et que les bancs
+déterministes suppriment.
 
 \subsection{Passage à l'échelle : deux axes orthogonaux}
 \label{sec:echelle}
@@ -2396,7 +2416,9 @@ montre : le minorant continu atteint pratiquement le minimum entier.
 Le passage d'une limite de temps réelle au solveur -- correction pourtant
 légitime, puisqu'un seul appel pouvait en principe absorber tout le budget --
 n'a produit \emph{aucun} effet mesurable : $0{,}00\ \%$ d'écart médian,
-78/80 optima, 57/80 preuves, avant comme après. Le dépassement réel
+78/80 optima, 57/80 preuves, \emph{avant comme après} -- et c'est
+l'identité des deux colonnes qui compte ici, non la valeur absolue, soumise
+au tirage rappelé plus haut. Le dépassement réel
 plafonnait à $+1{,}3$~s. C'est une \emph{assurance}, pas un résultat, et la
 rapporter comme un gain serait trompeur.
 
