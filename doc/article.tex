@@ -234,21 +234,45 @@ suivante : \emph{à tout instant, la méthode dispose d'un encadrement valide}
   q_{\text{lb}}\ \le\ \qs\ \le\ q_{\text{ub}} ,
 \]
 où $q_{\text{lb}}=f(x_{\text{best}})$ avec $x_{\text{best}}$ \emph{certifié
-efficace}, et où $q_{\text{ub}}$ découle du théorème~\ref{th:bound}. Les
-contributions sont :
+efficace}, et où $q_{\text{ub}}$ est le minimum de deux bornes valides
+(th.~\ref{th:bound} et th.~\ref{th:seuillibre}). Les contributions sont :
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
 \item \textbf{Un test d'efficacité intégral} (th.~\ref{th:eff}), exact sans
       tolérance numérique, coûtant un seul programme en nombres entiers, et
       fournissant gratuitement un certificat de dominance.
-\item \textbf{Une coupe de dominance fractionnaire exacte} (th.~\ref{th:cut},
-      dont la remarque~\ref{rem:unification} montre qu'il est un corollaire
-      du th.~\ref{th:effcut}),
-      transposition de la coupe « $+1$ » du cas linéaire entier, avec un
-      big-M renforcé par relaxation continue.
+\item \textbf{Une coupe autour d'un point \emph{quelconque}}
+      (th.~\ref{th:effcut}) : la région retranchée ne contient, parmi les
+      points efficaces, que ceux de \emph{même vecteur critères}. C'est la
+      contribution centrale, et elle est plus générale que ce que son usage
+      demande -- le centre n'a besoin d'être que réalisable. La coupe de
+      dominance fractionnaire exacte (th.~\ref{th:cut}), transposition de la
+      coupe « $+1$ » du cas linéaire entier avec un big-M renforcé par
+      relaxation continue, en est le corollaire où la réserve est
+      automatiquement vide (remarque~\ref{rem:unification}) ; la coupe
+      d'\emph{efficacité} est celui où il faut l'établir, ce qui coûte un
+      programme de faisabilité et non un optimum.
+\item \textbf{Une preuve inaccessible à la coupe de dominance}
+      (prop.~\ref{prop:vide}) : si le relâché se vide, $\qs=q$ sans qu'aucune
+      borne n'ait été évaluée. La coupe de dominance ne peut jamais la
+      produire, puisqu'elle \emph{préserve} $\Ecal$. C'est la signature de
+      l'hybridation : la partie exacte y conclut sur des points que seule la
+      partie heuristique a su trouver.
 \item \textbf{Un théorème de certification} (th.~\ref{th:bound}) qui convertit
       une borne supérieure du sous-problème de Dinkelbach en borne sur $\qs$,
       en restreignant le dénominateur à la région où la borne agit.
+\item \textbf{Une borne à seuil libre} (th.~\ref{th:seuillibre}) : le
+      théorème de certification n'a rien de particulier à l'incumbent, et
+      l'évaluer à un seuil avancé sur le relâché ouvre une seconde route,
+      incomparable à la première. Effet rare et énorme : jusqu'à $+38{,}77$
+      points d'écart garanti, $+137{,}1$ de gains cumulés contre $-0{,}42$
+      de pertes.
+\item \textbf{L'archive rendue et mesurée} (\S\ref{sec:livrable}) : le
+      sous-ensemble de $\Ecal$ que produit la méthode est évalué contre
+      $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de $40{,}7\ \%$ des
+      points du front pour $92{,}3\ \%$ de son hypervolume -- et l'on
+      établit au passage que l'indicateur de couverture, opposé à un
+      ensemble certifié efficace, dégénère en rapport de cardinalité.
 \item \textbf{Un protocole de validation à trois niveaux}, dont un niveau qui
       \emph{ne requiert aucune vérité terrain} et lève ainsi le plafond de
       taille imposé par l'énumération exhaustive.
@@ -2921,13 +2945,21 @@ Nous avons construit une matheuristique qui, sur le problème d'optimisation
 d'une fonction fractionnaire sur l'ensemble efficace d'un MOILFP, fournit à
 tout instant un encadrement valide de l'optimum. La borne inférieure repose
 sur un incumbent \emph{certifié efficace} par un test intégral exact ; la
-borne supérieure découle du théorème~\ref{th:bound}, qui convertit un budget
-borné en garantie. Sur un lot systématique de 90 instances, tous les
-résultats passent une vérification indépendante, et la méthode rend la
-meilleure valeur partout tout en prouvant l'optimalité plus souvent que la
-méthode exacte de référence.
+borne supérieure est le minimum de deux routes valides -- le
+théorème~\ref{th:bound}, qui convertit un budget borné en garantie, et le
+théorème~\ref{th:seuillibre}, qui évalue la même borne à un seuil libre. Sur
+un lot systématique de 90 instances, tous les résultats passent une
+vérification indépendante, et la méthode rend la meilleure valeur partout
+tout en prouvant l'optimalité plus souvent que la méthode exacte de
+référence.
 
-Deux directions se dégagent, dans cet ordre.
+Elle rend en outre \emph{deux} objets et non un : cette valeur encadrée, et
+l'archive des points efficaces certifiés rencontrés en chemin -- le
+sous-ensemble de $\Ecal$ que demande l'énoncé, mesuré à la
+section~\ref{sec:livrable} et dont la section~\ref{sec:aide} dit l'usage
+décisionnel.
+
+Trois directions se dégagent, dans cet ordre.
 
 \paragraph{Resserrer la borne dans le régime à $\Ecal$ épais.} C'était le
 verrou, et nous en avons donné deux diagnostics successifs, tous deux
@@ -2988,6 +3020,16 @@ n'agissent que là où la borne \emph{ne ferme pas}, et sur ces deux terrains
 l'optimalité est prouvée sur chaque instance. Les gains de ce travail
 appartiennent au régime difficile et n'y débordent pas.
 \end{remark}
+
+\paragraph{Viser la diversité du front.} La section~\ref{sec:livrable} donne
+pour la première fois une cible chiffrée : $\varepsilon^+$ et l'hypervolume,
+contre $\Ecal$ énuméré. Rien dans la phase~1 ne pousse aujourd'hui vers les
+régions du front que l'archive laisse vides, alors que $\varepsilon^+$ les
+localise exactement en désignant le point de $\Ecal$ le plus mal représenté.
+Le coût en est connu d'avance -- chaque point ainsi visé est un appel entier
+qui n'améliore pas $q_{\text{lb}}$ --, de sorte que c'est un arbitrage
+explicite entre les deux livrables, la valeur certifiée et le front rendu,
+que cet article n'instruit pas.
 
 % ============================================================================
 \appendix

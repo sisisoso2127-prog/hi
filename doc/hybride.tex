@@ -235,10 +235,19 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       programme \emph{linéaire} remplace le programme en nombres entiers.
       C'est ce qui fait passer le coût apparié de $+10$ à $-12$ appels par
       exécution sur le régime cible.
-\item \textbf{Un seul vivier, deux sources} (\S\ref{sec:vivier}) : mettre les
-      deux coupes en concurrence sous un plafond global, et non leur allouer
-      des budgets séparés -- point où une mise en \oe uvre naïve perd
-      $28$ preuves sur $90$.
+\item \textbf{Un seul vivier, deux sources \emph{alternées}}
+      (\S\ref{sec:vivier}) : les deux coupes ayant la même forme et le même
+      coût, elles partagent un plafond ; mais les classer sur une
+      \emph{seule échelle} affame l'archive -- jusqu'à zéro coupe d'archive
+      sur deux lignes sur six -- alors qu'elle est la seule source capable
+      de \emph{vider} le relâché. On classe donc à l'intérieur de chaque
+      source, puis on alterne, sans paramètre nouveau. La monotonie en
+      budget passe de $1/6$ à $4/6$, et une ligne de $88{,}1\ \%$ d'écart
+      garanti à $\mathbf{0{,}0\ \%}$.
+      \emph{Nous avions annoncé ici qu'une mise en \oe uvre à budgets
+      séparés perdait $28$ preuves sur $90$. Ce chiffre est retiré}
+      (\S\ref{sec:vivier}) : remesuré sous plafond déterministe il ne
+      montre aucun effondrement -- $5/18$ preuves dans les deux bras.
 \item \textbf{La coupe d'efficacité comme opérateur de recherche}
       (\S\ref{sec:divers}) : couper autour de toute l'archive rend un point
       \emph{garanti neuf} en vecteur critères, et cet usage-là n'exige
@@ -249,6 +258,27 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       Moulaï~\cite{zerdani2011} avec
       son simplexe rationnel à tableau, reproduction des deux exemples
       publiés, et match à unité de coût indépendante de la machine.
+\item \textbf{Théorème~\ref{th:seuil} (borne à seuil libre)}
+      (\S\ref{sec:seuil}) : la borne de certification n'a rien de
+      particulier à l'incumbent. Évaluée à un seuil quelconque, avancé sur
+      \emph{n'importe quel} point du relâché -- un Dinkelbach mené sur
+      $\Rcal$ et non sur $\Scal$ --, elle devient une seconde route,
+      incomparable à la première, dont on prend le minimum. C'est le levier
+      le plus fort mesuré ici, et sa forme est rare et énorme plutôt que
+      fréquente et petite : jusqu'à $+38{,}77$ points sur une ligne,
+      $+137{,}1$ de gains cumulés contre $-0{,}42$ de pertes.
+\item \textbf{L'archive mesurée comme livrable} (\S\ref{sec:livrable}) :
+      le sous-ensemble de $\Ecal$ que l'énoncé demande est enfin mesuré
+      contre $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de
+      $40{,}7\ \%$ des points du front pour $92{,}3\ \%$ de son
+      hypervolume --, avec une proposition qui vaut au-delà de ce travail :
+      face à un ensemble \emph{certifié} efficace, l'indicateur de
+      couverture dégénère en rapport de cardinalité et n'apprend rien.
+\item \textbf{Ce que le couple $(q_{\text{lb}},q_{\text{ub}})$ permet de
+      décider} (\S\ref{sec:aide}) : à budget fini il borne le regret
+      d'adopter $x_{\text{best}}$, et du même coup ce que la poursuite du
+      calcul peut rapporter -- là où une méthode exacte interrompue ne
+      majore rien, faute d'un schéma qui le lui permette.
 \item \textbf{Un protocole de mesure qui se contrôle lui-même}
       (\S\ref{sec:determ}) : lecture appariée plutôt que comparaison de
       médianes, budget plafonné en \emph{appels} et non en secondes, et
@@ -4099,8 +4129,10 @@ fractionnaire, nous n'en disposons pas.
 La coupe d'efficacité repose sur une observation d'une ligne -- deux points
 efficaces de vecteurs critères distincts se dépassent forcément quelque part
 -- et sur le fait, non trivial, que la réserve qui l'accompagne se vérifie
-par \emph{un seul programme de faisabilité}. Elle transforme un sous-produit
-de la recherche, l'archive, en la ressource dont la borne exacte manquait.
+par \emph{un seul programme de faisabilité}. Elle transforme ce qui n'était
+qu'un sous-produit de la recherche, l'archive, en la ressource dont la borne
+exacte manquait -- et, mesurée pour elle-même (\S\ref{sec:livrable}), en
+l'un des deux livrables de la méthode.
 
 C'est une hybridation au sens fort, et il faut le dire précisément :
 \emph{aucune des deux moitiés ne produit seule ce résultat}. Sans la
@@ -4113,8 +4145,8 @@ seule ne peut pas atteindre, puisqu'elle repose sur le fait d'avoir
 
 \subsection*{Ce que la méthode ne fait pas}
 
-Trois limites, énoncées avec la même précision que les gains, parce qu'elles
-délimitent exactement ce que ce travail établit.
+Quatre limites, énoncées avec la même précision que les gains, parce
+qu'elles délimitent exactement ce que ce travail établit.
 
 \begin{enumerate}[leftmargin=*,itemsep=3pt]
 \item \textbf{Aucune conclusion à $n\ge 20$, et un point immobile.} La
@@ -4132,11 +4164,18 @@ délimitent exactement ce que ce travail établit.
       recherche sature le plafond de points dominés, aucune coupe
       d'efficacité n'est posée -- est morte avec l'alternance, qui garantit
       à l'archive la moitié des places (§\ref{sec:echellehonnete}).
-\item \textbf{Aucun progrès sur la qualité des solutions.} Sur le lot figé
-      la recherche atteint déjà l'optimum $90$ fois sur $90$ : il n'y a pas
-      de place pour un tel progrès, et la contribution porte donc
-      entièrement sur la \emph{certification}. Aux tailles où de la place
-      existerait, nous ne disposons pas encore d'une mesure valide.
+\item \textbf{Aucun progrès sur la qualité de l'incumbent, et une
+      déficience désormais chiffrée.} Sur le lot figé la recherche atteint
+      déjà l'optimum $90$ fois sur $90$ : il n'y a pas de place pour un tel
+      progrès, et la contribution porte donc entièrement sur la
+      \emph{certification}. Aux tailles où de la place existe, nous
+      disposons maintenant de la mesure qui nous manquait, et elle est
+      contre nous : l'incumbent manque $\qs$ sur $3$ lignes de $26$, toutes
+      à $n\ge 12$ (§\ref{sec:couverture}), et tripler le budget de la seule
+      recherche le fait progresser jusqu'à $+49{,}6\ \%$. Cela n'achète que
+      $1{,}7$ point d'écart garanti, parce que $q_{\text{ub}}\approx 103$ y
+      dilue tout gain porté au numérateur : les deux termes sont
+      déficients, et aucun ne suffit seul.
 \item \textbf{Le théorème~\ref{th:hauteur} n'achète pas de preuves.} À
       budget d'appels égal il n'en gagne aucune (\S\ref{sec:determ}) : c'est
       un gain de coût, non de capacité.
@@ -4200,17 +4239,6 @@ d'un opérateur compte ses succès, pas ce qu'ils valent, et le retirer coûte
 jusqu'à un tiers de l'incumbent. Trancher demande davantage de graines que
 nous n'en avons jouées.
 
-\paragraph{Un opérateur de diversité.} La mesure du chapitre~\ref{sec:livrable}
-donne pour la première fois une cible chiffrée à viser : $\varepsilon^+$ et
-l'hypervolume, contre $\Ecal$ énuméré. La direction la plus immédiate est
-d'ajouter à la phase~1 un mouvement dirigé vers les régions du front que
-l'archive laisse vides -- ce que $\varepsilon^+$ localise exactement, en
-désignant le point de $\Ecal$ le plus mal représenté. Le coût en est connu
-d'avance : chaque point ainsi visé est un appel entier de plus qui
-n'améliore pas $q_{\text{lb}}$. C'est donc un arbitrage explicite entre les
-deux livrables, la valeur certifiée et le front rendu, que le mémoire
-n'instruit pas.
-
 La seconde est la clôture elle-même : nos mesures n'ont jamais rencontré
 deux points efficaces de même vecteur critères, ce qui suggère qu'une
 condition structurelle -- vérifiable une fois pour toutes sur l'instance
@@ -4225,6 +4253,18 @@ point est efficace tout est fini. Notre $f$ étant fractionnaire, nous n'en
 disposons pas -- le maximum de $f$ sur $\Scal$ demande un Dinkelbach
 complet. Reste à savoir si un test bon marché, appliqué au \emph{premier}
 itéré de ce Dinkelbach, en récupérerait une partie du bénéfice.
+
+La quatrième est la \textbf{diversité du front}, et c'est la mesure de
+l'archive qui la rend formulable. Le chapitre~\ref{sec:livrable} donne pour la première fois une cible chiffrée à viser : $\varepsilon^+$ et
+l'hypervolume, contre $\Ecal$ énuméré. La direction la plus immédiate est
+d'ajouter à la phase~1 un mouvement dirigé vers les régions du front que
+l'archive laisse vides -- ce que $\varepsilon^+$ localise exactement, en
+désignant le point de $\Ecal$ le plus mal représenté. Le coût en est connu
+d'avance : chaque point ainsi visé est un appel entier de plus qui
+n'améliore pas $q_{\text{lb}}$. C'est donc un arbitrage explicite entre les
+deux livrables, la valeur certifiée et le front rendu, que le mémoire
+n'instruit pas.
+
 
 % ============================================================================
 \appendix
