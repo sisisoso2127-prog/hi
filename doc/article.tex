@@ -53,6 +53,10 @@
 % Trois leviers ont change en cours de travail (§ Trois defauts trouves par
 % la mesure) et tous trois deplacent les chiffres. Un tableau ne dit rien
 % sans dire lequel il mesure.
+% couleur de la contribution dans le schema d'architecture
+\definecolor{ceff}{RGB}{0,102,153}
+\definecolor{cfond}{RGB}{235,242,247}
+
 \newcommand{\cfgm}[1]{\ifnum#1=1$\bullet$\else$\circ$\fi}
 \newcommand{\conf}[3]{%
   \textsf{\footnotesize[\,V\cfgm{#1}\ S\cfgm{#2}\ D\cfgm{#3}\,]}}
@@ -1176,19 +1180,36 @@ protocole. Les bancs ultérieurs remplacent le budget en secondes par un
 plafond \emph{déterministe} d'appels entiers ; c'est sous ce protocole seul
 que nous énonçons des comparaisons de coût.
 
-\paragraph{Où elle n'apporte rien, et pourquoi.} À $\text{corr}=0$ et
-$n\ge 20$ -- le régime à $\Ecal$ épais -- les écarts garantis sont
-\emph{inchangés} ($98{,}3\ \%$, $97{,}1\ \%$, $92{,}6\ \%$ à $n=20$, $30$,
-$40$). La raison est mécanique : à ces tailles la recherche produit
-suffisamment de points dominés pour saturer le plafond de coupes avant que
-l'archive ne soit atteinte. Aucune coupe d'efficacité n'est donc posée.
+\paragraph{Où elle n'apportait rien, et pourquoi le diagnostic était faux.}
+À $\text{corr}=0$ et $n\ge 20$ -- le régime à $\Ecal$ épais -- les écarts
+garantis étaient \emph{inchangés} ($98{,}3\ \%$, $97{,}1\ \%$, $92{,}6\ \%$
+à $n=20$, $30$, $40$), et nous l'expliquions mécaniquement : à ces tailles la
+recherche produit assez de points dominés pour saturer le plafond de coupes
+avant que l'archive ne soit atteinte, de sorte qu'aucune coupe d'efficacité
+n'est posée.
 
-C'est un résultat négatif utile, et il désigne le verrou suivant sans
-ambiguïté : ce n'est plus la \emph{disponibilité} des coupes qui limite la
-borne à grande taille, c'est le \emph{plafond} lui-même -- donc le coût en
-$p$ binaires par coupe. Désagréger la disjonction redevient la priorité, et
-l'on sait désormais qu'il y a, derrière ce plafond, de la matière à couper
-qui attend.
+\textbf{Cette explication est morte, et c'est notre propre mesure qui l'a
+tuée.} Elle décrit une famine de l'archive dans un vivier à \emph{classement
+commun}. Sous l'alternance (§\ref{sec:defauts}), cette famine est
+\emph{mécaniquement impossible} : l'archive obtient la moitié des places par
+construction, et les coupes d'archive effectivement posées passent de
+$[0,12,2,10,15,0]$ à $[40,40,40,40,35,36]$ au plafond haut.
+
+\textbf{Le résultat négatif ne tombe qu'en partie.} Sous la configuration
+courante et à plafond déterministe, deux des trois points bougent nettement
+-- $98{,}6\to 77{,}2\ \%$ à $n=20$ et $93{,}9\to 78{,}6\ \%$ à $n=30$ --,
+et l'affirmation « la méthode est sans effet au-delà de $n\ge 20$ » est
+\textbf{retirée}. Ce qui subsiste est plus étroit : à $n=40$,
+$\text{corr}=0$, l'écart ne bouge pas ($96{,}6$ contre $96{,}5$), et ce n'est
+pas faute de borne -- le statut « convergée » y certifie que le majorant
+\emph{est} $\max_{\Rcal}f$, de sorte que le verrou y est passé du côté de
+$q_{\text{lb}}$. Et un écart de $77\ \%$ reste sans usage décisionnel
+(§\ref{sec:aide}) : la méthode ne conclut toujours pas à ces tailles.
+
+Le diagnostic qui suivait -- « le verrou est le \emph{plafond} lui-même,
+donc le coût en $p$ binaires par coupe » -- reposait sur l'explication
+tombée. La section~\ref{sec:negatif} le met malgré tout à l'épreuve, parce
+qu'il avait été formulé avant, et l'infirme par un chemin indépendant.
 
 \section{La matheuristique}
 
@@ -1249,6 +1270,7 @@ La taille de $J$ règle l'intensification : $J$ vide donne le mouvement le
 plus explorateur, $J$ plein redonne le voisinage vide ci-dessus.
 
 \subsection{Ce que chaque mouvement rapporte réellement}
+\label{sec:mouvements}
 
 Décrire trois mouvements ne dit pas lequel travaille. Sur douze instances à
 plafond déterministe de $300$ appels :
@@ -1360,6 +1382,7 @@ fermé et qu'il reste du temps.
 
 \begin{algorithm}[H]
 \caption{\textsc{Matheuristique}$(B_{\text{rech}},B_{\text{cert}},s_{\max})$}
+\label{alg:matheur}
 \KwIn{budgets de recherche et de certification ; seuil de stagnation}
 \KwOut{$(q_{\text{lb}},x_{\text{best}},q_{\text{ub}})$ avec
        $q_{\text{lb}}\le\qs\le q_{\text{ub}}$}
@@ -1382,7 +1405,11 @@ $q\gets f(x_0)$ ;\quad $s\gets 0$\;
 }
 $B\gets B_{\text{cert}}+\max(0,\ B_{\text{rech}}-\textsc{écoulé}())$
   \Comment*[r]{réallocation}
-$q_{\text{ub}}\gets\textsc{Certifier}(q,\mathcal{A},B)$ (th.~\ref{th:bound})\;
+$q_{\text{ub}}\gets\textsc{Certifier}(q,\mathcal{A},B)$
+  \Comment*[r]{route 1 : th.~\ref{th:bound}}
+\lIf{$q_{\text{ub}}>q$}{$q_{\text{ub}}\gets\min\bigl(q_{\text{ub}},\
+  \textsc{SecondeRoute}(q,\Rcal)\bigr)$
+  \Comment*[f]{route 2 : th.~\ref{th:seuillibre}}}
 \Return $(q,x_{\text{best}},q_{\text{ub}})$\;
 \end{algorithm}
 
@@ -1718,50 +1745,62 @@ archive contient \textbf{6 points, soit exactement $\Ecal$}.
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
-   node distance=6mm,
+   x=1cm, y=1cm,
    box/.style={draw=black!55,rounded corners=1.5pt,align=center,
                font=\small,inner sep=4pt,minimum height=8mm},
    lab/.style={font=\scriptsize\itshape,black!65},
    ->,>=stealth]
 
- \node[box,fill=black!4] (init) {réparation de $x=0$\\[-1pt]
+ \node[box,fill=black!4] (init) at (-4.9, 0)  {réparation de $x=0$\\[-1pt]
    {\scriptsize (th.~\ref{th:eff})}};
- \node[box,right=10mm of init] (move) {mouvement $A$, $B$ ou $C$\\[-1pt]
+ \node[box]              (move) at ( 0.0, 0)  {mouvement $A$, $B$ ou $C$\\[-1pt]
    {\scriptsize sous-problème \ILP\ exact}};
- \node[box,right=10mm of move] (cert) {certification\\[-1pt]
+ \node[box]              (cert) at ( 4.7, 0)  {certification\\[-1pt]
    {\scriptsize th.~\ref{th:eff} : efficace ?}};
- \node[box,below=9mm of cert,fill=black!4] (arch) {archive\\[-1pt]
-   {\scriptsize points efficaces certifiés}};
- \node[box,left=10mm of arch] (dom) {points dominés\\[-1pt]
+ \node[box]              (dom)  at (-1.9,-2.3){points dominés\\[-1pt]
    {\scriptsize traversés, conservés}};
- \node[box,below=9mm of dom,fill=black!4] (orac) {oracle borné\\[-1pt]
-   {\scriptsize coupes recyclées (th.~\ref{th:cut})}};
- \node[box,right=10mm of orac] (bound) {borne du th.~\ref{th:bound}\\[-1pt]
-   {\scriptsize $\qs\le q+U/(Q D^{+})$}};
- \node[box,left=10mm of orac,fill=black!8] (out)
+ \node[box,fill=black!4] (arch) at ( 3.4,-2.3){archive\\[-1pt]
+   {\scriptsize points efficaces certifiés}};
+ \node[box,fill=cfond,draw=ceff,text width=72mm] (viv) at (0.4,-4.6)
+   {vivier de coupes, deux sources \textbf{alternées}\\[-1pt]
+   {\scriptsize dominance (th.~\ref{th:cut}) $\bullet$
+    \textbf{efficacité} (th.~\ref{th:effcut})}};
+ \node[box,fill=black!4] (orac) at (-1.2,-6.9){oracle borné sur $\Rcal$};
+ \node[box]              (bound)at ( 3.6,-6.9){borne, \textbf{deux routes}\\[-1pt]
+   {\scriptsize th.~\ref{th:bound} $\bullet$ th.~\ref{th:seuillibre}}};
+ \node[box,fill=black!8] (out)  at ( 0.4,-9.0)
    {$q_{\text{lb}}\le\qs\le q_{\text{ub}}$};
 
  \draw (init) -- (move);
  \draw (move) -- (cert);
  \draw (cert) -- (arch);
- \draw (cert) -- node[lab,above]{$\bot$} (dom);
- \draw (arch.north west) to[out=150,in=-40] node[lab,right,pos=0.4]
+ \draw (cert.south west) to[out=-160,in=20] node[lab,above]{$\bot$} (dom.north east);
+ \draw (arch.north west) to[out=150,in=-40] node[lab,right,pos=0.35]
    {redémarrage guidé} (move.south east);
- \draw (dom) -- (orac);
+ \draw (dom.south) -- (dom.south |- viv.north);
+ \draw[draw=ceff,thick] (arch.south) -- node[lab,left,pos=0.45]
+   {\textcolor{ceff}{coupes d'efficacité}} (arch.south |- viv.north);
+ \draw (viv.south -| orac.north) -- (orac.north);
  \draw (orac) -- (bound);
- \draw (bound.south) to[out=-150,in=-30] (out.south east);
- \draw (arch.south west) to[out=-135,in=25] node[lab,right,pos=0.35]
-   {$q_{\text{lb}}$} (out.north east);
+ \draw (bound.south) -- ++(0,-1.15) -| (out.east);
+ \draw (arch.east) -- ++(0.55,0) |- node[lab,right,pos=0.25]
+   {$q_{\text{lb}}$} (out.east);
 
- \node[lab,above=1mm of move] {Phase 1 : recherche};
- \node[lab,below=1mm of orac] {Phase 2 : certification};
+ \node[lab] at (0,1.05) {Phase 1 : recherche};
+ \node[lab] at (-1.2,-7.9) {Phase 2 : certification};
 \end{tikzpicture}
-\caption{Architecture. La phase de recherche ne produit que des points
-\emph{certifiés} efficaces, d'où une borne inférieure jamais optimiste. Les
-points dominés qu'elle traverse ne sont pas jetés : ce sont les seuls sur
-lesquels le théorème~\ref{th:cut} autorise une coupe, et ils alimentent la
-phase de certification. Le budget non consommé par la recherche lui est
-également reversé.}
+\caption{Architecture, dans la configuration \conf{1}{1}{1} -- celle que ce
+travail mesure partout. La phase de recherche ne produit que des points
+\emph{certifiés} efficaces, d'où une borne inférieure jamais optimiste. Elle
+alimente la phase~2 par \emph{deux} canaux : les points dominés qu'elle
+traverse, sur lesquels le théorème~\ref{th:cut} autorise une coupe, et
+l'\textbf{archive}, sur laquelle le théorème~\ref{th:effcut} en autorise une
+autre -- c'est la flèche bleue, et c'est la contribution. Les deux sources
+\emph{alternent} dans le vivier plutôt que d'y être classées ensemble, faute
+de quoi l'archive est affamée (§\ref{sec:defauts}) ; et la borne finale est
+le minimum de deux routes valides, l'une à seuil fixé sur l'incumbent,
+l'autre à seuil libre (§\ref{sec:defauts}). Le budget non consommé par la
+recherche est reversé à la certification.}
 \label{fig:archi}
 \end{figure}
 
@@ -2906,9 +2945,13 @@ $n=40$, $\text{corr}=0$, la borne ne bouge pas alors que la procédure
 certifie qu'elle \emph{est} $\max_{\Rcal}f$ : ce qui reste tient au
 minorant, où la recherche est effectivement déficiente sans que la corriger
 suffise. La méthode n'est pas monotone en budget, et deux lignes sur six le
-restent après correction de la cause principale. Enfin le mouvement C ne
-rapporte que quatre améliorations pour $316$ appels : sa conception ou sa
-place dans le menu est à revoir.
+restent après correction de la cause principale. Enfin le mouvement C, dont le rendement
+est le plus faible -- quatre améliorations pour $316$ appels --, reste en
+place : mis à l'épreuve sur trois graines contre son ancrage et contre son
+retrait pur et simple, le banc ne tranche pas ($p=0{,}73$ au mieux), et
+c'est notre \emph{diagnostic} qui est réfuté, l'ancrage étant le plus
+mauvais des trois traitements. Trancher demande davantage de graines que
+nous n'en avons jouées.
 
 \paragraph{Établir la comparaison externe.} Elle est faite.
 \cite{zerdani2011} a été réimplémenté -- simplexe rationnel exact révélant
@@ -2945,6 +2988,80 @@ n'agissent que là où la borne \emph{ne ferme pas}, et sur ces deux terrains
 l'optimalité est prouvée sur chaque instance. Les gains de ce travail
 appartiennent au régime difficile et n'y débordent pas.
 \end{remark}
+
+% ============================================================================
+\appendix
+\section{Annexe -- historique des versions}
+\label{sec:histo}
+
+Trois réglages ont changé en cours de travail et tous trois déplacent les
+chiffres ; c'est pourquoi chaque tableau porte son marqueur de configuration.
+Le \emph{corps} de l'article -- figure~\ref{fig:archi},
+algorithme~\ref{alg:matheur}, §\ref{sec:resultats}, conclusion -- décrit
+uniformément la configuration courante \conf{1}{1}{1}. Cette annexe conserve
+l'état antérieur, sans lequel les tableaux marqués \conf{0}{0}{0}
+resteraient incompréhensibles.
+
+\begin{center}
+\begin{tabular}{clll}
+\toprule
+& réglage & état antérieur \conf{0}{0}{0} & état courant \conf{1}{1}{1}\\
+\midrule
+\textsf{V} & vivier & classement commun par $w^{\top}x$
+  & alternance entre les deux sources\\
+\textsf{S} & seconde route & absente
+  & Dinkelbach sur $\Rcal$, seuil libre\\
+\textsf{D} & dénominateur & $D^{+}$ jamais réalisé
+  & minorant interrompu accepté\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip\noindent
+\textbf{Le vivier antérieur.} Les deux sources étaient versées dans une même
+liste, triée par $w^{\top}x$ décroissant. L'argument était que « l'effet est
+automatique et souhaitable : là où les points dominés abondent, ils occupent
+le vivier ; là où ils sont rares, l'archive le remplit à leur place ». La
+mesure dit l'inverse : en triplant le plafond, les coupes d'archive tombent
+jusqu'à zéro sur deux lignes sur six (§\ref{sec:defauts}). Le code conserve
+ce chemin sous \texttt{alterne=False}, uniquement pour rejouer les mesures
+antérieures.
+
+\medskip\noindent
+\textbf{L'absence de seconde route.} La certification s'arrêtait après la
+route~1 : $q_{\text{ub}}$ était le minimum, sur les tours, de
+$q_{\text{réf}}+U/(QD^{+})$, et rien n'évaluait la même borne à un autre
+seuil. Le théorème~\ref{th:seuillibre} et le second appel de
+l'algorithme~\ref{alg:matheur} étaient absents.
+
+\medskip\noindent
+\textbf{Ce qui a été retiré, et où.}
+\begin{center}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{lll}
+\toprule
+affirmation retirée & remplacée par & où\\
+\midrule
+$84\to 56$ preuves à budgets séparés
+  & aucun effondrement, $5/18$ dans les deux bras & \S\ref{sec:defauts}\\
+« le classement fait l'arbitrage »
+  & l'alternance & \S\ref{sec:defauts}\\
+« aucune coupe d'efficacité n'est posée »
+  & $35$ à $40$ posées par ligne & \S\ref{sec:resultats}\\
+« sans effet au-delà de $n\ge 20$ »
+  & $98{,}6\to 77{,}2$ et $93{,}9\to 78{,}6$ & \S\ref{sec:defauts}\\
+$p=0{,}031$ pour la seconde route
+  & $p=0{,}109$ aux signes, $0{,}020$ à Wilcoxon & \S\ref{sec:defauts}\\
+mouvement C : $3$ contre $3$ (deux graines)
+  & $4/4$ et $5/3$ (trois graines) & \S\ref{sec:mouvements}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Aucune de ces lignes n'est une correction de rédaction : chacune est une
+affirmation que nous avions publiée et qu'une mesure ultérieure a
+contredite.
 
 \begin{thebibliography}{99}
 \bibitem{philip1972}

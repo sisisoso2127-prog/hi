@@ -151,11 +151,12 @@ de couverture, opposé à la vraie frontière un ensemble certifié efficace,
 dégénère en rapport de cardinalité et n'apporte rien -- ce qui vaut pour
 toute méthode qui certifie avant d'archiver.
 
-Les limites sont énoncées avec la même précision que les gains : la méthode
-est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le
-théorème de clôture
-n'achète aucune preuve supplémentaire -- c'est un gain de coût, non de
-capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
+Les limites sont énoncées avec la même précision que les gains : à $n\ge 20$
+et front épais la méthode ne conclut toujours pas -- l'écart garanti y reste
+de $77$ à $96{,}5\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
+borne y étant certifiée égale à $\max_{\Rcal}f$ --, et à budget d'appels égal
+le théorème de clôture n'achète aucune preuve supplémentaire : c'est un gain
+de coût, non de capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
 programme générateur, y est construite et vérifiée : elle ne gagne que
 $0{,}11$ point d'écart garanti, ce qui \emph{infirme} le diagnostic que nous
 avions nous-mêmes posé sur l'origine de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
@@ -1056,6 +1057,7 @@ placés, et ils raflent le vivier.
 \end{remark}
 
 \subsection{L'alternance, et ce qu'elle rétablit}
+\label{sec:alternance}
 
 La correction ne demande aucun paramètre nouveau : on classe à l'intérieur
 de \emph{chaque} source, puis on \textbf{alterne}. Chaque source obtient la
@@ -1186,10 +1188,13 @@ l'exact la matière dont il manque.
   {sorties de la phase~1 :\ \ $q=f(\bar x)$ borne inférieure \emph{valide}
    \ \ $\bullet$\ \ archive $\Acal\subseteq\Ecal$
    \ \ $\bullet$\ \ dominés $\mathcal{D}$};
-\node[blocB,text width=66mm]    (vivier)  at (0, -6.3)
-  {\textbf{vivier unique} (\S\ref{sec:vivier})\\[1pt]
-   \footnotesize $\mathcal{D}\cup\Acal$ trié par $w^{\top}x$ décroissant,
-   sous un plafond global};
+\node[blocB,text width=72mm]    (vivier)  at (0, -6.3)
+  {\textbf{vivier unique, deux sources \emph{alternées}}
+   (\S\ref{sec:alternance})\\[1pt]
+   \footnotesize classement \emph{à l'intérieur de chaque} source par
+   $w^{\top}x$, puis alternance :\\
+   \footnotesize chaque source a la moitié des places, la totalité si
+   l'autre s'épuise};
 \node[dec]                      (src)     at (0, -8.4) {candidat\\ issu de $\Acal$ ?};
 \node[dec]                      (clot)    at (0,-10.6) {(C$_a$)\\ infaisable ?};
 \node[blocA,text width=46mm]    (maj)     at (-7.4,-10.6)
@@ -1208,9 +1213,19 @@ l'exact la matière dont il manque.
 \node[dec]                      (u0)      at (0,-19.0) {$U\le 0$ ?};
 \node[fin]                      (prv)     at (6.6,-19.0)
   {\textbf{$\qs=q$}\\[-1pt]\footnotesize borne~\eqref{eq:borne}};
-\node[fin,text width=54mm]      (out)     at (0,-21.2)
-  {$q\ \le\ \qs\ \le\ q+\dfrac{U}{Q\,D^{+}}$\\[-1pt]
-   \footnotesize Théorème~\ref{th:archbound}};
+\node[blocB,text width=54mm]    (geom)    at (-8.4,-19.0)
+  {\textbf{seconde route} (\S\ref{sec:seuil})\\[1pt]
+   \footnotesize Dinkelbach sur $\Rcal$ à seuil $t$ \emph{libre}
+   ($2$ à $4$ tours) :\\
+   \footnotesize $\max_{\Rcal}G_t\le v\Rightarrow
+    \max_{\Rcal}f\le t+v/D_{\min}$};
+\node[fin,text width=74mm]      (out)     at (0,-21.2)
+  {$q\ \le\ \qs\ \le\
+    \min\Bigl(q+\dfrac{U}{Q\,D^{+}},\ \max\bigl(q,\ \max_{\Rcal}f\bigr)\Bigr)$
+   \\[-1pt]
+   \footnotesize Th.~\ref{th:archbound} \quad$\bullet$\quad
+   Th.~\ref{th:seuil} et prop.~\ref{prop:geomvalide}\\[-1pt]
+   \footnotesize \emph{deux bornes valides : on prend la plus petite}};
 
 \draw[fl] (in)      -- (rech);
 \draw[fl] (rech)    -- (sortie1);
@@ -1228,14 +1243,22 @@ l'exact la matière dont il manque.
 \draw[fl] (vide)    -- node[et,right]{non} (u0);
 \draw[fl] (u0)      -- node[et,above]{oui} (prv);
 \draw[fl] (u0)      -- node[et,right]{non} (out);
+\draw[fl] (u0.west)     -- node[et,above]{si non prouvé} (geom.east);
+\draw[fl] (geom.south)  |- (out.west);
 \draw[fl,dashed,cgris] (out.east) -- ++(3.0,0)
     |- node[et,pos=0.80,above,text=black]{tour suivant} (vivier.east);
 \end{tikzpicture}}
-\caption{Fonctionnement de l'algorithme. En \textcolor{cdom}{orange} ce qui
-existait, en \textcolor{ceff}{bleu} ce que la coupe d'efficacité ajoute. La
-flèche décisive est celle qui va de l'archive (sortie de la phase~1) au
-vivier de coupes de la phase~2 : c'est l'inversion du flux d'information qui
-fait l'hybridation.}
+\caption{Fonctionnement de l'algorithme, dans la configuration
+\conf{1}{1}{1} -- celle que ce mémoire mesure partout. En
+\textcolor{cdom}{orange} ce qui existait, en \textcolor{ceff}{bleu} ce que la
+coupe d'efficacité ajoute. La flèche décisive est celle qui va de l'archive
+(sortie de la phase~1) au vivier de coupes de la phase~2 : c'est l'inversion
+du flux d'information qui fait l'hybridation. Deux éléments de ce schéma ont
+remplacé une version antérieure et la remplacent aussi dans le
+pseudo-code : l'\emph{alternance} du vivier, qui garantit des places à
+l'archive (\S\ref{sec:alternance}), et la \emph{seconde route}, qui évalue la
+même borne à un seuil libre (\S\ref{sec:seuil}). L'état antérieur
+\conf{0}{0}{0} est décrit à l'annexe~\ref{sec:histo}.}
 \label{fig:flow}
 \end{figure}
 
@@ -1561,17 +1584,34 @@ $r\leftarrow$ résoudre ce programme de \emph{faisabilité}\;
 \end{algorithm}
 
 \begin{algorithm}[htbp]
-\caption{\textsc{Vivier}$(\mathcal{D},\Acal,w)$ -- une seule réserve, deux sources}
+\caption{\textsc{Vivier}$(\mathcal{D},\Acal,w)$ -- une seule réserve, deux
+sources \textbf{alternées}}
 \label{alg:vivier}
 \KwIn{points dominés $\mathcal{D}$, archive $\Acal$, substitut $w=Qc-Pd$}
-\KwOut{liste de couples (point, origine) triée}
+\KwOut{liste de couples (point, origine), les deux sources alternées}
+$L_{\textsf{dom}}\leftarrow$ les $x\in\mathcal{D}$ distincts, triés par
+  $w^{\top}x$ \emph{décroissant}\;
+$L_{\textsf{arch}}\leftarrow$ les $a\in\Acal$ distincts, triés par
+  $w^{\top}a$ \emph{décroissant}
+  \Comment*[r]{classement \emph{à l'intérieur de} chaque source}
 $V\leftarrow\emptyset$\;
-\ForEach{$x\in\mathcal{D}$ \emph{distincts}}{$V\leftarrow V\cup\{(x,\textsf{dom})\}$}
-\ForEach{$a\in\Acal$ \emph{distincts}}{$V\leftarrow V\cup\{(a,\textsf{arch})\}$}
-trier $V$ par $w^{\top}x$ \emph{décroissant}
-\Comment*[r]{ce sont eux qui tirent $U$ vers le haut}
+\While{$L_{\textsf{dom}}\neq\emptyset$ \textbf{ou} $L_{\textsf{arch}}\neq\emptyset$}{
+  \lIf{$L_{\textsf{dom}}\neq\emptyset$}{déplacer sa tête en queue de $V$,
+       origine \textsf{dom}}
+  \lIf{$L_{\textsf{arch}}\neq\emptyset$}{déplacer sa tête en queue de $V$,
+       origine \textsf{arch}}
+}
 \Return $V$
 \end{algorithm}
+
+\noindent
+Aucun paramètre nouveau n'apparaît : l'alternance donne la moitié des places
+à chaque source tant que les deux ont des candidats, et la totalité à celle
+qui reste dès que l'autre est épuisée. Le classement \emph{commun} par
+$w^{\top}x$, qui était la règle antérieure, affamait l'archive -- seule
+source capable de vider $\Rcal$ -- jusqu'à zéro coupe d'archive sur deux
+lignes sur six (\S\ref{sec:alternance}, tableau~\ref{tab:famine}). Cette
+version antérieure est conservée à l'annexe~\ref{sec:histo}.
 
 \begin{algorithm}[htbp]
 \caption{\textsc{Certifier}$(q,\bar x,\mathcal{D},\Acal,\text{budget})$ --
@@ -1612,14 +1652,43 @@ $V\leftarrow$ \textsc{Vivier}$(\mathcal{D},\Acal,w(q))$\;
   }
   \lIf{$r$ résolu \textbf{et} $r.\text{valeur}\le 0$}{\Return $(q,q,\textsf{prouvé})$}
   \If{$r.U$ fini}{
-    $D^{+}\leftarrow\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$\;
+    $D^{+}\leftarrow\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$
+    \Comment*[r]{minorant valide même interrompu, arrondi \emph{vers le bas}}
     $q_{\text{ub}}\leftarrow\min\bigl(q_{\text{ub}},\
-      q_{\text{réf}}+U/(Q\,D^{+})\bigr)$
-    \Comment*[r]{Th.~\ref{th:archbound}}
+      q_{\text{réf}}+U/(Q\,\max(D_{\min},D^{+}))\bigr)$
+    \Comment*[r]{\textbf{route 1}, Th.~\ref{th:archbound}}
+  }
+}
+\tcp{— \textbf{route 2} : le même théorème à un seuil \emph{libre} —}
+\If{\textbf{non} \textsf{prouvé}}{
+  rendre la part de budget réservée
+  \Comment*[r]{au plus $\textsc{tours\_geom}=12$ appels}
+  $t\leftarrow q$\;
+  \For{$\tau\leftarrow 1$ \KwTo $\textsc{tours\_geom}$}{
+    $v\leftarrow$ borne supérieure de $\max_{x\in\Rcal}\,\bigl(N(x)-tD(x)\bigr)$,
+      à budget borné\;
+    \lIf{$\Rcal=\emptyset$}{\Return $(q,q,\textsf{prouvé})$}
+    $q_{\text{ub}}\leftarrow\min\bigl(q_{\text{ub}},\
+      \max(q,\ t+\max(v,0)/D_{\min})\bigr)$
+    \Comment*[r]{Th.~\ref{th:seuil}, prop.~\ref{prop:geomvalide}}
+    \lIf{$v\le 0$}{\Break \Comment*[f]{convergé : $\max_{\Rcal}f\le t$}}
+    $t\leftarrow f(x_t)$ pour le $x_t\in\Rcal$ rendu
+    \Comment*[r]{\emph{aucune certification d'efficacité exigée}}
   }
 }
 \Return $(q,q_{\text{ub}},\ q_{\text{ub}}\le q)$
 \end{algorithm}
+
+\noindent
+Deux points de la route~2 méritent d'être soulignés, parce qu'ils sont
+exactement ce que la version antérieure de cet algorithme n'avait pas.
+Le seuil $t$ avance sur \emph{n'importe quel} point du relâché : pour un
+\emph{majorant}, l'efficacité du point ne sert à rien, et l'exiger coûtait
+tout l'écart entre $q$ et $\max_{\Rcal}f$ (\S\ref{sec:seuil}). Et les deux
+routes sont \emph{incomparables} -- la première dispose de $D^{+}\ge
+D_{\min}$, la seconde d'un meilleur seuil -- donc on les prend toutes deux
+et l'on garde le minimum, qui reste valide. La version sans route~2 est
+décrite à l'annexe~\ref{sec:histo}.
 
 \begin{remark}[validité malgré un incumbent mobile]
 Chaque tour produit une borne valide sur $\qs$ pour le $q$ \emph{de ce tour}.
@@ -1657,23 +1726,41 @@ def same_criteria_improves(inst, a, q):
     return None if not res.ok else res.x
 \end{lstlisting}
 
-\begin{lstlisting}[caption={Le vivier unique : deux sources, un plafond
+\begin{lstlisting}[caption={Le vivier unique : deux sources, un plafond, et
+l'\textbf{alternance} qui garantit des places a l'archive
 (Alg.~\ref{alg:vivier}).},label={lst:vivier}]
-def build_cut_pool(dominated, archive, w):
-    """Les deux coupes ont la meme forme, donc le meme cout (p binaires).
-    On les met en concurrence dans UNE seule reserve, triee par valeur
-    decroissante du substitut, sous le plafond global deja regle.
+def build_cut_pool(dominated, archive, w, alterne=True):
+    """Les deux coupes ont la meme forme, donc le meme cout (p binaires) :
+    un seul vivier, un seul plafond. Mais les CLASSER ENSEMBLE affame
+    l'archive -- jusqu'a zero coupe d'archive sur deux lignes sur six --
+    or elle est la seule source qui puisse vider le relache.
+    On classe donc DANS chaque source, puis on ALTERNE. Aucune fraction
+    a regler : moitie des places a chacune, totalite a celle qui reste.
     """
     wv = np.asarray(w, dtype=float)
-    seen, pool = set(), []
+    seen, par_source = set(), {"dom": [], "arch": []}
     for pts, kind in ((dominated, "dom"), (archive or [], "arch")):
         for x in pts:
             key = (kind, tuple(int(v) for v in x))
             if key in seen:
                 continue
             seen.add(key)
-            pool.append((np.asarray(x, dtype=int), kind))
-    pool.sort(key=lambda t: -float(wv @ t[0]))
+            par_source[kind].append((np.asarray(x, dtype=int), kind))
+    for k in par_source:
+        par_source[k].sort(key=lambda t: -float(wv @ t[0]))
+
+    if not alterne:                      # version anterieure, cf. annexe
+        pool = par_source["dom"] + par_source["arch"]
+        pool.sort(key=lambda t: -float(wv @ t[0]))
+        return pool
+
+    d, a = par_source["dom"], par_source["arch"]
+    pool, i, j = [], 0, 0
+    while i < len(d) or j < len(a):
+        if i < len(d):
+            pool.append(d[i]); i += 1
+        if j < len(a):
+            pool.append(a[j]); j += 1
     return pool
 \end{lstlisting}
 
@@ -2595,7 +2682,8 @@ contrôle ponctuel montre que la borne \emph{supérieure}, elle, peut se
 relâcher. Régler le déclencheur demande de mesurer les deux, ce qui reste à
 faire.
 
-\subsection{Où elle n'apporte rien, et pourquoi}
+\subsection{Où elle n'apporte rien, et pourquoi le diagnostic était faux}
+\label{sec:echellehonnete}
 
 \begin{figure}[htbp]
 \centering
@@ -2604,44 +2692,69 @@ faire.
   xlabel={$n$}, ylabel={écart garanti (\%)},
   xmin=15,xmax=45, ymin=0, ymax=105,
   xtick={20,30,40}, ytick={0,20,40,60,80,100},
-  legend style={at={(0.5,0.35)},anchor=north,font=\small,draw=cgris},
+  legend style={at={(0.5,0.40)},anchor=north,font=\small,draw=cgris},
   grid=major, grid style={cgris!35}, tick label style={font=\small},
   label style={font=\small}]
 \addplot[color=cdom,mark=*,thick,mark size=2.4pt]
-  coordinates {(20,98.3) (30,97.1) (40,92.5)};
-\addlegendentry{sans coupes d'archive}
+  coordinates {(20,98.6) (30,93.9) (40,96.6)};
+\addlegendentry{configuration d'origine \conf{0}{0}{0}}
 \addplot[color=ceff,mark=square*,thick,dashed,mark size=2.2pt]
-  coordinates {(20,98.3) (30,97.0) (40,92.4)};
-\addlegendentry{avec}
+  coordinates {(20,77.2) (30,78.6) (40,96.5)};
+\addlegendentry{configuration courante \conf{1}{1}{1}}
 \addplot[color=black,thick,dotted] coordinates {(15,0) (45,0)};
 \addlegendentry{ce qu'il faudrait atteindre}
 \end{axis}
 \end{tikzpicture}
-\caption{La frontière honnête de la méthode. À front épais et $n\ge 20$, les
-deux courbes sont confondues et restent à $92$--$98\ \%$ : la coupe
-d'efficacité n'y change \emph{rien}, et la borne ne descend pas. La raison
-est mécanique -- la recherche produit assez de points dominés pour saturer
-le plafond avant que l'archive ne soit atteinte, de sorte qu'aucune coupe
-d'efficacité n'est posée. Nous reproduisons cette figure telle quelle plutôt
-que de la reléguer à une note : elle délimite ce que ce travail
-n'accomplit pas.}
+\caption{La frontière honnête de la méthode, à front épais
+($\text{corr}=0$), sous plafond déterministe de $300$ appels entiers. Deux
+des trois points ont bougé de vingt et quinze points ; le troisième, $n=40$,
+n'a pas bougé du tout. La version antérieure de cette figure -- deux courbes
+confondues à $92$--$98\ \%$ -- et le diagnostic qui l'accompagnait sont à
+l'annexe~\ref{sec:histo}.}
 \label{fig:echelle}
 \end{figure}
 
+Cette sous-section portait un résultat négatif et son explication. Le
+résultat était : à front épais et $n\ge 20$, l'écart garanti reste à
+$98{,}3\ \%$, $97{,}1\ \%$ et $92{,}6\ \%$, \emph{inchangé} selon que l'on
+pose ou non des coupes d'efficacité. L'explication était mécanique : à ces
+tailles la recherche produit assez de points dominés pour saturer le
+plafond \emph{avant} que les points d'archive ne soient atteints dans le
+classement, de sorte qu'aucune coupe d'efficacité n'est posée.
 
-À front épais et $n\ge 20$, les écarts garantis sont \textbf{inchangés} :
-$98{,}3\ \%$, $97{,}1\ \%$ et $92{,}6\ \%$ à $n=20$, $30$, $40$. La raison
-est mécanique et se lit dans la règle du vivier
-(\S\ref{sec:vivier}) : à ces tailles la recherche produit assez de points
-dominés pour saturer le plafond \emph{avant} que les points d'archive ne
-soient atteints dans le classement. Aucune coupe d'efficacité n'est donc
-posée.
+\textbf{L'explication est morte, et c'est notre propre mesure qui l'a tuée.}
+Elle décrit une famine de l'archive dans un vivier à \emph{classement
+commun}. Sous l'alternance (\S\ref{sec:alternance}), cette famine est
+\emph{mécaniquement impossible} : l'archive obtient la moitié des places par
+construction. Le tableau~\ref{tab:alternance} le mesure aux tailles mêmes
+dont il est ici question -- les coupes d'archive effectivement posées
+passent de $[0,12,2,10,15,0]$ à $[40,40,40,40,35,36]$ au plafond haut. La
+phrase « aucune coupe d'efficacité n'est posée » ne décrit plus la méthode.
 
-C'est un résultat négatif utile, et il paraissait désigner le verrou suivant
-sans ambiguïté : non plus la \emph{disponibilité} des coupes, mais le
-\emph{plafond} lui-même, donc le coût de $p$ binaires par coupe. Désagréger
-la disjonction~\eqref{eq:disj} devenait la priorité. La sous-section
-suivante met cette conclusion à l'épreuve -- et l'infirme.
+\textbf{Le résultat négatif, lui, ne tombe qu'en partie.} Sous la
+configuration courante et à plafond déterministe, deux des trois points
+bougent nettement : $98{,}6\to 77{,}2$ à $n=20$ et $93{,}9\to 78{,}6$ à
+$n=30$ (§\ref{sec:seuil}). L'affirmation « la méthode est sans effet
+au-delà de $n\ge 20$ » est donc \textbf{retirée}. Ce qui subsiste est plus
+étroit et plus intéressant :
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item à $n=40$, $\text{corr}=0$, l'écart ne bouge pas -- $96{,}6$ contre
+      $96{,}5$ -- et ce n'est pas faute de borne : le statut « convergée »
+      y certifie que le majorant annoncé \emph{est} $\max_{\Rcal}f$. Le
+      verrou y a changé de terme, il est passé du côté de
+      $q_{\text{lb}}$ (§\ref{sec:couverture}) ;
+\item même à $77\ \%$ et $78\ \%$, l'écart reste sans usage décisionnel
+      (§\ref{sec:aide}). Avoir divisé le résidu par un quart ne fait pas
+      une méthode qui conclut à ces tailles.
+\end{itemize}
+
+\noindent
+Le diagnostic qui suivait -- « le verrou est donc le \emph{plafond}
+lui-même, donc le coût de $p$ binaires par coupe » -- reposait sur
+l'explication tombée. La sous-section suivante le met malgré tout à
+l'épreuve, parce qu'il avait été formulé avant, et l'infirme lui aussi par
+un chemin indépendant.
 
 \subsection{Supprimer le coût en binaires ne suffit pas}
 \label{sec:cglp}
@@ -3513,10 +3626,11 @@ même :
 
 \noindent
 Le troisième régime n'est pas rare chez nous : à $n\ge 20$ et critères
-indépendants, l'écart garanti reste entre $92$ et $98\ \%$. Nous ne le
-présentons pas comme un service rendu au décideur, mais comme un aveu
-utilisable : la méthode y dit qu'elle ne garantit rien, plutôt que de laisser
-croire le contraire.
+indépendants, l'écart garanti vaut encore $77$, $79$ et $96{,}5\ \%$ dans la
+configuration courante (§\ref{sec:echellehonnete}). Nous ne le présentons pas
+comme un service rendu au décideur, mais comme un aveu utilisable : la
+méthode y dit qu'elle ne garantit rien, plutôt que de laisser croire le
+contraire.
 
 \subsection{Ce qu'une méthode exacte interrompue ne peut pas dire}
 
@@ -4003,14 +4117,21 @@ Trois limites, énoncées avec la même précision que les gains, parce qu'elles
 délimitent exactement ce que ce travail établit.
 
 \begin{enumerate}[leftmargin=*,itemsep=3pt]
-\item \textbf{Aucun effet au-delà de $n\ge 20$.} Les écarts garantis restent
-      à $98{,}3$, $97{,}1$ et $92{,}6\ \%$, inchangés. Dans ce régime la
-      recherche produit assez de points dominés pour saturer le plafond
-      avant que l'archive ne soit atteinte : aucune coupe d'efficacité n'est
-      posée. Le verrou n'est plus la \emph{disponibilité} des coupes mais
-      leur \emph{coût}, $p$ binaires chacune -- et la
-      section~\ref{sec:cglp} montre que lever ce coût ne suffit pas
-      davantage.
+\item \textbf{Aucune conclusion à $n\ge 20$, et un point immobile.} La
+      formulation antérieure de cette limite -- « aucun effet au-delà de
+      $n\ge 20$, écarts $98{,}3$, $97{,}1$ et $92{,}6\ \%$ inchangés » -- est
+      \textbf{retirée} : sous la configuration courante et à plafond
+      déterministe, l'écart passe de $98{,}6$ à $77{,}2\ \%$ à $n=20$ et de
+      $93{,}9$ à $78{,}6\ \%$ à $n=30$ (§\ref{sec:seuil}). Ce qui subsiste
+      est plus étroit. D'une part $n=40$, $\text{corr}=0$ ne bouge pas --
+      $96{,}6$ contre $96{,}5$ -- et le statut « convergée » y certifie que
+      le majorant \emph{est} $\max_{\Rcal}f$ : le verrou y est passé du côté
+      de $q_{\text{lb}}$. D'autre part un écart de $77\ \%$ reste sans usage
+      décisionnel (§\ref{sec:aide}) : la méthode ne conclut toujours pas à
+      ces tailles. L'explication mécanique que nous en donnions -- la
+      recherche sature le plafond de points dominés, aucune coupe
+      d'efficacité n'est posée -- est morte avec l'alternance, qui garantit
+      à l'archive la moitié des places (§\ref{sec:echellehonnete}).
 \item \textbf{Aucun progrès sur la qualité des solutions.} Sur le lot figé
       la recherche atteint déjà l'optimum $90$ fois sur $90$ : il n'y a pas
       de place pour un tel progrès, et la contribution porte donc
@@ -4068,9 +4189,12 @@ Nous ne savons pas nommer la cause restante. Une méthode dont le résultat
 peut empirer quand on lui donne plus de temps reste une méthode à corriger.
 
 \paragraph{Le mouvement C.} Sa conception a été mise à l'épreuve contre son
-retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché : $3$
-améliorées contre $3$ dégradées dans les deux cas, médiane et moyenne en
-désaccord. Ce qui est acquis est négatif de notre côté -- l'ancrage que nous
+retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché.
+Avec deux graines les deux traitements donnaient $3$ améliorées contre $3$
+dégradées ; la troisième graine déplace l'aiguille sans la faire basculer --
+ancré : mieux $4$, pire $4$ ($p=0{,}73$ au mieux) ; retiré : mieux $5$,
+pire $3$ --, et les sommes appariées, $+51{,}3$ points gagnés contre
+$-42{,}5$ perdus, disent mieux que les tests qu'il n'y a rien à conclure. Ce qui est acquis est négatif de notre côté -- l'ancrage que nous
 proposions est le plus mauvais des trois -- et méthodologique : le rendement
 d'un opérateur compte ses succès, pas ce qu'ils valent, et le retirer coûte
 jusqu'à un tiers de l'incumbent. Trancher demande davantage de graines que
@@ -4101,6 +4225,127 @@ point est efficace tout est fini. Notre $f$ étant fractionnaire, nous n'en
 disposons pas -- le maximum de $f$ sur $\Scal$ demande un Dinkelbach
 complet. Reste à savoir si un test bon marché, appliqué au \emph{premier}
 itéré de ce Dinkelbach, en récupérerait une partie du bénéfice.
+
+% ============================================================================
+\appendix
+\section{Annexe -- historique des versions}
+\label{sec:histo}
+
+Trois réglages ont changé en cours de travail, et tous trois déplacent les
+chiffres. Les tableaux de ce mémoire portent chacun son marqueur de
+configuration ; le \emph{corps} du mémoire, lui -- figure~\ref{fig:flow},
+algorithmes~\ref{alg:vivier} et~\ref{alg:cert}, listing~\ref{lst:vivier},
+\S\ref{sec:echellehonnete}, conclusion -- décrit uniformément la
+configuration courante \conf{1}{1}{1}. Cette annexe conserve l'état
+antérieur, parce qu'une partie des mesures publiées ici a été obtenue sous
+cet état et resterait incompréhensible sans lui.
+
+\begin{center}
+\begin{tabular}{clll}
+\toprule
+& réglage & état antérieur \conf{0}{0}{0} & état courant \conf{1}{1}{1}\\
+\midrule
+V & vivier & classement commun par $w^{\top}x$ & alternance entre les
+    deux sources\\
+S & seconde route & absente & Dinkelbach sur $\Rcal$, seuil libre\\
+D & dénominateur & $D^{+}$ jamais réalisé & minorant interrompu accepté\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{V -- le vivier à classement commun}
+
+La règle antérieure construisait le vivier en versant les deux sources dans
+une même liste, puis en la triant par $w^{\top}x$ décroissant :
+%
+\begin{center}\small
+\fbox{\begin{minipage}{0.86\textwidth}
+$V\leftarrow\emptyset$ ; pour chaque $x\in\mathcal{D}$ distinct,
+$V\leftarrow V\cup\{(x,\textsf{dom})\}$ ; pour chaque $a\in\Acal$ distinct,
+$V\leftarrow V\cup\{(a,\textsf{arch})\}$ ; \textbf{trier $V$ par $w^{\top}x$
+décroissant} ; renvoyer $V$.
+\end{minipage}}
+\end{center}
+%
+Elle s'appuyait sur un argument que la mesure a renversé : « l'effet est
+automatique et souhaitable -- là où les points dominés abondent, ils
+occupent le vivier ; là où ils sont rares, l'archive le remplit à leur
+place. Aucun réglage n'arbitre : le classement le fait. » Le
+tableau~\ref{tab:famine} montre l'inverse : en triplant le plafond, les
+coupes d'archive tombent jusqu'à zéro sur deux lignes sur six. Le code de
+production conserve ce chemin sous \texttt{alterne=False}, uniquement pour
+pouvoir rejouer les mesures antérieures.
+
+\subsection{S -- l'absence de seconde route}
+
+La boucle de certification s'arrêtait après la route~1 : $q_{\text{ub}}$
+était le minimum, sur les tours, de $q_{\text{réf}}+U/(QD^{+})$, et rien
+n'évaluait la même borne à un autre seuil. Le bloc « route~2 » de
+l'algorithme~\ref{alg:cert} était absent. Ce que cela coûtait est mesuré
+au tableau~\ref{tab:geom}.
+
+\subsection{La figure d'échelle, dans sa version antérieure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=12cm,height=5.0cm,
+  xlabel={$n$}, ylabel={écart garanti (\%)},
+  xmin=15,xmax=45, ymin=0, ymax=105,
+  xtick={20,30,40}, ytick={0,20,40,60,80,100},
+  legend style={at={(0.5,0.35)},anchor=north,font=\small,draw=cgris},
+  grid=major, grid style={cgris!35}, tick label style={font=\small},
+  label style={font=\small}]
+\addplot[color=cgris,mark=*,thick,mark size=2.4pt]
+  coordinates {(20,98.3) (30,97.1) (40,92.5)};
+\addlegendentry{sans coupes d'archive}
+\addplot[color=cgris,mark=square*,thick,dashed,mark size=2.2pt]
+  coordinates {(20,98.3) (30,97.0) (40,92.4)};
+\addlegendentry{avec}
+\addplot[color=black,thick,dotted] coordinates {(15,0) (45,0)};
+\addlegendentry{ce qu'il faudrait atteindre}
+\end{axis}
+\end{tikzpicture}
+\caption{\textbf{Version antérieure}, configuration \conf{0}{0}{0}, budget
+en temps. Les deux courbes sont confondues à $92$--$98\ \%$. La légende
+d'origine expliquait ce plat ainsi : « la recherche produit assez de points
+dominés pour saturer le plafond avant que l'archive ne soit atteinte, de
+sorte qu'aucune coupe d'efficacité n'est posée ». Cette explication ne vaut
+que sous classement commun ; l'alternance la rend mécaniquement impossible.
+La figure~\ref{fig:echelle} lui succède.}
+\label{fig:echelleold}
+\end{figure}
+
+\subsection{Ce qui a été retiré, et où}
+
+\begin{center}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{lll}
+\toprule
+affirmation retirée & remplacée par & où\\
+\midrule
+$84\to 56$ preuves à budgets séparés
+  & tableau~\ref{tab:budgets}, aucun effondrement & \S\ref{sec:vivier}\\
+« le classement fait l'arbitrage »
+  & l'alternance, tableau~\ref{tab:alternance} & \S\ref{sec:alternance}\\
+« aucune coupe d'efficacité n'est posée »
+  & $35$ à $40$ posées par ligne & \S\ref{sec:echellehonnete}\\
+« sans effet au-delà de $n\ge 20$ »
+  & $98{,}6\to 77{,}2$ et $93{,}9\to 78{,}6$ & \S\ref{sec:seuil}\\
+$p=0{,}031$ pour la seconde route
+  & $p=0{,}109$ aux signes, $0{,}020$ à Wilcoxon & \S\ref{sec:seuil}\\
+mouvement C : $3$ contre $3$ (deux graines)
+  & $4/4$ et $5/3$ (trois graines) & tableau~\ref{tab:mouvementc}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Aucune de ces lignes n'est une correction de rédaction : chacune est une
+affirmation que nous avions publiée et qu'une mesure ultérieure a
+contredite. Les conserver ici plutôt que de les effacer est le seul moyen
+de rendre lisibles les tableaux qui portent encore le marqueur
+\conf{0}{0}{0}.
 
 \begin{thebibliography}{99}
 
