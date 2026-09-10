@@ -2349,6 +2349,128 @@ elle n'a pas d'opérateur de suppression -- mais les trois budgets sont trois
 exécutions distinctes, donc trois trajectoires. Sur un front de six points,
 elles n'ont aucune raison de coïncider.
 
+% ============================================================================
+\section{Usage en aide à la décision}
+\label{sec:aide}
+
+Cette section ne rapporte aucune expérience nouvelle. Elle nomme un usage que
+les mesures précédentes rendent possible et que le mémoire laissait implicite :
+ce qu'un décideur peut faire du couple $(q_{\text{lb}},q_{\text{ub}})$ quand
+le budget de calcul s'épuise avant la preuve. C'est le régime normal du
+problème, pas un accident : l'énumération de $\Ecal$ devient impraticable dès
+que le front s'épaissit, et le décideur doit alors agir sur ce qui a été
+calculé.
+
+\subsection{Ce que la méthode remet, à tout instant}
+
+Trois objets, et non un :
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{une solution applicable}, $x_{\text{best}}$, dont l'efficacité
+      est \emph{certifiée} et non supposée. Ce n'est pas un point réalisable
+      quelconque : c'est un compromis efficace, donc une décision qu'aucun
+      autre choix n'améliore sur tous les critères à la fois. Cette propriété
+      est la seule que la méthode n'a pas le droit de perdre, et tout le
+      dispositif est organisé pour la préserver sous interruption ;
+\item \textbf{un intervalle} $q_{\text{lb}}\le\qs\le q_{\text{ub}}$, valide
+      quel que soit l'instant d'arrêt. L'encadrement a été vérifié sur
+      \textbf{80 exécutions sur 80} (\S\ref{sec:resultats}) ;
+\item \textbf{un ensemble d'alternatives}, l'archive $\Acal\subseteq\Ecal$,
+      toutes certifiées efficaces et contenant $x_{\text{best}}$
+      (\S\ref{sec:livrable}).
+\end{enumerate}
+
+\subsection{Lire l'intervalle : un majorant du regret}
+
+La quantité utile au décideur n'est pas $q_{\text{ub}}$ mais la différence.
+Adopter $x_{\text{best}}$ plutôt que l'optimum inconnu coûte au plus
+\[
+  \qs - f(x_{\text{best}})\ \le\ q_{\text{ub}} - q_{\text{lb}},
+\]
+c'est-à-dire un \emph{regret maximal} chiffré, en unités de $f$. Trois
+régimes se lisent directement, et la décision qu'ils appellent n'est pas la
+même :
+
+\begin{itemize}[leftmargin=*,itemsep=3pt]
+\item $q_{\text{ub}}=q_{\text{lb}}$ : la question est close, la décision est
+      optimale et prouvée telle. C'est le cas sur $84$ instances du
+      lot systématique en $12$~s, et sur un écart garanti médian de $0{,}00\ \%$ sur $8$ instances $\times$ $10$ graines ;
+\item $q_{\text{ub}}-q_{\text{lb}}$ petit : le décideur connaît son regret
+      maximal et peut arbitrer entre l'adopter et payer davantage de calcul.
+      C'est ici que l'intervalle sert le plus, car il borne aussi ce que la
+      poursuite du calcul peut \emph{rapporter} : aucune seconde
+      supplémentaire ne peut gagner plus que $q_{\text{ub}}-q_{\text{lb}}$.
+      La valeur de continuer est majorée par la largeur de l'intervalle,
+      et cette information n'existe pas sans borne supérieure ;
+\item $q_{\text{ub}}-q_{\text{lb}}$ grand : le décideur dispose d'un
+      compromis efficace certifié, et sait qu'il ne sait pas ce qu'il vaut.
+      C'est peu -- mais c'est exactement ce qu'il faut savoir pour ne pas
+      présenter cette solution comme un optimum, et pour décider s'il faut
+      changer d'échelle de moyens ou renoncer à la garantie.
+\end{itemize}
+
+\noindent
+Le troisième régime n'est pas rare chez nous : à $n\ge 20$ et critères
+indépendants, l'écart garanti reste entre $92$ et $98\ \%$. Nous ne le
+présentons pas comme un service rendu au décideur, mais comme un aveu
+utilisable : la méthode y dit qu'elle ne garantit rien, plutôt que de laisser
+croire le contraire.
+
+\subsection{Ce qu'une méthode exacte interrompue ne peut pas dire}
+
+La différence n'est pas d'implémentation, elle est de \emph{schéma}. Les
+méthodes exactes du domaine énumèrent implicitement $\Ecal$ ; interrompues,
+elles conservent un incumbent -- donc un minorant -- mais rien dans leur
+construction ne majore $\qs$. La boucle externe de Dinkelbach sait seulement
+qu'elle n'a pas convergé : $F(q)>0$ dit que $\qs>q$, ce qui resserre le
+minorant, jamais le majorant. Notre propre implémentation de la méthode
+exacte le rend visible : sa structure de résultat n'a \emph{aucun champ} où
+loger une borne supérieure, parce qu'il n'y a rien à y mettre. C'est le
+théorème~\ref{th:bound} qui fournit ce que le schéma exact ne produit pas, en
+convertissant un budget borné en majorant valide.
+
+La conséquence pratique se lit sur le lot systématique. La méthode exacte ne
+prouve pas l'optimalité sur $17$ instances, et sur $14$ elle
+ne détient même pas la meilleure valeur connue : un décideur qui l'arrête
+agirait sur une solution strictement moins bonne, \emph{sans disposer d'aucun
+moyen de s'en apercevoir}. Ce n'est pas un défaut de ces méthodes -- elles
+sont conçues pour aller jusqu'au bout -- mais c'est ce qui les rend
+inutilisables sous budget fini.
+
+\subsection{Quand $f$ ne suffit pas : l'archive comme jeu d'alternatives}
+
+Un décideur arbitre rarement sur un seul agrégat. La fonction $f$ est
+souvent un \emph{proxy} de sa préférence, construit avant de voir les
+solutions ; l'usage courant en aide multicritère à la décision est de
+proposer un petit ensemble de compromis efficaces et de laisser l'arbitrage
+final se faire devant eux~\cite{roy1985}. L'archive est cet ensemble, et la
+section~\ref{sec:livrable} en donne la mesure : médiane de $40{,}7\ \%$ des
+points du front pour $92{,}3\ \%$ de son hypervolume, et $x_{\text{best}}$
+toujours dedans. Autrement dit, si le décideur récuse $x_{\text{best}}$ parce
+que $f$ le représentait mal, il ne repart pas de rien : les alternatives
+qu'on lui remet couvrent l'essentiel du volume du front, et chacune est
+certifiée efficace -- ce qu'aucune métaheuristique multiobjectif usuelle ne
+garantit pour les points qu'elle rend.
+
+\subsection{Deux limites, dites ici parce que c'est ici qu'elles mordent}
+
+\paragraph{L'intervalle porte sur $f$, pas sur les critères.} $q_{\text{ub}}$
+majore le \emph{scalaire} $\qs$ ; il ne dit rien de la distance entre
+$Z(x_{\text{best}})$ et le reste du front. Un décideur qui raisonne en
+vecteurs critères ne doit pas lire le regret dans l'intervalle : il doit lire
+l'archive et son $\varepsilon^+$ (\S\ref{sec:livrable}), qui sont les
+quantités faites pour cela. Les deux garanties ne se remplacent pas.
+
+\paragraph{Attendre plus longtemps peut affaiblir la garantie.} La méthode
+n'est pas monotone en budget : en triplant le plafond, l'écart garanti
+recule encore sur deux lignes sur six, et nous ne savons pas nommer la cause
+restante (\S\ref{sec:negatif}). Pour un usage décisionnel c'est un défaut
+sérieux, et c'est ici qu'il faut l'écrire plutôt que dans une liste de
+résultats négatifs : un décideur qui accorde plus de temps s'attend à une
+garantie meilleure ou égale, jamais pire. La solution rendue, elle, ne se
+dégrade pas -- $q_{\text{lb}}$ ne décroît jamais -- mais la promesse faite
+sur sa qualité, si. Tant que ce point n'est pas corrigé, l'usage recommandé est de conserver le meilleur encadrement rencontré et non le dernier : deux encadrements valides du même $\qs$ s'intersectent en un encadrement valide, donc garder $\max q_{\text{lb}}$ et $\min q_{\text{ub}}$ sur toutes les exécutions ne coûte aucune hypothèse.
+
 \section{Trois défauts trouvés par la mesure}
 \label{sec:defauts}
 
@@ -2915,6 +3037,11 @@ Q.~Zhang et H.~Li.
   decomposition.
 \newblock \emph{IEEE Transactions on Evolutionary Computation},
   11(6):712--731, 2007.
+
+\bibitem{roy1985}
+B.~Roy.
+\newblock \emph{Méthodologie multicritère d'aide à la décision}.
+\newblock Economica, Paris, 1985.
 
 \bibitem{talbi2002}
 E.-G.~Talbi.
