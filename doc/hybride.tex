@@ -1798,7 +1798,8 @@ courant.
 \subsection{Code}
 
 Les trois pièces réellement nouvelles, en \textsc{Python}. Le solveur entier
-est appelé à travers \texttt{scipy.optimize.milp} (HiGHS), et
+est appelé à travers \texttt{scipy.optimize.milp}
+(HiGHS~\cite{huangfu2018}), et
 \texttt{solve\_ilp} en est l'enveloppe qui compte les appels.
 
 \begin{lstlisting}[caption={La condition de clôture : UN seul programme de
@@ -3927,7 +3928,8 @@ données étant entières, tout le tableau reste rationnel : l'exactitude
 s'obtient sans rien supposer. L'objectif fractionnaire est traité par le
 gradient réduit de Martos~\cite{martos1964,martos1975}, sous la forme même de
 leur section~2 ; la règle
-de Bland des deux côtés garantit la terminaison sans perturbation, la
+de Bland~\cite{bland1977} des deux côtés garantit la terminaison sans
+perturbation, la
 dégénérescence étant fréquente sur ces données. Une phase~I a dû être
 ajoutée : leurs coupes $\sum_{j\in N_k}x_j\ge 1$ rendent la base des écarts
 irréalisable, ce pour quoi ils prescrivent le simplexe dual.
@@ -3967,7 +3969,7 @@ critères fractionnaires -- avec vérité terrain par énumération exhaustive.
 L'unité de coût est, \textbf{des deux côtés}, le nombre d'appels au solveur
 \emph{en nombres entiers} : elle est indépendante de la machine et du
 langage, là où les secondes ne compareraient rien -- un simplexe rationnel
-exact d'un côté, HiGHS de l'autre. Chez eux, ces appels sont la relaxation
+exact d'un côté, HiGHS~\cite{huangfu2018} de l'autre. Chez eux, ces appels sont la relaxation
 initiale et les tests d'efficacité, chacun étant un programme entier ; chez
 nous, ils sont \emph{tout} ce que la méthode fait. Le même compteur les
 enregistre. Le plafond de travail de leur méthode porte sur le nombre
@@ -4531,8 +4533,8 @@ S.~Schaible.
 \bibitem{abbas2002}
 M.~Abbas et M.~Moulaï.
 \newblock Integer linear fractional programming with multiple objective.
-\newblock \emph{Journal of Information and Optimization Sciences},
-  23(1):1--18, 2002.
+\newblock \emph{Journal of the Italian Operations Research Society
+  (Ricerca Operativa)}, 32(103--104):15--38, 2002.
 
 \bibitem{mladenovic1997}
 N.~Mladenović et P.~Hansen.
@@ -4648,6 +4650,16 @@ R.~E.~Gomory.
 \newblock \emph{Bulletin of the American Mathematical Society},
   64(5):275--278, 1958.
 
+\bibitem{bland1977}
+R.~G.~Bland.
+\newblock New finite pivoting rules for the simplex method.
+\newblock \emph{Mathematics of Operations Research}, 2(2):103--107, 1977.
+
+\bibitem{huangfu2018}
+Q.~Huangfu et J.~A.~J.~Hall.
+\newblock Parallelizing the dual revised simplex method.
+\newblock \emph{Mathematical Programming Computation}, 10(1):119--142, 2018.
+
 \bibitem{balas1979}
 E.~Balas.
 \newblock Disjunctive programming.
@@ -4693,7 +4705,7 @@ S.~Mahdi et D.~Chaabane.
 W.~Drici, F.~Z.~Ouail et M.~Moulaï.
 \newblock Optimizing a linear fractional function over the integer efficient
   set.
-\newblock \emph{Annals of Operations Research}, 267(1--2):135--151, 2018.
+\newblock \emph{Annals of Operations Research}, 267:135--151, 2018.
 \newblock \texttt{doi:10.1007/s10479-017-2691-0}.
 
 \end{thebibliography}
