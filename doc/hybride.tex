@@ -575,9 +575,9 @@ b_i/A_{ij}\rfloor$.
 \end{proposition}
 
 \begin{proof}
-Th.~1 et~2 ne divisent que par $\Dk(x)$ et n'exigent que (ii) ; leur
-terminaison exige (i). Les coupes disjonctives des Th.~\ref{th:effcut}
-et~4 exigent un grand $M$ valide, c'est-à-dire un minorant fini de
+Les briques 1 et 2 ne divisent que par $\Dk(x)$ et n'exigent que (ii) ;
+leur terminaison exige (i). Les coupes disjonctives du
+théorème~\ref{th:effcut} et de ses deux corollaires exigent un grand $M$ valide, c'est-à-dire un minorant fini de
 $e_k$ sur $\Scal$ : (i) suffit, sous quelque forme qu'on l'obtienne. La
 borne du Th.~\ref{th:archbound} divise par $D^{+}\ge D_{\min}>0$, soit (ii),
 et son $U$ est fini par (i). Aucune preuve n'invoque le signe de $A$ ni
@@ -697,7 +697,11 @@ chaînes de réparation traversent.
 
 \paragraph{Un constat mesuré, pas une intuition.} La campagne mesure une
 profondeur médiane de chaîne de réparation égale à $1$ : la recherche ne
-franchit qu'un point dominé par mouvement. Dans le régime à $\Ecal$ épais --
+franchit qu'un point dominé par mouvement. La lecture fine est encore plus
+défavorable à la coupe classique -- $\mathbf{28{,}5\ \%}$ des chaînes sont
+de profondeur \emph{zéro}, le mouvement tombant d'emblée sur un point
+efficace, de sorte que plus du quart du travail de recherche ne produit
+\emph{aucun} centre de coupe de dominance (§\ref{sec:divers}). Dans le régime à $\Ecal$ épais --
 celui qui résiste -- l'archive compte des dizaines de points efficaces
 certifiés quand les points dominés se comptent sur les doigts. Et sur les
 deux instances illustratives de ce mémoire, la recherche en collecte
@@ -1413,7 +1417,8 @@ points efficaces et un $\varepsilon$ trop petit ne progresse pas.
   $[\,\text{nadir}_j,\ \text{idéal}_j\,]$ pour un sous-ensemble aléatoire
   de critères, et l'on pose
   $V^B(\varepsilon)=\{x\in\Scal:\ Z_j(x)\ge\varepsilon_j\}$
-  via le théorème~1. C'est le mouvement qui permet d'atteindre une région
+  via l'inégalité~\eqref{eq:eint}. C'est le mouvement qui permet
+  d'atteindre une région
   du front que l'archive n'a jamais visitée.
 
 \item[\textbf{C -- LNS / \emph{fix-and-optimize}.}] On gèle
@@ -1436,7 +1441,7 @@ mouvement existe.
 
 Un point $y$ sorti d'un mouvement est réalisable, pas nécessairement
 efficace. On suit alors la \emph{chaîne de réparation} : le test
-d'efficacité (théorème~2) est exact et, lorsqu'il déclare $y$ non efficace,
+d'efficacité (brique 1) est exact et, lorsqu'il déclare $y$ non efficace,
 il exhibe un dominateur $y'$. On remplace $y$ par $y'$ et l'on
 recommence.
 
@@ -1454,7 +1459,8 @@ mineur :
 \item son point terminal est efficace \emph{certifié}, donc
   $f$ y est une borne inférieure valide de $\qs$ ;
 \item tous les points \emph{traversés} sont dominés, donc chacun est un
-  centre légitime de coupe de dominance (théorème~4) -- déjà payé par la
+  centre légitime de coupe de dominance (corollaire~\ref{cor:dom}) --
+  déjà payé par la
   recherche.
 \end{enumerate}
 Si la chaîne est interrompue faute de budget, on ne retient \emph{pas} le
@@ -1496,7 +1502,7 @@ problème : il n'existe que parce que la certification produit une archive.
 \end{remark}
 
 \begin{algorithm}[htbp]
-\caption{\textsc{Recherche} -- phase~1}
+\caption{\textsc{Recherche} -- phase~1\ \conf{1}{1}{1}}
 \label{alg:recherche}
 \KwIn{instance, budget, \texttt{max\_stall}}
 \KwOut{$q$, $\bar x$ (efficace certifié), archive $\Acal$, dominés
@@ -1657,7 +1663,7 @@ Trois procédures suffisent. La première établit la clôture, la deuxième
 construit le vivier, la troisième est la boucle de certification.
 
 \begin{algorithm}[htbp]
-\caption{\textsc{Clôture}$(a,q)$ -- un seul programme de faisabilité}
+\caption{\textsc{Clôture}$(a,q)$ -- un seul programme de faisabilité\ \confna}
 \label{alg:clot}
 \KwIn{$a\in\Ecal$ certifié, incumbent $q=P/Q$}
 \KwOut{\textsc{Établie}, ou un point $x$ \emph{efficace} avec $f(x)>q$}
@@ -1675,7 +1681,7 @@ $r\leftarrow$ résoudre ce programme de \emph{faisabilité}\;
 
 \begin{algorithm}[htbp]
 \caption{\textsc{Vivier}$(\mathcal{D},\Acal,w)$ -- une seule réserve, deux
-sources \textbf{alternées}}
+sources \textbf{alternées}\ \conf{1}{1}{1}}
 \label{alg:vivier}
 \KwIn{points dominés $\mathcal{D}$, archive $\Acal$, substitut $w=Qc-Pd$}
 \KwOut{liste de couples (point, origine), les deux sources alternées}
@@ -1705,7 +1711,7 @@ version antérieure est conservée à l'annexe~\ref{sec:histo}.
 
 \begin{algorithm}[htbp]
 \caption{\textsc{Certifier}$(q,\bar x,\mathcal{D},\Acal,\text{budget})$ --
-la boucle de certification}
+la boucle de certification\ \conf{1}{1}{1}}
 \label{alg:cert}
 \KwIn{incumbent $q$ atteint en $\bar x\in\Ecal$, $\mathcal{D}$, $\Acal$,
       budget $B$, taille de lot $\beta$, nombre de tours $\rho$}
@@ -1957,7 +1963,7 @@ de $\Scal$ ; en \textcolor{ceff}{bleu} les $5$ points efficaces, en
 \textcolor{cdom}{orange} le point $(4,0)$ où $f$ atteint son maximum sur
 $\Scal$, égal à $12$. Ce point est \emph{dominé} : borner $\qs$ par
 $\max_\Scal f$ donne $12$ au lieu de $2{,}8$, soit un écart de $77\ \%$.
-Tout le travail consiste à retrancher ce genre de région.}
+Tout le travail consiste à retrancher ce genre de région.\ \confna}
 \label{fig:i2x}
 \end{figure}
 
@@ -2038,7 +2044,7 @@ $\bar x=(4,0)$ retranche le rectangle orange -- et ce rectangle ne contient
 qu'\textbf{un seul} point, $\bar x$ lui-même : $|\Rcal|$ passe de $22$ à
 $21$. La coupe d'\textcolor{ceff}{efficacité} en $a=(4,2)$ retranche le
 rectangle bleu, qui en contient \textbf{neuf} : $|\Rcal_A|$ passe de $22$ à
-$13$. Même forme algébrique, même coût, neuf fois plus de matière.}
+$13$. Même forme algébrique, même coût, neuf fois plus de matière.\ \confna}
 \label{fig:i2z}
 \end{figure}
 
@@ -2063,8 +2069,11 @@ de~\eqref{eq:cloture}.
 
 \subsection{Étape 4 -- le relâché se vide}
 
-Le vivier est trié par $w^{\top}x$ décroissant, avec $w=Qc-Pd=(15,-23)$ pour
-$q=14/5$. L'ordre est donc $(4,2),(3,3),(2,3),(1,4),(0,5)$. La
+Le vivier ne contient ici que des points d'archive -- la recherche n'a
+traversé aucun point dominé (§\ref{sec:verrou}) --, si bien que l'alternance
+de l'algorithme~\ref{alg:vivier} se réduit au tri de cette unique source.
+L'ordre est celui de $w^{\top}x$ décroissant, avec $w=Qc-Pd=(15,-23)$ pour
+$q=14/5$, soit $(4,2),(3,3),(2,3),(1,4),(0,5)$. La
 figure~\ref{fig:i2panels} montre $\Rcal_A$ après chaque coupe.
 
 \newcommand{\panel}[2]{%
@@ -2099,7 +2108,7 @@ cercles vides : retranchés. Après les cinq coupes d'efficacité le relâché e
 \textbf{vide}, et la proposition~\ref{prop:vide} conclut $\qs=q=14/5$
 \emph{sans qu'aucune borne n'ait été évaluée}. Aucune suite de coupes de
 dominance ne peut atteindre cet état : elles préservent $\Ecal$, donc
-$|\Rcal|\ge 5$ toujours.}
+$|\Rcal|\ge 5$ toujours.\ \confna}
 \label{fig:i2panels}
 \end{figure}
 
@@ -2133,7 +2142,7 @@ descend de $22$ à $15$ : elle ne peut pas faire mieux, puisqu'elle préserve
 $\Ecal$ et se heurte donc au plancher $|\Rcal|\ge|\Ecal|=5$. Sur
 $\mathcal{I}_3$ la descente s'arrête à $1$ : l'archive y est incomplète, il
 reste le point efficace non trouvé -- et le théorème~\ref{th:archbound}
-conclut malgré tout, dès la deuxième coupe.}
+conclut malgré tout, dès la deuxième coupe.\ \confna}
 \label{fig:trajrelache}
 \end{figure}
 
@@ -2203,7 +2212,7 @@ L'\textcolor{ceff}{efficacité} atteint l'optimum en \textbf{une} coupe ; la
 \textcolor{cdom}{dominance} en demande \textbf{cinq} -- et elle les prend
 dans un vivier de $17$ points que la recherche, ici, n'a \emph{pas produit}.
 La courbe orange est donc une borne de ce que la coupe classique pourrait
-faire au mieux, pas de ce qu'elle fait.}
+faire au mieux, pas de ce qu'elle fait.\ \confna}
 \label{fig:i2traj}
 \end{figure}
 
@@ -2288,7 +2297,7 @@ là encore.
 $p=2$, même à $n=3$). Le point efficace $(2,0,1)$, en cercle vide, n'est pas
 dans l'archive. La zone bleue est ce que retranche la coupe d'efficacité en
 $(2,0,1)$\dots\ qu'on ne peut pas poser. C'est pourquoi $\Rcal_A$ ne se vide
-pas ici : il finit \emph{exactement} sur ce point.}
+pas ici : il finit \emph{exactement} sur ce point.\ \confna}
 \label{fig:i3z}
 \end{figure}
 
@@ -2346,7 +2355,7 @@ pas ici : il finit \emph{exactement} sur ce point.}
 \end{tikzpicture}
 \caption{$\mathcal{I}_3$ : même lecture qu'à la figure~\ref{fig:i2traj}.
 L'écart de coût est ici d'un facteur $4$ en nombre de coupes -- donc en
-variables binaires ajoutées au programme entier.}
+variables binaires ajoutées au programme entier.\ \confna}
 \label{fig:i3traj}
 \end{figure}
 
@@ -2373,7 +2382,7 @@ remesuré. Chaque tableau porte donc un marqueur à trois positions.
 
 \begin{table}[htbp]
 \centering
-\caption{Les trois leviers. $\circ$ = absent, $\bullet$ = présent.}
+\caption{Les trois leviers. $\circ$ = absent, $\bullet$ = présent.\ \confna}
 \label{tab:config}
 \begin{tabular}{clll}
 \toprule
@@ -2495,7 +2504,7 @@ changent d'\emph{état} plutôt que de degré, passant de \textbf{zéro} preuve
 sur dix à dix sur dix et de zéro à huit : de « solution trouvée, optimalité
 inconnue » à « optimalité établie », ce qui n'est pas une amélioration de
 pourcentage mais un changement de ce que la méthode rend. La troisième,
-déjà prouvée $8$ fois sur $10$, complète simplement sa série.}
+déjà prouvée $8$ fois sur $10$, complète simplement sa série.\ \conf{0}{0}{0}}
 \label{fig:cible}
 \end{figure}
 
@@ -2618,7 +2627,7 @@ toutes des \emph{baisses}. La figure dit ce qu'une médiane cache : à front
 mince la courbe est presque entièrement sous zéro, à front épais presque
 entièrement au-dessus, et le gain global tient à une queue courte de très
 fortes baisses plutôt qu'à un progrès réparti. C'est pourquoi la médiane
-appariée vaut $+1$ alors que le total baisse de $5{,}2\ \%$.}
+appariée vaut $+1$ alors que le total baisse de $5{,}2\ \%$.\ \conf{0}{0}{0}}
 \label{fig:apparie}
 \end{figure}
 
@@ -2750,7 +2759,7 @@ identique. Aucune barre ne descend sous zéro : sur les $24$ paires, la
 valeur rendue n'est \emph{jamais} dégradée. Dix-huit paires sont
 exactement nulles, six montent, de $+2{,}7$ à $+80{,}6\ \%$. C'est cette
 asymétrie -- rien à perdre, parfois beaucoup à gagner -- qui justifie le
-mécanisme, bien plus que sa moyenne.}
+mécanisme, bien plus que sa moyenne.\ \conf{0}{0}{0}}
 \label{fig:divers}
 \end{figure}
 
@@ -2800,7 +2809,7 @@ faire.
 des trois points ont bougé de vingt et quinze points ; le troisième, $n=40$,
 n'a pas bougé du tout. La version antérieure de cette figure -- deux courbes
 confondues à $92$--$98\ \%$ -- et le diagnostic qui l'accompagnait sont à
-l'annexe~\ref{sec:histo}.}
+l'annexe~\ref{sec:histo}.\ \conf{0}{0}{0} contre \conf{1}{1}{1}}
 \label{fig:echelle}
 \end{figure}
 
@@ -3111,8 +3120,19 @@ lignes sur $26$, alors que l'archive ne retient qu'entre $20$ et $35\ \%$
 des vecteurs critères de $\Ecal$ (médiane par échelle). Une petite archive
 domine donc déjà la quasi-totalité de $\Scal^{+}$ : la seconde explication
 tombe comme la première. Et le résultat a une portée propre, en
-dehors du diagnostic : il dit qu'\emph{il ne sert à rien de chercher à
-grossir l'archive}. Ce n'est pas en la remplissant qu'on gagnera.
+dehors du diagnostic : il dit qu'\emph{il ne sert à rien de grossir
+l'archive pour resserrer la borne}. Ce n'est pas en la remplissant qu'on
+gagnera là.
+
+\begin{remark}[à ne pas transporter au chapitre~\ref{sec:livrable}]
+Cette conclusion vaut pour un usage précis, et un seul : l'archive comme
+\emph{source de coupes}. Pour l'archive comme \emph{livrable}, la grossir
+change tout -- le chapitre~\ref{sec:livrable} mesure une cardinalité et un
+hypervolume qui montent avec le budget sur $7$ lignes sur $8$. Les deux
+énoncés ne se contredisent pas : $20$ à $35\ \%$ de $\Ecal$ suffisent à
+dominer $\Scal^{+}$, et ne suffisent pas à \emph{représenter} le front. Un
+même ensemble est riche pour couper et pauvre pour rendre.
+\end{remark}
 
 \paragraph{Une perte que rien n'avait isolée : la recherche.} Sur $3$ des
 $26$ lignes, toutes à $n\ge 12$, l'incumbent n'atteint pas $\qs$. Aucun banc
@@ -3142,7 +3162,7 @@ la quasi-totalité de $\Scal^{+}$, et la borne n'en tient pas compte --
 $32{,}27$ annoncé quand la région survivante plafonne à $8{,}53$. Le défaut
 n'est donc pas dans le relâché mais dans la façon dont on en tire un nombre.
 
-\subsection{Le théorème 5' ne parle pas de l'incumbent}
+\subsection{La borne de certification ne parle pas de l'incumbent}
 
 La certification pose $q=P/Q$, résout $U\ \ge\ \max_{\Rcal}F_q$ avec
 $F_q=QN-PD$, et conclut $\qs\le q+U/(Q D^{+})$. Le seuil est \emph{toujours}
@@ -3164,8 +3184,8 @@ $f(x)=N(x)/D(x)\le t+v/D(x)$, et $v\ge0$ donne
 $v/D(x)\le v/D_{\min}$. \end{proof}
 
 \begin{remark}[le gain $D^{+}$ n'était jamais réalisé]
-Le théorème~5' compte trois apports sur le théorème~5, dont le deuxième est
-de remplacer $D_{\min}$ par $D^{+}\ge D_{\min}$, minimum pris sur la seule
+La borne resserrée~\eqref{eq:borne} compte trois apports sur sa forme
+naïve, dont le deuxième est de remplacer $D_{\min}$ par $D^{+}\ge D_{\min}$, minimum pris sur la seule
 région où la borne agit. L'instrumentation montre qu'il ne s'appliquait
 \emph{jamais} : sur neuf exécutions à $n=20,30,40$ et aux deux plafonds,
 $D^{+}$ vaut \texttt{None} les neuf fois, et la borne retombe sur
@@ -3176,7 +3196,8 @@ temps, et il est appelé \emph{en dernier} dans le tour -- le budget est
 
 Or ce programme \emph{minimise}, et la borne optimiste d'une minimisation
 interrompue est un \emph{minorant} valide de $\min D$. C'est exactement ce
-que le théorème~5' demande à son dénominateur, qui n'a qu'à minorer $D(x)$
+que la borne~\eqref{eq:borne} demande à son dénominateur, qui n'a qu'à
+minorer $D(x)$
 là où la borne agit. Un minorant interrompu est donc aussi légitime que
 l'optimum, seulement moins fin -- et l'appelant prenant
 $\max(D_{\min},D^{+})$, maximum de deux minorants valides, il ne peut que
@@ -3184,7 +3205,7 @@ resserrer. L'arrondi se fait \emph{vers le bas} : un dénominateur surestimé
 rendrait la borne fausse.
 \end{remark}
 
-Le théorème~5' est le cas $t=q$ : en effet $G_q=F_q/Q$, de sorte que
+La borne~\eqref{eq:borne} est le cas $t=q$ : en effet $G_q=F_q/Q$, de sorte que
 $v=U/Q$ et la borne s'écrit $q+U/(QD_{\min})$. Mais tout $t$ convient, et
 \emph{chaque point du relâché en fournit un meilleur} : si l'ILP rend un
 $x_t\in\Rcal$ avec $G_t(x_t)>0$, alors $f(x_t)>t$, et l'on recommence en
@@ -3198,7 +3219,8 @@ $\qs\ \le\ \max\bigl(q,\ \max_{\Rcal}f\bigr)$.
 \end{proposition}
 
 \begin{proof}
-Les coupes de dominance préservent $\Ecal$ (Th.~4). Une coupe d'efficacité
+Les coupes de dominance préservent $\Ecal$ (corollaire~\ref{cor:dom}).
+Une coupe d'efficacité
 n'est posée qu'après établissement de sa condition de clôture : les seuls
 points efficaces qu'elle retranche ont le vecteur critères de son centre, et
 aucun ne bat $q$. Donc tout $x\in\Ecal$ est soit dans $\Rcal$ -- et
@@ -3457,7 +3479,8 @@ nous l'avons porté jusqu'ici. Nous ne l'avons pas encore mesuré.
 
 L'énoncé demande \emph{un sous-ensemble de solutions efficaces engendré par
 des algorithmes hybrides}. Notre méthode en produit un : l'archive
-$\mathcal{A}$, dont chaque point est certifié efficace par le théorème~2
+$\mathcal{A}$, dont chaque point est certifié efficace par le test
+d'efficacité (brique 1)
 \emph{avant} d'y entrer. Jusqu'ici nous ne la mesurions nulle part. Elle
 servait à amorcer la recherche, à alimenter le vivier de coupes, à fournir
 l'incumbent~; jamais à être rendue. Le front approché était un sous-produit.
@@ -3557,7 +3580,7 @@ Trois lectures, dans l'ordre de ce qu'elles engagent.
 C'est le résultat le plus important du tableau et le moins spectaculaire :
 aucun point rendu n'est faussement annoncé efficace. Une métaheuristique
 multiobjectif usuelle rend une approximation dont une part est dominée et ne
-le sait pas ; ici la certification passe par le théorème~2 avant l'insertion,
+le sait pas ; ici le test d'efficacité passe avant l'insertion,
 et la mesure le confirme sur $104$ points au total. C'est la contrepartie de
 notre coût par point.
 
@@ -4051,7 +4074,7 @@ médiane ; quand il n'y parvient pas, $371$. La cause est mécanique : la
 coupe de Dantzig retire \emph{un sommet à la fois}, de sorte que le coût de
 la certification suit $|\Scal|$ et non la difficulté du problème. Notre
 méthode, elle, se situerait entièrement sur la ligne du haut : elle prouve
-les $24$.}
+les $24$.\ \conf{0}{0}{0}}
 \label{fig:matchzm}
 \end{figure}
 
@@ -4161,7 +4184,7 @@ contraintes tirées sur $[1,30]$ avec un second membre sur $[50,100]$
 bornent les variables par $2$ ou $3$ ; les nôtres le sont par $19$ en
 médiane. À la même valeur de $n$, trente-quatre ordres de grandeur séparent
 les deux boîtes. Prouver $80/80$ sur le protocole de gauche ne dit rien du
-régime de droite -- et c'est ce dernier qui nous résiste.}
+régime de droite -- et c'est ce dernier qui nous résiste.\ \confna}
 \label{fig:boite}
 \end{figure}
 
@@ -4272,7 +4295,8 @@ section~\ref{sec:couverture} réfute cela aussi : les coupes centrées sur
 $\Ecal$ retranchent $100\ \%$ des points fautifs, et l'archive -- qui n'en
 retient que $20$ à $35\ \%$ -- en domine déjà la quasi-totalité. Ce
 n'étaient donc ni le plafond, ni la couverture. C'était le \emph{seuil}
-auquel le théorème~5' est évalué (§\ref{sec:seuil}), et l'\emph{échelle} sur
+auquel la borne de certification est évaluée (§\ref{sec:seuil}), et
+l'\emph{échelle} sur
 laquelle le vivier classe ses deux sources (§\ref{sec:vivier}).
 
 Ce qui reste ouvert, après ces deux corrections, se dit en trois points.

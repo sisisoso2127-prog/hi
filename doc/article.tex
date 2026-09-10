@@ -758,7 +758,7 @@ relâché $\Rcal\supseteq\Ecal$, initialisé à $\Scal$ et resserré par les
 coupes du théorème~\ref{th:cut}.
 
 \begin{algorithm}[H]
-\caption{\textsc{MaxLinéaire}$(g,\Rcal,B)$ --- schéma}
+\caption{\textsc{MaxLinéaire}$(g,\Rcal,B)$ --- schéma\ \confna}
 \KwIn{objectif linéaire $g$ ; relâché $\Rcal$ ; budget $B$}
 \KwOut{$(\textsf{statut},x_{\text{best}},\textsf{LB},\textsf{UB})$ avec
        $\textsf{LB}\le\max_{\Ecal}g\le\textsf{UB}$ à tout instant}
@@ -1311,7 +1311,7 @@ les autres critères est indispensable.
 
 \medskip
 \begin{algorithm}[H]
-\caption{Les trois mouvements}
+\caption{Les trois mouvements\ \confna}
 \SetKwProg{Mv}{Mouvement}{ :}{}
 \Mv{$A$ --- $\varepsilon$ partiel}{
   $J\gets$ sous-ensemble \textbf{strict} aléatoire de
@@ -1446,7 +1446,7 @@ sont ajoutées par lots, un lot de plus n'étant posé que si la borne n'a pas
 fermé et qu'il reste du temps.
 
 \begin{algorithm}[H]
-\caption{\textsc{Matheuristique}$(B_{\text{rech}},B_{\text{cert}},s_{\max})$}
+\caption{\textsc{Matheuristique}$(B_{\text{rech}},B_{\text{cert}},s_{\max})$\ \conf{1}{1}{1}}
 \label{alg:matheur}
 \KwIn{budgets de recherche et de certification ; seuil de stagnation}
 \KwOut{$(q_{\text{lb}},x_{\text{best}},q_{\text{ub}})$ avec
@@ -1583,7 +1583,7 @@ optimiser $f$ sur $\Scal$ est facile et ne répond pas à la question.
 les 14 cercles sont $\Scal$. Les disques pleins sont les cinq points
 efficaces. La flèche est la chaîne de dominance qui, partant de l'optimum de
 la relaxation $x=(0,0)$, atteint le point efficace $(2,3)$ en un pas
-(théorème~\ref{th:eff}).}
+(théorème~\ref{th:eff}).\ \confna}
 \label{fig:ex2decision}
 \end{figure}
 
@@ -1618,7 +1618,7 @@ la relaxation $x=(0,0)$, atteint le point efficace $(2,3)$ en un pas
 \end{tikzpicture}
 \caption{Espace des critères. Le point le plus à gauche et en bas est
 l'image de $(0,0)$, où $f$ atteint son maximum sur $\Scal$ : il est dominé
-par tout le front. L'optimum de (P) est à l'autre extrémité du front.}
+par tout le front. L'optimum de (P) est à l'autre extrémité du front.\ \confna}
 \label{fig:ex2criteres}
 \end{figure}
 
@@ -1679,7 +1679,7 @@ sa nullité est testée exactement, sans tolérance.
 une affine décroissante de $q$ ; $F$ en est l'enveloppe supérieure, convexe,
 linéaire par morceaux, de racine unique $\qs$. Sur cette instance une seule
 affine, celle de $x^\star=(3,0)$, domine toutes les autres sur la plage
-utile, ce qui explique la convergence en deux itérations.}
+utile, ce qui explique la convergence en deux itérations.\ \confna}
 \label{fig:ex2Fq}
 \end{figure}
 
@@ -1797,7 +1797,7 @@ borne supérieure au fil des coupes, l'oracle étant lancé au point $\qs$ pour
 strictement $\Rcal$. La preuve est acquise lorsque la courbe atteint $0$ ;
 interrompue avant, la méthode conserve la dernière valeur comme borne
 \emph{valide} -- c'est précisément ce que le théorème~\ref{th:bound}
-convertit en garantie sur $\qs$.}
+convertit en garantie sur $\qs$.\ \confna}
 \label{fig:ex3anytime}
 \end{figure}
 
@@ -1936,7 +1936,7 @@ néanmoins, car elles sont \emph{auto-certifiantes}.
 
 \begin{table}[htbp]
 \centering
-\caption{Contrôles ne requérant pas $\qs$.}
+\caption{Contrôles ne requérant pas $\qs$.\ \confna}
 \begin{tabular}{clp{9.6cm}}
 \toprule
 & propriété & comment elle se vérifie sans $\qs$\\
@@ -2111,7 +2111,7 @@ C'est un biais de survie. On sépare donc deux questions.
 \begin{table}[htbp]
 \centering
 \caption{Corrélations de Spearman avec le nombre d'appels au solveur,
-censurées exclues. \emph{***} : $p<10^{-3}$, \emph{*} : $p<5\cdot 10^{-2}$.}
+censurées exclues. \emph{***} : $p<10^{-3}$, \emph{*} : $p<5\cdot 10^{-2}$.\ \conf{0}{0}{0}}
 \begin{tabular}{lr}
 \toprule
 prédicteur & Spearman\\
@@ -2139,7 +2139,7 @@ résolution.
 
 \begin{table}[htbp]
 \centering
-\caption{Censurées contre résolues (Mann--Whitney bilatéral).}
+\caption{Censurées contre résolues (Mann--Whitney bilatéral).\ \conf{0}{0}{0}}
 \begin{tabular}{lrrr}
 \toprule
 variable & médiane censurée & médiane résolue & $p$\\
@@ -2173,7 +2173,7 @@ résultat négatif, et il est utile : il délimite ce qu'il reste à trouver.
 \centering
 \begin{minipage}{0.48\textwidth}
 \centering
-\caption{Q3 : expérience contrôlée sur corr.}
+\caption{Q3 : expérience contrôlée sur corr.\ \conf{0}{0}{0}}
 \begin{tabular}{cccc}
 \toprule
 corr & $|\Ecal|$ méd. & timeouts & \ILP\ méd.\\
@@ -2190,7 +2190,7 @@ $1{,}00$ & $1{,}0$ & 0 & $53{,}0$\\
 \hfill
 \begin{minipage}{0.48\textwidth}
 \centering
-\caption{Q4 : la taille prédit-elle ?}
+\caption{Q4 : la taille prédit-elle ?\ \conf{0}{0}{0}}
 \begin{tabular}{crrrr}
 \toprule
 $n$ & méd. & min & max & \% timeout\\
@@ -2247,7 +2247,7 @@ méthode exacte & 73/90 & 76/90 & 92 & $1{,}5$~s & \textbf{0}\\
 
 \begin{table}[htbp]
 \centering
-\caption{Détail par strate.}
+\caption{Détail par strate.\ \conf{0}{0}{0}}
 \begin{tabular}{llcc}
 \toprule
 strate & & exacte & matheuristique\\
@@ -2645,7 +2645,7 @@ allongeant la recherche, donc en récoltant plus de points dominés :
 
 \begin{table}[htbp]
 \centering
-\caption{Six exécutions, $n=20,30,40$, plafond triplé.}
+\caption{Six exécutions, $n=20,30,40$, plafond triplé.\ \conf{0}{1}{0}}
 \begin{tabular}{lcccccc}
 \toprule
 archive $|\Acal|$ & $39\!\to\!80$ & $26\!\to\!50$ & $24\!\to\!52$
@@ -2821,7 +2821,7 @@ alors même qu'il disposait de deux fois plus de temps.
 
 \begin{table}[htbp]
 \centering
-\caption{Réglage du plafond de coupes, 4 instances $\times$ 4 graines.}
+\caption{Réglage du plafond de coupes, 4 instances $\times$ 4 graines.\ \conf{0}{0}{0}}
 \begin{tabular}{lcc}
 \toprule
 schéma & écart garanti médian & optimalité prouvée\\
@@ -2869,7 +2869,12 @@ Vérifié $26$ fois sur $26$. Reste à savoir ce que l'archive en atteint :
 $\text{cov}_{\Acal}\ge 99\ \%$ sur $26$ lignes sur $26$, alors qu'elle ne
 retient que $20$ à $35\ \%$ des vecteurs critères de $\Ecal$. \textbf{Une
 petite archive domine déjà la quasi-totalité de $\Scal^{+}$} : la chercher
-plus grande ne servirait à rien, et la couverture n'était pas le verrou.
+plus grande ne servirait à rien \emph{pour la borne}, et la couverture
+n'était pas le verrou. Cette conclusion ne se transporte pas à la
+section~\ref{sec:livrable} : pour l'archive comme \emph{livrable}, la
+grossir change tout, et l'hypervolume y monte avec le budget sur $7$ lignes
+sur $8$. Un même ensemble peut être riche pour couper et pauvre pour
+rendre.
 
 \paragraph{Une perte que rien n'avait isolée : la recherche.} La même mesure
 montre que l'incumbent manque $\qs$ sur $3$ lignes de $26$, toutes à
