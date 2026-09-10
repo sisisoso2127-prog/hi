@@ -139,6 +139,18 @@ arithmétique rationnelle. Sur $24$ instances de sa classe, elle certifie
 $12$ optima quand notre méthode en prouve $24$ ; mais elle dispose d'un
 raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
 
+Un chapitre est consacré à ce que la méthode \emph{rend} : non pas
+seulement une valeur encadrée, mais l'archive des points efficaces
+certifiés, qui est le sous-ensemble de $E$ demandé par l'énoncé. Mesurée
+contre $E$ énuméré, elle est de pureté~$1$ sur $8/8$ instances -- aucun
+point faussement annoncé efficace sur $104$ --, creuse en cardinalité
+(médiane $40{,}7\,\%$) et riche en hypervolume (médiane $92{,}3\,\%$),
+contient toujours la solution du problème d'optimisation, et s'enrichit avec
+le budget sur $7$ lignes sur $8$. Nous y établissons aussi que l'indicateur
+de couverture, opposé à la vraie frontière un ensemble certifié efficace,
+dégénère en rapport de cardinalité et n'apporte rien -- ce qui vaut pour
+toute méthode qui certifie avant d'archiver.
+
 Les limites sont énoncées avec la même précision que les gains : la méthode
 est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le
 théorème de clôture
@@ -3233,6 +3245,213 @@ nous l'avons porté jusqu'ici. Nous ne l'avons pas encore mesuré.
 
 % ============================================================================
 % ============================================================================
+\section{L'archive comme livrable}
+\label{sec:livrable}
+
+\subsection{Ce que le sujet demande, et ce que nous mesurions}
+
+L'énoncé demande \emph{un sous-ensemble de solutions efficaces engendré par
+des algorithmes hybrides}. Notre méthode en produit un : l'archive
+$\mathcal{A}$, dont chaque point est certifié efficace par le théorème~2
+\emph{avant} d'y entrer. Jusqu'ici nous ne la mesurions nulle part. Elle
+servait à amorcer la recherche, à alimenter le vivier de coupes, à fournir
+l'incumbent~; jamais à être rendue. Le front approché était un sous-produit.
+
+C'est une lacune de présentation avant d'être une lacune technique, mais
+elle est réelle : rien dans les sections précédentes ne dit combien de
+points $\mathcal{A}$ contient, où ils se trouvent sur le front, ni ce qu'ils
+en représentent. Cette section comble ce manque, avec les indicateurs qu'une
+lecture multiobjectif attend.
+
+\subsection{Les indicateurs, et lequel ne dit rien ici}
+
+Contre la vérité terrain $E$ énumérée, cinq quantités, toutes en
+maximisation et calculées en arithmétique exacte :
+
+\begin{itemize}
+\item \textbf{pureté} $|\mathcal{A}\cap E|/|\mathcal{A}|$. Chez nous elle
+  vaut $1$ par construction. Nous la \emph{vérifions} plutôt que de
+  l'affirmer : c'est d'abord un test de correction de la certification,
+  ensuite un indicateur.
+\item \textbf{cardinalité} $|Z(\mathcal{A})|/|Z(E)|$, en vecteurs critères
+  distincts.
+\item \textbf{couverture} $C(\mathcal{A},E)$, part de $E$ faiblement dominée
+  par au moins un point de $\mathcal{A}$.
+\item \textbf{hypervolume} $HV(\mathcal{A})/HV(E)$, exact, par balayage
+  dimensionnel récursif -- aucun échantillonnage.
+\item \textbf{$\varepsilon^+$}, décalage additif normalisé qu'il faudrait
+  ajouter à $\mathcal{A}$ pour qu'elle domine $E$ tout entier.
+\end{itemize}
+
+Un mot sur le point de référence de l'hypervolume, parce que le choix naïf
+est faux. Posée exactement sur le nadir de $E$, la référence donne à tout
+point extrême de $E$ une boîte d'épaisseur nulle sur au moins un critère,
+donc un hypervolume nul : une archive réduite aux deux extrémités du front
+serait notée $0{,}0$ alors qu'elle en tient les deux bouts. Nous abaissons
+la référence de $10\,\%$ de l'étendue de chaque critère, identiquement pour
+$\mathcal{A}$ et pour $E$, ce qui laisse le rapport comparable.
+
+Un mot, surtout, sur la couverture, car la mesure a établi qu'elle est
+\emph{sans contenu} dans notre cas.
+
+\begin{proposition}\label{prop:couv}
+Si $\mathcal{A}\subseteq E$, alors
+$C(\mathcal{A},E)=|Z(\mathcal{A})|/|Z(E)|$.
+\end{proposition}
+
+\begin{proof}
+Soient $a\in\mathcal{A}$ et $z\in Z(E)$ avec $Z(a)\ge z$ composante par
+composante. Si $Z(a)\neq z$, l'inégalité est stricte sur au moins un
+critère, donc $Z(a)$ domine $z$ -- ce qui contredit l'efficacité du point de
+$E$ réalisant $z$. Donc $Z(a)=z$. Les points de $Z(E)$ faiblement dominés
+par $\mathcal{A}$ sont exactement ceux de $Z(\mathcal{A})$.
+\end{proof}
+
+\noindent
+La conséquence est à retenir hors de ce mémoire : l'indicateur de couverture
+de Zitzler \& Thiele est conçu pour comparer \emph{deux approximations},
+dont l'une peut contenir des points dominés. Opposé à la vraie frontière un
+ensemble certifié efficace, il dégénère en rapport de cardinalité et
+n'apporte rien. Le tableau~\ref{tab:livrableA} le vérifie ligne à ligne --
+les colonnes \textsc{card} et \textsc{couv} y sont identiques sur les huit
+instances, ce qui est la proposition et non une coïncidence. Nous les
+laissons toutes deux, comme contrôle.
+
+\subsection{Ce que l'archive vaut}
+
+\begin{table}[htbp]
+\centering
+\caption{L'archive mesurée contre $E$ énuméré, budget de $180$ appels ILP.
+Instances énumérables ($|S|$ de $1\,130$ à $5\,275$), $\varepsilon^+$
+normalisé par l'étendue de chaque critère.\ \conf{1}{1}{1}}
+\label{tab:livrableA}
+\begin{tabular}{rrrrrrrrrrc}
+\toprule
+$n$ & $p$ & corr & $|S|$ & $|Z(E)|$ & $|Z(\mathcal{A})|$ &
+card\,\% & couv\,\% & $HV$\,\% & $\varepsilon^+$ & $z^\ast\!\in\!\mathcal{A}$\\
+\midrule
+$6$ & $3$ & $0{,}00$ & $1\,436$ & $88$  & $15$ & $17{,}0$ & $17{,}0$ & $90{,}6$ & $0{,}146$ & oui\\
+$6$ & $3$ & $0{,}00$ & $1\,130$ & $114$ & $17$ & $14{,}9$ & $14{,}9$ & $79{,}7$ & $0{,}280$ & oui\\
+$7$ & $3$ & $0{,}00$ & $5\,275$ & $27$  & $11$ & $40{,}7$ & $40{,}7$ & $96{,}2$ & $0{,}101$ & oui\\
+$7$ & $4$ & $0{,}00$ & $1\,931$ & $218$ & $19$ & $8{,}7$  & $8{,}7$  & $68{,}2$ & $0{,}503$ & oui\\
+$8$ & $3$ & $0{,}00$ & $2\,754$ & $42$  & $12$ & $28{,}6$ & $28{,}6$ & $76{,}4$ & $0{,}722$ & oui\\
+$6$ & $3$ & $0{,}50$ & $1\,436$ & $26$  & $13$ & $50{,}0$ & $50{,}0$ & $92{,}3$ & $0{,}128$ & oui\\
+$7$ & $3$ & $0{,}50$ & $5\,275$ & $17$  & $12$ & $70{,}6$ & $70{,}6$ & $95{,}2$ & $0{,}117$ & oui\\
+$8$ & $3$ & $0{,}50$ & $2\,754$ & $6$   & $5$  & $83{,}3$ & $83{,}3$ & $99{,}9$ & $0{,}058$ & oui\\
+\midrule
+\multicolumn{6}{l}{médianes} & $40{,}7$ & $40{,}7$ & $92{,}3$ & $0{,}146$ & $8/8$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Trois lectures, dans l'ordre de ce qu'elles engagent.
+
+\paragraph{La pureté vaut $1$ sur les huit instances.}
+C'est le résultat le plus important du tableau et le moins spectaculaire :
+aucun point rendu n'est faussement annoncé efficace. Une métaheuristique
+multiobjectif usuelle rend une approximation dont une part est dominée et ne
+le sait pas ; ici la certification passe par le théorème~2 avant l'insertion,
+et la mesure le confirme sur $104$ points au total. C'est la contrepartie de
+notre coût par point.
+
+\paragraph{L'archive est creuse mais bien placée.}
+Médiane : $40{,}7\,\%$ des points de $Z(E)$, et $92{,}3\,\%$ de son
+hypervolume. Le rapport est constant dans le sens de l'inégalité sur les
+huit lignes -- $HV\,\%$ dépasse card\,\% partout, d'un facteur $1{,}2$ à
+$7{,}8$, et d'autant plus que le front est épais. Ce n'est pas un hasard : la recherche est pilotée par $f$ et un point
+qui améliore $f$ est, sur ces instances, un point avancé du front. On rend
+donc peu de points, mais ceux qui portent le volume.
+
+\paragraph{Où c'est faible, et pourquoi.}
+La ligne $n=7$, $p=4$ est la plus mauvaise de toutes les colonnes :
+$8{,}7\,\%$ de cardinalité, $68{,}2\,\%$ d'hypervolume, $\varepsilon^+ =
+0{,}503$. C'est aussi celle où $|Z(E)| = 218$, six fois la médiane des
+autres. Le régime est clair et il ne faut pas l'habiller : \emph{à budget
+fixe, l'archive ne suit pas la croissance de $E$}. Un $\varepsilon^+$ de
+$0{,}5$ signifie qu'il existe un point efficace dont un critère est à la
+moitié de l'étendue de tout ce que l'archive propose ; ce coin du front,
+nous ne le voyons pas. Rien dans l'algorithme ne le lui demande -- aucun
+opérateur ne pousse vers la diversité du front pour elle-même, seulement
+vers $f$. Nous ne prétendons donc pas produire une approximation de $E$
+entier, et le tableau dit exactement de combien nous en sommes loin.
+
+\paragraph{$z^\ast$ y est toujours.}
+Le point $f$-optimal appartient à l'archive sur les huit instances. C'est
+attendu -- c'est l'incumbent -- mais cela vaut d'être vérifié, car c'est ce
+qui articule les deux moitiés du sujet : l'archive n'est pas un objet à côté
+de l'optimisation, elle \emph{contient} la solution du problème posé.
+
+\subsection{L'archive s'améliore-t-elle quand on paie ?}
+
+La question décide si le front approché est un livrable ou un artefact. Un
+ensemble de points qui ne bouge pas quand on triple l'effort n'approche
+rien : il enregistre où l'algorithme est passé.
+
+\begin{table}[htbp]
+\centering
+\caption{Le même lot à trois budgets d'appels ILP. Chaque colonne est une
+exécution indépendante, pas un raffinement de la précédente.\ \conf{1}{1}{1}}
+\label{tab:livrableB}
+\begin{tabular}{rrrrrrrrrrrr}
+\toprule
+& & & \multicolumn{3}{c}{$|Z(\mathcal{A})|$} & \multicolumn{3}{c}{couv\,\%}
+& \multicolumn{3}{c}{$HV$\,\%}\\
+\cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(lr){10-12}
+$n$ & $p$ & corr & $60$ & $180$ & $540$ & $60$ & $180$ & $540$
+& $60$ & $180$ & $540$\\
+\midrule
+$6$ & $3$ & $0{,}00$ & $12$ & $15$ & $21$ & $13{,}6$ & $17{,}0$ & $23{,}9$ & $73{,}0$ & $90{,}6$ & $93{,}7$\\
+$6$ & $3$ & $0{,}00$ & $6$  & $17$ & $28$ & $5{,}3$  & $14{,}9$ & $24{,}6$ & $68{,}1$ & $79{,}7$ & $92{,}1$\\
+$7$ & $3$ & $0{,}00$ & $9$  & $11$ & $12$ & $33{,}3$ & $40{,}7$ & $44{,}4$ & $86{,}9$ & $96{,}2$ & $98{,}0$\\
+$7$ & $4$ & $0{,}00$ & $9$  & $19$ & $37$ & $4{,}1$  & $8{,}7$  & $17{,}0$ & $57{,}4$ & $68{,}2$ & $79{,}7$\\
+$8$ & $3$ & $0{,}00$ & $8$  & $12$ & $19$ & $19{,}0$ & $28{,}6$ & $45{,}2$ & $57{,}3$ & $76{,}4$ & $98{,}9$\\
+$6$ & $3$ & $0{,}50$ & $12$ & $13$ & $19$ & $46{,}2$ & $50{,}0$ & $73{,}1$ & $73{,}4$ & $92{,}3$ & $97{,}3$\\
+$7$ & $3$ & $0{,}50$ & $9$  & $12$ & $16$ & $52{,}9$ & $70{,}6$ & $94{,}1$ & $92{,}8$ & $95{,}2$ & $100{,}0$\\
+$8$ & $3$ & $0{,}50$ & $6$  & $5$  & $5$  & $100{,}0$& $83{,}3$ & $83{,}3$ & $100{,}0$& $99{,}9$ & $99{,}9$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Sept lignes sur huit croissent en cardinalité \emph{et} en hypervolume, et
+aucune n'est immobile. Cinq lignes sur huit dépassent $97\,\%$
+d'hypervolume au budget élevé. La ligne $n=7$, $p=4$ -- la plus difficile -- quadruple son
+archive de $9$ à $37$ points. L'archive répond donc à l'effort : c'est un
+livrable.
+
+La huitième ligne demande une explication, et elle en a une. À $n=8$,
+$corr=0{,}5$, l'archive vaut $6$ points au budget $60$ et $5$ aux budgets
+supérieurs : elle \emph{régresse}. $|Z(E)|$ n'y vaut que $6$, l'archive au
+petit budget est donc le front entier, et on ne peut que redescendre. La
+cause n'est pas une perte de points -- l'archive est strictement croissante
+au cours d'une exécution, elle n'a pas d'opérateur de suppression -- mais le
+fait que les trois colonnes sont \emph{trois exécutions distinctes} : le
+budget change la répartition entre recherche et certification, donc la
+trajectoire, donc les points rencontrés. Sur un front de six points, deux
+trajectoires n'ont aucune raison de coïncider. C'est une limite du
+protocole autant qu'un résultat, et nous l'écrivons ainsi plutôt que de
+retirer la ligne.
+
+\subsection{Ce que cette section permet d'affirmer}
+
+\begin{enumerate}
+\item La méthode rend un sous-ensemble de $E$ \emph{certifié} -- pureté $1$
+  sur $8/8$, vérifiée et non postulée.
+\item Ce sous-ensemble est creux en cardinalité (médiane $40{,}7\,\%$) et
+  riche en hypervolume (médiane $92{,}3\,\%$) : il tient la partie du front
+  que $f$ désigne, qui est celle que le sujet demande.
+\item Il contient toujours la solution du problème d'optimisation.
+\item Il s'enrichit quand le budget croît, sur $7$ lignes sur $8$.
+\item Il ne couvre pas $E$ entier, et l'écart se creuse quand $E$ grossit
+  ($\varepsilon^+ = 0{,}503$ à $|Z(E)| = 218$). Aucun opérateur ne vise la
+  diversité du front pour elle-même ; c'est la direction ouverte la plus
+  immédiate de ce travail.
+\item L'indicateur de couverture, opposé à la vraie frontière un ensemble
+  certifié efficace, ne dit rien de plus que la cardinalité
+  (proposition~\ref{prop:couv}) -- ce qui vaut pour toute méthode qui
+  certifie avant d'archiver, pas seulement pour la nôtre.
+\end{enumerate}
+
+% ============================================================================
 \section{Comparaison avec les méthodes du domaine}
 \label{sec:comparaison}
 
@@ -3678,6 +3897,16 @@ délimitent exactement ce que ce travail établit.
 \item \textbf{Le théorème~\ref{th:hauteur} n'achète pas de preuves.} À
       budget d'appels égal il n'en gagne aucune (\S\ref{sec:determ}) : c'est
       un gain de coût, non de capacité.
+\item \textbf{L'archive n'approche pas $\Ecal$ entier.} Elle en rend une
+      médiane de $40{,}7\ \%$ des points -- et $8{,}7\ \%$ sur l'instance
+      où $|Z(\Ecal)|=218$ --, avec un $\varepsilon^+$ qui monte alors à
+      $0{,}503$ (§\ref{sec:livrable}). Ce n'est pas une défaillance de
+      l'implémentation mais une conséquence de la conception : la recherche
+      est pilotée par $f$ et \emph{aucun opérateur ne vise la diversité du
+      front pour elle-même}. Ce que nous rendons est la partie du front que
+      $f$ désigne, et l'hypervolume ($92{,}3\ \%$ en médiane) dit qu'elle
+      en porte l'essentiel du volume ; ce n'est pas la même chose que
+      l'approcher tout entier, et nous ne le prétendons pas.
 \end{enumerate}
 
 \subsection*{Directions ouvertes}
@@ -3724,6 +3953,17 @@ proposions est le plus mauvais des trois -- et méthodologique : le rendement
 d'un opérateur compte ses succès, pas ce qu'ils valent, et le retirer coûte
 jusqu'à un tiers de l'incumbent. Trancher demande davantage de graines que
 nous n'en avons jouées.
+
+\paragraph{Un opérateur de diversité.} La mesure du chapitre~\ref{sec:livrable}
+donne pour la première fois une cible chiffrée à viser : $\varepsilon^+$ et
+l'hypervolume, contre $\Ecal$ énuméré. La direction la plus immédiate est
+d'ajouter à la phase~1 un mouvement dirigé vers les régions du front que
+l'archive laisse vides -- ce que $\varepsilon^+$ localise exactement, en
+désignant le point de $\Ecal$ le plus mal représenté. Le coût en est connu
+d'avance : chaque point ainsi visé est un appel entier de plus qui
+n'améliore pas $q_{\text{lb}}$. C'est donc un arbitrage explicite entre les
+deux livrables, la valeur certifiée et le front rendu, que le mémoire
+n'instruit pas.
 
 La seconde est la clôture elle-même : nos mesures n'ont jamais rencontré
 deux points efficaces de même vecteur critères, ce qui suggère qu'une

@@ -96,6 +96,16 @@ théorème~\ref{th:bound} convertit toute borne supérieure du sous-problème de
 Dinkelbach en borne sur $\qs$, avec un dénominateur restreint à la région où
 la borne agit.
 
+La méthode rend deux objets et non un : la valeur encadrée, et
+l'\emph{archive} des points efficaces certifiés rencontrés en chemin --
+le sous-ensemble de $\Ecal$ que demande l'énoncé. Nous le mesurons contre
+$\Ecal$ énuméré (section~\ref{sec:livrable}) : pureté~$1$ sur $8/8$
+instances, médiane de $40{,}7\,\%$ des points du front pour $92{,}3\,\%$
+de son hypervolume, et une archive qui s'enrichit avec le budget sur $7$
+lignes sur $8$. Nous établissons au passage que l'indicateur de couverture
+n'a aucun contenu face à un ensemble certifié efficace, où il coïncide avec
+le rapport de cardinalité.
+
 Sur un lot systématique de 90 instances, tous les résultats des deux méthodes
 passent une vérification indépendante ; la matheuristique rend la meilleure
 valeur sur \textbf{90 instances sur 90} et \emph{prouve} l'optimalité sur
@@ -2235,6 +2245,110 @@ variance entre graines est au moins aussi grande que l'effet de la taille.
 Conclusion à ne pas dépasser : corr domine, $n$ compte moins qu'il n'y paraît.
 \end{remark}
 
+\section{L'archive comme livrable}
+\label{sec:livrable}
+
+Le problème posé demande \emph{un sous-ensemble de solutions efficaces
+engendré par des algorithmes hybrides}. La méthode en produit un --
+l'archive $\Acal$, dont chaque point est certifié efficace par le
+théorème~\ref{th:eff} \emph{avant} d'y entrer -- et rien, jusqu'ici, ne le
+mesurait. Le front approché servait à amorcer la recherche et à alimenter le
+vivier de coupes, jamais à être rendu. Cette section le mesure contre la
+vérité terrain $\Ecal$ énumérée, avec les indicateurs usuels : pureté,
+cardinalité, couverture $C(\Acal,\Ecal)$, hypervolume exact (balayage
+dimensionnel récursif, sans échantillonnage) et $\varepsilon$-indicateur
+additif normalisé.
+
+Deux précautions, dont la seconde retire un indicateur du tableau.
+
+La référence de l'hypervolume ne peut pas être posée sur le nadir de
+$\Ecal$ : tout point extrême y a une boîte d'épaisseur nulle sur au moins un
+critère, donc un hypervolume nul, et une archive qui tiendrait les deux bouts
+du front serait notée $0{,}0$. Nous l'abaissons de $10\,\%$ de l'étendue de
+chaque critère, identiquement pour $\Acal$ et pour $\Ecal$.
+
+\begin{proposition}\label{prop:couv}
+Si $\Acal\subseteq\Ecal$, alors $C(\Acal,\Ecal)=|Z(\Acal)|/|Z(\Ecal)|$.
+\end{proposition}
+
+\begin{proof}
+Soient $a\in\Acal$ et $z\in Z(\Ecal)$ avec $Z(a)\ge z$ composante par
+composante. Si $Z(a)\neq z$, l'inégalité est stricte sur au moins un critère
+et $Z(a)$ domine $z$, ce qui contredit l'efficacité du point de $\Ecal$
+réalisant $z$. Donc $Z(a)=z$.
+\end{proof}
+
+\noindent
+L'indicateur de couverture est conçu pour comparer \emph{deux}
+approximations, dont l'une peut contenir des points dominés ; opposé à la
+vraie frontière un ensemble certifié efficace, il dégénère en rapport de
+cardinalité. Le tableau~\ref{tab:livrable} le vérifie ligne à ligne -- les
+colonnes card et couv y sont identiques sur les huit instances, ce qui est
+la proposition et non une coïncidence. La remarque vaut pour toute méthode
+qui certifie avant d'archiver.
+
+\begin{table}[htbp]
+\centering
+\caption{L'archive mesurée contre $\Ecal$ énuméré, budget de 180 appels
+\ILP. $\varepsilon^+$ normalisé par l'étendue de chaque critère.\ \conf{1}{1}{1}}
+\label{tab:livrable}
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{rrrrrrrrrc}
+\toprule
+$n$ & $p$ & corr & $|S|$ & $|Z(\Ecal)|$ & $|Z(\Acal)|$ &
+card\,\% & $HV$\,\% & $\varepsilon^+$ & $z^\ast\!\in\!\Acal$\\
+\midrule
+$6$ & $3$ & $0{,}00$ & $1\,436$ & $88$  & $15$ & $17{,}0$ & $90{,}6$ & $0{,}146$ & oui\\
+$6$ & $3$ & $0{,}00$ & $1\,130$ & $114$ & $17$ & $14{,}9$ & $79{,}7$ & $0{,}280$ & oui\\
+$7$ & $3$ & $0{,}00$ & $5\,275$ & $27$  & $11$ & $40{,}7$ & $96{,}2$ & $0{,}101$ & oui\\
+$7$ & $4$ & $0{,}00$ & $1\,931$ & $218$ & $19$ & $8{,}7$  & $68{,}2$ & $0{,}503$ & oui\\
+$8$ & $3$ & $0{,}00$ & $2\,754$ & $42$  & $12$ & $28{,}6$ & $76{,}4$ & $0{,}722$ & oui\\
+$6$ & $3$ & $0{,}50$ & $1\,436$ & $26$  & $13$ & $50{,}0$ & $92{,}3$ & $0{,}128$ & oui\\
+$7$ & $3$ & $0{,}50$ & $5\,275$ & $17$  & $12$ & $70{,}6$ & $95{,}2$ & $0{,}117$ & oui\\
+$8$ & $3$ & $0{,}50$ & $2\,754$ & $6$   & $5$  & $83{,}3$ & $99{,}9$ & $0{,}058$ & oui\\
+\midrule
+\multicolumn{6}{l}{médianes} & $40{,}7$ & $92{,}3$ & $0{,}146$ & $8/8$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{La pureté vaut $1$ sur les huit instances}
+-- $104$ points, aucun faussement annoncé efficace. C'est le résultat le
+moins spectaculaire du tableau et le plus important : une métaheuristique
+multiobjectif usuelle rend une approximation dont une part est dominée et ne
+le sait pas. Ici la certification précède l'insertion, et la mesure le
+confirme au lieu de le postuler.
+
+\paragraph{L'archive est creuse mais bien placée}
+-- médiane $40{,}7\,\%$ des points de $Z(\Ecal)$ pour $92{,}3\,\%$ de son
+hypervolume, $HV\,\%$ dépassant card\,\% sur les huit lignes d'un facteur
+$1{,}2$ à $7{,}8$. La recherche étant pilotée par $f$, elle rend peu de
+points, mais ceux qui portent le volume. Le point $f$-optimal appartient à
+l'archive partout : le sous-ensemble rendu \emph{contient} la solution du
+problème posé, il n'est pas un objet à côté d'elle.
+
+\paragraph{Où elle est faible}
+-- la ligne $n=7$, $p=4$ est la plus mauvaise de toutes les colonnes, et
+c'est celle où $|Z(\Ecal)|=218$, six fois la médiane des autres. À budget
+fixe, l'archive ne suit pas la croissance de $\Ecal$ : $\varepsilon^+ =
+0{,}503$ signifie qu'un point efficace reste à la moitié de l'étendue d'un
+critère de tout ce que l'archive propose. Rien dans l'algorithme ne vise la
+diversité du front pour elle-même ; nous ne prétendons donc pas approcher
+$\Ecal$ entier, et le tableau dit de combien nous en sommes loin.
+
+\paragraph{L'archive répond à l'effort.}
+Le même lot relancé à $60$, $180$ et $540$ appels \ILP\ donne une archive
+plus grande \emph{et} un hypervolume plus élevé sur $7$ lignes sur $8$ ;
+aucune n'est immobile, et cinq dépassent $97\,\%$ d'hypervolume au budget
+haut. La ligne la plus difficile ($n=7$, $p=4$) passe de $9$ à $37$ points.
+C'est ce qui distingue un front approché d'un simple relevé de trajectoire.
+La huitième ligne régresse ($6$ points puis $5$) : $|Z(\Ecal)|$ n'y vaut que
+$6$, l'archive au petit budget est le front entier et l'on ne peut que
+redescendre. L'archive ne perd jamais de point au cours d'une exécution --
+elle n'a pas d'opérateur de suppression -- mais les trois budgets sont trois
+exécutions distinctes, donc trois trajectoires. Sur un front de six points,
+elles n'ont aucune raison de coïncider.
+
 \section{Trois défauts trouvés par la mesure}
 \label{sec:defauts}
 
@@ -2629,6 +2743,15 @@ Elles sont énoncées ici plutôt que laissées à découvrir.
       l'effet mesuré.
 \item \textbf{Un seul solveur.} Le comptage des appels atténue la dépendance
       sans la supprimer.
+\item \textbf{L'archive n'approche pas $\Ecal$ entier.} Elle en rend une
+      médiane de $40{,}7\,\%$ des points, et $8{,}7\,\%$ seulement sur
+      l'instance où $|Z(\Ecal)|=218$, avec un $\varepsilon^+$ qui y monte à
+      $0{,}503$ (section~\ref{sec:livrable}). Ce n'est pas un défaut
+      d'implémentation mais une conséquence de la conception : la recherche
+      est pilotée par $f$, et aucun opérateur ne vise la diversité du front
+      pour elle-même. L'hypervolume ($92{,}3\,\%$ en médiane) dit que la
+      partie rendue en porte l'essentiel du volume ; ce n'est pas la même
+      chose que l'approcher tout entier, et nous ne le prétendons pas.
 \end{enumerate}
 
 \section{Conclusion et perspectives}
