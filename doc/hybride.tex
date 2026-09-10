@@ -436,10 +436,83 @@ critères. Un point $y$ \emph{domine} $x$ si $Z(y)\ge Z(x)$ et $Z(y)\ne Z(x)$ ;
 $\Ecal$ est l'ensemble des $x\in\Scal$ non dominés. Un rationnel $q$ est
 toujours écrit $q=P/Q$ sous forme irréductible avec $Q>0$.
 
-\paragraph{Hypothèses.} (A1) $d_k\ge 0$ et $b_k\ge 1$ pour tout $k$, ainsi
-que pour $f$ ; (A2) $A\ge 0$ à colonnes non nulles et $b\ge 0$. (A1) entraîne
-$\Dk(x)\ge 1>0$ partout ; (A2) rend $\Scal$ non vide et borné. Toutes les
-données sont entières.
+\paragraph{Hypothèses, et ce dont les preuves ont réellement besoin.}
+(A1) $d_k\ge 0$ et $b_k\ge 1$ pour tout $k$, ainsi que pour $f$ ;
+(A2) $A\ge 0$ à colonnes non nulles et $b\ge 0$. Toutes les données sont
+entières.
+
+Ces deux hypothèses sont \emph{suffisantes} et faciles à vérifier, mais
+aucune n'est nécessaire, et il importe de dire ce qu'elles achètent
+exactement.
+
+\begin{proposition}[les hypothèses utiles]
+\label{prop:hyp}
+Les théorèmes de ce mémoire n'utilisent que les deux propriétés suivantes :
+\begin{enumerate}[label=(\roman*),leftmargin=*,itemsep=1pt]
+\item $\Scal$ est \textbf{borné} (donc fini, puisque entier) ;
+\item $\Dk(x)>0$ pour tout $k$ et tout $x\in\Scal$, de même pour $D$.
+\end{enumerate}
+(A1) implique (ii) en donnant $\Dk\ge 1$ partout ; (A2) implique (i) en
+fournissant la boîte $\text{ub}_j=\min_{i\,:\,A_{ij}>0}\lfloor
+b_i/A_{ij}\rfloor$.
+\end{proposition}
+
+\begin{proof}
+Th.~1 et~2 ne divisent que par $\Dk(x)$ et n'exigent que (ii) ; leur
+terminaison exige (i). Les coupes disjonctives des Th.~\ref{th:effcut}
+et~4 exigent un grand $M$ valide, c'est-à-dire un minorant fini de
+$e_k$ sur $\Scal$ : (i) suffit, sous quelque forme qu'on l'obtienne. La
+borne du Th.~\ref{th:archbound} divise par $D^{+}\ge D_{\min}>0$, soit (ii),
+et son $U$ est fini par (i). Aucune preuve n'invoque le signe de $A$ ni
+celui de $d_k$. \end{proof}
+
+\begin{remark}[pourquoi cette distinction n'est pas cosmétique]
+Deux des instances publiées sur lesquelles nous nous validons
+(§\ref{sec:externe}) ont une matrice $A$ à coefficients \emph{négatifs} --
+$A=\bigl(\begin{smallmatrix}-1&4\\2&-1\end{smallmatrix}\bigr)$ chez Zerdani
+et Moulaï --
+et violent donc (A2). Elles restent parfaitement traitables : (i) leur est
+fournie par des bornes explicites sur les variables, et (ii) se vérifie
+directement. C'est d'ailleurs l'hypothèse même de Zerdani et
+Moulaï~\cite{zerdani2011}, qui demandent $q^{i\top}x+\beta^i>0$ sur le
+domaine, et non un signe sur $A$. Le code distingue les deux régimes : un
+contrôle \emph{strict} impose (A1)--(A2) et sert à valider notre générateur,
+un contrôle \emph{faible} impose (i)--(ii) et sert à lire la littérature.
+\end{remark}
+
+\begin{table}[htbp]
+\centering
+\caption{Ce qui est vérifié dans chaque expérience. « boîte » indique
+d'où vient la bornitude.\ \confna}
+\label{tab:hyp}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llccl}
+\toprule
+expérience & $A$ & (A1) & (A2) & boîte\\
+\midrule
+lots générés (régime cible, lot figé, échelle)
+ & $\ge 0$ & oui & oui & déduite de $A$\\
+terrain de Zerdani \& Moulaï (§\ref{sec:matchzm})
+ & $\ge 1$ & oui & oui & déduite de $A$\\
+terrain de Drici \emph{et al.} (§\ref{sec:matchdrici})
+ & $\ge 1$ & oui & oui & déduite de $A$\\
+\midrule
+exemple publié de Zerdani \& Moulaï
+ & \textbf{signes mêlés} & oui & \textbf{non} & explicite\\
+exemple publié de Drici \emph{et al.}
+ & \textbf{signes mêlés} & oui & \textbf{non} & explicite\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Aucun \emph{banc} ne viole (A2) : les trois générateurs produisent
+$A\ge 0$, celui de Drici \emph{et al.} tirant même dans $[1,30]$. La
+violation ne concerne que les deux instances \emph{publiées} servant à la
+validation externe, et elle est sans conséquence puisque
+(i) et (ii) y tiennent. Nous le signalons parce qu'une hypothèse énoncée
+globalement et violée localement, sans que le lecteur en soit averti, est
+une faute -- même quand rien n'en dépend.
 
 \begin{remark}[intégralité]\label{rem:int}
 Les quantités $e_k$ et $QN-PD$ introduites plus bas sont \emph{entières}.
@@ -1090,7 +1163,7 @@ points efficaces et un $\varepsilon$ trop petit ne progresse pas.
   seul des trois à pouvoir réorganiser plusieurs variables d'un coup.
 \end{description}
 
-\begin{remark}[l'erreur de conception qu'il faut éviter]
+\begin{remark}[une erreur de conception à éviter]
 Une première version prenait $J=\{1,\dots,p\}\setminus\{k\}$ tout entier :
 « mieux sur $k$ sans rien perdre ailleurs ». C'est exactement l'ensemble des
 points qui \emph{dominent} $x^r$ -- donc vide dès que $x^r$ est efficace, ce

@@ -412,6 +412,49 @@ explicites
 \[
   \overline{x}_j=\min_{i\,:\,A_{ij}>0}\left\lfloor b_i/A_{ij}\right\rfloor .
 \]
+
+\begin{remark}[(A2) est suffisante, non nécessaire, et deux instances la
+violent]\label{rem:a2}
+Ce que les preuves utilisent n'est pas le signe de $A$ mais la
+\textbf{bornitude} de $\Scal$ : les coupes disjonctives ont besoin d'un
+grand $M$ valide, c'est-à-dire d'un minorant fini de $e_k$ sur $\Scal$, et
+le théorème~\ref{th:bound} d'un $U$ fini. (A2) n'est qu'un moyen commode
+d'\emph{obtenir} une boîte ; des bornes explicites sur les variables font
+le même travail.
+
+La distinction a une conséquence directe : les deux instances publiées sur
+lesquelles nous nous validons (§\ref{sec:externe}) ont une matrice $A$ à
+coefficients \emph{négatifs} et violent donc (A2). Elles restent
+traitables -- bornes explicites d'un côté, $\Dk>0$ vérifié de l'autre --
+et c'est du reste l'hypothèse même de~\cite{zerdani2011}, qui demande
+$q^{i\top}x+\beta^i>0$ sur le domaine, non un signe sur $A$.
+
+\begin{center}
+\begin{tabular}{llccl}
+\toprule
+expérience & $A$ & (A1) & (A2) & bornitude\\
+\midrule
+lots générés (tous les bancs) & $\ge 0$ & oui & oui & déduite de $A$\\
+terrain de~\cite{zerdani2011} & $\ge 1$ & oui & oui & déduite de $A$\\
+terrain de~\cite{drici2018} & $\ge 1$ & oui & oui & déduite de $A$\\
+\midrule
+exemple publié de~\cite{zerdani2011} & \textbf{mêlé} & oui
+ & \textbf{non} & explicite\\
+exemple publié de~\cite{drici2018} & \textbf{mêlé} & oui
+ & \textbf{non} & explicite\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Aucun \emph{banc} ne viole (A2) -- le protocole de~\cite{drici2018} tire
+même $A$ dans $[1,30]$. La violation ne concerne que les deux instances
+publiées de la validation externe. Nous le signalons parce qu'une hypothèse
+énoncée globalement et violée localement, sans avertissement, est une faute
+même quand rien n'en dépend. Le code applique d'ailleurs les deux régimes
+séparément : un contrôle \emph{strict} pour valider le générateur, un
+contrôle \emph{faible} -- bornitude et $\Dk>0$ -- pour lire la littérature.
+\end{remark}
 Ces hypothèses ne sont pas des commodités techniques : ce sont elles qui
 rendent la suite exacte. Toute instance extérieure doit être testée contre
 elles avant traitement.
