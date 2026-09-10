@@ -1110,16 +1110,29 @@ class ECutModel:
         """
         Retire { x : Z(x) <= Z(a) } pour `a` EFFICACE certifie.
 
-        Structurellement identique a `add_dominance_cut` -- meme disjonction,
-        meme big-M -- mais la PRECONDITION et la PORTEE different, et c'est
-        tout l'interet :
+        Structurellement identique a `add_dominance_cut`, et pour une raison
+        plus forte que la ressemblance : c'est LE MEME THEOREME.
 
-          * `add_dominance_cut` exige `a` DOMINE. Le lemme du Th. 4 garantit
-            alors qu'aucun point efficace n'est retire.
-          * `add_efficiency_cut` exige `a` EFFICACE. La region retiree ne
-            contient alors, parmi les points efficaces, que ceux de MEME
-            vecteur criteres que `a` (Th. 6). L'appelant doit avoir etabli
-            qu'aucun d'eux ne bat l'incumbent -- condition de cloture.
+        La demonstration ne suppose que `a` REALISABLE. Elle etablit que
+        pour tout x EFFICACE de vecteur criteres different de Z(a), il
+        existe k tel que e_k(x) >= 1 -- la contradiction porte sur
+        l'efficacite de x, jamais sur celle de a. Les deux methodes ne
+        different donc que par le REGIME de la condition de cloture :
+
+          * `add_dominance_cut` : `a` domine. Aucun point efficace ne
+            partage Z(a) -- sinon son dominateur dominerait ce point
+            efficace -- donc la cloture est AUTOMATIQUE.
+          * `add_efficiency_cut` : `a` efficace. Les points efficaces de
+            meme vecteur criteres sont retires, et l'appelant doit avoir
+            etabli qu'aucun ne bat l'incumbent.
+
+        CE QUE L'EFFICACITE DE `a` NE SERT PAS. Elle n'intervient pas dans
+        la validite de la coupe. Elle ne sert qu'a la branche FAISABLE du
+        programme de cloture : c'est parce que `a` est efficace qu'un point
+        de meme vecteur criteres l'est aussi, et peut etre empoche comme
+        incumbent. Un point de S au statut INDETERMINE reste donc un centre
+        de coupe legitime, sa cloture etant etablie -- possibilite ouverte
+        par le theoreme et que la methode n'exploite pas encore.
 
         Pourquoi cette coupe manquait. Les coupes de dominance ne se posent
         que sur des points domines, c'est-a-dire sur ce que les chaines de

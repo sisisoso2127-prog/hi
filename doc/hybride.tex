@@ -39,6 +39,7 @@
 \newtheorem{theorem}{Théorème}
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{lemma}[theorem]{Lemme}
+\newtheorem{corollary}[theorem]{Corollaire}
 \theoremstyle{remark}
 \newtheorem{remark}{Remarque}
 
@@ -96,7 +97,10 @@ fractionnaire multi-objectif en nombres entiers. Ce mémoire présente
 \emph{une seule} contribution et la traite complètement : une \textbf{coupe
 d'efficacité} qui permet de retrancher du relâché servant à borner $\qs$ la
 région dominée par un point \textbf{efficace}, alors que la coupe classique
-ne l'autorise qu'autour d'un point \emph{dominé}.
+ne l'autorise qu'autour d'un point \emph{dominé}. Le théorème qui l'établit
+se révèle plus général que la contribution elle-même : le centre de coupe
+n'a besoin d'être que \emph{réalisable}, et la coupe classique en devient un
+corollaire.
 
 L'intérêt est une hybridation au sens fort. La recherche heuristique produit,
 comme sous-produit, une archive de points efficaces certifiés ; le
@@ -197,9 +201,13 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
 \subsection{Contribution}
 
 \begin{enumerate}[leftmargin=*,itemsep=3pt]
-\item \textbf{Théorème~\ref{th:effcut} (coupe d'efficacité).} On peut couper
-      autour d'un point \emph{efficace} : la région retranchée ne contient,
-      parmi les points efficaces, que ceux de \emph{même vecteur critères}.
+\item \textbf{Théorème~\ref{th:effcut} (coupe autour d'un point
+      quelconque).} On peut couper autour de \emph{n'importe quel} point
+      réalisable : la région retranchée ne contient, parmi les points
+      efficaces, que ceux de \emph{même vecteur critères}. La coupe de
+      dominance et la coupe d'efficacité en sont les deux corollaires,
+      selon que cette réserve est automatiquement vide (centre dominé) ou
+      qu'il faut l'établir (centre efficace).
 \item \textbf{Théorème~\ref{th:archbound} (borne sur le relâché d'archive).}
       Sous une condition de clôture, la borne resserrée reste valide sur ce
       relâché plus petit.
@@ -617,9 +625,10 @@ détruit que peu, et rendre ce « peu » vérifiable.
 
 \subsection{Le théorème}
 
-\begin{theorem}[Coupe d'efficacité]\label{th:effcut}
-Soient $a\in\Ecal$ et $x\in\Ecal$ avec $Z(x)\ne Z(a)$. Alors il existe $k$
-tel que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Ecal$,
+\begin{theorem}[Coupe autour d'un point quelconque]\label{th:effcut}
+Soient $a\in\Scal$ -- \emph{quelconque} -- et $x\in\Ecal$ avec
+$Z(x)\ne Z(a)$. Alors il existe $k$ tel que $e^a_k(x)\ge 1$. Par
+conséquent, pour tout $A\subseteq\Scal$,
 \[
   \Ecal\ \subseteq\ \Rcal_A\ \cup\
   \bigl\{x\in\Scal:\ \exists a\in A,\ Z(x)=Z(a)\bigr\},
@@ -630,12 +639,63 @@ tel que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Ecal$,
 
 \begin{proof}
 Supposons $\Zk(x)\le \Zk(a)$ pour tout $k$. Comme $Z(x)\ne Z(a)$, le point
-$a$ dominerait $x$, ce qui contredit l'efficacité de $x$. Il existe donc $k$
-avec $\Zk(x)>\Zk(a)$, c'est-à-dire $e^a_k(x)\ge 1$
-par~\eqref{eq:eint}. L'inclusion s'obtient en appliquant ceci à chaque
-$a\in A$, pour les $x$ efficaces dont le vecteur critères diffère de tous
-ceux de $A$.
+$a$ dominerait $x$ -- ce qui suppose seulement $a\in\Scal$ -- et
+contredirait l'efficacité de $x$. Il existe donc $k$ avec
+$\Zk(x)>\Zk(a)$, c'est-à-dire $e^a_k(x)\ge 1$ par~\eqref{eq:eint}.
+L'inclusion s'obtient en appliquant ceci à chaque $a\in A$, pour les $x$
+efficaces dont le vecteur critères diffère de tous ceux de $A$.
 \end{proof}
+
+\begin{remark}[où l'efficacité de $a$ intervient, et où elle
+n'intervient pas]\label{rem:aeff}
+La démonstration ci-dessus contredit l'efficacité de $\mathbf{x}$, jamais
+celle de $a$ : le centre de coupe n'a besoin d'être que \emph{réalisable}.
+Nous avions énoncé ce théorème sous l'hypothèse $a\in\Ecal$, qui ne
+lui sert pas. L'efficacité de $a$ n'intervient qu'en un seul endroit de tout
+ce mémoire, la \emph{branche faisable} de la condition de
+clôture~\eqref{eq:clot} : c'est parce que $a$ est efficace qu'un point de
+même vecteur critères l'est aussi, et peut donc être empoché comme
+incumbent. Pour la \emph{validité de la coupe}, elle est inutile.
+\end{remark}
+
+\noindent
+Deux corollaires en découlent, et le premier est le théorème dont nous
+partions.
+
+\begin{corollary}[coupe de dominance]\label{cor:dom}
+Si $a$ est \emph{dominé}, aucun point efficace n'a le vecteur critères de
+$a$, et donc $\Ecal\subseteq\Rcal_A$ : la condition de clôture est
+automatiquement satisfaite.
+\end{corollary}
+
+\begin{proof}
+Soit $y\in\Scal$ dominant $a$, et supposons $x\in\Ecal$ avec $Z(x)=Z(a)$.
+Alors $Z(y)\ge Z(a)=Z(x)$ et $Z(y)\ne Z(a)=Z(x)$, donc $y$ domine $x$ :
+contradiction. Le second ensemble de l'inclusion ne contient donc aucun
+point efficace. \end{proof}
+
+\begin{corollary}[coupe d'efficacité]\label{cor:eff}
+Si $a\in\Ecal$, la condition de clôture doit être établie, et la branche
+faisable de~\eqref{eq:clot} rend alors un point \emph{efficace} qui bat
+l'incumbent.
+\end{corollary}
+
+\begin{remark}[ce que cette unification change]
+Les deux coupes ne sont donc pas « deux sources de forme algébrique
+identique » comme nous l'écrivions, mais \emph{un seul théorème} et deux
+régimes de sa condition de clôture -- automatique pour un point dominé, à
+établir pour un point efficace. Cela a une conséquence pratique que nous
+n'avons pas exploitée : \textbf{un point de $\Scal$ dont le statut n'a pas
+été déterminé peut servir de centre de coupe}. La précondition n'est plus
+« être certifié dominé ou certifié efficace », mais seulement « être
+réalisable, et voir sa clôture établie ». Or notre recherche \emph{jette}
+aujourd'hui les points dont la chaîne de réparation a été interrompue faute
+de budget : ils ne sont ni archivés ni retenus comme incumbents
+(§\ref{sec:recherche}). Le théorème~\ref{th:effcut} dit qu'ils restent des
+centres de coupe légitimes. Nous ne l'avons pas mesuré, et nous ne
+prétendons donc pas que cela rapporte -- seulement que le théorème
+l'autorise, et que la version restreinte l'interdisait à tort.
+\end{remark}
 
 \noindent
 La différence avec la brique 3 tient en une ligne, et c'est toute la
@@ -814,8 +874,10 @@ intermédiaire.
 \section{Un seul vivier, deux sources}
 \label{sec:vivier}
 
-Les deux coupes ont exactement la même forme -- la disjonction~\eqref{eq:disj}
--- donc exactement le même coût, $p$ binaires chacune. Leur allouer des
+Les deux coupes ne sont pas deux mécanismes de forme voisine : ce sont
+\emph{le même} théorème~\ref{th:effcut} sous deux régimes de sa condition de
+clôture (corollaires~\ref{cor:dom} et~\ref{cor:eff}). Elles ont donc la même
+disjonction~\eqref{eq:disj} et le même coût, $p$ binaires chacune. Leur allouer des
 budgets séparés serait doublement fautif.
 
 Un plafond existe : au-delà d'une quarantaine de coupes, chaque coupe
@@ -936,8 +998,13 @@ sur cinq de ces six lignes quand on triple le budget.
 
 \begin{remark}[la faute n'est pas le plafond unique, c'est l'échelle unique]
 Les deux sources sont classées sur un seul critère, $w^{\top}x$, alors que
-leurs \emph{capacités} diffèrent en nature : une coupe de dominance
-rétrécit $\Rcal$, une coupe d'efficacité peut le \emph{vider}. Trier sur une
+leurs \emph{capacités} diffèrent en nature. Cela se lit sur les corollaires :
+avec un centre dominé, le corollaire~\ref{cor:dom} donne
+$\Ecal\subseteq\Rcal_A$, si bien que $\Rcal_A$ ne peut jamais se vider tant
+que $\Ecal$ est non vide -- une coupe de dominance ne peut que
+\emph{rétrécir}. Avec un centre efficace, la région retranchée contient les
+points efficaces de même vecteur critères, et $\Rcal_A$ peut donc perdre
+$\Ecal$ tout entier : c'est la seule façon de le \emph{vider}. Trier sur une
 échelle unique traite comme équivalent ce qui ne l'est pas. Quand la
 recherche s'allonge, les points dominés deviennent nombreux \emph{et} bien
 placés, et ils raflent le vivier.

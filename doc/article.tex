@@ -227,7 +227,9 @@ contributions sont :
 \item \textbf{Un test d'efficacité intégral} (th.~\ref{th:eff}), exact sans
       tolérance numérique, coûtant un seul programme en nombres entiers, et
       fournissant gratuitement un certificat de dominance.
-\item \textbf{Une coupe de dominance fractionnaire exacte} (th.~\ref{th:cut}),
+\item \textbf{Une coupe de dominance fractionnaire exacte} (th.~\ref{th:cut},
+      dont la remarque~\ref{rem:unification} montre qu'il est un corollaire
+      du th.~\ref{th:effcut}),
       transposition de la coupe « $+1$ » du cas linéaire entier, avec un
       big-M renforcé par relaxation continue.
 \item \textbf{Un théorème de certification} (th.~\ref{th:bound}) qui convertit
@@ -830,9 +832,10 @@ La question est donc : peut-on couper depuis un point \textbf{efficace} ?
 
 \subsection{On le peut, à une réserve près}
 
-\begin{theorem}[Coupe d'efficacité]\label{th:effcut}
-Soit $a\in\Ecal$ et $x\in\Ecal$ avec $Z(x)\ne Z(a)$. Alors il existe $k$ tel
-que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Ecal$,
+\begin{theorem}[Coupe autour d'un point quelconque]\label{th:effcut}
+Soit $a\in\Scal$ -- \emph{quelconque} -- et $x\in\Ecal$ avec
+$Z(x)\ne Z(a)$. Alors il existe $k$ tel
+que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Scal$,
 \[
   \Ecal\ \subseteq\ \Rcal_A\ \cup\ \bigl\{x\in\Scal:\ \exists a\in A,\ Z(x)=Z(a)\bigr\},
   \qquad
@@ -842,11 +845,44 @@ que $e^a_k(x)\ge 1$. Par conséquent, pour tout $A\subseteq\Ecal$,
 
 \begin{proof}
 Supposons $Z_k(x)\le Z_k(a)$ pour tout $k$. Comme $Z(x)\ne Z(a)$, le point
-$a$ dominerait $x$, ce qui contredit l'efficacité de $x$. Il existe donc $k$
+$a$ dominerait $x$ -- ce qui ne suppose que $a\in\Scal$ -- et contredirait
+l'efficacité de $x$. Il existe donc $k$
 avec $Z_k(x)>Z_k(a)$, c'est-à-dire $e^a_k(x)\ge 1$ par intégralité
 (théorème~\ref{th:cut}). L'inclusion s'ensuit en appliquant ceci à chaque
 $a\in A$ pour les $x$ dont le vecteur critères diffère de tous.
 \end{proof}
+
+\begin{remark}[où l'efficacité de $a$ sert, et où elle ne sert pas]
+\label{rem:aeff}
+La contradiction porte sur l'efficacité de $\mathbf{x}$, jamais sur celle de
+$a$ : le centre de coupe n'a besoin d'être que \emph{réalisable}. Nous
+avions énoncé ce théorème sous l'hypothèse $a\in\Ecal$, qui ne lui sert pas.
+L'efficacité de $a$ n'intervient qu'à un seul endroit, la \emph{branche
+faisable} du programme de clôture : c'est parce que $a$ est efficace qu'un
+point de même vecteur critères l'est aussi et peut être empoché comme
+incumbent. Pour la validité de la coupe, elle est inutile.
+\end{remark}
+
+\begin{remark}[la coupe de dominance en est un corollaire]
+\label{rem:unification}
+Si $a$ est \emph{dominé} par $y\in\Scal$, aucun point efficace ne partage
+$Z(a)$ : sinon $Z(y)\ge Z(a)=Z(x)$ avec $Z(y)\ne Z(x)$ ferait de $y$ un
+dominateur de $x$. Le second ensemble de l'inclusion ne contient alors aucun
+point efficace, d'où $\Ecal\subseteq\Rcal_A$ -- c'est exactement le
+théorème~\ref{th:cut}. Les deux coupes ne sont donc pas deux mécanismes de
+forme voisine mais \emph{un seul théorème} sous deux régimes de sa condition
+de clôture : automatique pour un centre dominé, à établir pour un centre
+efficace.
+
+Cela ouvre une possibilité que nous n'avons pas exploitée : \textbf{un point
+de $\Scal$ au statut indéterminé peut servir de centre de coupe}. La
+précondition n'est plus « certifié dominé ou certifié efficace » mais
+« réalisable, et clôture établie ». Or la recherche \emph{jette} aujourd'hui
+les points dont la chaîne de réparation a été interrompue faute de budget.
+Le théorème dit qu'ils restent des centres légitimes. Nous ne l'avons pas
+mesuré et ne prétendons donc pas que cela rapporte -- seulement que la
+version restreinte l'interdisait à tort.
+\end{remark}
 
 \noindent
 La différence avec le théorème~\ref{th:cut} tient en une ligne. Couper autour
