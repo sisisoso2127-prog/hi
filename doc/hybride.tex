@@ -93,17 +93,19 @@ linéaire fractionnaire sur l'ensemble efficace d'un MOILFP}
 \noindent
 On considère le problème (P) : maximiser une fonction linéaire fractionnaire
 $f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
-fractionnaire multi-objectif en nombres entiers. Ce mémoire présente
-\emph{une seule} contribution et la traite complètement : une \textbf{coupe
-d'efficacité} qui permet de retrancher du relâché servant à borner $\qs$ la
+fractionnaire multi-objectif en nombres entiers. Ce mémoire est organisé
+autour d'\emph{un} résultat, qu'il traite complètement, et rapporte les
+corrections que la mesure lui a imposées en chemin. Le résultat est une
+\textbf{coupe d'efficacité} qui permet de retrancher du relâché servant à borner $\qs$ la
 région dominée par un point \textbf{efficace}, alors que la coupe classique
 ne l'autorise qu'autour d'un point \emph{dominé}. Le théorème qui l'établit
-se révèle plus général que la contribution elle-même : le centre de coupe
+se révèle plus général que ce résultat lui-même : le centre de coupe
 n'a besoin d'être que \emph{réalisable}, et la coupe classique en devient un
 corollaire.
 
-L'intérêt est une hybridation au sens fort. La recherche heuristique produit,
-comme sous-produit, une archive de points efficaces certifiés ; le
+L'intérêt est une hybridation au sens fort. La recherche heuristique produit
+une archive de points efficaces certifiés -- sous-produit pour la borne,
+livrable pour le lecteur ; le
 théorème~\ref{th:effcut} en fait la \emph{source des coupes de la borne
 exacte}. Le flux d'information s'inverse : ce n'est plus la partie exacte qui
 certifie la partie heuristique, c'est la partie heuristique qui fournit à la
@@ -114,8 +116,19 @@ de même vecteur critères -- se lève par une condition de clôture qui coûte
 Une proposition en découle, sans équivalent pour la coupe de dominance : si
 le relâché se \emph{vide}, l'optimalité est prouvée sans qu'aucune borne
 n'ait été évaluée. Un second théorème réduit ensuite le coût de la clôture
-à un
-\emph{programme linéaire}.
+à un \emph{programme linéaire}.
+
+Deux corrections trouvées en mesurant, et non en relisant, déplacent
+davantage les chiffres que le résultat lui-même. La borne de certification
+n'a rien de particulier à l'incumbent : évaluée à un \textbf{seuil libre},
+avancé sur n'importe quel point du relâché, elle ouvre une seconde route
+incomparable à la première, dont on prend le minimum -- effet rare et
+énorme, jusqu'à $+38{,}77$ points d'écart garanti, $+137{,}1$ de gains
+cumulés contre $-0{,}42$ de pertes. Et le vivier de coupes, qui classait ses
+deux sources sur une seule échelle, \textbf{affamait l'archive} jusqu'à zéro
+coupe d'archive sur deux lignes sur six, alors qu'elle est la seule à
+pouvoir vider le relâché ; les classer dans chaque source puis
+\emph{alterner} rétablit la monotonie en budget de $1/6$ à $4/6$.
 
 Les mesures sont rapportées par \textbf{paires} -- même instance, même
 graine, les deux variantes -- et jamais en comparant deux médianes
@@ -141,8 +154,8 @@ raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
 
 Un chapitre est consacré à ce que la méthode \emph{rend} : non pas
 seulement une valeur encadrée, mais l'archive des points efficaces
-certifiés, qui est le sous-ensemble de $E$ demandé par l'énoncé. Mesurée
-contre $E$ énuméré, elle est de pureté~$1$ sur $8/8$ instances -- aucun
+certifiés, qui est le sous-ensemble de $\Ecal$ demandé par l'énoncé.
+Mesurée contre $\Ecal$ énuméré, elle est de pureté~$1$ sur $8/8$ instances -- aucun
 point faussement annoncé efficace sur $104$ --, creuse en cardinalité
 (médiane $40{,}7\,\%$) et riche en hypervolume (médiane $92{,}3\,\%$),
 contient toujours la solution du problème d'optimisation, et s'enrichit avec
@@ -157,9 +170,12 @@ de $77$ à $96{,}5\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
 borne y étant certifiée égale à $\max_{\Rcal}f$ --, et à budget d'appels égal
 le théorème de clôture n'achète aucune preuve supplémentaire : c'est un gain
 de coût, non de capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
-programme générateur, y est construite et vérifiée : elle ne gagne que
-$0{,}11$ point d'écart garanti, ce qui \emph{infirme} le diagnostic que nous
-avions nous-mêmes posé sur l'origine de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
+programme générateur, y est construite et vérifiée : sur dix-huit lignes et
+trois graines, pour $180$ coupes produites, son gain vaut
+\textbf{exactement zéro} -- pas une ligne améliorée, pas une dégradée --,
+et cela jusque sur une instance dont l'écart de référence est descendu à
+$1{,}2\ \%$. Cela \emph{infirme} le diagnostic que nous avions nous-mêmes
+posé sur l'origine de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
 $3$ variables, exposent le mécanisme pas à pas.
 \end{abstract}
 
@@ -291,10 +307,12 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
 \section{Revue de la littérature}
 \label{sec:revue}
 
-Quatre courants se rejoignent dans (P), et il faut les parcourir séparément
+Six courants se rejoignent dans (P), et il faut les parcourir séparément
 avant de dire ce que notre travail y ajoute : l'optimisation \emph{sur}
 l'ensemble efficace, le traitement du fractionnaire, l'énumération de
-$\Ecal$ dans le cas entier multiobjectif, et l'hybridation exact
+$\Ecal$ dans le cas entier multiobjectif, les métaheuristiques
+multiobjectif et l'\emph{évaluation} des fronts qu'elles produisent,
+l'aide multicritère à la décision, et l'hybridation exact
 $\times$ métaheuristique. Le dernier est celui où nous plaçons une
 revendication, et c'est donc celui qu'il faut le plus soigneusement
 instrumenter.
@@ -397,6 +415,48 @@ Shaw~\cite{shaw1998}, systématisée par Pisinger et
 Ropke~\cite{pisinger2010}, donne le mouvement C. La différence tient à ce
 que chaque voisinage est ici résolu \emph{exactement}, ce qui nous conduit
 au dernier courant.
+
+\subsection{Évaluer un front approché : les indicateurs}
+\label{sec:revueind}
+
+Comparer deux ensembles de points non dominés n'est pas une question triviale
+et a sa propre littérature. Zitzler et Thiele~\cite{zitzler1999} introduisent
+l'\emph{hypervolume} -- le volume dominé par un ensemble relativement à un
+point de référence -- et l'indicateur de \emph{couverture} $C(A,B)$, part de
+$B$ faiblement dominée par au moins un point de $A$. Zitzler et
+collaborateurs~\cite{zitzler2003} en donnent ensuite l'analyse critique : ils
+formalisent ce qu'un indicateur peut et ne peut pas établir, montrent
+qu'aucun indicateur unaire ne détecte à lui seul la relation de dominance
+entre approximations, et introduisent l'$\varepsilon$-indicateur, qui mesure
+le décalage minimal à appliquer à $A$ pour qu'elle domine $B$.
+
+Deux remarques situent notre usage. D'abord, ces indicateurs sont conçus
+pour comparer \emph{deux approximations}, l'une et l'autre pouvant contenir
+des points dominés ; nous en faisons un usage différent, en opposant à la
+\emph{vraie} frontière un ensemble dont chaque point est certifié efficace.
+La section~\ref{sec:livrable} montre que ce changement de cadre n'est pas
+neutre : l'indicateur de couverture y dégénère en rapport de cardinalité et
+n'apprend rien. Ensuite, l'hypervolume est le plus souvent estimé par
+échantillonnage au-delà de trois ou quatre critères ; nos instances
+énumérables restant petites, nous le calculons \emph{exactement}, par
+balayage dimensionnel récursif.
+
+\subsection{Aide multicritère à la décision}
+\label{sec:revueaide}
+
+Le problème (P) suppose une fonction $f$ qui arbitre entre les points de
+$\Ecal$. Cette supposition est forte, et la tradition d'aide multicritère à
+la décision issue de Roy~\cite{roy1985} la discute plutôt qu'elle ne
+l'accepte : $f$ est ordinairement construite \emph{avant} d'avoir vu les
+solutions, elle n'est donc qu'un modèle de la préférence, et l'usage courant
+est de présenter au décideur un petit ensemble de compromis efficaces devant
+lesquels l'arbitrage final se fait. C'est exactement ce que notre archive
+fournit, et la raison pour laquelle nous la rendons plutôt que de la garder
+comme un intermédiaire de calcul (\S\ref{sec:aide}). La distinction que Roy
+pose entre \emph{décider} et \emph{aider à décider} est aussi celle qui rend
+lisible notre encadrement : un intervalle $(q_{\text{lb}},q_{\text{ub}})$
+n'est pas une décision, c'est ce qui permet d'en prendre une en connaissant
+son regret maximal.
 
 \subsection{Hybridation : où se situe ce travail dans les taxonomies}
 \label{sec:taxonomie}
@@ -3325,7 +3385,9 @@ il retire de $14$ à $39$ points. Un levier de cette forme ne se juge pas au
 comptage des signes.
 
 \paragraph{L'ordre de grandeur.} Le levier précédent -- la coupe générée
-sans binaire -- rapportait au mieux $0{,}11$ point (§\ref{sec:cglp}).
+sans binaire -- rapporte exactement $0{,}00$ point dans cette même
+configuration, et n'atteignait $0{,}11$ que sur le socle bien plus lâche de
+la configuration d'origine (§\ref{sec:cglp}).
 Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, puis $34{,}63$,
 $20{,}36$, $14{,}85$ et $14{,}52$. Ce n'est pas le même phénomène mesuré
 plus finement, c'est un autre phénomène.
@@ -3422,8 +3484,9 @@ maximisation et calculées en arithmétique exacte :
   par au moins un point de $\mathcal{A}$.
 \item \textbf{hypervolume} $HV(\mathcal{A})/HV(E)$, exact, par balayage
   dimensionnel récursif -- aucun échantillonnage.
-\item \textbf{$\varepsilon^+$}, décalage additif normalisé qu'il faudrait
-  ajouter à $\mathcal{A}$ pour qu'elle domine $E$ tout entier.
+\item \textbf{$\varepsilon^+$}~\cite{zitzler2003}, décalage additif
+  normalisé qu'il faudrait ajouter à $\mathcal{A}$ pour qu'elle domine $E$
+  tout entier.
 \end{itemize}
 
 Un mot sur le point de référence de l'hypervolume, parce que le choix naïf
@@ -3452,7 +3515,8 @@ par $\mathcal{A}$ sont exactement ceux de $Z(\mathcal{A})$.
 
 \noindent
 La conséquence est à retenir hors de ce mémoire : l'indicateur de couverture
-de Zitzler \& Thiele est conçu pour comparer \emph{deux approximations},
+de Zitzler et Thiele~\cite{zitzler1999} est conçu pour comparer \emph{deux
+approximations},
 dont l'une peut contenir des points dominés. Opposé à la vraie frontière un
 ensemble certifié efficace, il dégénère en rapport de cardinalité et
 n'apporte rien. Le tableau~\ref{tab:livrableA} le vérifie ligne à ligne --
@@ -4197,8 +4261,10 @@ La première n'est plus celle que nous pensions. Nous avions désigné le
 plafond de coupes -- donc le coût de $p$ binaires -- comme le verrou
 suivant. La section~\ref{sec:cglp} lève ce coût entièrement, par un
 programme générateur produisant des coupes disjonctives valides sans aucune
-binaire, en nombre illimité : l'écart garanti gagne $0{,}11$ point au mieux,
-zéro en médiane. Le plafond n'était donc pas le verrou.
+binaire, en nombre illimité : l'écart garanti gagne \emph{exactement} zéro
+en configuration courante, sur dix-huit lignes et $180$ coupes, et
+n'atteignait $0{,}11$ point que sur le socle plus lâche d'origine. Le
+plafond n'était donc pas le verrou.
 
 Nous avions alors avancé, à sa place, que la région retranchable serait
 négligeable devant ce qui sépare $\Rcal$ de $\Ecal$. La
@@ -4472,6 +4538,21 @@ K.~Deb, A.~Pratap, S.~Agarwal et T.~Meyarivan.
 E.~Zitzler, M.~Laumanns et L.~Thiele.
 \newblock SPEA2: improving the strength Pareto evolutionary algorithm.
 \newblock Rapport technique 103, ETH Zürich, 2001.
+
+\bibitem{zitzler1999}
+E.~Zitzler et L.~Thiele.
+\newblock Multiobjective evolutionary algorithms: a comparative case study and
+  the strength Pareto approach.
+\newblock \emph{IEEE Transactions on Evolutionary Computation},
+  3(4):257--271, 1999.
+
+\bibitem{zitzler2003}
+E.~Zitzler, L.~Thiele, M.~Laumanns, C.~M. Fonseca et
+  V.~Grunert da Fonseca.
+\newblock Performance assessment of multiobjective optimizers: an analysis and
+  review.
+\newblock \emph{IEEE Transactions on Evolutionary Computation},
+  7(2):117--132, 2003.
 
 \bibitem{zhang2007}
 Q.~Zhang et H.~Li.

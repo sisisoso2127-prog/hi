@@ -90,15 +90,24 @@ budget de calcul borné en une borne supérieure \emph{valide} sur l'optimum.
 La méthode encadre donc $\qs$ à tout instant, ce qu'aucune méthode exacte du
 domaine ne fait.
 
-Trois résultats structurent la construction. Le test d'efficacité du
+Quatre résultats structurent la construction. Le test d'efficacité du
 théorème~\ref{th:eff} est \emph{entièrement entier}, donc exact sans
 tolérance numérique, et fournit gratuitement un certificat de dominance
-réutilisable comme mouvement de recherche. La coupe de dominance du
-théorème~\ref{th:cut} transpose au cas fractionnaire la coupe « $+1$ » du cas
-linéaire entier, sans qu'aucun pas minimal ne soit à estimer. Le
+réutilisable comme mouvement de recherche. Le théorème~\ref{th:effcut}
+autorise une coupe autour d'un point \emph{quelconque} du domaine : la
+région retranchée ne contient, parmi les points efficaces, que ceux de même
+vecteur critères. C'est le résultat central, et il est plus général que son
+usage ; la coupe de dominance fractionnaire (th.~\ref{th:cut}), qui
+transpose la coupe « $+1$ » du cas linéaire entier sans qu'aucun pas minimal
+ne soit à estimer, en est le corollaire où cette réserve est
+automatiquement vide. Il en découle une preuve d'optimalité inaccessible à
+la coupe classique (prop.~\ref{prop:vide}) : si le relâché se \emph{vide},
+$\qs=q$ sans qu'aucune borne n'ait été évaluée. Enfin le
 théorème~\ref{th:bound} convertit toute borne supérieure du sous-problème de
 Dinkelbach en borne sur $\qs$, avec un dénominateur restreint à la région où
-la borne agit.
+la borne agit -- et le théorème~\ref{th:seuillibre} montre que ce seuil n'a
+rien de particulier à l'incumbent, ce qui ouvre une seconde route dont le
+minimum avec la première reste valide.
 
 La méthode rend deux objets et non un : la valeur encadrée, et
 l'\emph{archive} des points efficaces certifiés rencontrés en chemin --
@@ -284,9 +293,11 @@ efficace}, et où $q_{\text{ub}}$ est le minimum de deux bornes valides
 \section{Revue de la littérature}
 \label{sec:revue}
 
-Quatre courants se rejoignent dans (P) : l'optimisation \emph{sur}
+Six courants se rejoignent dans (P) : l'optimisation \emph{sur}
 l'ensemble efficace, le traitement du fractionnaire, l'énumération de
-$\Ecal$ dans le cas entier multiobjectif, et l'hybridation exact
+$\Ecal$ dans le cas entier multiobjectif, les métaheuristiques
+multiobjectif et l'\emph{évaluation} des fronts qu'elles produisent,
+l'aide multicritère à la décision, et l'hybridation exact
 $\times$ métaheuristique. Le dernier est celui où nous plaçons une
 revendication, et c'est donc celui qu'il faut instrumenter le plus
 soigneusement -- une formule comme « hybridation au sens fort » ne vaut
@@ -361,6 +372,36 @@ solutions admissibles. Nous empruntons en revanche leur vocabulaire de
 voisinages -- VNS~\cite{mladenovic1997} pour la structure d'ensemble,
 LNS~\cite{shaw1998,pisinger2010} pour le mouvement C -- avec cette
 différence que chaque voisinage est ici résolu \emph{exactement}.
+
+\subsection{Évaluer un front approché : les indicateurs}
+\label{sec:revueind}
+
+Comparer deux ensembles non dominés a sa propre littérature. Zitzler et
+Thiele~\cite{zitzler1999} introduisent l'\emph{hypervolume} et l'indicateur
+de \emph{couverture} $C(A,B)$ ; Zitzler \emph{et
+al.}~\cite{zitzler2003} en donnent l'analyse critique, établissent qu'aucun
+indicateur unaire ne détecte à lui seul la dominance entre approximations,
+et introduisent l'$\varepsilon$-indicateur. Notre usage en diffère sur un
+point qui n'est pas neutre : ces indicateurs comparent \emph{deux
+approximations}, dont chacune peut contenir des points dominés, alors que
+nous opposons à la vraie frontière un ensemble \emph{certifié} efficace. La
+section~\ref{sec:livrable} montre que la couverture y dégénère en rapport de
+cardinalité. L'hypervolume, souvent estimé par échantillonnage, est ici
+calculé exactement, nos instances de vérité terrain restant petites.
+
+\subsection{Aide multicritère à la décision}
+\label{sec:revueaide}
+
+Le problème (P) suppose une fonction $f$ qui arbitre entre les points de
+$\Ecal$. La tradition issue de Roy~\cite{roy1985} discute cette supposition
+plutôt qu'elle ne l'accepte : $f$ est construite \emph{avant} d'avoir vu les
+solutions et n'est donc qu'un modèle de la préférence, d'où l'usage de
+présenter au décideur un petit ensemble de compromis efficaces devant
+lesquels l'arbitrage final se fait. C'est ce que fournit notre archive, et la
+distinction que Roy pose entre \emph{décider} et \emph{aider à décider} est
+celle qui rend lisible notre encadrement : $(q_{\text{lb}},q_{\text{ub}})$
+n'est pas une décision, c'est ce qui permet d'en prendre une en connaissant
+son regret maximal (\S\ref{sec:aide}).
 
 \subsection{Hybridation : la revendication, située de l'extérieur}
 \label{sec:taxonomie}
@@ -2318,9 +2359,9 @@ théorème~\ref{th:eff} \emph{avant} d'y entrer -- et rien, jusqu'ici, ne le
 mesurait. Le front approché servait à amorcer la recherche et à alimenter le
 vivier de coupes, jamais à être rendu. Cette section le mesure contre la
 vérité terrain $\Ecal$ énumérée, avec les indicateurs usuels : pureté,
-cardinalité, couverture $C(\Acal,\Ecal)$, hypervolume exact (balayage
-dimensionnel récursif, sans échantillonnage) et $\varepsilon$-indicateur
-additif normalisé.
+cardinalité, couverture $C(\Acal,\Ecal)$~\cite{zitzler1999}, hypervolume exact
+(balayage dimensionnel récursif, sans échantillonnage) et
+$\varepsilon$-indicateur additif normalisé~\cite{zitzler2003}.
 
 Deux précautions, dont la seconde retire un indicateur du tableau.
 
@@ -2342,8 +2383,8 @@ réalisant $z$. Donc $Z(a)=z$.
 \end{proof}
 
 \noindent
-L'indicateur de couverture est conçu pour comparer \emph{deux}
-approximations, dont l'une peut contenir des points dominés ; opposé à la
+L'indicateur de couverture~\cite{zitzler1999} est conçu pour comparer
+\emph{deux} approximations, dont l'une peut contenir des points dominés ; opposé à la
 vraie frontière un ensemble certifié efficace, il dégénère en rapport de
 cardinalité. Le tableau~\ref{tab:livrable} le vérifie ligne à ligne -- les
 colonnes card et couv y sont identiques sur les huit instances, ce qui est
@@ -3189,6 +3230,21 @@ K.~Deb, A.~Pratap, S.~Agarwal et T.~Meyarivan.
 E.~Zitzler, M.~Laumanns et L.~Thiele.
 \newblock SPEA2: improving the strength Pareto evolutionary algorithm.
 \newblock Rapport technique 103, ETH Zürich, 2001.
+
+\bibitem{zitzler1999}
+E.~Zitzler et L.~Thiele.
+\newblock Multiobjective evolutionary algorithms: a comparative case study and
+  the strength Pareto approach.
+\newblock \emph{IEEE Transactions on Evolutionary Computation},
+  3(4):257--271, 1999.
+
+\bibitem{zitzler2003}
+E.~Zitzler, L.~Thiele, M.~Laumanns, C.~M. Fonseca et
+  V.~Grunert da Fonseca.
+\newblock Performance assessment of multiobjective optimizers: an analysis and
+  review.
+\newblock \emph{IEEE Transactions on Evolutionary Computation},
+  7(2):117--132, 2003.
 
 \bibitem{zhang2007}
 Q.~Zhang et H.~Li.
