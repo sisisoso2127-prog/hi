@@ -2362,36 +2362,58 @@ une implémentation correcte -- ou, plus grave, d'en accepter une fausse.
 \centering
 \caption{Coupe par programme générateur, budget déterministe de $300$ appels
 entiers, comparaison appariée, chaque exécution jouée deux fois. Écarts en
-pourcentage. Remesuré dans les \emph{deux} configurations.\
-\conf{0}{0}{0} \emph{et} \conf{1}{1}{1}}
+pourcentage. Remesuré dans les \emph{deux} configurations, et à
+\textbf{trois graines} dans la seconde.\ \conf{0}{0}{0} \emph{et}
+\conf{1}{1}{1}}
 \label{tab:cglp}
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{cc cccc cccc}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{ccrrrr|rrrr}
 \toprule
-& & \multicolumn{4}{c}{\conf{0}{0}{0}} & \multicolumn{4}{c}{\conf{1}{1}{1}}\\
+& & \multicolumn{4}{c}{\conf{0}{0}{0}, une graine}
+ & \multicolumn{4}{c}{\conf{1}{1}{1}, \textbf{trois graines}}\\
 \cmidrule(lr){3-6}\cmidrule(l){7-10}
 $n$ & corr & sans & avec & gain & coupes & sans & avec & gain & coupes\\
 \midrule
 $20$ & $0$    & $98{,}6$ & $98{,}5$ & $+0{,}11$ & $13$
-              & $77{,}2$ & $77{,}2$ & $\mathbf{+0{,}00}$ & $20$\\
+              & $77{,}2$ & $77{,}2$ & $\mathbf{0{,}00}$ & $20$\\
+     &        &          &          &           &
+              & $43{,}6$ & $43{,}6$ & $\mathbf{0{,}00}$ & $12$\\
+     &        &          &          &           &
+              & $37{,}4$ & $37{,}4$ & $\mathbf{0{,}00}$ & $5$\\
 $20$ & $0{,}5$& $0{,}0$  & $0{,}0$  & $+0{,}00$ & $0$
-              & $0{,}0$  & $0{,}0$  & $+0{,}00$ & $0$\\
+              & $0{,}0$  & $0{,}0$  & $\mathbf{0{,}00}$ & $0,7,0$\\
 $30$ & $0$    & $93{,}9$ & $93{,}8$ & $+0{,}06$ & $12$
-              & $78{,}6$ & $78{,}6$ & $\mathbf{+0{,}00}$ & $16$\\
+              & $78{,}6$ & $78{,}6$ & $\mathbf{0{,}00}$ & $16$\\
+     &        &          &          &           &
+              & $22{,}8$ & $22{,}8$ & $\mathbf{0{,}00}$ & $17$\\
+     &        &          &          &           &
+              & $32{,}5$ & $32{,}5$ & $\mathbf{0{,}00}$ & $24$\\
 $30$ & $0{,}5$& $78{,}9$ & $78{,}9$ & $+0{,}00$ & $3$
-              & $\mathbf{1{,}2}$ & $\mathbf{1{,}2}$ & $\mathbf{+0{,}00}$ & $6$\\
+              & $\mathbf{1{,}2}$ & $\mathbf{1{,}2}$ & $\mathbf{0{,}00}$ & $6$\\
+     &        &          &          &           &
+              & $13{,}7$ & $13{,}7$ & $\mathbf{0{,}00}$ & $7$\\
+     &        &          &          &           &
+              & $0{,}0$  & $0{,}0$  & $\mathbf{0{,}00}$ & $0$\\
 $40$ & $0$    & $96{,}6$ & $96{,}6$ & $+0{,}00$ & $12$
-              & $96{,}5$ & $96{,}5$ & $+0{,}00$ & $11$\\
+              & $96{,}5$ & $96{,}5$ & $\mathbf{0{,}00}$ & $11$\\
+     &        &          &          &           &
+              & $87{,}3$ & $87{,}3$ & $\mathbf{0{,}00}$ & $15$\\
+     &        &          &          &           &
+              & $57{,}4$ & $57{,}4$ & $\mathbf{0{,}00}$ & $10$\\
 $40$ & $0{,}5$& $0{,}0$  & $0{,}0$  & $+0{,}00$ & $9$
-              & $0{,}0$  & $0{,}0$  & $+0{,}00$ & $11$\\
+              & $0{,}0$  & $0{,}0$  & $\mathbf{0{,}00}$ & $11$\\
+     &        &          &          &           &
+              & $43{,}9$ & $43{,}9$ & $\mathbf{0{,}00}$ & $16$\\
+     &        &          &          &           &
+              & $16{,}7$ & $16{,}7$ & $\mathbf{0{,}00}$ & $3$\\
 \midrule
-\multicolumn{10}{l}{reproductibilité $6/6$ dans les deux configurations
+\multicolumn{10}{l}{reproductibilité $6/6$ puis $\mathbf{18/18}$
  \quad$\bullet$\quad tous les encadrements valides}\\
 \multicolumn{10}{l}{\conf{0}{0}{0} : améliorées $2$, dégradées $0$,
  inchangées $4$ ; maximum $+0{,}11$}\\
 \multicolumn{10}{l}{\conf{1}{1}{1} : améliorées $\mathbf{0}$, dégradées
- $\mathbf{0}$, inchangées $\mathbf{6}$ ; maximum
- $\mathbf{+0{,}00}$}\\
+ $\mathbf{0}$, inchangées $\mathbf{18}$ ; maximum
+ $\mathbf{+0{,}00}$, pour $\mathbf{180}$ coupes générées}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2410,22 +2432,27 @@ dixième de point. Sur les six lignes, le gain médian est \emph{nul} et le
 maximum vaut $0{,}11$ point, contre des écarts de $79$ à $99\ \%$.
 
 \paragraph{Remesuré sur une base bien meilleure, le résultat se
-\emph{durcit}.} Ce banc a d'abord été mené en \conf{0}{0}{0}, dont les
-écarts de référence allaient de $79$ à $99\ \%$. On pouvait objecter qu'un
-levier ne se juge pas sur un socle aussi lâche : $0{,}11$ point s'y perd
-dans le bruit. La configuration courante retire cette objection. Les écarts
-de référence y sont $77{,}2$, $78{,}6$, $\mathbf{1{,}2}$ et $96{,}5\ \%$, et
-le gain de la coupe générée vaut alors $\mathbf{+0{,}00}$ point sur les
-\emph{six} lignes -- pas une améliorée, pas une dégradée. Les coupes
-continuent pourtant d'être produites, et en plus grand nombre qu'avant
-($20$, $16$, $11$, $11$, $6$) : le mécanisme n'est pas en défaut, son effet
-est nul.
+\emph{durcit}.} Ce banc a d'abord été mené en \conf{0}{0}{0}, sur six
+lignes et une seule graine, avec des écarts de référence allant de $79$ à
+$99\ \%$. Deux objections étaient recevables : $0{,}11$ point se perd dans
+le bruit d'un socle aussi lâche, et six mesures ne fondent pas un résultat
+négatif. La remesure retire les deux. Sur \textbf{dix-huit lignes} et trois
+graines, dont les écarts de référence descendent jusqu'à
+$\mathbf{1{,}2\ \%}$, le gain de la coupe générée vaut $\mathbf{+0{,}00}$
+point partout -- pas une ligne améliorée, pas une dégradée, maximum comme
+minimum nuls.
 
-Le cas décisif est la ligne $n=30$, $\text{corr}=0{,}5$. Son écart de
-référence est passé de $78{,}9$ à $\mathbf{1{,}2\ \%}$ : la borne y est à un
-point de fermer. Six coupes générées ne la ferment pas. Tant que l'écart
-valait $79\ \%$, on pouvait croire que la coupe agissait sans qu'on le voie ;
-à $1{,}2\ \%$, cet argument tombe.
+Et ce n'est pas faute de coupes : \textbf{$180$} sont produites au total,
+jusqu'à $24$ sur une seule ligne. Le mécanisme fonctionne, ses coupes sont
+valides, son effet sur l'écart garanti est \emph{exactement} nul. Le coût,
+lui, n'est pas nul : la colonne \textsc{Pl} passe par exemple de $330$ à
+$388$ programmes linéaires, soit $58$ de plus pour rien.
+
+Le cas décisif est la ligne $n=30$, $\text{corr}=0{,}5$, graine~$1$. Son
+écart de référence est passé de $78{,}9$ à $\mathbf{1{,}2\ \%}$ : la borne
+y est à un point de fermer, et six coupes générées ne la ferment pas. Tant
+que l'écart valait $79\ \%$, on pouvait croire que la coupe agissait sans
+qu'on le voie ; à $1{,}2\ \%$, cet argument n'est plus disponible.
 
 \paragraph{Ce que ce résultat négatif corrige.} Il ne dit pas seulement que
 la coupe générée est insuffisante ; il infirme le \emph{diagnostic} qui
