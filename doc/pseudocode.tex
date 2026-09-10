@@ -1,6 +1,10 @@
 \documentclass[11pt,a4paper]{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{lmodern}       % Type1 vectoriel : PDF non
+                          % bitmap, ligatures extractibles
+\usepackage{cmap}          % table ToUnicode : rend le PDF
+                          % cherchable et analysable
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
 \usepackage{amsmath,amssymb,amsthm}
@@ -91,6 +95,14 @@ $\beta$ une borne \emph{optimiste valide} ($\beta=v$ si $\textsf{statut}
 
 \subsection{Théorème 2 --- test d'efficacité intégral}
 
+C'est la forme fractionnaire du test d'Ecker et
+Kouada~\cite{ecker1975} : même structure -- un programme auxiliaire dont
+l'optimum nul caractérise l'efficacité -- transportée sur des critères
+rationnels par multiplication croisée. Les deux méthodes auxquelles ce
+travail se compare, celles de Zerdani et Moulaï~\cite{zerdani2011} et de
+Drici \emph{et al.}~\cite{drici2018}, en emploient une variante, comme la
+méthode d'énumération de Chergui et Moulaï~\cite{chergui2008}.
+
 Un seul \ILP{}. Le terme $k$ de l'objectif vaut
 $\Dk(\bar x)\,\Dk(x)\,(\Zk(x)-\Zk(\bar x))$, de même signe que
 $\Zk(x)-\Zk(\bar x)$ puisque les dénominateurs sont strictement positifs
@@ -133,6 +145,12 @@ et un incumbent déclaré efficace à tort rendrait la borne inférieure
 optimiste.
 
 \subsection{Théorème 3 --- Dinkelbach à paramètre rationnel}
+
+Le schéma est celui de Dinkelbach~\cite{dinkelbach1967}, dont
+Schaible~\cite{schaible1976} établit la convergence
+superlinéaire. La particularité tenue ici est que $q$ est
+\emph{rationnel} et le domaine entier : la valeur du
+sous-problème est alors entière, et le test d'arrêt exact.
 
 $F(q)=\max_{x\in X}\{N(x)-qD(x)\}$ est le sup d'un nombre \emph{fini} de
 fonctions affines de $q$ : convexe, décroissante, de racine unique
@@ -576,5 +594,44 @@ minorant valide.
 Le compteur d'appels \ILP{} est l'unité à rapporter : reproductible,
 indépendante de la machine et du solveur. Les \LP{} de renforcement du big-M
 sont comptés séparément, étant d'un ordre de grandeur moins chers.
+
+\begin{thebibliography}{9}
+
+\bibitem{dinkelbach1967}
+W.~Dinkelbach.
+\newblock On nonlinear fractional programming.
+\newblock \emph{Management Science}, 13(7):492--498, 1967.
+
+\bibitem{schaible1976}
+S.~Schaible.
+\newblock Fractional programming~II: on Dinkelbach's algorithm.
+\newblock \emph{Management Science}, 22(8):868--873, 1976.
+
+\bibitem{ecker1975}
+J.~G.~Ecker et I.~A.~Kouada.
+\newblock Finding efficient points for linear multiple objective programs.
+\newblock \emph{Mathematical Programming}, 8:375--377, 1975.
+
+\bibitem{zerdani2011}
+O.~Zerdani et M.~Moulaï.
+\newblock Optimization over an integer efficient set of a multiple objective
+  linear fractional problem.
+\newblock \emph{Applied Mathematical Sciences}, 5(50):2451--2466, 2011.
+
+\bibitem{drici2018}
+W.~Drici, F.~Z.~Ouail et M.~Moulaï.
+\newblock Optimizing a linear fractional function over the integer efficient
+  set.
+\newblock \emph{Annals of Operations Research}, 267(1--2):135--151, 2018.
+\newblock \texttt{doi:10.1007/s10479-017-2691-0}.
+
+\bibitem{chergui2008}
+M.~E.~A.~Chergui et M.~Moulaï.
+\newblock An exact method for a discrete multiobjective linear fractional
+  optimization.
+\newblock \emph{Journal of Applied Mathematics and Decision Sciences}, 2008,
+  article 760191.
+
+\end{thebibliography}
 
 \end{document}

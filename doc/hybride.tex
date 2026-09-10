@@ -1,6 +1,10 @@
 \documentclass[11pt,a4paper]{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{lmodern}       % Type1 vectoriel : PDF non
+                          % bitmap, ligatures extractibles
+\usepackage{cmap}          % table ToUnicode : rend le PDF
+                          % cherchable et analysable
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
 \usepackage{amsmath,amssymb,amsthm}
@@ -105,7 +109,8 @@ de même vecteur critères -- se lève par une condition de clôture qui coûte
 
 Une proposition en découle, sans équivalent pour la coupe de dominance : si
 le relâché se \emph{vide}, l'optimalité est prouvée sans qu'aucune borne
-n'ait été évaluée. Un lemme réduit ensuite le coût de la clôture à un
+n'ait été évaluée. Un second théorème réduit ensuite le coût de la clôture
+à un
 \emph{programme linéaire}.
 
 Les mesures sont rapportées par \textbf{paires} -- même instance, même
@@ -131,7 +136,8 @@ $12$ optima quand notre méthode en prouve $24$ ; mais elle dispose d'un
 raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
 
 Les limites sont énoncées avec la même précision que les gains : la méthode
-est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le lemme
+est sans effet au-delà de $n\ge 20$, et à budget d'appels égal le
+théorème de clôture
 n'achète aucune preuve supplémentaire -- c'est un gain de coût, non de
 capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
 programme générateur, y est construite et vérifiée : elle ne gagne que
@@ -1014,6 +1020,33 @@ n'était pas la seule. Nous ne savons pas nommer l'autre.
 
 \subsection{Vue d'ensemble}
 
+La figure~\ref{fig:flow} donne la méthode en entier. Elle se lit en trois
+temps.
+
+La \textbf{phase~1} (§\ref{sec:recherche}) explore l'espace des critères et
+n'en retient que des points \emph{certifiés} efficaces. Elle produit trois
+choses, et c'est la troisième qui compte pour la suite : un incumbent $q$,
+qui minore $\qs$ quoi qu'il arrive ; une archive $\Acal\subseteq\Ecal$ ; et
+l'ensemble $\mathcal{D}$ des points dominés traversés par les chaînes de
+réparation.
+
+Le \textbf{vivier} (§\ref{sec:vivier}) rassemble $\mathcal{D}$ et $\Acal$.
+C'est la charnière : les deux sources y fournissent des centres de coupe de
+même forme, mais sous des préconditions différentes -- dominance pour
+$\mathcal{D}$, efficacité et clôture établie pour $\Acal$.
+
+La \textbf{phase~2} maximise le substitut sur le relâché $\Rcal_A$ et en
+tire, selon ce qu'elle rencontre, une preuve ou une borne. Trois sorties
+sont possibles : $\Rcal_A$ se vide, et $\qs=q$ est prouvé sans qu'aucune
+borne n'ait été évaluée (proposition~\ref{prop:vide}) ; le maximum $U$ est
+négatif ou nul, et $\qs=q$ également ; sinon le théorème~\ref{th:archbound}
+convertit $U$ en encadrement.
+
+\emph{La flèche décisive} est celle qui remonte de l'archive vers le vivier.
+C'est elle, et elle seule, qui distingue cette méthode d'une matheuristique
+ordinaire : ailleurs l'exact sert la recherche, ici la recherche fournit à
+l'exact la matière dont il manque.
+
 \begin{figure}[htbp]
 \centering
 \resizebox{0.99\textwidth}{!}{%
@@ -1138,12 +1171,13 @@ points efficaces et un $\varepsilon$ trop petit ne progresse pas.
 \subsubsection*{Trois structures de voisinage}
 
 \begin{description}
-\item[\textbf{A -- $\varepsilon$ partiel.}] Autour d'un point de base $x^r$,
-  d'un critère $k$ et d'un sous-ensemble $J\subsetneq\{1,\dots,p\}
-  \setminus\{k\}$ tiré au hasard :
+\item[\textbf{A -- $\varepsilon$ partiel.}] Autour d'un point de base
+  $x^r$ et d'un critère $k$, on tire au hasard un sous-ensemble
+  \emph{strict} $J$ des autres critères, puis on pose
   \[
     V^A_k(x^r,J)=\bigl\{x\in\Scal:\ e_k(x)\ge 1,\ \
-      e_j(x)\ge 0\ \ \forall j\in J\bigr\}.
+      e_j(x)\ge 0\ \ \forall j\in J\bigr\},
+    \qquad J\subsetneq\{1,\dots,p\}\setminus\{k\}.
   \]
   « Strictement mieux sur $k$, sans rien perdre sur $J$, libre ailleurs. »
   La taille de $J$ règle l'intensification : $J=\emptyset$ donne le
@@ -1652,6 +1686,22 @@ dominance est donc \textbf{vide} -- c'est exactement le verrou de
 la section~\ref{sec:verrou}, sur un cas concret.
 
 \subsection{Étape 2 -- ce que chaque coupe retranche}
+
+L'archive contient ici cinq points, et la recherche n'a traversé
+\emph{aucun} point dominé : la coupe classique n'aurait donc rien à poser,
+et c'est très exactement le verrou de la section~\ref{sec:verrou}, visible
+sur une instance de vingt-deux points.
+
+Les panneaux qui suivent montrent, coupe par coupe, la région
+$\{x:Z(x)\le Z(a)\}$ que chaque centre $a$ retranche. Trois choses s'y
+lisent. D'abord les régions \emph{se recouvrent} : les coupes ne se
+partagent pas le domaine, elles s'empilent, et c'est pourquoi leur nombre
+compte moins que leur placement. Ensuite chacune contient son propre centre,
+puisque $Z(a)\le Z(a)$ -- ce qui est sans danger tant que la condition de
+clôture est établie, et fatal sans elle. Enfin le point $(4,0)$, où $f$ vaut
+$12$ contre $q^{\star}=14/5$, est retranché dès la première coupe : c'est
+lui qui rendait la borne $\max_{\Scal}f$ fausse de $77\ \%$, et il tombe
+sans qu'aucun point efficace ne soit perdu.
 
 \begin{figure}[htbp]
 \centering
