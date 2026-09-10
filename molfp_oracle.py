@@ -354,7 +354,9 @@ def reset_chaines() -> None:
 def repair_to_efficient(inst: MOILFP, x: np.ndarray,
                         max_steps: int = 100,
                         dominated_out: Optional[list] = None,
-                        deadline: Optional[float] = None) -> Optional[np.ndarray]:
+                        deadline: Optional[float] = None,
+                        indetermine_out: Optional[list] = None
+                        ) -> Optional[np.ndarray]:
     """
     Suit la chaine de dominance jusqu'a atteindre un point efficace certifie.
 
@@ -372,6 +374,16 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
     optimiste : c'est la seule propriete que la matheuristique ne peut pas
     perdre. Les points domines deja traverses restent acquis dans
     `dominated_out`.
+
+    `indetermine_out` : si une liste est fournie, le dernier point atteint
+    sans avoir pu etre classe y est depose. Il ne doit JAMAIS servir de
+    minorant -- son efficacite est inconnue -- mais le Th. 1 generalise
+    l'autorise comme CENTRE DE COUPE : sa demonstration ne suppose du centre
+    que d'etre realisable, et la reserve (les points efficaces de meme
+    vecteur criteres) se leve par la meme condition de cloture que pour un
+    point d'archive. La difference est dans la branche faisable : elle rend
+    alors un point dont on ne sait PAS s'il est efficace, donc qu'on ne peut
+    pas empocher.
     """
     cur = x
     for pas in range(max_steps):
@@ -379,9 +391,13 @@ def repair_to_efficient(inst: MOILFP, x: np.ndarray,
         if deadline is not None:
             tl = deadline - time.time()
             if tl <= 0:
+                if indetermine_out is not None:
+                    indetermine_out.append(np.array(cur, dtype=int))
                 return None
         r = efficiency_test(inst, cur, time_limit=tl)
         if not r.conclusive:
+            if indetermine_out is not None:
+                indetermine_out.append(np.array(cur, dtype=int))
             return None
         if r.efficient:
             CHAINES.append(pas)      # 0 = le point etait deja efficace

@@ -1363,6 +1363,11 @@ def matheuristic_P(inst: MOILFP,
 
     # --- amorcage : un point efficace quelconque --------------------------
     dominated: List[np.ndarray] = []      # recyclage pour le Th. 5' (gain 3)
+    # Points dont la chaine de reparation n'a pas abouti : statut INCONNU.
+    # Le Th. 1 generalise en fait des centres de coupe legitimes ; on les
+    # collecte d'abord pour savoir COMBIEN il y en a, avant de decider s'il
+    # vaut la peine de les exploiter.
+    indetermines: List[np.ndarray] = []
     # l'amorcage n'a pas de garde-temps : sans un premier point efficace
     # certifie il n'y a pas de LB du tout, donc rien a rapporter
     x0 = repair_to_efficient(inst, np.zeros(inst.n, dtype=int),
@@ -1443,7 +1448,8 @@ def matheuristic_P(inst: MOILFP,
                     continue
                 y = repair_to_efficient(inst, y,       # certification Th. 2
                                         dominated_out=dominated,
-                                        deadline=t0 + time_budget)
+                                        deadline=t0 + time_budget,
+                                        indetermine_out=indetermines)
                 if y is None:
                     continue       # non certifie : ni archive ni incumbent
                 arch.add(y)
@@ -1566,6 +1572,7 @@ def matheuristic_P(inst: MOILFP,
         cert_info["diag"] = None
     cert_info["cert_budget"] = budget
     cert_info["restarts"] = n_restarts
+    cert_info["indetermines"] = len(indetermines)
     cert_info["moves"] = dict(n_moves)
     cert_info["hits"] = dict(n_hits)
 
