@@ -1272,6 +1272,60 @@ matheuristique & 84/90 & \textbf{90/90} & 124 & $0{,}9$~s & 0\\
 \end{tabular}
 \end{table}
 
+
+\begin{table}[htbp]
+\centering
+\caption{Le lot figé sous plafond \textbf{déterministe} d'appels entiers ;
+la seule différence entre les deux bras est la coupe d'efficacité.\
+\conf{1}{1}{1}}
+\label{tab:lotdeterm}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{plafond $100$} & \multicolumn{2}{c}{plafond $300$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+& sans & avec & sans & avec\\
+\midrule
+optimalité \textbf{prouvée} & $64/90$ & $\mathbf{87/90}$
+                            & $83/90$ & $\mathbf{88/90}$\\
+reproductibilité & \multicolumn{2}{c}{$90/90$} & \multicolumn{2}{c}{$90/90$}\\
+encadrements valides & \multicolumn{2}{c}{$144/144$}
+                     & \multicolumn{2}{c}{$144/144$}\\
+\midrule
+preuves gagnées / perdues & \multicolumn{2}{c}{$\mathbf{23}$ / $\mathbf{0}$}
+                          & \multicolumn{2}{c}{$\mathbf{5}$ / $\mathbf{0}$}\\
+recul : valeur / borne & \multicolumn{2}{c}{$1$ / $0$}
+                       & \multicolumn{2}{c}{$0$ / $0$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le même banc sur le lot figé donne $23$ preuves gagnées et aucune perdue au
+plafond serré, là où la mesure à $12$~s en donnait $2$
+(tableau~\ref{tab:archlot}) : le budget en temps sous-estimait l'ampleur de
+l'effet autant que sa reproductibilité. À $300$ appels le gain tombe à $5$
+paires, parce que le bras sans coupes prouve déjà $83/90$ -- sur une grille
+systématique la plupart des instances sont faciles, et la coupe
+d'efficacité n'y a rien à faire. Elle décide là où la ressource manque,
+ce qui est aussi pourquoi le régime cible, choisi difficile, en montre $57$.
+
+\begin{remark}[un recul, et ce qu'il coûte exactement]
+\label{rem:recullot}
+À $100$ appels, une instance ($n=20$, $m=11$, $p=3$, $\text{corr}=0$) rend
+une valeur \emph{plus faible} avec les coupes que sans : $q_{\text{lb}}$
+passe de $3{,}02$ à $2{,}51$. C'est reproductible, donc ce n'est pas du
+bruit -- poser des coupes consomme des appels que la recherche aurait
+dépensés ailleurs. Mais l'encadrement entier raconte l'inverse : au même
+plafond la borne supérieure passe de $206{,}0$ à $\mathbf{115{,}2}$, et à
+$300$ appels, à $q_{\text{lb}}$ identique, de $27{,}86$ à $\mathbf{8{,}86}$
+-- soit un écart garanti de $86{,}6$ à $\mathbf{57{,}9\ \%}$. Ce que nous
+retirons est donc la forme \emph{absolue} de « aucun recul » : la forme que
+la mesure soutient est qu'aucune preuve n'est perdue et aucune borne
+relâchée, jamais, aux deux plafonds et sur les deux lots, mais qu'un
+\emph{minorant} peut reculer quand le budget est très serré.
+\end{remark}
+
 \noindent
 Sur le lot systématique, l'apport se lit sur l'axe des preuves : deux
 certificats de plus, à valeur inchangée ($90/90$ dans les deux cas).
@@ -2658,9 +2712,14 @@ recule encore sur deux lignes sur six, et nous ne savons pas nommer la cause
 restante (\S\ref{sec:negatif}). Pour un usage décisionnel c'est un défaut
 sérieux, et c'est ici qu'il faut l'écrire plutôt que dans une liste de
 résultats négatifs : un décideur qui accorde plus de temps s'attend à une
-garantie meilleure ou égale, jamais pire. La solution rendue, elle, ne se
-dégrade pas -- $q_{\text{lb}}$ ne décroît jamais -- mais la promesse faite
-sur sa qualité, si. Tant que ce point n'est pas corrigé, l'usage recommandé est de conserver le meilleur encadrement rencontré et non le dernier : deux encadrements valides du même $\qs$ s'intersectent en un encadrement valide, donc garder $\max q_{\text{lb}}$ et $\min q_{\text{ub}}$ sur toutes les exécutions ne coûte aucune hypothèse.
+garantie meilleure ou égale, jamais pire. Au sein d'une
+\emph{même} exécution la solution rendue ne se dégrade pas -- l'archive ne
+perd aucun point et $q_{\text{lb}}$ ne décroît jamais --, mais rien de tel
+ne vaut d'une exécution à l'autre : à budget égal, changer de configuration
+peut rendre un incumbent plus faible alors même que l'encadrement se
+resserre, et nous en avons un cas mesuré (remarque~\ref{rem:recullot}).
+C'est la tension des deux livrables, prise du côté du décideur : la
+garantie s'améliore, la solution remise empire. Tant que ce point n'est pas corrigé, l'usage recommandé est de conserver le meilleur encadrement rencontré et non le dernier : deux encadrements valides du même $\qs$ s'intersectent en un encadrement valide, donc garder $\max q_{\text{lb}}$ et $\min q_{\text{ub}}$ sur toutes les exécutions ne coûte aucune hypothèse.
 
 \section{Trois défauts trouvés par la mesure}
 \label{sec:defauts}

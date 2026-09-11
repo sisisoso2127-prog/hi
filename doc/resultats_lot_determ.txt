@@ -1,0 +1,32 @@
+================================================================================================
+LOT FIGE SOUS PLAFOND DETERMINISTE DE 100 APPELS  [V* S* D*]  90 instances
+================================================================================================
+  instances                     : 90  (dont 18 sans vérité terrain)
+  reproductibilité              : 90/90
+  optimalité prouvée            : sans 64/90   avec 87/90
+  lecture APPARIÉE, preuves     : gagnées 23   perdues 0
+  recul, valeur plus faible     : 1
+  recul, borne plus lâche       : 0
+  delta d'appels par paire      : médiane -1   total -681   47/90 en baisse
+  encadrements valides          : 144/144
+  VALEUR PLUS FAIBLE : molfp_n20_m11_p3_c000_s1
+
+================================================================================================
+LOT FIGE SOUS PLAFOND DETERMINISTE DE 300 APPELS  [V* S* D*]  90 instances
+================================================================================================
+  instances                     : 90  (dont 18 sans vérité terrain)
+  reproductibilité              : 90/90
+  optimalité prouvée            : sans 83/90   avec 88/90
+  lecture APPARIÉE, preuves     : gagnées 5   perdues 0
+  recul, valeur plus faible     : 0
+  recul, borne plus lâche       : 0
+  delta d'appels par paire      : médiane +0   total -1860   45/90 en baisse
+  encadrements valides          : 144/144
+
+================================================================================================
+BILAN
+  plafond  100 : sans 64/90   avec 87/90   apparié +23 / -0   reculs 1+0   encadrements 144/144
+  plafond  300 : sans 83/90   avec 88/90   apparié +5 / -0   reculs 0+0   encadrements 144/144
+  (1278 s)
+
+=== TERMINE ===
