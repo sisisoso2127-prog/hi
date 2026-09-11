@@ -161,6 +161,12 @@ compris, en
 arithmétique rationnelle. Sur $24$ instances de sa classe, elle certifie
 $12$ optima quand notre méthode en prouve $24$ ; mais elle dispose d'un
 raccourci qui la rend imbattable sur $9$ d'entre elles, et nous le disons.
+Nous disons aussi ce que la mesure appariée nous retire : \emph{aux plafonds
+publiés de ces deux comparaisons, la coupe d'efficacité est strictement
+inerte}, et les $24/24$ et $10/10$ sont donc obtenus sans elle. Elle
+redevient décisive dès qu'on serre le budget -- $19/24$ à $24/24$ à cent
+appels --, ces classes d'instances étant simplement trop faciles pour que le
+levier ait à servir.
 
 Un chapitre est consacré à ce que la méthode \emph{rend} : non pas
 seulement une valeur encadrée, mais l'archive des points efficaces
@@ -4496,7 +4502,8 @@ quelles.
 \caption{Notre méthode sur le protocole et les tailles de Drici
 \emph{et al.}, $10$ instances par taille, budget déterministe de $1500$
 appels. Colonne \ILP{} remesurée en configuration courante ; l'ancienne
-valeur suit entre parenthèses là où elle diffère.\ \conf{1}{1}{1}}
+valeur suit entre parenthèses là où elle diffère. Aucun encadrement n'y est
+vérifiable contre $\qs$ (remarque~\ref{rem:littvt}).\ \conf{1}{1}{1}}
 \label{tab:drici}
 \begin{tabular}{lcccc}
 \toprule
@@ -4584,6 +4591,79 @@ section~\ref{sec:res} sur nos propres instances, et il serait malhonnête de
 présenter ce tableau comme une résolution du régime qui nous résiste. Les
 deux mesures portent sur des régimes différents et se lisent séparément.
 
+\subsection{Ce que la coupe d'efficacité rapporte sur ces deux terrains}
+\label{sec:littdeterm}
+
+Les deux confrontations ci-dessus opposent \emph{une méthode à une autre} :
+celle de Zerdani \& Moulaï à la nôtre, et la nôtre seule sur le terrain de
+Drici \emph{et al.} Ni l'une ni l'autre n'isole donc la contribution de ce
+mémoire. Nous appliquons ici le banc apparié des
+§\ref{sec:cibledeterm}--\ref{sec:echelledeterm} : deux bras en configuration
+courante ne différant que par la coupe d'efficacité, plafond en appels,
+chaque configuration jouée deux fois, trois axes de recul vérifiés.
+
+\begin{table}[htbp]
+\centering
+\caption{La coupe d'efficacité sur le terrain de chacun, à plafond
+\textbf{déterministe} d'appels. Les plafonds marqués d'une étoile sont ceux
+sous lesquels les tableaux~\ref{tab:match} et~\ref{tab:drici} sont
+publiés.\ \conf{1}{1}{1}}
+\label{tab:littdeterm}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrcccc}
+\toprule
+terrain & plafond & prouvé sans & prouvé avec & apparié & reculs\\
+\midrule
+Zerdani \& Moulaï ($24$) & $100$ & $19/24$ & $\mathbf{24/24}$
+ & $\mathbf{+5}/{-0}$ & $0$\\
+Zerdani \& Moulaï ($24$) & $400^{\star}$ & $24/24$ & $24/24$
+ & $0/0$ & $0$\\
+\midrule
+Drici \emph{et al.} ($80$) & $300$ & $77/80$ & $\mathbf{80/80}$
+ & $\mathbf{+3}/{-0}$ & $0$\\
+Drici \emph{et al.} ($80$) & $1500^{\star}$ & $80/80$ & $80/80$
+ & $0/0$ & $0$\\
+\midrule
+\multicolumn{6}{l}{reproductibilité $24/24$, $24/24$, $80/80$, $80/80$
+ \quad$\bullet$\quad encadrements $96/96$ chez Zerdani \& Moulaï}\\
+\multicolumn{6}{l}{$\Delta$ d'écart maximal : $+52{,}94$ pt à $100$ appels,
+ $+58{,}93$ pt à $300$ \quad$\bullet$\quad nul aux plafonds $\star$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Aux plafonds publiés, la coupe d'efficacité est strictement
+inerte.} Non pas « peu utile » : le $\Delta$ d'écart garanti vaut
+$\mathbf{+0{,}00}$ en médiane, en moyenne \emph{et en maximum}, sur $24$
+puis $80$ paires. Pas une instance n'est touchée, dans aucun sens. Il faut
+donc en tirer la conséquence et l'écrire : \textbf{les deux résultats de
+comparaison que ce mémoire met en avant -- $24/24$ contre $12/24$, et
+$10/10$ à chaque taille -- sont obtenus sans la contribution centrale de ce
+mémoire.} Ils viennent du reste du dispositif : le test d'efficacité
+intégral, le Dinkelbach à paramètre rationnel, la borne resserrée et la
+seconde route.
+
+\paragraph{Elle redevient décisive dès que le budget serre.} À $100$ appels
+le bras sans coupes tombe à $19/24$ et la coupe récupère les cinq
+manquantes ; à $300$ appels sur le terrain de Drici, elle récupère les
+trois dernières. Les gains d'écart y atteignent $+52{,}94$ et $+58{,}93$
+points sur une instance. La raison n'est pas accidentelle : \emph{les
+classes d'instances de la littérature sont faciles pour notre méthode}, et
+les plafonds publiés y sont largement surdimensionnés -- le bras sans coupes
+prouve déjà tout. C'est la même forme que sur les quatre autres lots, poussée
+à son terme : le levier décide là où la ressource manque, et il est
+rigoureusement nul là où elle suffit.
+
+\begin{remark}[deux réserves de niveau de preuve]
+\label{rem:littvt}
+Chez Zerdani \& Moulaï la vérité terrain existe et les $96$ encadrements
+sont vérifiés sans une violation. Chez Drici \emph{et al.} elle n'existe
+pas aux grandes tailles -- leurs bornes de variables mettent l'énumération
+hors de portée dès $n=20$ --, et aucun des $160$ encadrements n'a pu être
+confronté à $\qs$. Ce second bloc repose donc sur le même niveau de preuve
+affaibli que le tableau d'échelle (remarque~\ref{rem:pasdevt}).
+\end{remark}
+
 \subsection{Ce que la comparaison établit, et ce qu'elle n'établit pas}
 
 \textbf{Établi.} Sur la classe de Drici \emph{et al.}, avec leur règle de
@@ -4592,8 +4672,13 @@ celle de Zerdani \& Moulaï, elle prouve $24/24$ là où leur méthode certifie
 $12/24$, et cela sous une unité de coût qui leur est favorable. Les deux
 exemples publiés sont reproduits exactement.
 
-\textbf{Non établi.} Rien n'est dit des temps de calcul, qui ne se comparent
-pas ici. Rien n'est dit non plus des grandes instances \emph{de notre}
+\textbf{Non établi.} \emph{Ces deux résultats n'établissent rien sur la
+coupe d'efficacité.} Aux plafonds sous lesquels ils sont publiés, elle est
+strictement inerte -- $\Delta$ nul en médiane, en moyenne et en maximum sur
+$104$ paires (§\ref{sec:littdeterm}) --, de sorte que le $24/24$ et le
+$10/10$ sont acquis sans elle. Ils valident le \emph{dispositif}, non la
+contribution. Rien n'est dit non plus des temps de calcul, qui ne se
+comparent pas ici. Rien n'est dit non plus des grandes instances \emph{de notre}
 protocole, où aucune des trois méthodes ne conclut. Et le raccourci de
 l'étape~1 de Zerdani \& Moulaï reste un avantage net de leur construction
 sur les instances où il s'applique : notre fonction objectif étant

@@ -134,6 +134,12 @@ d'efficacité n'y dégrade aucune des dix-huit paires et n'y produit aucun
 recul, alors qu'au plafond de $100$ elle en dégrade quatre -- ce n'est pas la
 taille qui retourne le signe, mais le rapport entre budget et taille.
 
+Une réserve est portée au même rang que les gains : sur les deux terrains de
+la littérature, aux plafonds sous lesquels les comparaisons sont publiées, la
+coupe d'efficacité est \emph{strictement inerte}, et les résultats de
+comparaison y sont donc acquis sans elle ; elle redevient décisive dès qu'on
+serre le budget.
+
 Sur un lot systématique de 90 instances, tous les résultats des deux méthodes
 passent une vérification indépendante ; la matheuristique rend la meilleure
 valeur sur \textbf{90 instances sur 90} et \emph{prouve} l'optimalité sur
@@ -3267,7 +3273,9 @@ l'essentiel de son travail, ni les coupes de Gomory qu'il pose -- $108$ en
 médiane, $2\,090$ au total sur les $24$ instances. Les $45$ ne sont donc pas
 leur coût réel, mais la part que cette unité sait voir. Sur le terrain
 de~\cite{drici2018} -- leur protocole de génération, leurs tailles --
-l'optimalité est prouvée $10/10$ à chaque taille jusqu'à $40\times15$.
+l'optimalité est prouvée $10/10$ à chaque taille jusqu'à $40\times15$. Ces
+deux résultats n'établissent toutefois rien sur la coupe d'efficacité
+elle-même : voir la remarque~\ref{rem:littinerte}.
 
 \begin{remark}[une réserve sur les tailles, qui vaut d'être dite]
 Le couple $(n,m)$ ne mesure pas la difficulté ; les bornes des variables la
@@ -3276,6 +3284,47 @@ $2$ ou $3$, donc une boîte de l'ordre de $10^{18}$ points à $n=40$, contre
 $10^{52}$ pour nos instances d'échelle au même $n$. Prouver $10/10$ là-bas
 ne contredit en rien nos $96\ \%$ d'écart garanti ici : « $n=40$ » ne désigne
 pas le même problème.
+\end{remark}
+
+
+\begin{table}[htbp]
+\centering
+\caption{La coupe d'efficacité sur le terrain de chacun, à plafond
+\textbf{déterministe} d'appels. Les plafonds étoilés sont ceux sous lesquels
+les deux comparaisons sont publiées.\ \conf{1}{1}{1}}
+\label{tab:littdeterm}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrcccc}
+\toprule
+terrain & plafond & prouvé sans & prouvé avec & apparié & reculs\\
+\midrule
+\cite{zerdani2011} ($24$) & $100$ & $19/24$ & $\mathbf{24/24}$
+ & $\mathbf{+5}/{-0}$ & $0$\\
+\cite{zerdani2011} ($24$) & $400^{\star}$ & $24/24$ & $24/24$ & $0/0$ & $0$\\
+\midrule
+\cite{drici2018} ($80$) & $300$ & $77/80$ & $\mathbf{80/80}$
+ & $\mathbf{+3}/{-0}$ & $0$\\
+\cite{drici2018} ($80$) & $1500^{\star}$ & $80/80$ & $80/80$ & $0/0$ & $0$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}[ce que ces deux comparaisons n'établissent pas]
+\label{rem:littinerte}
+Elles opposent \emph{une méthode à une autre} et n'isolent donc pas la
+contribution de ce travail. Le banc apparié des §\ref{sec:defauts} appliqué
+à ces deux terrains le fait, et son résultat est contre nous : \textbf{aux
+plafonds sous lesquels ces comparaisons sont publiées, la coupe
+d'efficacité est strictement inerte} -- $\Delta$ d'écart nul en médiane, en
+moyenne \emph{et en maximum}, sur $104$ paires. Le $24/24$ et le $10/10$
+sont donc acquis \emph{sans elle}, par le reste du dispositif : test
+d'efficacité intégral, Dinkelbach rationnel, borne resserrée, seconde route.
+Elle redevient décisive dès qu'on serre le budget -- $19/24$ à $24/24$ à
+cent appels, avec des gains d'écart jusqu'à $+52{,}9$ points --, ces classes
+d'instances étant simplement trop faciles pour que le levier ait à servir.
+Enfin la vérité terrain existe chez~\cite{zerdani2011}, où les $96$
+encadrements passent sans une violation, et n'existe pas aux grandes tailles
+de~\cite{drici2018}.
 \end{remark}
 
 \begin{remark}[ces deux confrontations ne bougent pas avec la méthode]

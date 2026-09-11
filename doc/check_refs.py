@@ -115,7 +115,11 @@ def controle(path: str) -> List[str]:
     # -- 2. type du renvoi ---------------------------------------------------
     ren = re.compile(r"(\w+)\.?~?\\(?:eq)?ref\{([^}]+)\}")
     for m in ren.finditer(sans_comm):
-        mot, lab = m.group(1).lower().rstrip(".").rstrip("s"), m.group(2)
+        # pluriels francais : « tableaux », « corollaires », « theoremes »
+        mot = m.group(1).lower().rstrip(".")
+        if mot.endswith("aux"):
+            mot = mot[:-3] + "au"
+        mot, lab = mot.rstrip("s"), m.group(2)
         env = labs.get(lab)
         if env is None or env not in ATTENDU:
             continue

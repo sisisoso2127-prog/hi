@@ -1,0 +1,57 @@
+================================================================================================
+TERRAIN DE ZERDANI & MOULAI -- plafond deterministe de 100 appels  [V* S* D*]  24 instances
+================================================================================================
+  reproductibilite        : 24/24
+  optimalite prouvee      : sans 19/24   avec 24/24
+  apparie, preuves        : gagnees 5   perdues 0
+  ecart garanti           : mieux 5   pire 0   egal 19
+  delta d'ecart (points)  : median +0.00   moyen +6.86   max +52.94
+  delta d'appels          : median -1   total -218
+  recul : valeur 0   borne 0
+  encadrements valides    : 48/48
+
+================================================================================================
+TERRAIN DE ZERDANI & MOULAI -- plafond deterministe de 400 appels  [V* S* D*]  24 instances
+================================================================================================
+  reproductibilite        : 24/24
+  optimalite prouvee      : sans 24/24   avec 24/24
+  apparie, preuves        : gagnees 0   perdues 0
+  ecart garanti           : mieux 0   pire 0   egal 24
+  delta d'ecart (points)  : median +0.00   moyen +0.00   max +0.00
+  delta d'appels          : median +0   total -174
+  recul : valeur 0   borne 0
+  encadrements valides    : 48/48
+
+================================================================================================
+TERRAIN DE DRICI, OUAIL & MOULAI -- plafond deterministe de 300 appels  [V* S* D*]  80 instances
+================================================================================================
+  reproductibilite        : 80/80
+  optimalite prouvee      : sans 77/80   avec 80/80
+  apparie, preuves        : gagnees 3   perdues 0
+  ecart garanti           : mieux 3   pire 0   egal 77
+  delta d'ecart (points)  : median +0.00   moyen +1.73   max +58.93
+  delta d'appels          : median +4   total -164
+  recul : valeur 0   borne 0
+  encadrements valides    : -- sans verite terrain
+
+================================================================================================
+TERRAIN DE DRICI, OUAIL & MOULAI -- plafond deterministe de 1500 appels  [V* S* D*]  80 instances
+================================================================================================
+  reproductibilite        : 80/80
+  optimalite prouvee      : sans 80/80   avec 80/80
+  apparie, preuves        : gagnees 0   perdues 0
+  ecart garanti           : mieux 0   pire 0   egal 80
+  delta d'ecart (points)  : median +0.00   moyen +0.00   max +0.00
+  delta d'appels          : median +7   total -142
+  recul : valeur 0   borne 0
+  encadrements valides    : -- sans verite terrain
+
+================================================================================================
+BILAN
+  TERRAIN DE ZERDANI & MOULAI  plafond   100 : prouve 19->24 /24   apparie +5/-0   ecart median +0.00   reculs 0+0
+  TERRAIN DE ZERDANI & MOULAI  plafond   400 : prouve 24->24 /24   apparie +0/-0   ecart median +0.00   reculs 0+0
+  TERRAIN DE DRICI, OUAIL & MO plafond   300 : prouve 77->80 /80   apparie +3/-0   ecart median +0.00   reculs 0+0
+  TERRAIN DE DRICI, OUAIL & MO plafond  1500 : prouve 80->80 /80   apparie +0/-0   ecart median +0.00   reculs 0+0
+  (4119 s)
+
+=== TERMINE ===
