@@ -19,6 +19,23 @@
 \usetikzlibrary{positioning,arrows.meta}
 \usepackage[hidelinks]{hyperref}
 
+% ---------------------------------------------------------------- flottants
+% Les flottants derivaient jusqu'a plusieurs pages de leur point d'appel.
+% Deux mesures, sans forcer [H] qui creerait des pages a demi vides :
+%   * une barriere en debut de section : un flottant ne peut plus franchir
+%     un titre de section, donc ne sort jamais de son propre chapitre ;
+%   * des fractions relachees : LaTeX accepte davantage de flottants sur la
+%     page ou ils sont appeles au lieu de les reporter.
+\usepackage[section]{placeins}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+
+
 \renewcommand{\algorithmcfname}{Algorithme}
 \SetKwInput{KwIn}{Entrées}
 \SetKwInput{KwOut}{Sorties}

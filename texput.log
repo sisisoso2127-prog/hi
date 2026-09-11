@@ -1,11 +1,11 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.9.6)  11 SEP 2026 17:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.9.6)  11 SEP 2026 19:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**hybride.tex
+**article.tex
 
 ! Emergency stop.
-<*> hybride.tex
+<*> article.tex
                
 *** (job aborted, file error in nonstop mode)
 
