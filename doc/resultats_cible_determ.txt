@@ -4,30 +4,6 @@ REGIME CIBLE SOUS PLAFOND DETERMINISTE DE 100 APPELS  [V* S* D*]   10 graines
 instance                  |E|          ecart median      optimalite prouvee          ILP med.   det.
                                     sans       avec       sans         avec     sans     avec
 --------------------------------------------------------------------------------------------------------
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
 molfp_n7_m4_p4_c000_s3    218      22.1%       0.0%       0/10       10/10       99       96     ok
 molfp_n7_m4_p4_c025_s3    198      53.6%      13.0%       0/10        0/10       99      100     ok
 molfp_n6_m4_p4_c000_s3    185      13.3%       0.0%       0/10        9/10       95       94     ok
@@ -49,30 +25,6 @@ REGIME CIBLE SOUS PLAFOND DETERMINISTE DE 300 APPELS  [V* S* D*]   10 graines
 instance                  |E|          ecart median      optimalite prouvee          ILP med.   det.
                                     sans       avec       sans         avec     sans     avec
 --------------------------------------------------------------------------------------------------------
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
-HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
 molfp_n7_m4_p4_c000_s3    218       0.0%       0.0%      10/10       10/10      238      216     ok
 molfp_n7_m4_p4_c025_s3    198      27.7%       0.0%       0/10       10/10      295      270     ok
 molfp_n6_m4_p4_c000_s3    185       0.0%       0.0%       8/10       10/10      249      211     ok
