@@ -2450,6 +2450,37 @@ main, un renvoi dont le mot introducteur ne correspond pas à
 l'environnement étiqueté, et un énoncé étiqueté que rien n'invoque. Les deux
 documents le passent à zéro signalement.
 
+\paragraph{Où vit chaque méthode.} Ce mémoire met trois méthodes en
+présence, et le dépôt les tient désormais dans trois fichiers distincts,
+l'infrastructure qu'elles partagent étant à part :
+%
+\begin{center}
+\setlength{\tabcolsep}{5pt}\small
+\begin{tabular}{ll}
+\toprule
+\texttt{molfp\_hybride.py} & la matheuristique certifiée -- archive,
+  mouvements,\\
+ & vivier, certification, seconde route\\
+\texttt{molfp\_exact.py} & la méthode exacte de référence
+  (\textsc{Dinkelbach} $+$ oracle)\\
+\texttt{zerdani\_moulai.py} & la méthode de la littérature, réimplémentée\\
+\midrule
+\texttt{molfp\_oracle.py} & infrastructure \emph{partagée} : modèle de
+  coupes,\\
+ & oracle linéaire sur $\Ecal$, chaîne de réparation\\
+\bottomrule
+\end{tabular}
+\end{center}
+%
+\noindent
+La séparation n'est pas cosmétique : la méthode exacte de référence vivait
+dans le même fichier que l'oracle et le modèle de coupes dont la
+matheuristique dépend, si bien qu'une méthode et sa concurrente partageaient
+un fichier avec leur infrastructure commune. Le déplacement a été fait
+\emph{verbatim}, et vérifié plutôt qu'annoncé : le banc déterministe rejoué
+après découpage rend une sortie identique à celle d'avant, ligne pour ligne,
+à la seule exception du chronomètre.
+
 \begin{table}[htbp]
 \centering
 \caption{Les trois leviers. $\circ$ = absent, $\bullet$ = présent.\ \confna}
