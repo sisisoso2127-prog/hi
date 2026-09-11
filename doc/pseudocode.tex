@@ -1,3 +1,8 @@
+%% check_refs: numerotation externe = article.tex
+%% Ce document ne numerote pas ses propres enonces : il cite ceux de
+%% article.tex. Les numeros y sont donc ecrits en clair, et c'est le
+%% controle croise qui les verifie :
+%%     python check_refs.py --cross pseudocode.tex article.tex
 \documentclass[11pt,a4paper]{article}
 
 \usepackage[utf8]{inputenc}
@@ -14,7 +19,7 @@
 \usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
 
-\newtheorem*{theorem}{Th\'eor\`eme 5$'$}
+\newtheorem*{theorem}{Th\'eor\`eme 5 (article)}
 \renewcommand{\algorithmcfname}{Algorithme}
 
 %% Mots-cles en francais. L'option [french] d'algorithm2e ne traduit que le
@@ -144,7 +149,8 @@ $(\textsf{st},x^\ast,\theta,\beta)\gets
 et un incumbent déclaré efficace à tort rendrait la borne inférieure
 optimiste.
 
-\subsection{Théorème 3 --- Dinkelbach à paramètre rationnel}
+\subsection{Théorème 3 (convergence finie) --- Dinkelbach à paramètre
+rationnel}
 
 Le schéma est celui de Dinkelbach~\cite{dinkelbach1967}, dont
 Schaible~\cite{schaible1976} établit la convergence
@@ -378,7 +384,7 @@ $U\ge F_{\Rcal}(q)=\max_{x\in\Rcal}\{QN(x)-PD(x)\}$ et
 $D^{+}=\min\{D(x) : x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$. Alors
 \[
   q^\star\ \le\ q+\frac{U}{Q\,D^{+}},
-  \qquad\text{et si } U=0 \text{ alors } q^\star=q .
+  \qquad\text{et si } U\le 0 \text{ alors } q^\star=q .
 \]
 \end{theorem}
 
@@ -390,12 +396,16 @@ max sur $\Ecal$.
 \end{proof}
 
 \noindent
-La version d'origine (Th. 5) prend $\Rcal=\Scal$ et
-$D_{\min}=\min_{x\in\Scal}D(x)$ ; comme le minimum de $D^{+}$ porte sur un
-sous-ensemble, $D^{+}\ge D_{\min}$ et la borne est mécaniquement plus fine.
+L'énoncé ci-dessus est le théorème~5 de l'article. Sa \emph{forme naïve},
+qui n'y porte pas de numéro, prend $\Rcal=\Scal$ et
+$D_{\min}=\min_{x\in\Scal}D(x)$ ; comme le minimum définissant $D^{+}$ porte
+sur un sous-ensemble, $D^{+}\ge D_{\min}$ et la borne ci-dessus est
+mécaniquement plus fine. Le théorème~8 de l'article, lui, évalue la même
+borne à un seuil \emph{libre} : il n'est pas plus fort, il gagne sur le
+seuil et cède sur le dénominateur, et les deux se prennent au minimum.
 
 \begin{algorithm}[H]
-\caption{\textsc{Certifier}$(q,\mathcal{D},B,\lambda,T)$ --- Théorème 5$'$}
+\caption{\textsc{Certifier}$(q,\mathcal{D},B,\lambda,T)$ --- Théorème 5}
 \KwIn{$q$ atteinte par un point efficace ; points dominés $\mathcal{D}$
       déjà payés par les chaînes de réparation ; budget $B$ ;
       taille de lot $\lambda$ ; nombre de tours $T$}

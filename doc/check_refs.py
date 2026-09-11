@@ -21,7 +21,14 @@ Trois controles :
                          l'environnement ou \\label{x} est pose ;
   3. etiquettes mortes-- \\label sans \\ref, \\ref sans \\label.
 
+Un quatrieme controle, CROISE, existe pour le cas que rien d'autre ne peut
+attraper : pseudocode.tex cite la numerotation de article.tex en chiffres
+durs, alors que ce sont DEUX documents separes. Aucun compilateur ne verra
+jamais la derive. Ce controle simule le compteur de theoremes de l'article et
+confronte chaque « Theoreme N » du pseudo-code a ce que N designe reellement.
+
 Usage :  python check_refs.py [fichier.tex ...]     (defaut : les deux memoires)
+         python check_refs.py --cross pseudocode.tex article.tex
 """
 
 from __future__ import annotations
@@ -88,11 +95,20 @@ def controle(path: str) -> List[str]:
     pbs: List[str] = []
 
     # -- 1. chiffres durs ----------------------------------------------------
+    # Un document peut declarer qu'il CITE la numerotation d'un autre. La
+    # regle ne s'y applique alors pas : c'est le controle croise qui la
+    # remplace, et il est plus fort puisqu'il verifie ce que le numero
+    # designe vraiment.
+    ext = re.search(r"%%\s*check_refs:\s*numerotation externe\s*=\s*(\S+)", src)
+    if ext:
+        pbs.append(f"[info] numerotation externe declaree : "
+                   f"lancer  python check_refs.py --cross {path} {ext.group(1)}")
+
     dur = re.compile(r"(Th\.|[Tt]héorème|[Pp]roposition|[Cc]orollaire|[Ll]emme)"
                      r"~? ?(\d+)")
     for m in dur.finditer(sans_comm):
         ctx = sans_comm[max(0, m.start() - 40): m.end() + 20]
-        if any(re.search(e, ctx) for e in EXEMPT):
+        if ext or any(re.search(e, ctx) for e in EXEMPT):
             continue
         pbs.append(f"chiffre dur : « {m.group(0)} »  ...{' '.join(ctx.split())[-70:]}")
 
@@ -123,13 +139,70 @@ def controle(path: str) -> List[str]:
     return pbs
 
 
+def numerotation(path: str) -> Dict[int, str]:
+    """Simule le compteur `theorem` de LaTeX (partage avec `lemma`)."""
+    src = re.sub(r"(?<!\\)%.*", "", open(path, encoding="utf-8").read())
+    out, n = {}, 0
+    for m in re.finditer(r"\\begin\{(theorem|lemma)\}(\[[^\]]*\])?", src):
+        n += 1
+        out[n] = (m.group(2) or "[]")[1:-1]
+    return out
+
+
+def _mots(t: str) -> set:
+    t = re.sub(r"\\[a-zA-Z]+|[^\w\s]", " ", t.lower())
+    petits = {"de", "la", "le", "un", "une", "sur", "du", "des", "a", "au",
+              "et", "en", "d", "l", "pour", "par"}
+    return {w for w in t.split() if len(w) > 2 and w not in petits}
+
+
+def croise(cite: str, source: str) -> List[str]:
+    """Verifie les renvois en chiffres durs de `cite` vers les enonces de
+    `source`. Imprime la correspondance, signale ce qui ne colle pas."""
+    num = numerotation(source)
+    src = re.sub(r"(?<!\\)%.*", "", open(cite, encoding="utf-8").read())
+    pbs: List[str] = []
+    print(f"    ({source} definit {len(num)} theoremes)")
+    vus = set()
+    for m in re.finditer(r"(?:Th\.|Théorème)~? ?(\d+)([^\n]{0,60})", src):
+        n, suite = int(m.group(1)), m.group(2)
+        if n not in num:
+            pbs.append(f"« Théorème {n} » : {source} n'en compte que {len(num)}")
+            continue
+        titre = num[n]
+        # une glose suit-elle le numero ?
+        g = re.match(r"\s*(?:---|--|—|\()\s*([^)\n]{3,60})", suite)
+        etat = "?"
+        if g:
+            glose = g.group(1)
+            etat = "ok" if _mots(glose) & _mots(titre) else "DIVERGE"
+            if etat == "DIVERGE":
+                pbs.append(f"« Théorème {n} --- {glose.strip()} » mais "
+                           f"{source} y met : « {titre} »")
+        cle = (n, etat)
+        if cle not in vus:
+            vus.add(cle)
+            print(f"      Th. {n:<2} -> « {titre} »  [{etat}]")
+    return pbs
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["--cross"]:
+        cite, source = sys.argv[2], sys.argv[3]
+        print(f"=== controle croise : {cite} contre {source}")
+        pbs = croise(cite, source)
+        for x in pbs:
+            print("   ", x)
+        print(f"\nTOTAL : {len(pbs)}")
+        sys.exit(1 if pbs else 0)
+
     cibles = sys.argv[1:] or ["hybride.tex", "article.tex"]
     total = 0
     for c in cibles:
         pbs = controle(c)
-        total += len(pbs)
-        print(f"=== {c} : {len(pbs)} probleme(s)")
+        durs = [x for x in pbs if not x.startswith("[info]")]
+        total += len(durs)
+        print(f"=== {c} : {len(durs)} probleme(s)")
         for p in pbs:
             print("   ", p)
     print(f"\nTOTAL : {total}")
