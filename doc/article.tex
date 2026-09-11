@@ -532,6 +532,9 @@ exemple publié de~\cite{drici2018} & \textbf{mêlé} & oui
 \end{center}
 
 \noindent
+Les deux exemples publiés violent donc l'hypothèse sous laquelle nous
+énonçons tout, et restent néanmoins traitables : c'est l'objet de la
+remarque~\ref{rem:a2}.
 Aucun \emph{banc} ne viole (A2) -- le protocole de~\cite{drici2018} tire
 même $A$ dans $[1,30]$. La violation ne concerne que les deux instances
 publiées de la validation externe. Nous le signalons parce qu'une hypothèse
@@ -854,8 +857,11 @@ trois points, et il est instructif de les distinguer.
       théorème~\ref{th:eff} traversent des points \emph{dominés} -- les seuls
       sur lesquels le théorème~\ref{th:cut} autorise une coupe. Les jeter
       gaspillerait une information déjà payée. On les rejoue comme coupes,
-      triés par valeur décroissante du substitut linéaire : ce sont eux qui
-      tirent $U$ vers le haut, donc les couper resserre le plus.
+      triés par valeur décroissante du substitut linéaire \emph{au sein de
+      leur source} : ce sont eux qui tirent $U$ vers le haut, donc les
+      couper resserre le plus. Le vivier alterne ensuite entre cette source
+      et l'archive, faute de quoi la seconde est affamée
+      (§\ref{sec:defauts}).
 \end{enumerate}
 
 \begin{remark}
@@ -956,8 +962,12 @@ efficace.
 Cela ouvre une possibilité : \textbf{un point de $\Scal$ au statut
 indéterminé peut servir de centre de coupe}. La précondition n'est plus
 « certifié dominé ou certifié efficace » mais « réalisable, et clôture
-établie ». Or la recherche \emph{jette} aujourd'hui les points dont la
-chaîne de réparation a été interrompue faute de budget.
+établie » -- l'efficacité de $a$, elle, ne sert qu'à un seul endroit de tout
+ce travail, et la remarque~\ref{rem:aeff} dit lequel. Or la recherche
+\emph{jette} aujourd'hui les points dont la
+chaîne de réparation a été interrompue faute de budget. Nous avons compté
+ce que cela représente avant de rien construire
+(remarque~\ref{rem:indetermines}).
 \end{remark}
 
 \begin{remark}[l'ouverture est réelle et sans matière : nous l'avons
@@ -2078,6 +2088,22 @@ terrain $q\le\qs$ avec égalité dès que le statut annonce l'optimalité
 fautive, rejetée par $C_2$ et $C_4$ : un contrôle qu'on n'a jamais vu échouer
 ne prouve rien.
 
+
+\paragraph{Les renvois sont vérifiés par un programme, pas par relecture.}
+La numérotation des énoncés a changé plusieurs fois, et les renvois écrits
+en \emph{chiffres durs} -- \texttt{Th.\ 4} tapé à la main -- ne bougent pas
+avec elle. Trois
+d'entre eux ont fini par désigner un théorème \emph{inexistant} et deux
+attribuaient la coupe de dominance au corollaire de la coupe d'efficacité.
+Aucun ne faisait échouer la compilation : \LaTeX{} vérifie qu'une étiquette
+existe, jamais la \emph{nature} de ce qu'elle désigne -- un renvoi qui
+annonce un \emph{corollaire} là où l'étiquette porte un théorème passe donc
+sans un mot. Le dépôt contient
+donc \texttt{check\_refs.py}, qui refuse trois choses : un numéro écrit à la
+main, un renvoi dont le mot introducteur ne correspond pas à
+l'environnement étiqueté, et un énoncé étiqueté que rien n'invoque. Les deux
+documents le passent à zéro signalement.
+
 \section{Campagne de difficulté}
 \label{sec:campagne}
 
@@ -2386,7 +2412,8 @@ réalisant $z$. Donc $Z(a)=z$.
 L'indicateur de couverture~\cite{zitzler1999} est conçu pour comparer
 \emph{deux} approximations, dont l'une peut contenir des points dominés ; opposé à la
 vraie frontière un ensemble certifié efficace, il dégénère en rapport de
-cardinalité. Le tableau~\ref{tab:livrable} le vérifie ligne à ligne -- les
+cardinalité (proposition~\ref{prop:couv}). Le tableau~\ref{tab:livrable} le
+vérifie ligne à ligne -- les
 colonnes card et couv y sont identiques sur les huit instances, ce qui est
 la proposition et non une coïncidence. La remarque vaut pour toute méthode
 qui certifie avant d'archiver.
@@ -2599,7 +2626,12 @@ Pour $x\in\Rcal$ : $N(x)-tD(x)\le v$ et $D(x)>0$ sous (A1), donc
 $f(x)\le t+v/D(x)\le t+v/D_{\min}$ puisque $v\ge0$.
 \end{proof}
 
-Le théorème usuel est le cas $t=q$. Mais \emph{chaque point du relâché
+Prendre $t=q$ y redonne la forme \emph{naïve} du dénominateur,
+$\qs\le q+U/(QD_{\min})$, et non le théorème~\ref{th:bound}, qui est
+strictement plus fin puisqu'il y substitue $D^{+}\ge D_{\min}$. Les deux
+énoncés sont donc incomparables -- l'un gagne sur le seuil, l'autre sur le
+dénominateur -- et c'est pourquoi on les prend au minimum, qui reste
+valide. Car \emph{chaque point du relâché
 fournit un meilleur seuil} : si l'oracle rend $x_t\in\Rcal$ avec
 $G_t(x_t)>0$, alors $f(x_t)>t$ et l'on recommence. C'est un Dinkelbach
 ordinaire, mené sur $\Rcal$ et non sur $\Scal$ ; à convergence,

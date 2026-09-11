@@ -784,7 +784,8 @@ point efficace. \end{proof}
 \begin{corollary}[coupe d'efficacité]\label{cor:eff}
 Si $a\in\Ecal$, la condition de clôture doit être établie, et la branche
 faisable de~\eqref{eq:clot} rend alors un point \emph{efficace} qui bat
-l'incumbent.
+l'incumbent. C'est le seul endroit de ce mémoire où l'efficacité de $a$ est
+réellement utilisée (remarque~\ref{rem:aeff}).
 \end{corollary}
 
 \begin{remark}[ce que cette unification change]
@@ -798,7 +799,8 @@ certifié efficace », mais seulement « être réalisable, et voir sa clôture
 établie ». Or notre recherche \emph{jette} aujourd'hui les points dont la
 chaîne de réparation a été interrompue faute de budget
 (§\ref{sec:recherche}) : le théorème~\ref{th:effcut} dit qu'ils restent des
-centres légitimes.
+centres légitimes. Nous avons compté ce que cela représente avant de rien
+construire (remarque~\ref{rem:indetermines}).
 \end{remark}
 
 \begin{remark}[l'ouverture est réelle et sans matière : nous l'avons
@@ -1386,7 +1388,7 @@ chercher le point qui bat le plus nettement l'incumbent. Le substitut est
 recalculé \emph{à chaque amélioration} de $q$ : la direction de recherche
 suit l'incumbent au lieu d'être fixée une fois pour toutes.
 
-\paragraph{Le pas $+1$ est exact.} Le théorème~\ref{th:effcut} fournit
+\paragraph{Le pas $+1$ est exact.} La brique~1 fournit
 $e_k(x)=\bar D_k D_k(x)\,(Z_k(x)-Z_k(\bar x))$, entière, donc
 \[
   Z_k(x)\ \ge\ Z_k(\bar x)\iff e_k(x)\ge 0,
@@ -1869,11 +1871,11 @@ for x, kind in pending:
     if posees >= cut_batch or time.time() > t0 + budget:
         break
     if kind == "arch":
-        better = same_criteria_improves(inst, x, q_ref)   # cloture, Th. 2
+        better = same_criteria_improves(inst, x, q_ref)   # cloture (C_a)
         if better is not None:                            # issue FAISABLE
             improved_by_closure = better                  # -> le LB monte
             break
-        model.add_efficiency_cut(x)                       # Th. 1
+        model.add_efficiency_cut(x)                       # cor. 4
         info["archive_cuts"] += 1
     else:
         model.add_dominance_cut(x)                        # brique 3
@@ -1882,7 +1884,8 @@ for x, kind in pending:
 r = max_linear_over_E(inst, w, w0, time_limit=slice_, model=model)
 
 # --- RELACHE VIDE : la preuve la plus forte -----------------------------
-# Th. 1 : E est inclus dans R_A union {x : Z(x) = Z(a), a dans A}.
+# Coupe autour d'un point QUELCONQUE : E est inclus dans
+#   R_A union {x : Z(x) = Z(a), a dans A}.
 # Si R_A est vide, tout point efficace a le vecteur criteres d'un point de
 # l'archive, et la cloture -- etablie point par point AVANT chaque coupe --
 # dit qu'aucun d'eux ne bat q. Donc q* <= q, et comme q <= q*, q* = q.
@@ -1915,7 +1918,8 @@ if r.status == "optimal" and r.value <= 0 and not improved:
 \]
 
 \noindent
-Les hypothèses (A1)--(A2) sont vérifiées par inspection. L'énumération
+Les hypothèses (A1)--(A2) sont vérifiées par inspection ; ce qui suffirait
+en réalité est plus faible (proposition~\ref{prop:hyp}). L'énumération
 exhaustive donne $|\Scal|=22$, $|\Ecal|=5$ et $\qs=14/5=2{,}8$, atteint en
 $x^{\star}=(4,2)$. Ces valeurs ne servent qu'à \emph{vérifier} ce que la
 méthode produit ; elle ne les utilise jamais.
@@ -2380,6 +2384,22 @@ détail d'exposition : chacun des trois déplace les chiffres, l'un d'eux de
 plus de $70$ points sur une instance. Un tableau ne dit donc rien sans dire
 \emph{quelle} version de la méthode il mesure, et nous n'avons pas tout
 remesuré. Chaque tableau porte donc un marqueur à trois positions.
+
+
+\paragraph{Les renvois sont vérifiés par un programme, pas par relecture.}
+La numérotation des énoncés a changé plusieurs fois, et les renvois écrits
+en \emph{chiffres durs} -- \texttt{Th.\ 4} tapé à la main -- ne bougent pas
+avec elle. Trois
+d'entre eux ont fini par désigner un théorème \emph{inexistant} et deux
+attribuaient la coupe de dominance au corollaire de la coupe d'efficacité.
+Aucun ne faisait échouer la compilation : \LaTeX{} vérifie qu'une étiquette
+existe, jamais la \emph{nature} de ce qu'elle désigne -- un renvoi qui
+annonce un \emph{corollaire} là où l'étiquette porte un théorème passe donc
+sans un mot. Le dépôt contient
+donc \texttt{check\_refs.py}, qui refuse trois choses : un numéro écrit à la
+main, un renvoi dont le mot introducteur ne correspond pas à
+l'environnement étiqueté, et un énoncé étiqueté que rien n'invoque. Les deux
+documents le passent à zéro signalement.
 
 \begin{table}[htbp]
 \centering
@@ -3163,7 +3183,7 @@ la quasi-totalité de $\Scal^{+}$, et la borne n'en tient pas compte --
 $32{,}27$ annoncé quand la région survivante plafonne à $8{,}53$. Le défaut
 n'est donc pas dans le relâché mais dans la façon dont on en tire un nombre.
 
-\subsection{La borne de certification ne parle pas de l'incumbent}
+\subsection{Le seuil de la borne n'a rien de particulier à l'incumbent}
 
 La certification pose $q=P/Q$, résout $U\ \ge\ \max_{\Rcal}F_q$ avec
 $F_q=QN-PD$, et conclut $\qs\le q+U/(Q D^{+})$. Le seuil est \emph{toujours}
@@ -3185,10 +3205,20 @@ $f(x)=N(x)/D(x)\le t+v/D(x)$, et $v\ge0$ donne
 $v/D(x)\le v/D_{\min}$. \end{proof}
 
 \begin{remark}[le gain $D^{+}$ n'était jamais réalisé]
-La borne resserrée~\eqref{eq:borne} compte trois apports sur sa forme
-naïve, dont le deuxième est de remplacer $D_{\min}$ par $D^{+}\ge D_{\min}$, minimum pris sur la seule
-région où la borne agit. L'instrumentation montre qu'il ne s'appliquait
-\emph{jamais} : sur neuf exécutions à $n=20,30,40$ et aux deux plafonds,
+La borne resserrée~\eqref{eq:borne} gagne sur sa forme naïve
+-- celle qui prend $\Rcal=\Scal$ et $D_{\min}$ -- de trois façons, qu'il
+faut distinguer pour lire ce qui suit :
+\begin{enumerate}[label=(\alph*),leftmargin=*,itemsep=1pt]
+\item $\Rcal$ au lieu de $\Scal$ : les coupes retirent des zones sans aucun
+  point efficace, donc $U$ diminue ;
+\item $D^{+}$ au lieu de $D_{\min}$ : on ne minimise $D$ que là où la borne
+  agit, c'est-à-dire là où $f$ dépasse $q$, d'où $D^{+}\ge D_{\min}$
+  mécaniquement ;
+\item recyclage des points dominés traversés par les chaînes de réparation,
+  qui alimentent $\Rcal$ sans coûter d'appel supplémentaire.
+\end{enumerate}
+C'est le gain~(b) qui nous occupe ici, et l'instrumentation montre qu'il ne
+s'appliquait \emph{jamais} : sur neuf exécutions à $n=20,30,40$ et aux deux plafonds,
 $D^{+}$ vaut \texttt{None} les neuf fois, et la borne retombe sur
 $D_{\min}$. La cause est d'implémentation, non de théorie : le programme qui
 calcule $D^{+}$ est posé sur le modèle de coupes complet, sans limite de
@@ -3206,8 +3236,19 @@ resserrer. L'arrondi se fait \emph{vers le bas} : un dénominateur surestimé
 rendrait la borne fausse.
 \end{remark}
 
-La borne~\eqref{eq:borne} est le cas $t=q$ : en effet $G_q=F_q/Q$, de sorte que
-$v=U/Q$ et la borne s'écrit $q+U/(QD_{\min})$. Mais tout $t$ convient, et
+Le lien avec la borne~\eqref{eq:borne} demande d'être posé exactement, sans
+quoi les deux routes paraissent redondantes. Prendre $t=q$ dans le
+théorème~\ref{th:seuil} donne $G_q=F_q/Q$, donc $v=U/Q$, donc
+$\max_{\Rcal}f\le q+U/(Q\,D_{\min})$ : on retrouve la \emph{forme naïve} du
+dénominateur, et \emph{non} la borne~\eqref{eq:borne}, qui est strictement
+plus fine puisqu'elle y substitue $D^{+}\ge D_{\min}$ -- c'est le gain~(b)
+ci-dessus. Le théorème~\ref{th:seuil} ne redonne donc pas
+la borne~\eqref{eq:borne} et ne la contient pas : il l'améliore sur le
+\emph{seuil} et lui cède sur le \emph{dénominateur}. C'est là toute la
+raison pour laquelle les deux routes sont incomparables et pour laquelle on
+les prend au minimum, qui reste valide.
+
+Mais tout $t$ convient, et
 \emph{chaque point du relâché en fournit un meilleur} : si l'ILP rend un
 $x_t\in\Rcal$ avec $G_t(x_t)>0$, alors $f(x_t)>t$, et l'on recommence en
 $t\leftarrow f(x_t)$. C'est un Dinkelbach ordinaire -- mené sur $\Rcal$ et
