@@ -119,6 +119,16 @@ lignes sur $8$. Nous établissons au passage que l'indicateur de couverture
 n'a aucun contenu face à un ensemble certifié efficace, où il coïncide avec
 le rapport de cardinalité.
 
+Le résultat principal est donné sous plafond \emph{déterministe} d'appels au
+solveur entier, et non en secondes : sur le régime cible, à ressource
+strictement égale, la coupe d'efficacité gagne \textbf{57} preuves sur $80$
+paires au plafond de $100$ appels et \textbf{30} à celui de $300$, sans
+jamais en perdre une seule, tout en consommant \emph{moins} d'appels que le
+bras qui s'en passe ; au plafond haut elle prouve l'optimalité sur
+$\mathbf{80/80}$ exécutions. Les mesures arbitrées par un budget en temps
+sont conservées mais ne sont plus mises en avant, un tel budget n'étant pas
+reproductible.
+
 Sur un lot systématique de 90 instances, tous les résultats des deux méthodes
 passent une vérification indépendante ; la matheuristique rend la meilleure
 valeur sur \textbf{90 instances sur 90} et \emph{prouve} l'optimalité sur
@@ -1184,6 +1194,56 @@ tirage du même processus. C'est précisément pourquoi tous les bancs
 ultérieurs remplacent les secondes par un plafond déterministe d'appels
 entiers. Les valeurs retenues ici sont celles que détaille, instance par
 instance, la figure du régime cible.
+\end{remark}
+
+
+\begin{table}[htbp]
+\centering
+\caption{Le même régime sous plafond \textbf{déterministe} d'appels entiers,
+mêmes 8 instances, mêmes 10 graines, les deux bras en configuration
+courante : la seule différence est la coupe d'efficacité.\ \conf{1}{1}{1}}
+\label{tab:cibledeterm}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{plafond $100$} & \multicolumn{2}{c}{plafond $300$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+& sans & avec & sans & avec\\
+\midrule
+optimalité \textbf{prouvée} & $10/80$ & $\mathbf{67/80}$
+                            & $50/80$ & $\mathbf{80/80}$\\
+encadrements valides & $80/80$ & $80/80$ & $80/80$ & $80/80$\\
+lignes instables & \multicolumn{2}{c}{$0/8$} & \multicolumn{2}{c}{$0/8$}\\
+\midrule
+preuves gagnées / perdues & \multicolumn{2}{c}{$\mathbf{57}$ / $\mathbf{0}$}
+                          & \multicolumn{2}{c}{$\mathbf{30}$ / $\mathbf{0}$}\\
+delta d'appels par paire & \multicolumn{2}{c}{médiane $-1$}
+                         & \multicolumn{2}{c}{médiane $\mathbf{-51}$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Le gain n'est pas un effet d'horloge, et c'est mesuré.} Le
+tableau~\ref{tab:archcut} est compté en secondes, l'unité que nous refusons
+au §\ref{sec:negatif} et au §\ref{sec:externe}. Pire, nous en donnions
+une explication qui passait par l'horloge : le théorème de clôture remplace
+un programme entier par un programme linéaire, et le temps ainsi rendu
+retournerait à la certification. Sous un plafond compté en appels, ce temps
+n'est plus une ressource -- et le gain y est \emph{plus} net encore :
+$57$ preuves gagnées sur $80$ paires au plafond serré, $30$ au plafond
+large, aucune perdue dans les deux cas, et le bras qui pose des coupes
+consomme \emph{moins} d'appels que celui qui s'en passe. L'explication par
+le temps rendu est donc retirée ; ce que la coupe d'efficacité achète, elle
+l'achète en appels. C'est le tableau~\ref{tab:cibledeterm}, et non
+le~\ref{tab:archcut}, que nous mettons en avant.
+
+\begin{remark}[les deux tableaux ne se comparent pas]
+Le~\ref{tab:archcut} mesure la configuration d'origine sous budget de temps,
+le~\ref{tab:cibledeterm} la configuration courante sous plafond d'appels.
+Leurs colonnes « sans » ne sont pas comparables entre eux. Ce que le second
+établit est plus étroit et reproductible : à ressource strictement égale, la
+coupe d'efficacité gagne des preuves sans jamais en perdre.
 \end{remark}
 
 \noindent

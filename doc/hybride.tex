@@ -133,9 +133,17 @@ pouvoir vider le relâché ; les classer dans chaque source puis
 Les mesures sont rapportées par \textbf{paires} -- même instance, même
 graine, les deux variantes -- et jamais en comparant deux médianes
 indépendantes, qui laissent croire à un gain par instance qui n'existe pas.
-Sur le régime cible, l'optimalité prouvée passe de $58/80$ à $78/80$
-exécutions, soit $20$ preuves gagnées et \emph{aucune} perdue, avec un coût
-en baisse ($-12$ appels au solveur entier par paire en médiane). Sur un lot
+Le résultat principal est donné sous plafond \textbf{déterministe} d'appels
+au solveur entier, et non en secondes : sur le régime cible, à ressource
+strictement égale, la coupe d'efficacité gagne $\mathbf{57}$ preuves sur
+$80$ paires au plafond de $100$ appels et $\mathbf{30}$ à celui de $300$,
+sans jamais en perdre une seule, en consommant \emph{moins} d'appels que le
+bras qui s'en passe. Au plafond haut elle prouve l'optimalité sur
+$\mathbf{80/80}$ exécutions. La mesure antérieure du même régime, arbitrée
+par un budget en temps ($58/80$ à $78/80$), est conservée mais n'est plus
+mise en avant : un budget en secondes n'est pas reproductible, et le gain
+qu'il montrait pouvait n'être qu'un effet d'horloge -- ce que le plafond en
+appels réfute. Sur un lot
 figé de $90$ instances, $2$ preuves gagnées, aucune perdue, valeur identique
 partout. Un banc à budget \emph{déterministe} -- plafonné en nombre d'appels
 et non en secondes -- confirme la reproductibilité sur $90$ instances sur
@@ -295,6 +303,14 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       d'adopter $x_{\text{best}}$, et du même coup ce que la poursuite du
       calcul peut rapporter -- là où une méthode exacte interrompue ne
       majore rien, faute d'un schéma qui le lui permette.
+\item \textbf{Le résultat principal, dans l'unité que ce mémoire accepte}
+      (\S\ref{sec:cibledeterm}) : sur le régime cible, à plafond
+      \emph{déterministe} d'appels entiers et non en secondes, la coupe
+      d'efficacité gagne $57$ preuves sur $80$ paires au plafond de $100$
+      appels et $30$ à celui de $300$, sans jamais en perdre, tout en
+      consommant \emph{moins} d'appels que le bras qui s'en passe. Au
+      plafond haut elle prouve $80/80$. Ce chiffre remplace, comme résultat
+      mis en avant, celui qui était arbitré par un budget en temps.
 \item \textbf{Un protocole de mesure qui se contrôle lui-même}
       (\S\ref{sec:determ}) : lecture appariée plutôt que comparaison de
       médianes, budget plafonné en \emph{appels} et non en secondes, et
@@ -2539,16 +2555,27 @@ la \emph{même} expérience : autre tirage du même processus, non faute de
 recopie. C'est pourquoi tous les bancs ultérieurs comptent en appels
 entiers. Les valeurs retenues sont celles que la figure~\ref{fig:cible}
 détaille instance par instance, et dont les sommes valent bien $58$ et
-$78$.
+$78$. Le §\ref{sec:cibledeterm} rejoue ce régime sous plafond d'\emph{appels}
+et c'est cette mesure-là, reproductible, que nous mettons en avant.
 \end{remark}
 
 \noindent
 C'est ici que le théorème~\ref{th:hauteur} change le signe du coût. Avant
 lui, les preuves supplémentaires s'\emph{achetaient} : la médiane appariée
 valait $+10$ appels. Chaque clôture établie par programme linéaire est un
-appel entier non dépensé, et le temps ainsi rendu retourne à la
-certification, qui ferme davantage de bornes. Les preuves montent
-\emph{et} le coût baisse, non l'un malgré l'autre.
+appel entier non dépensé. Les preuves montent \emph{et} le coût baisse, non
+l'un malgré l'autre.
+
+\begin{remark}[une explication que nous retirons]
+Nous ajoutions ici que « le temps ainsi rendu retourne à la certification,
+qui ferme davantage de bornes ». C'était attribuer le gain à l'horloge, et
+c'est faux : le §\ref{sec:cibledeterm} rejoue le même régime sous plafond
+d'\emph{appels}, où aucun temps n'est rendu à personne, et le gain y est
+plus net encore -- $57$ preuves gagnées sur $80$ paires au plafond serré.
+Ce que la coupe d'efficacité achète, elle l'achète en appels. Le
+théorème~\ref{th:hauteur}, lui, reste ce que le §\ref{sec:determ} en dit :
+un gain de coût qui n'achète aucune preuve à ressource égale.
+\end{remark}
 
 Les $20$ preuves gagnées se répartissent sur \emph{trois} instances, et
 non deux. Deux d'entre elles changent d'\emph{état} et non seulement de
@@ -2560,6 +2587,95 @@ coupes pour prouver par l'oracle exact seul. La troisième instance apporte
 les $2$ preuves restantes, de $8/10$ à $10/10$ : un gain de degré, moins
 spectaculaire, mais qui manquait au compte -- $8+10=18$, et le tableau en
 annonce $20$.
+
+\subsection{Le même régime, sous plafond d'appels}
+\label{sec:cibledeterm}
+
+Le tableau~\ref{tab:res1} est le chiffre qui ouvre ce mémoire, et il est
+compté en \emph{secondes}. C'est l'unité que nous refusons partout ailleurs :
+au §\ref{sec:determ} parce qu'elle fait varier le nombre d'appels de
+$125\ \%$ d'une exécution à l'autre, et au §\ref{sec:matchzm} parce que
+« les secondes ne compareraient rien ». Annoncer le résultat principal dans
+la seule unité que le protocole récuse est une faute, et elle est aggravée
+par l'explication que nous en donnions : le théorème~\ref{th:hauteur}
+remplace un programme entier par un programme linéaire, \emph{le temps ainsi
+rendu} retournant à la certification. Sous un plafond compté en appels, ce
+temps rendu n'est plus une ressource. Le gain pouvait donc n'être qu'un
+effet d'horloge. Il fallait le mesurer, non l'argumenter.
+
+\begin{table}[htbp]
+\centering
+\caption{Régime cible sous plafond \textbf{déterministe} d'appels entiers,
+mêmes $8$ instances, mêmes $10$ graines. Les deux bras portent la
+configuration courante : la \emph{seule} différence entre eux est la coupe
+d'efficacité.\ \conf{1}{1}{1}}
+\label{tab:cibledeterm}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{plafond $100$} & \multicolumn{2}{c}{plafond $300$}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+& sans & avec & sans & avec\\
+\midrule
+optimalité \textbf{prouvée} & $10/80$ & $\mathbf{67/80}$
+                            & $50/80$ & $\mathbf{80/80}$\\
+encadrements valides & $80/80$ & $80/80$ & $80/80$ & $80/80$\\
+lignes instables & \multicolumn{2}{c}{$0/8$} & \multicolumn{2}{c}{$0/8$}\\
+\midrule
+\multicolumn{5}{l}{\emph{lecture appariée} (même instance, même graine)}\\
+preuves gagnées / perdues & \multicolumn{2}{c}{$\mathbf{57}$ / $\mathbf{0}$}
+                          & \multicolumn{2}{c}{$\mathbf{30}$ / $\mathbf{0}$}\\
+delta d'appels par paire & \multicolumn{2}{c}{médiane $-1$, total $-494$}
+                         & \multicolumn{2}{c}{médiane $\mathbf{-51}$,
+                           total $-3\,771$}\\
+& \multicolumn{2}{c}{$55/80$ en baisse}
+& \multicolumn{2}{c}{$67/80$ en baisse}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Le gain n'est pas un effet d'horloge.} Sous plafond d'appels il
+est \emph{plus} net que sous budget de temps, et il l'est aux deux plafonds :
+$57$ preuves gagnées et aucune perdue à $100$ appels, $30$ et aucune à
+$300$. L'explication par le temps rendu est donc réfutée par sa propre
+conséquence : ce temps n'existe plus ici comme ressource, et l'effet
+demeure. Ce que la coupe d'efficacité achète, elle l'achète en \emph{appels},
+pas en secondes.
+
+\paragraph{Et elle coûte moins, pas plus.} Le bras qui pose des coupes
+d'efficacité consomme \emph{moins} d'appels que celui qui n'en pose pas, aux
+deux plafonds -- médiane $-1$ à $100$, $-51$ à $300$, et $67$ paires sur $80$
+en baisse au plafond haut. La raison est mécanique : une preuve obtenue plus
+tôt arrête la boucle plus tôt. Les preuves montent \emph{et} le coût baisse,
+comme le tableau~\ref{tab:res1} l'annonçait -- mais pour une raison qui
+n'est pas celle que nous donnions.
+
+\paragraph{L'effet est le plus fort là où le budget serre.} À $300$ appels
+le bras sans coupes prouve déjà $50/80$, et le gain tombe de $57$ à $30$
+paires ; le bras avec coupes, lui, prouve $\mathbf{80/80}$. C'est la forme
+attendue d'un levier de certification : il ne sert à rien là où le budget
+suffit déjà, et il décide là où il ne suffit pas.
+
+\begin{remark}[ce que ce tableau remplace, et ce qu'il ne remplace pas]
+Il ne rejoue pas le tableau~\ref{tab:res1} : celui-ci mesure la
+configuration d'origine sous budget de temps, celui-là la configuration
+courante sous plafond d'appels. Les deux bras « sans » ne sont donc pas
+comparables d'un tableau à l'autre, et les rapprocher n'aurait pas de sens.
+Ce que le tableau~\ref{tab:cibledeterm} établit est plus étroit et
+\emph{reproductible} : à ressource strictement égale, comptée dans l'unité
+que ce mémoire accepte, la coupe d'efficacité gagne des preuves sans jamais
+en perdre. C'est cet énoncé, et non celui du tableau~\ref{tab:res1}, que nous
+mettons en avant.
+\end{remark}
+
+\begin{remark}[la ligne qui ne gagne rien]
+À $100$ appels, l'instance $n=7$, $p=4$, $\text{corr}=0{,}25$ ($|\Ecal|=198$)
+ne gagne \emph{aucune} preuve : $0/10$ dans les deux bras. Son écart garanti
+médian tombe pourtant de $53{,}6$ à $13{,}0\ \%$. Le levier y agit sans
+conclure -- et à $300$ appels cette même ligne passe à $10/10$. Nous la
+signalons parce qu'une lecture en preuves seules l'aurait donnée pour
+inerte.
+\end{remark}
 
 \subsection{Lot systématique}
 
@@ -2723,8 +2839,8 @@ des coupes d'efficacité ; la seule variable est le
 théorème~\ref{th:hauteur}, qui remplace un programme entier par un programme
 linéaire. Ce banc ne dit donc \emph{rien} de ce que la coupe d'efficacité
 elle-même rapporte à budget d'appels égal -- c'est une autre question, et
-elle demande son propre banc. Confondre les deux ferait lire un zéro là où
-rien n'a été mesuré.
+elle est traitée au~§\ref{sec:cibledeterm}. Confondre les deux ferait lire
+un zéro là où rien n'a été mesuré.
 
 Deux conclusions, et la seconde est un résultat négatif qu'il faut énoncer
 aussi nettement que les gains. La première : à budget d'appels égal, aucune
