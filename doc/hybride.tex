@@ -174,6 +174,13 @@ de couverture, opposé à la vraie frontière un ensemble certifié efficace,
 dégénère en rapport de cardinalité et n'apporte rien -- ce qui vaut pour
 toute méthode qui certifie avant d'archiver.
 
+La remesure est poussée jusqu'à $n=50$, que ce mémoire n'atteignait pas : au
+plafond de $300$ appels la coupe d'efficacité n'y dégrade \emph{aucune} des
+dix-huit paires et n'y produit aucun recul, le minorant restant identique
+partout et tout le gain passant par la borne supérieure ; au plafond de
+$100$, en revanche, elle dégrade quatre paires -- ce n'est donc pas la
+taille qui retourne le signe, mais le rapport entre budget et taille.
+
 Les limites sont énoncées avec la même précision que les gains : à $n\ge 20$
 et front épais la méthode ne conclut toujours pas -- l'écart garanti y reste
 de $77$ à $96{,}5\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
@@ -2883,6 +2890,120 @@ distinction compte : c'est la solution remise qui est moins bonne, alors
 même que la garantie qui l'accompagne est meilleure.
 \end{remark}
 
+\subsection{Le haut de l'échelle, sous plafond d'appels}
+\label{sec:echelledeterm}
+
+Troisième et dernier étage de la même remesure. Ici la lecture doit changer
+d'axe : à $n\ge 30$ et front épais la méthode ne prouve presque rien, de
+sorte que \emph{compter les preuves y renverrait zéro contre zéro et ne
+dirait rien}. La quantité informative est l'écart garanti, et ses deux
+termes séparément. La grille est celle de l'étude d'échelle -- $m=n/2+1$,
+$p=3$, $\text{corr}\in\{0\,;0{,}5\,;0{,}9\}$, deux graines -- prolongée à
+$n=50$, que ce mémoire n'atteignait pas.
+
+\begin{table}[htbp]
+\centering
+\caption{Échelle sous plafond \textbf{déterministe} d'appels entiers. Écarts
+garantis en \%, $\Delta>0$ signifiant que la coupe d'efficacité
+\emph{améliore}. Les deux bras portent la configuration courante ; seule la
+coupe les sépare.\ \conf{1}{1}{1}}
+\label{tab:echelledeterm}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{rcc|rrr|rrr}
+\toprule
+& & & \multicolumn{3}{c|}{plafond $100$} & \multicolumn{3}{c}{plafond $300$}\\
+$n$ & corr & gr & sans & avec & $\Delta$ & sans & avec & $\Delta$\\
+\midrule
+$30$ & $0{,}00$ & $1$ & $96{,}3$ & $95{,}6$ & $+0{,}67$
+                      & $96{,}0$ & $80{,}6$ & $\mathbf{+15{,}41}$\\
+$30$ & $0{,}00$ & $2$ & $80{,}6$ & $77{,}8$ & $+2{,}82$
+                      & $64{,}9$ & $61{,}9$ & $+3{,}02$\\
+$30$ & $0{,}50$ & $1$ & $30{,}4$ & $8{,}4$ & $\mathbf{+21{,}98}$
+                      & $4{,}5$ & $\mathbf{0{,}0}$ & $+4{,}52$\\
+$30$ & $0{,}50$ & $2$ & $22{,}6$ & $16{,}6$ & $+5{,}99$
+                      & $9{,}6$ & $\mathbf{0{,}0}$ & $+9{,}58$\\
+$30$ & $0{,}90$ & $1$ & $35{,}3$ & $\mathbf{0{,}0}$ & $\mathbf{+35{,}34}$
+                      & $33{,}1$ & $\mathbf{0{,}0}$ & $\mathbf{+33{,}13}$\\
+$30$ & $0{,}90$ & $2$ & $49{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+49{,}16}$
+                      & $37{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+37{,}20}$\\
+\midrule
+$40$ & $0{,}00$ & $1$ & $93{,}3$ & $93{,}3$ & $+0{,}00$
+                      & $91{,}7$ & $90{,}4$ & $+1{,}36$\\
+$40$ & $0{,}00$ & $2$ & $93{,}7$ & $93{,}7$ & $+0{,}00$
+                      & $91{,}7$ & $84{,}4$ & $+7{,}35$\\
+$40$ & $0{,}50$ & $1$ & $44{,}9$ & $58{,}8$ & $\mathbf{-13{,}94}$
+                      & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$\\
+$40$ & $0{,}50$ & $2$ & $66{,}0$ & $69{,}3$ & $-3{,}29$
+                      & $18{,}2$ & $\mathbf{0{,}0}$ & $+18{,}19$\\
+$40$ & $0{,}90$ & $1$ & $22{,}9$ & $\mathbf{0{,}0}$ & $+22{,}92$
+                      & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$\\
+$40$ & $0{,}90$ & $2$ & $39{,}2$ & $48{,}2$ & $-9{,}03$
+                      & $27{,}5$ & $17{,}7$ & $+9{,}74$\\
+\midrule
+$50$ & $0{,}00$ & $1$ & $76{,}0$ & $79{,}3$ & $-3{,}26$
+                      & $59{,}6$ & $59{,}6$ & $+0{,}00$\\
+$50$ & $0{,}00$ & $2$ & $91{,}6$ & $91{,}4$ & $+0{,}21$
+                      & $92{,}3$ & $91{,}4$ & $+0{,}88$\\
+$50$ & $0{,}50$ & $1$ & $43{,}1$ & $40{,}9$ & $+2{,}20$
+                      & $33{,}0$ & $24{,}2$ & $+8{,}73$\\
+$50$ & $0{,}50$ & $2$ & $93{,}1$ & $89{,}4$ & $+3{,}74$
+                      & $24{,}0$ & $16{,}3$ & $+7{,}67$\\
+$50$ & $0{,}90$ & $1$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$
+                      & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$\\
+$50$ & $0{,}90$ & $2$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$
+                      & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$\\
+\midrule
+\multicolumn{3}{l|}{mieux / pire / égal}
+ & \multicolumn{3}{c|}{$10$ / $\mathbf{4}$ / $4$}
+ & \multicolumn{3}{c}{$\mathbf{13}$ / $\mathbf{0}$ / $5$}\\
+\multicolumn{3}{l|}{$\Delta$ médian \quad$\bullet$\quad moyen}
+ & \multicolumn{3}{c|}{$+0{,}44$ \quad$\bullet$\quad $+6{,}42$}
+ & \multicolumn{3}{c}{$\mathbf{+5{,}94}$ \quad$\bullet$\quad $+8{,}71$}\\
+\multicolumn{3}{l|}{optimalité prouvée}
+ & \multicolumn{3}{c|}{$2\to 5$} & \multicolumn{3}{c}{$4\to\mathbf{9}$}\\
+\multicolumn{3}{l|}{reculs : preuve / valeur / borne}
+ & \multicolumn{3}{c|}{$0$ / $\mathbf{3}$ / $\mathbf{3}$}
+ & \multicolumn{3}{c}{$\mathbf{0}$ / $\mathbf{0}$ / $\mathbf{0}$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Ce qui décide n'est pas la taille, c'est le rapport
+budget/taille.} À $300$ appels, \emph{aucune} paire n'est dégradée, aucun
+recul n'est observé sur aucun des trois axes, et le minimum du $\Delta$ vaut
+$+0{,}00$ : la coupe d'efficacité ne nuit \textbf{jamais}. Au même lot et au
+même $n$, mais à $100$ appels, elle dégrade $4$ paires et produit $6$
+reculs. Ce n'est donc pas $n$ qui retourne le signe, c'est le fait qu'à
+$100$ appels pour $n=40$ ou $50$ il n'y a pas de quoi financer à la fois la
+recherche et les coupes.
+
+\paragraph{À $300$ appels, tout le gain passe par la borne.} Le minorant est
+\emph{identique} dans les dix-huit paires -- pas une ne bouge d'un
+millième. L'écart se resserre uniquement par $q_{\text{ub}}$, ce qui est
+exactement le rôle assigné à la coupe, et ce qui montre après coup que les
+reculs de valeur du plafond serré étaient un effet de famine budgétaire et
+non un défaut du mécanisme.
+
+\paragraph{$\text{corr}$ commande plus que $n$.} À front mince
+($\text{corr}=0{,}9$) les gains sont massifs et se soldent par des preuves :
+$+33$, $+37$ points à $n=30$. À front épais ils décroissent avec la taille
+-- $+15{,}4$ et $+3{,}0$ à $n=30$, puis $+1{,}4$ et $+7{,}4$ à $n=40$,
+puis $+0{,}0$ et $+0{,}9$ à $n=50$. C'est la frontière de la méthode, et
+elle se lit ici sur l'axe qui convient : la coupe d'efficacité conserve une
+prise à $n=30$ même à front épais, et l'a perdue à $n=50$.
+
+\begin{remark}[un niveau de preuve plus faible, et il faut le dire]
+\label{rem:pasdevt}
+À ces tailles l'énumération est hors de portée : il n'y a \textbf{pas de
+vérité terrain}. Le contrôle $q_{\text{lb}}\le\qs\le q_{\text{ub}}$, qui
+couvre $288$ exécutions sur $288$ aux deux lots précédents
+(§\ref{sec:cibledeterm} et~§\ref{sec:lotdeterm}), est donc indisponible ici.
+Le seul contrôle possible est la cohérence interne
+$q_{\text{lb}}\le q_{\text{ub}}$, vérifiée $18/18$ aux deux plafonds. Ce
+tableau repose sur un niveau de preuve inférieur à celui des deux autres, et
+nous ne le présentons pas au même rang.
+\end{remark}
+
 \subsection{À budget d'appels égal : ce que la clôture par la hauteur achète}
 \label{sec:determ}
 
@@ -3079,7 +3200,13 @@ au-delà de $n\ge 20$ » est donc \textbf{retirée}. Ce qui subsiste est plus
       $q_{\text{lb}}$ (§\ref{sec:couverture}) ;
 \item même à $77\ \%$ et $78\ \%$, l'écart reste sans usage décisionnel
       (§\ref{sec:aide}). Avoir divisé le résidu par un quart ne fait pas
-      une méthode qui conclut à ces tailles.
+      une méthode qui conclut à ces tailles ;
+\item le §\ref{sec:echelledeterm} prolonge cette frontière jusqu'à $n=50$
+      sous plafond d'appels, et la situe plus précisément : à front épais le
+      gain décroît avec la taille jusqu'à s'annuler, tandis qu'à front mince
+      il reste massif. Ce tableau repose toutefois sur un contrôle plus
+      faible que les autres, faute de vérité terrain à ces tailles
+      (remarque~\ref{rem:pasdevt}).
 \end{itemize}
 
 \noindent

@@ -129,6 +129,11 @@ $\mathbf{80/80}$ exécutions. Les mesures arbitrées par un budget en temps
 sont conservées mais ne sont plus mises en avant, un tel budget n'étant pas
 reproductible.
 
+La remesure est poussée jusqu'à $n=50$ : au plafond de $300$ appels la coupe
+d'efficacité n'y dégrade aucune des dix-huit paires et n'y produit aucun
+recul, alors qu'au plafond de $100$ elle en dégrade quatre -- ce n'est pas la
+taille qui retourne le signe, mais le rapport entre budget et taille.
+
 Sur un lot systématique de 90 instances, tous les résultats des deux méthodes
 passent une vérification indépendante ; la matheuristique rend la meilleure
 valeur sur \textbf{90 instances sur 90} et \emph{prouve} l'optimalité sur
@@ -1326,6 +1331,66 @@ relâchée, jamais, aux deux plafonds et sur les deux lots, mais qu'un
 \emph{minorant} peut reculer quand le budget est très serré.
 \end{remark}
 
+
+\begin{table}[htbp]
+\centering
+\caption{Échelle sous plafond \textbf{déterministe} d'appels entiers,
+$m=n/2+1$, $p=3$, deux graines, prolongée à $n=50$. Écarts garantis
+médians par cellule, en \% ; $\Delta>0$ signifie que la coupe
+d'efficacité améliore.\ \conf{1}{1}{1}}
+\label{tab:echelledeterm}
+\setlength{\tabcolsep}{5pt}\small
+\begin{tabular}{rc|rrr|rrr}
+\toprule
+& & \multicolumn{3}{c|}{plafond $100$} & \multicolumn{3}{c}{plafond $300$}\\
+$n$ & corr & sans & avec & $\Delta$ & sans & avec & $\Delta$\\
+\midrule
+$30$ & $0{,}00$ & $88{,}5$ & $86{,}7$ & $+1{,}7$ & $80{,}4$ & $71{,}3$ & $\mathbf{+9{,}2}$\\
+$30$ & $0{,}50$ & $26{,}5$ & $12{,}5$ & $\mathbf{+14{,}0}$ & $7{,}0$ & $\mathbf{0{,}0}$ & $+7{,}0$\\
+$30$ & $0{,}90$ & $42{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+42{,}2}$ & $35{,}1$ & $\mathbf{0{,}0}$ & $\mathbf{+35{,}2}$\\
+$40$ & $0{,}00$ & $93{,}5$ & $93{,}5$ & $+0{,}0$ & $91{,}7$ & $87{,}4$ & $+4{,}4$\\
+$40$ & $0{,}50$ & $55{,}4$ & $64{,}0$ & $\mathbf{-8{,}6}$ & $9{,}1$ & $\mathbf{0{,}0}$ & $+9{,}1$\\
+$40$ & $0{,}90$ & $31{,}0$ & $24{,}1$ & $+6{,}9$ & $13{,}8$ & $8{,}8$ & $+4{,}9$\\
+$50$ & $0{,}00$ & $83{,}8$ & $85{,}3$ & $-1{,}5$ & $76{,}0$ & $75{,}5$ & $+0{,}4$\\
+$50$ & $0{,}50$ & $68{,}1$ & $65{,}2$ & $+3{,}0$ & $28{,}5$ & $20{,}2$ & $+8{,}2$\\
+$50$ & $0{,}90$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}0$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}0$\\
+\midrule
+\multicolumn{2}{l|}{mieux / pire / égal (18 paires)}
+ & \multicolumn{3}{c|}{$10$ / $\mathbf{4}$ / $4$}
+ & \multicolumn{3}{c}{$\mathbf{13}$ / $\mathbf{0}$ / $5$}\\
+\multicolumn{2}{l|}{$\Delta$ médian}
+ & \multicolumn{3}{c|}{$+0{,}44$} & \multicolumn{3}{c}{$\mathbf{+5{,}94}$}\\
+\multicolumn{2}{l|}{reculs : preuve / valeur / borne}
+ & \multicolumn{3}{c|}{$0$ / $3$ / $3$}
+ & \multicolumn{3}{c}{$\mathbf{0}$ / $\mathbf{0}$ / $\mathbf{0}$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Au sommet de l'échelle, le plafond décide du signe.} À $n\ge 30$ la
+méthode ne prouve presque rien : compter les preuves y renverrait zéro
+contre zéro, et l'axe informatif devient l'écart garanti. À $300$ appels,
+\emph{aucune} paire n'est dégradée et aucun recul n'apparaît sur aucun des
+trois axes -- la coupe d'efficacité ne nuit jamais, et le minorant est
+identique dans les dix-huit paires, tout le gain passant par
+$q_{\text{ub}}$. À $100$ appels pour $n=40$ ou $50$, en revanche, il n'y a
+pas de quoi financer à la fois la recherche et les coupes : $4$ paires
+dégradées et $6$ reculs. Ce n'est donc pas la taille qui retourne le signe
+mais le rapport budget/taille. Enfin $\text{corr}$ commande plus que $n$ :
+à front mince le gain reste massif et se solde par des preuves, à front
+épais il décroît avec la taille jusqu'à s'annuler vers $n=50$.
+
+\begin{remark}[un niveau de preuve plus faible, et il faut le dire]
+\label{rem:pasdevt}
+À ces tailles l'énumération est hors de portée : il n'y a pas de vérité
+terrain, et le contrôle $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ -- vérifié
+$288/288$ sur les deux lots précédents -- est indisponible. Seule la
+cohérence interne $q_{\text{lb}}\le q_{\text{ub}}$ est vérifiable, et elle
+passe $18/18$ aux deux plafonds. Ce tableau repose donc sur un niveau de
+preuve inférieur aux autres, et nous ne le présentons pas au même rang.
+\end{remark}
+
 \noindent
 Sur le lot systématique, l'apport se lit sur l'axe des preuves : deux
 certificats de plus, à valeur inchangée ($90/90$ dans les deux cas).
@@ -1393,7 +1458,12 @@ $\text{corr}=0$, l'écart ne bouge pas ($96{,}6$ contre $96{,}5$), et ce n'est
 pas faute de borne -- le statut « convergée » y certifie que le majorant
 \emph{est} $\max_{\Rcal}f$, de sorte que le verrou y est passé du côté de
 $q_{\text{lb}}$. Et un écart de $77\ \%$ reste sans usage décisionnel
-(§\ref{sec:aide}) : la méthode ne conclut toujours pas à ces tailles.
+(§\ref{sec:aide}) : la méthode ne conclut toujours pas à ces tailles. Le
+tableau~\ref{tab:echelledeterm} prolonge cette frontière jusqu'à $n=50$ sous
+plafond d'appels et la situe plus finement -- à front épais le gain décroît
+avec la taille jusqu'à s'annuler, à front mince il reste massif --, sur un
+contrôle plus faible faute de vérité terrain à ces tailles
+(remarque~\ref{rem:pasdevt}).
 
 Le diagnostic qui suivait -- « le verrou est le \emph{plafond} lui-même,
 donc le coût en $p$ binaires par coupe » -- reposait sur l'explication
