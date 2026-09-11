@@ -997,7 +997,7 @@ un majorant $\le 0$ suffit à conclure. On le calcule sur la
 \emph{programme linéaire} remplace un programme en nombres entiers. Le
 maximum est de plus ramené au plancher entier, $QN-PD$ étant entière.
 
-\begin{remark}[ce que ce lemme est, et ce qu'il n'est pas]\label{rem:lemme}
+\begin{remark}[ce que ce théorème est, et ce qu'il n'est pas]\label{rem:lemme}
 Il ne change \emph{aucune} coupe : même vivier, même ordre, mêmes coupes
 posées. Seul le moyen d'autoriser la coupe change. Le nombre d'appels au
 solveur entier ne peut donc que baisser -- par construction, et pas
@@ -1007,7 +1007,8 @@ de \textbf{capacité} : la section~\ref{sec:res} mesure qu'à budget d'appels
 \end{remark}
 
 \noindent
-Le comportement mesuré est nettement bimodal : là où le lemme opère il
+Le comportement mesuré est nettement bimodal : là où le théorème~\ref{th:hauteur}
+opère il
 établit presque toutes les clôtures ($24$ sur $24$, $22$ sur $22$, $21$ sur
 $21$), là où il n'opère pas il n'en établit aucune. Il n'y a pas de régime
 intermédiaire.
@@ -2680,7 +2681,7 @@ coûtait alors un programme entier de clôture pour rien -- c'est exactement
 ce que le théorème~\ref{th:hauteur} supprime, en ramenant cette clôture à un
 programme linéaire.
 
-\subsection{À budget d'appels égal : un banc déterministe}
+\subsection{À budget d'appels égal : ce que la clôture par la hauteur achète}
 \label{sec:determ}
 
 Les bancs précédents sont bornés en \emph{secondes}. Ils sont réalistes,
@@ -2702,7 +2703,9 @@ de la conclusion.
 
 \begin{table}[htbp]
 \centering
-\caption{Banc déterministe, plafond de $100$ appels, $90$ instances.\ \conf{0}{0}{0}}
+\caption{Banc déterministe, plafond de $100$ appels, $90$ instances. Les
+\emph{deux} bras posent des coupes d'efficacité : seul le
+théorème~\ref{th:hauteur} les sépare.\ \conf{0}{0}{0}}
 \label{tab:determ}
 \begin{tabular}{lc}
 \toprule
@@ -2715,6 +2718,14 @@ bornes plus lâches & $\mathbf{0}$\\
 \end{table}
 
 \noindent
+\textbf{Ce que ce banc isole, et ce qu'il n'isole pas.} Les deux bras posent
+des coupes d'efficacité ; la seule variable est le
+théorème~\ref{th:hauteur}, qui remplace un programme entier par un programme
+linéaire. Ce banc ne dit donc \emph{rien} de ce que la coupe d'efficacité
+elle-même rapporte à budget d'appels égal -- c'est une autre question, et
+elle demande son propre banc. Confondre les deux ferait lire un zéro là où
+rien n'a été mesuré.
+
 Deux conclusions, et la seconde est un résultat négatif qu'il faut énoncer
 aussi nettement que les gains. La première : à budget d'appels égal, aucune
 instance ne recule sur aucun des trois axes -- l'affirmation a désormais un
