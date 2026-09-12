@@ -104,8 +104,10 @@ def controle(path: str) -> List[str]:
         pbs.append(f"[info] numerotation externe declaree : "
                    f"lancer  python check_refs.py --cross {path} {ext.group(1)}")
 
-    dur = re.compile(r"(Th\.|[Tt]héorème|[Pp]roposition|[Cc]orollaire|[Ll]emme)"
-                     r"~? ?(\d+)")
+    # les variantes sans accent sont acceptees : le controle ne doit pas
+    # dependre de l'hygiene typographique de celui qui ecrit le renvoi faux
+    dur = re.compile(r"(Th\.|[Tt]h[ée]or[èe]me|[Pp]roposition|[Cc]orollaire"
+                     r"|[Ll]emme)~? ?(\d+)")
     for m in dur.finditer(sans_comm):
         ctx = sans_comm[max(0, m.start() - 40): m.end() + 20]
         if ext or any(re.search(e, ctx) for e in EXEMPT):
@@ -187,6 +189,19 @@ def croise(cite: str, source: str) -> List[str]:
         if cle not in vus:
             vus.add(cle)
             print(f"      Th. {n:<2} -> « {titre} »  [{etat}]")
+
+    # Un renvoi sans glose n'est PAS verifie : le controle sait seulement que
+    # le numero existe. Le taire serait pire que de ne pas controler, puisque
+    # la sortie ressemble alors a une verification. On dit donc ce qui a ete
+    # verifie, et on signale tout numero dont AUCUNE occurrence ne l'est.
+    cites = {n for (n, _) in vus}
+    verifies = {n for (n, e) in vus if e == "ok"}
+    aveugles = sorted(cites - verifies)
+    print(f"    {len(verifies)}/{len(cites)} numeros cites avec au moins un "
+          f"renvoi glose, donc reellement verifies")
+    for n in aveugles:
+        pbs.append(f"« Théorème {n} » n'est cite que sans glose : le controle "
+                   f"ne peut pas verifier qu'il designe « {num[n]} »")
     return pbs
 
 

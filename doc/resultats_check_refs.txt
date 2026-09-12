@@ -1,0 +1,22 @@
+=== check_refs sur les trois documents ===
+=== doc/hybride.tex : 0 probleme(s)
+=== doc/article.tex : 0 probleme(s)
+=== doc/pseudocode.tex : 0 probleme(s)
+    [info] numerotation externe declaree : lancer  python check_refs.py --cross doc/pseudocode.tex article.tex
+
+TOTAL : 0
+
+=== controle croise ===
+=== controle croise : doc/pseudocode.tex contre doc/article.tex
+    (doc/article.tex definit 8 theoremes)
+      Th. 2  -> « Test d'efficacité »  [ok]
+      Th. 3  -> « Convergence finie »  [ok]
+      Th. 4  -> « Coupe de dominance »  [ok]
+      Th. 4  -> « Coupe de dominance »  [?]
+      Th. 5  -> « Borne resserrée sur $\qs$ »  [ok]
+      Th. 2  -> « Test d'efficacité »  [?]
+      Th. 1  -> « Linéarisation de seuil »  [?]
+      Th. 1  -> « Linéarisation de seuil »  [ok]
+    5/5 numeros cites avec au moins un renvoi glose, donc reellement verifies
+
+TOTAL : 0

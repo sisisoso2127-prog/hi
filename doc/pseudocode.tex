@@ -114,7 +114,7 @@ $\Zk(x)-\Zk(\bar x)$ puisque les dénominateurs sont strictement positifs
 sous (A1). Donc $\bar x$ est efficace si et seulement si $\theta(\bar x)=0$.
 
 \begin{algorithm}[H]
-\caption{\textsc{TestEfficacité}$(\bar x,\tau)$ --- Théorème 2}
+\caption{\textsc{TestEfficacité}$(\bar x,\tau)$ --- Théorème 2 (test d'efficacité)}
 \KwIn{$\bar x\in\Scal$ ; limite de temps $\tau$ (éventuellement $+\infty$)}
 \KwOut{$(\textsf{verdict},\theta,y)$ avec
        $\textsf{verdict}\in\{\textsf{efficace},\textsf{dominé},
@@ -164,7 +164,7 @@ $q^\star=\max_X f$. $X$ étant fini, l'itération converge en un nombre fini
 d'étapes.
 
 \begin{algorithm}[H]
-\caption{\textsc{Dinkelbach}$(f,X)$ --- Théorème 3}
+\caption{\textsc{Dinkelbach}$(f,X)$ --- Théorème 3 (convergence finie)}
 \KwIn{fonction fractionnaire $f=(N,D)$ ; domaine entier $X$}
 \KwOut{$(q^\star,x^\star)$ ou \textsf{infaisable}}
 $x_0\gets$ un point quelconque de $X$ (un \ILP{} à objectif nul)\;
@@ -197,7 +197,7 @@ Les $e_k$ étant \emph{entiers}, $\Zk(x)>\Zk(\bar x)\iff e_k(x)\ge 1$ :
 aucun pas minimal $\varepsilon$ n'est à estimer.
 
 \begin{algorithm}[H]
-\caption{\textsc{AjouterCoupe}$(\Rcal,\bar x)$ --- Théorème 4}
+\caption{\textsc{AjouterCoupe}$(\Rcal,\bar x)$ --- Théorème 4 (coupe de dominance)}
 \KwIn{modèle $\Rcal$ ; $\bar x$ \textbf{dominé} (prérequis de validité)}
 \KwOut{$\Rcal$ privé de $\{x : Z(x)\le Z(\bar x)\}$}
 introduire $u_1,\dots,u_p\in\{0,1\}$ (nouvelles variables)\;
@@ -405,7 +405,7 @@ borne à un seuil \emph{libre} : il n'est pas plus fort, il gagne sur le
 seuil et cède sur le dénominateur, et les deux se prennent au minimum.
 
 \begin{algorithm}[H]
-\caption{\textsc{Certifier}$(q,\mathcal{D},B,\lambda,T)$ --- Théorème 5}
+\caption{\textsc{Certifier}$(q,\mathcal{D},B,\lambda,T)$ --- Théorème 5 (borne resserrée)}
 \KwIn{$q$ atteinte par un point efficace ; points dominés $\mathcal{D}$
       déjà payés par les chaînes de réparation ; budget $B$ ;
       taille de lot $\lambda$ ; nombre de tours $T$}
