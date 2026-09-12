@@ -1340,6 +1340,12 @@ def matheuristic_P(inst: MOILFP,
                    gap_hopeless: float = 0.5,
                    ilp_budget: Optional[int] = None,
                    ilp_search_share: float = 0.6,
+                   k_elite: int = 8,
+                   k_rand: int = 4,
+                   menu_normal: Tuple[str, ...] = ("A", "A", "B", "C"),
+                   menu_divers: Tuple[str, ...] = ("B", "B", "C", "A"),
+                   lns_frac: Tuple[float, float] = (0.4, 0.6),
+                   keep_prob: Tuple[float, float] = (0.6, 0.4),
                    verbose: bool = False) -> MatheurResult:
     """
     Phase 1 (recherche) : VNS dans l'espace des criteres, sous-problemes
@@ -1363,6 +1369,16 @@ def matheuristic_P(inst: MOILFP,
     `cut_batch`  taille des lots de coupes recyclees et `cert_rounds` leur
                  nombre : le plafond n'est plus fixe, il est arbitre par le
                  budget (cf. `certify`).
+
+    Quatre constantes de la recherche sont EXPOSEES, a valeur par defaut
+    inchangee, pour que l'etude de sensibilite puisse les faire varier au
+    lieu de les subir : `k_elite`/`k_rand` (bases du tour : les meilleurs
+    pour f, plus des tires au hasard), `menu_normal`/`menu_divers` (le menu
+    pondere de mouvements dans chaque regime), `lns_frac` (fraction des
+    variables liberees par le mouvement C, en regime normal puis en
+    diversification) et `keep_prob` (probabilite de conserver une borne
+    epsilon dans le mouvement B, memes deux regimes). Voir
+    `bench_sensibilite.py`.
     """
     t0 = time.time()
     calls0 = ORACLE_CALLS["ilp"]
@@ -1417,11 +1433,12 @@ def matheuristic_P(inst: MOILFP,
 
         # en diversification on tire davantage vers B (plancher absolu) et C
         # (LNS) : A reste ancre sur le point de base, donc explore peu
-        menu = ["B", "B", "C", "A"] if diversify else ["A", "A", "B", "C"]
+        menu = list(menu_divers if diversify else menu_normal)
         if mouvement_c == "sans":
             menu = [m for m in menu if m != "C"] or ["A"]
 
-        for xr in _select_pool(arch, usage, rng, inst, diversify):
+        for xr in _select_pool(arch, usage, rng, inst, diversify,
+                               k_elite=k_elite, k_rand=k_rand):
             usage[tuple(int(v) for v in xr)] = \
                 usage.get(tuple(int(v) for v in xr), 0) + 1
             for k in rng.permutation(inst.p):
@@ -1442,12 +1459,12 @@ def matheuristic_P(inst: MOILFP,
                     t = rng.random(inst.p)
                     eps = [nadir[j] + Fraction(float(t[j])).limit_denominator(64)
                            * (ideal[j] - nadir[j]) for j in range(inst.p)]
-                    keep_prob = 0.4 if diversify else 0.6
-                    eps = [eps[j] if rng.random() < keep_prob else None
+                    kp = keep_prob[1] if diversify else keep_prob[0]
+                    eps = [eps[j] if rng.random() < kp else None
                            for j in range(inst.p)]
                     y = move_epsilon_absolute(inst, eps, w, w0)
                 else:
-                    frac = 0.6 if diversify else 0.4
+                    frac = lns_frac[1] if diversify else lns_frac[0]
                     n_free = max(1, int(frac * inst.n))
                     free = rng.choice(inst.n, size=n_free, replace=False)
                     keep_c = None
