@@ -1662,6 +1662,37 @@ coupes recyclées, autrefois fixé à 40, est piloté par le budget : les coupes
 sont ajoutées par lots, un lot de plus n'étant posé que si la borne n'a pas
 fermé et qu'il reste du temps.
 
+\paragraph{Sensibilité.} Les constantes de la recherche -- $8$ bases
+d'élite plus $4$ tirées au hasard, menu $\{A,A,B,C\}$, fraction LNS
+$0{,}4\to0{,}6\,n$, seuil de stagnation, taille de lot $\beta$, tours de
+certification $\rho$ -- ont été balayées un facteur à la fois. Le plafond du
+balayage n'est pas neutre : à $300$ appels sur le régime cible la
+configuration de production prouve $24/24$ et \emph{aucune} valeur ne peut
+alors rien montrer, un banc saturé mesurant son propre plafond et non une
+insensibilité. Le balayage porte donc sur deux strates à marge réelle :
+régime cible à plafond $80$ ($13/24$ preuves) et $n=20$ à plafond $300$
+($10{,}94\ \%$ d'écart médian).
+
+Deux valeurs sont justifiées, et seules ces deux-là : $\beta=40$ et
+$\rho=2$ sont les seuls facteurs d'effet \emph{unanime} -- en dessous toutes
+les lignes comparables se dégradent ($\beta=10$ : $0/6$, $+20{,}8$ points et
+$4$ preuves perdues ; $\beta=20$ : $0/4$ ; $\rho=1$ : $0/4$), au-dessus
+rien ne bouge ($\beta=80$ et $160$, $\rho=4$ et $6$ identiques). Les deux
+sont donc au genou de la courbe, la plus petite valeur qui sature. Les
+autres réglages déplacent l'écart de $2$ à $5$ points sans jamais changer le
+nombre de preuves : leur valeur demande à être \emph{dite}, non justifiée.
+
+\begin{remark}[une médiane bimodale n'est pas un juge]
+Deux facteurs semblaient battre la production de $7$ à $9$ points d'écart
+médian. Rejoués sur un lot élargi ($8$ instances à $n=20$ et $30$, trois
+graines), ils prouvent \emph{exactement} le même nombre de lignes
+($11/24$ partout), leurs moyennes tiennent dans $0{,}6$ point et leurs
+comptes appariés sont symétriques ($2/2$, $7/7$, $2/2$). Les écarts garantis
+sont bimodaux -- des lignes à $0\ \%$, des lignes au-dessus de $80\ \%$,
+presque rien entre -- si bien qu'une seule ligne traversant le milieu
+déplace la médiane sans rien changer au fond. Les défauts ne bougent pas.
+\end{remark}
+
 \begin{algorithm}[H]
 \caption{\textsc{Matheuristique}$(B_{\text{rech}},B_{\text{cert}},s_{\max})$\ \conf{1}{1}{1}}
 \label{alg:matheur}

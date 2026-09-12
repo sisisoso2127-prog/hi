@@ -2718,6 +2718,182 @@ méthode concurrente réimplémentée dans un autre langage doit pouvoir lire
 \emph{exactement} les mêmes instances. C'est le format d'échange, et il rend
 la comparaison possible hors de ce dépôt.
 
+\subsection{Les réglages, et ce qu'ils pilotent vraiment}
+\label{sec:sensibilite}
+
+La recherche porte des constantes que ce mémoire énonçait sans les
+défendre : $8$ bases d'élite plus $4$ tirées au hasard, un menu
+$\{A,A,B,C\}$, une fraction LNS qui passe de $0{,}4$ à $0{,}6\,n$ en
+diversification, \texttt{max\_stall}, la taille de lot $\beta$ et le nombre
+de tours $\rho$. Quatre d'entre elles n'étaient même pas des réglages :
+elles étaient figées dans le code, donc impossibles à faire varier. Une
+valeur qu'on ne peut pas faire varier n'est pas un choix, c'est une
+hypothèse cachée. Elles sont maintenant exposées, à valeur par défaut
+inchangée -- vérifié, le banc déterministe rejoué avant et après rend une
+sortie identique ligne pour ligne, à la seule exception du chronomètre.
+
+\paragraph{Un piège qu'il a fallu mesurer avant de balayer.} Le premier
+balayage a été lancé sur le régime cible à $300$ appels. Il n'a rien montré,
+et pour une raison qui n'est pas une propriété des réglages : dans ce régime
+la production prouve $24/24$ avec $0{,}00\ \%$ d'écart, de sorte
+qu'\emph{aucune} valeur ne peut faire mieux ni pire. Un banc saturé ne
+mesure pas une insensibilité, il mesure son propre plafond. Nous avons donc
+cherché où se trouve la marge, et balayé là.
+
+\begin{table}[htbp]
+\centering
+\caption{Sensibilité aux réglages, un facteur à la fois autour de la
+configuration de production. Strate~A : régime cible, plafond $80$,
+$8$~instances $\times$ $3$ graines d'algorithme -- la production y prouve
+$13/24$, c'est le \emph{nombre de preuves} qui se lit. Strate~B : $n=20$,
+plafond $300$ -- la production y laisse $10{,}94\ \%$ d'écart garanti
+médian. Lecture appariée : même instance, même graine.\ \conf{1}{1}{1}}
+\label{tab:sensib}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{llrrrc}
+\toprule
+facteur & valeur & A preuves & B écart & B $\Delta$ & B mieux/pire\\
+\midrule
+\multirow{5}{*}{$k_{\text{élite}}$}
+ & $2$ & $14/24$ & $10{,}51$ & $-0{,}44$ & $2/2$\\
+ & $4$ & $13/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+ & $\mathbf{8}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $16$ & $13/24$ & $11{,}55$ & $+0{,}61$ & $0/3$\\
+ & $32$ & $13/24$ & $11{,}55$ & $+0{,}61$ & $0/4$\\
+\midrule
+\multirow{5}{*}{$k_{\text{hasard}}$}
+ & $0$ & $13/24$ & $12{,}93$ & $+1{,}98$ & $0/4$\\
+ & $2$ & $13/24$ & $13{,}74$ & $+2{,}80$ & $0/4$\\
+ & $\mathbf{4}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $8$ & $13/24$ & $14{,}06$ & $+3{,}11$ & $0/4$\\
+ & $16$ & $13/24$ & $10{,}76$ & $-0{,}19$ & $1/2$\\
+\midrule
+\multirow{5}{*}{menu normal}
+ & $\{A,B,C\}$ & $14/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+ & $\mathbf{\{A,A,B,C\}}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $\{A,A,A,B,C\}$ & $14/24$ & $10{,}51$ & $-0{,}44$ & $1/2$\\
+ & $\{A,B,B,C\}$ & $14/24$ & $12{,}20$ & $+1{,}25$ & $0/3$\\
+ & $\{A,A,B,C,C\}$ & $\mathbf{17/24}$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+\midrule
+\multirow{4}{*}{menu divers.}
+ & $\{A,B,C\}$ & $13/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+ & $\mathbf{\{B,B,C,A\}}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $\{B,C\}$ & $13/24$ & $7{,}53$ & $-3{,}41$ & $1/2$\\
+ & $\{B,B,B,C,A\}$ & $13/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+\midrule
+\multirow{6}{*}{fraction LNS}
+ & $(0{,}2\,;0{,}4)$ & $\mathbf{17/24}$ & $5{,}40$ & $-5{,}55$ & $1/3$\\
+ & $(0{,}3\,;0{,}5)$ & $14/24$ & $6{,}64$ & $-4{,}30$ & $1/3$\\
+ & $\mathbf{(0{,}4\,;0{,}6)}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $(0{,}5\,;0{,}7)$ & $16/24$ & $15{,}44$ & $+4{,}49$ & $0/4$\\
+ & $(0{,}6\,;0{,}8)$ & $15/24$ & $12{,}14$ & $+1{,}19$ & $1/3$\\
+ & $(0{,}4\,;0{,}4)$ & $13/24$ & $3{,}38$ & $-7{,}56$ & $1/2$\\
+\midrule
+\multirow{4}{*}{garde $\varepsilon$}
+ & $(0{,}4\,;0{,}2)$ & $12/24$ & $8{,}94$ & $-2{,}00$ & $1/3$\\
+ & $\mathbf{(0{,}6\,;0{,}4)}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $(0{,}8\,;0{,}6)$ & $15/24$ & $11{,}25$ & $+0{,}31$ & $0/3$\\
+ & $(0{,}6\,;0{,}6)$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/1$\\
+\midrule
+\multirow{5}{*}{\texttt{max\_stall}}
+ & $1$ & $13/24$ & $3{,}73$ & $-7{,}21$ & $1/2$\\
+ & $2$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $0/1$\\
+ & $\mathbf{3}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $5$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $0/0$\\
+ & $8$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $0/0$\\
+\midrule
+\multirow{5}{*}{$\beta$ (lot)}
+ & $10$ & $\mathbf{9/24}$ & $31{,}74$ & $\mathbf{+20{,}80}$ & $\mathbf{0/6}$\\
+ & $20$ & $13/24$ & $22{,}90$ & $\mathbf{+11{,}95}$ & $\mathbf{0/4}$\\
+ & $\mathbf{40}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $80$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
+ & $160$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
+\midrule
+\multirow{4}{*}{$\rho$ (tours)}
+ & $1$ & $13/24$ & $20{,}65$ & $\mathbf{+9{,}71}$ & $\mathbf{0/4}$\\
+ & $\mathbf{2}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
+ & $4$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
+ & $6$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Deux valeurs sont justifiées, et le banc dit pourquoi.} $\beta=40$
+et $\rho=2$ sont les seuls facteurs dont l'effet est \emph{unanime} : en
+dessous, toutes les lignes comparables se dégradent -- $\beta=10$ perd $6$
+lignes sur $6$ et $4$ preuves, $\beta=20$ en perd $4$ sur $4$, $\rho=1$
+également $4$ sur $4$ -- et au-dessus, rien ne bouge : $\beta=80$ et $160$
+sont identiques à $40$, $\rho=4$ et $6$ identiques à $2$. Les deux valeurs
+de production sont donc exactement au \emph{genou} de la courbe : la plus
+petite qui sature. C'est la seule forme de justification qu'un réglage
+puisse recevoir d'un banc, et ces deux-là l'ont.
+
+\begin{remark}[une médiane qui ment, et comment nous l'avons su]
+\label{rem:medianeartefact}
+Deux facteurs semblaient dire le contraire de la production : une fraction
+LNS constante à $0{,}4$ améliorait l'écart médian de $7{,}56$ points, et
+\texttt{max\_stall}$=1$ de $7{,}21$. Le compte apparié disait déjà l'inverse
+-- plus de lignes dégradées qu'améliorées -- et une médiane qui baisse
+pendant que la majorité des lignes monte n'est pas un résultat, c'est un
+symptôme d'échantillon trop petit : la strate~B ne compte que huit
+exécutions.
+
+Nous avons donc rejoué ces deux facteurs sur un lot élargi, $8$ instances à
+$n=20$ et $n=30$, trois graines, $24$ exécutions par configuration. Le
+verdict est net et il va contre la lecture flatteuse :
+
+\begin{center}\small
+\begin{tabular}{lrrrc}
+\toprule
+configuration & médiane & \textbf{moyenne} & preuves & mieux/pire\\
+\midrule
+production & $14{,}63$ & $27{,}41$ & $11/24$ & ---\\
+LNS constante $(0{,}4\,;0{,}4)$ & $7{,}06$ & $27{,}50$ & $11/24$ & $2/2$\\
+LNS basse $(0{,}2\,;0{,}4)$ & $8{,}50$ & $27{,}80$ & $11/24$ & $7/7$\\
+\texttt{max\_stall}$=1$ & $5{,}64$ & $27{,}19$ & $11/24$ & $2/2$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Les quatre configurations prouvent \emph{exactement} le même nombre de
+lignes, leurs moyennes tiennent dans $0{,}6$ point, et tous les comptes
+appariés sont \emph{symétriques} -- $0/0$, $2/2$, $7/7$, $2/2$. Seule la
+médiane bouge, de $6$ à $9$ points. La cause est la forme de la
+distribution : les écarts garantis sont \emph{bimodaux} -- des lignes à
+$0\ \%$ et des lignes au-dessus de $80\ \%$, presque rien entre les deux --
+si bien qu'une seule ligne traversant le milieu déplace la médiane
+énormément sans rien changer au fond. Ces deux réglages ne pilotent donc
+rien, et les défauts ne bougent pas. Nous rapportons l'épisode parce qu'il
+vaut au-delà de ces deux lignes : sur une distribution bimodale, la médiane
+seule est un mauvais juge, et c'est le compte apparié qui tranche.
+\end{remark}
+
+\paragraph{Quatre réglages ne pilotent rien, et c'est une information.}
+$k_{\text{élite}}$, $k_{\text{hasard}}$, la garde $\varepsilon$ et le menu
+de diversification déplacent l'écart de $2$ à $5$ points -- c'est-à-dire
+dans le bruit que la remarque~\ref{rem:medianeartefact} vient de
+caractériser -- sans jamais changer le nombre de preuves. Leur valeur n'a
+pas besoin d'être \emph{justifiée}, elle a besoin d'être \emph{dite}, ce que
+ce mémoire ne faisait pas. On notera tout de même que $k_{\text{hasard}}=4$
+n'est battu par aucune des quatre autres valeurs testées sur la strate~B,
+et que la supprimer ($k_{\text{hasard}}=0$) coûte $1{,}98$ point : la part
+aléatoire des bases sert à quelque chose, même si sa taille exacte importe
+peu.
+
+\paragraph{Une piste que nous ne refermons pas.} Sur la strate~A, deux
+configurations indépendantes montent à $\mathbf{17/24}$ preuves contre
+$13/24$ : le menu $\{A,A,B,C,C\}$ -- une seconde part de LNS -- et la
+fraction $(0{,}2\,;0{,}4)$ -- des voisinages LNS plus petits. Un
+\emph{nombre de preuves} n'est pas une médiane : il n'a pas le défaut que la
+remarque précédente décrit. Les deux pointent dans la même direction, un LNS
+plus fréquent et plus étroit sur les petites instances. Le lot élargi ne le
+confirme pas à $n=20$ et $30$ ($11/24$ partout), ce qui suggère un effet
+propre au petit régime. Nous le signalons comme une piste ouverte plutôt que
+de la faire passer pour un réglage acquis : quatre preuves de plus sur $24$,
+sur une seule strate, ne justifient pas de changer une configuration de
+production.
+
 \medskip\noindent
 Deux jeux d'instances, générés sous (A1)--(A2), gelés avant toute mesure :
 un \emph{régime cible} de $8$ instances à vérité terrain énumérable, jouées

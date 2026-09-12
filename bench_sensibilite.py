@@ -133,6 +133,13 @@ def med(v: List[float]) -> float:
 
 def main() -> int:
     graines = list(range(int(sys.argv[1]) if len(sys.argv) > 1 else 3))
+    # reprise : « 5- » reprend au sixieme facteur, « 0-3 » n'en fait que
+    # quatre. Le balayage est long et un banc qu'on ne peut pas reprendre
+    # est un banc qu'on finit par ne plus relancer.
+    facteurs = FACTEURS
+    if len(sys.argv) > 2:
+        a, _, b = sys.argv[2].partition("-")
+        facteurs = FACTEURS[int(a or 0): int(b) if b else None]
 
     print("=" * 108)
     print("SENSIBILITE AUX REGLAGES -- un facteur a la fois, "
@@ -159,7 +166,7 @@ def main() -> int:
     print("-" * 108)
 
     resume = []
-    for nom, cle, valeurs in FACTEURS:
+    for nom, cle, valeurs in facteurs:
         ampA, ampB = [], []
         for v in valeurs:
             prod = (v == PROD[cle])
