@@ -2352,11 +2352,37 @@ $\text{corr}\in\{0;0{,}25;0{,}5;0{,}75;0{,}9;1\}$, 3 graines, soit
 \textbf{216 instances}, vérité terrain par énumération, limite de 12~s par
 résolution.
 
-Le paramètre $\text{corr}$ pilote la similarité entre critères, donc la
-finesse de $\Ecal$, \textbf{à domaine $\Scal$ rigoureusement identique} : le
-générateur construit $A$ et $b$ indépendamment de $\text{corr}$, ainsi que la
-fonction d'utilité. On \emph{manipule} donc la cause supposée au lieu de
-l'observer : le plan est causal et non corrélationnel.
+\paragraph{Le générateur.} Toutes les données sont entières, ce qui rend le
+test d'efficacité intégral et sans tolérance numérique.
+$A_{ij}\sim\mathcal{U}_{\mathbb{Z}}\{0,\dots,9\}$, une colonne nulle étant
+corrigée par un coefficient dans $\{1,\dots,9\}$ pour borner le domaine ; le
+second membre n'est pas tiré mais posé,
+$b_i=\max(1,\lfloor\kappa\sum_j A_{ij}\rfloor)$, où $\kappa$ est l'échelle
+qui pilote $|\Scal|$ à $(n,m)$ fixés. Les critères tirent
+$c_k\in[1,20]$, $d_k\in[0,5]$, $\alpha_k\in[0,10]$, $\beta_k\in[1,10]$ ;
+$\beta_k\ge 1$ avec $d_k\ge 0$ établit~(A1), et $A\ge 0$ avec le domaine
+borné établit~(A2) -- par construction, non par vérification a posteriori.
+L'utilité $f$ tire $c\in[1,20]$, $d\in[0,5]$, $\alpha\in[0,9]$,
+$\beta\in[1,9]$, en entiers et \emph{indépendamment} des critères. Les
+bornes des variables s'en déduisent :
+$\overline{x}_j=\min_{i:A_{ij}>0}\lfloor b_i/A_{ij}\rfloor$.
+
+La corrélation est une composante latente commune. Pour chacun des quatre
+tirages d'un critère, un $u$ est fait \emph{une fois} et partagé par les
+$p$ critères, un tirage $v$ est refait pour chacun, et le coefficient retenu
+est $\lfloor\text{corr}\cdot u+(1-\text{corr})\cdot v\rceil$ ramené dans son
+domaine. Le mélange porte sur le numérateur \emph{et} sur le dénominateur :
+corréler les seuls numérateurs laisse des dénominateurs indépendants
+recréer du conflit entre les rapports, et l'effet sur la finesse de $\Ecal$
+reste faible.
+
+Le paramètre $\text{corr}$ pilote ainsi la similarité entre critères, donc la
+finesse de $\Ecal$, \textbf{à domaine $\Scal$ rigoureusement identique} : $A$
+et $b$ sont tirés avant les critères, sur le même flux, donc sont identiques
+d'un niveau de $\text{corr}$ à l'autre -- nous l'avons vérifié par
+comparaison directe des matrices. La fonction d'utilité l'est aussi. On
+\emph{manipule} donc la cause supposée au lieu de l'observer : le plan est
+causal et non corrélationnel.
 
 \paragraph{Validation.} \textbf{0 divergence} avec la vérité terrain sur les
 199 instances résolues à l'optimum, \textbf{0 faux positif} dans les
@@ -3344,7 +3370,9 @@ elle-même : voir la remarque~\ref{rem:littinerte}.
 Le couple $(n,m)$ ne mesure pas la difficulté ; les bornes des variables la
 mesurent. Le protocole de~\cite{drici2018} donne des variables bornées par
 $2$ ou $3$, donc une boîte de l'ordre de $10^{18}$ points à $n=40$, contre
-$10^{52}$ pour nos instances d'échelle au même $n$. Prouver $10/10$ là-bas
+$10^{52}$ pour nos instances d'échelle au même $n$ -- médianes sur les deux
+grilles, $10^{18{,}1}$ contre $10^{51{,}9}$, l'écart ne tenant donc pas au
+choix d'une instance. Prouver $10/10$ là-bas
 ne contredit en rien nos $96\ \%$ d'écart garanti ici : « $n=40$ » ne désigne
 pas le même problème.
 \end{remark}

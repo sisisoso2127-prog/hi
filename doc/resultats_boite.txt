@@ -1,0 +1,5 @@
+BOITE DES VARIABLES : instance publiee et mediane du lot
+  n | notre publ.  notre med  ubmax  ubmed | drici publ.  drici med  ubmax  ubmed | ecart med
+ 20 |        20.9       20.7     13     10 |         7.8        9.0      3      2 |      11.7
+ 30 |        36.2       35.8     22     14 |        13.5       13.6      3      2 |      22.2
+ 40 |        51.8       51.9     24     19 |        18.2       18.1      4      2 |      33.8

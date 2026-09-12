@@ -11,6 +11,7 @@
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage[margin=2.4cm]{geometry}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{tikz}
@@ -2536,6 +2537,164 @@ $+0{,}11$ à $+0{,}00$ point sur les six lignes. Le tableau~\ref{tab:cglp}
 porte les deux configurations.
 \end{remark}
 
+\subsection{Le générateur, en toutes lettres}
+\label{sec:generateur}
+
+Nous donnons plus loin (§\ref{sec:matchdrici}) le protocole de Drici
+\emph{et al.} au coefficient près, et nous en tirons argument : leurs
+variables sont bornées par $2$ ou $3$, les nôtres par $19$ en médiane, et
+c'est ce qui sépare leur régime du nôtre (figure~\ref{fig:boite}). L'argument
+ne vaut rien si notre propre générateur reste implicite. Le voici, sous la
+forme qui permet de le réimplémenter ailleurs.
+
+\begin{table}[htbp]
+\centering
+\caption{Le générateur d'instances, tirage par tirage. Toutes les données
+sont \textbf{entières} : c'est ce qui permet un test d'efficacité
+entièrement intégral, donc sans tolérance numérique. $\mathcal{U}$ désigne
+la loi uniforme continue, $\mathcal{U}_{\mathbb{Z}}$ l'uniforme sur les
+entiers.\ \confna}
+\label{tab:generateur}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{llll}
+\toprule
+& objet & tirage & domaine\\
+\midrule
+\multirow{2}{*}{contraintes}
+ & $A_{ij}$ & $\mathcal{U}_{\mathbb{Z}}\{0,\dots,9\}$ & $[0,9]$\\
+ & $b_i$ & $\max\bigl(1,\lfloor\kappa\sum_j A_{ij}\rfloor\bigr)$
+   & déterministe\\
+\midrule
+\multirow{4}{*}{critères $Z_k$}
+ & $c_k$ & $\operatorname{mix}\bigl(\mathcal{U}(1,20)\bigr)$ & $[1,20]$\\
+ & $d_k$ & $\operatorname{mix}\bigl(\mathcal{U}(0,5)\bigr)$ & $[0,5]$\\
+ & $\alpha_k$ & $\operatorname{mix}\bigl(\mathcal{U}(0,10)\bigr)$ & $[0,10]$\\
+ & $\beta_k$ & $\operatorname{mix}\bigl(\mathcal{U}(1,10)\bigr)$ & $[1,10]$\\
+\midrule
+\multirow{4}{*}{utilité $f$}
+ & $c$ & $\mathcal{U}_{\mathbb{Z}}\{1,\dots,20\}$ & $[1,20]$\\
+ & $d$ & $\mathcal{U}_{\mathbb{Z}}\{0,\dots,5\}$ & $[0,5]$\\
+ & $\alpha$ & $\mathcal{U}_{\mathbb{Z}}\{0,\dots,9\}$ & $[0,9]$\\
+ & $\beta$ & $\mathcal{U}_{\mathbb{Z}}\{1,\dots,9\}$ & $[1,9]$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Trois précisions que le tableau ne porte pas, et sans lesquelles il ne se
+réimplémente pas.
+
+\paragraph{$\kappa$, et pourquoi le second membre n'est pas tiré.}
+$\kappa$ est l'\emph{échelle du second membre} : $b_i$ n'est pas tiré au
+hasard mais posé proportionnellement à la somme de sa ligne. C'est ce qui
+rend $|\Scal|$ pilotable à $(n,m)$ fixés, donc ce qui permet de comparer
+deux tailles à difficulté comparable plutôt qu'à formule comparable. Les
+bornes sur les variables s'en déduisent :
+$\overline{x}_j=\min_{i\,:\,A_{ij}>0}\lfloor b_i/A_{ij}\rfloor$, valide car
+$A\ge 0$ et $x\ge 0$. Une colonne nulle de $A$ rendrait le domaine non
+borné ; le générateur la corrige en y plaçant un coefficient tiré dans
+$\{1,\dots,9\}$, ce qui établit~(A2). Et $\beta_k\ge 1$ avec $d_k\ge 0$
+établit~(A1) : les deux hypothèses sont vraies \emph{par construction}, pas
+vérifiées après coup.
+
+\paragraph{$\text{corr}$ : une composante latente commune, sur les deux
+étages de la fraction.} Notons $\operatorname{mix}$ le mélange convexe
+\[
+  \operatorname{mix}(\mathcal{L})
+  \;=\;\operatorname{clip}\Bigl(\bigl\lfloor
+    \text{corr}\cdot u \;+\; (1-\text{corr})\cdot v
+  \bigr\rceil\Bigr),
+  \qquad u,v\sim\mathcal{L}\ \text{i.i.d.},
+\]
+où $u$ est tiré \emph{une seule fois} et partagé par les $p$ critères tandis
+que $v$ est retiré pour chacun, et où $\operatorname{clip}$ ramène dans le
+domaine de la ligne. À $\text{corr}=0$ les critères sont indépendants, à
+$\text{corr}=1$ ils sont identiques ; entre les deux on interpole. Le
+paramètre est le levier structurel du mémoire : il permet de
+\emph{manipuler} la finesse de $\Ecal$ au lieu de seulement l'observer, ce
+qui rend l'étude de difficulté causale et non corrélationnelle.
+
+Deux choix méritent d'être défendus plutôt que subis. D'abord, le mélange
+porte sur le numérateur \emph{et} sur le dénominateur. Corréler les seuls
+numérateurs ne suffit pas : des dénominateurs indépendants recréent du
+conflit entre les rapports, et l'effet sur la finesse de $\Ecal$ reste
+faible -- nous l'avons constaté avant de corriger. Ensuite, $f$ est tirée
+\emph{indépendamment} des critères, et sans mélange : l'utilité à optimiser
+sur $\Ecal$ ne doit pas hériter de la structure qu'on impose au front, sans
+quoi $\text{corr}$ agirait des deux côtés à la fois et ne mesurerait plus
+rien de propre.
+
+\begin{remark}[ce que $\text{corr}$ laisse invariant, et c'est le point]
+À $(n,m,p,\text{graine})$ fixés, $A$ et $b$ sont \textbf{identiques} d'un
+niveau de $\text{corr}$ à l'autre : ils sont tirés avant les critères, sur
+le même flux aléatoire. Le domaine $\Scal$ ne bouge donc pas, et seul
+$\Ecal$ change. C'est ce qui autorise à lire $\text{corr}$ comme un levier
+et non comme une troisième instance. Nous l'avons vérifié par comparaison
+directe des matrices sur $(n,p)\in\{(6,3),(8,3),(20,3),(40,3)\}$ et
+$\text{corr}\in\{0\,;0{,}25\,;0{,}5\,;0{,}9\,;1\}$.
+\end{remark}
+
+\paragraph{Les grilles, campagne par campagne.} Le nombre de contraintes
+est lié à celui des variables par $m=\max(3,\lfloor n/2\rfloor+1)$, partout
+et sauf mention contraire.
+
+\begin{table}[htbp]
+\centering
+\caption{Où chaque campagne du mémoire tire ses instances. « graines »
+désigne les graines du \emph{générateur}, sauf pour le régime cible, dont
+les huit instances sont figées et rejouées sur dix graines de
+l'\emph{algorithme}.\ \confna}
+\label{tab:grilles}
+\setlength{\tabcolsep}{4pt}\small
+\begin{tabular}{llllll}
+\toprule
+campagne & $n$ & $p$ & $\text{corr}$ & $\kappa$ & graines\\
+\midrule
+régime cible (\S\ref{sec:cibledeterm})
+ & $5$--$8$ & $2$--$4$ & $0$ ; $0{,}25$ ; $0{,}5$ & $1{,}0$--$1{,}8$
+ & \emph{algo} $0$--$9$\\
+lot figé, strate A
+ & $5$--$8$ & $2$ ; $3$ ; $4$ & $0$ ; $0{,}5$ ; $0{,}9$
+ & $1{,}8/1{,}5/1{,}2/1{,}0$ & $1$ ; $2$\\
+lot figé, strate B
+ & $10$ ; $15$ ; $20$ & $3$ & $0$ ; $0{,}5$ ; $0{,}9$ & $1{,}0$ & $1$ ; $2$\\
+échelle (\S\ref{sec:echelledeterm})
+ & $30$ ; $40$ ; $50$ & $3$ & $0$ ; $0{,}5$ ; $0{,}9$ & $1{,}0$ & $1$ ; $2$\\
+seconde route (\S\ref{sec:seuil})
+ & $20$ ; $30$ ; $40$ & $3$ & $0$ ; $0{,}5$ & $1{,}0$ & $1$ ; $2$ ; $3$\\
+vivier (\S\ref{sec:vivier})
+ & $20$ ; $30$ ; $40$ & $3$ & $0$ ; $0{,}5$ & $1{,}0$ & $1$ ; $2$\\
+couverture, échelle A
+ & $6$ ; $8$ ; $10$ ; $12$ & $3$ & $0$ & $1{,}0$ & $1$ ; $2$ ; $3$\\
+couverture, échelle B
+ & $12$--$20$ & $3$ & $0$
+ & $0{,}65$ à $0{,}38$ & $1$ ; $2$ ; $3$\\
+livrable (\S\ref{sec:livrable})
+ & $6$ ; $7$ ; $8$ & $3$ ; $4$ & $0$ ; $0{,}5$ & $1{,}0$--$1{,}5$ & $1$ ; $2$ ; $3$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}[le protocole publié a été rejoué contre le code]
+Un protocole n'a de valeur que s'il se réimplémente. Nous avons donc
+réécrit le générateur \emph{à partir du seul texte ci-dessus} -- le tableau
+et les deux paragraphes, sans lire le programme -- et comparé coefficient
+par coefficient sur $180$ instances couvrant
+$n\in\{6,8,20,40\}$, $p\in\{2,3,4\}$, trois graines et
+$\text{corr}\in\{0\,;0{,}25\,;0{,}5\,;0{,}9\,;1\}$ : \textbf{aucun écart}.
+Ce contrôle ne teste pas le programme, il teste \emph{cette section} ; s'il
+échouait, c'est le texte qui serait faux.
+\end{remark}
+
+\noindent
+Le lot figé compte $4\times 3\times 3\times 2=72$ instances en strate~A et
+$3\times 1\times 3\times 2=18$ en strate~B, soit les $90$ annoncées. Il est
+écrit sur disque en JSON avant toute mesure, avec son manifeste : le
+générateur est déterministe à graine donnée, mais il peut évoluer, et une
+méthode concurrente réimplémentée dans un autre langage doit pouvoir lire
+\emph{exactement} les mêmes instances. C'est le format d'échange, et il rend
+la comparaison possible hors de ce dépôt.
+
 \medskip\noindent
 Deux jeux d'instances, générés sous (A1)--(A2), gelés avant toute mesure :
 un \emph{régime cible} de $8$ instances à vérité terrain énumérable, jouées
@@ -4660,18 +4819,37 @@ $[50,100]$ donnent des variables bornées par $2$ ou $3$.
 \begin{table}[htbp]
 \centering
 \caption{« $n=40$ » ne désigne pas le même problème d'un protocole à
-l'autre.\ \conf{0}{0}{0}}
+l'autre. Colonne « publiée » : l'instance de la figure~\ref{fig:boite}
+(graine~$1$, $\text{corr}=0$ chez nous ; graine~$1000$ chez eux). Colonne
+« médiane » : sur toute la grille de la campagne -- $6$ instances pour nous
+(§\ref{sec:generateur}), $10$ pour eux. La conclusion ne dépend pas du choix
+de l'instance.\ \conf{0}{0}{0}}
 \label{tab:boite}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
 protocole & $n$ & $\overline{x}$ max & $\overline{x}$ méd.
- & $\log_{10}$ de la boîte\\
+ & $\log_{10}$ boîte, publiée & médiane\\
 \midrule
-Drici \emph{et al.} ($A\sim[1,30]$) & $40$ & $3$ & $2$ & $18{,}2$\\
-notre lot d'échelle & $40$ & $24$ & $19$ & $\mathbf{51{,}8}$\\
+Drici \emph{et al.} ($A\sim[1,30]$) & $40$ & $3$ & $2$ & $18{,}2$ & $18{,}1$\\
+notre lot d'échelle & $40$ & $24$ & $19$ & $\mathbf{51{,}8}$ & $\mathbf{51{,}9}$\\
+\midrule
+\multicolumn{4}{l}{écart des médianes} & $33{,}6$ & $\mathbf{33{,}8}$\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{remark}[une instance par protocole, et pourquoi ce n'est pas un choix]
+La figure~\ref{fig:boite} porte une instance de chaque côté, et il faut le
+dire plutôt que le laisser deviner : une boîte se lit sur une instance, pas
+sur une moyenne d'instances. Reste à établir que celle-ci n'est pas choisie.
+Sur la grille entière, la médiane de $\log_{10}$ de notre boîte vaut $20{,}7$,
+$35{,}8$ et $51{,}9$ à $n=20$, $30$ et $40$, contre $9{,}0$, $13{,}6$ et
+$18{,}1$ pour la leur : l'écart médian est de $33{,}8$ ordres de grandeur à
+$n=40$, là où l'instance publiée en donne $33{,}6$. La conclusion est
+\emph{légèrement plus forte} sur la grille complète que sur l'instance
+montrée. À $n=20$ elle est un peu plus faible ($11{,}7$ contre $13{,}1$) et
+nous le disons aussi.
+\end{remark}
 
 
 \begin{figure}[htbp]
