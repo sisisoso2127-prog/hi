@@ -312,7 +312,7 @@ efficace}, et où $q_{\text{ub}}$ est le minimum de deux bornes valides
       théorème de certification n'a rien de particulier à l'incumbent, et
       l'évaluer à un seuil avancé sur le relâché ouvre une seconde route,
       incomparable à la première. Effet rare et énorme : jusqu'à $+38{,}77$
-      points d'écart garanti, $+137{,}1$ de gains cumulés contre $-0{,}42$
+      points d'écart garanti, $+137{,}56$ de gains cumulés contre $-0{,}42$
       de pertes.
 \item \textbf{L'archive rendue et mesurée} (\S\ref{sec:livrable}) : le
       sous-ensemble de $\Ecal$ que produit la méthode est évalué contre
@@ -2625,7 +2625,10 @@ vivier de coupes, jamais à être rendu. Cette section le mesure contre la
 vérité terrain $\Ecal$ énumérée, avec les indicateurs usuels : pureté,
 cardinalité, couverture $C(\Acal,\Ecal)$~\cite{zitzler1999}, hypervolume exact
 (balayage dimensionnel récursif, sans échantillonnage) et
-$\varepsilon$-indicateur additif normalisé~\cite{zitzler2003}.
+$\varepsilon$-indicateur additif normalisé~\cite{zitzler2003}. Les quatre
+premiers sont d'autant meilleurs qu'ils sont \emph{grands} ; le dernier
+mesure un décalage et se lit à l'envers, $\varepsilon^+=0$ signifiant que
+$\Acal$ couvre $\Ecal$ exactement.
 
 Deux précautions, dont la seconde retire un indicateur du tableau.
 
@@ -2636,8 +2639,19 @@ du front serait notée $0{,}0$. Nous l'abaissons de $10\,\%$ de l'étendue de
 chaque critère, identiquement pour $\Acal$ et pour $\Ecal$.
 
 \begin{proposition}\label{prop:couv}
-Si $\Acal\subseteq\Ecal$, alors $C(\Acal,\Ecal)=|Z(\Acal)|/|Z(\Ecal)|$.
+Soit $\Acal\subseteq\Ecal$, la couverture étant mesurée \emph{dans l'espace
+des critères} : $C(\Acal,\Ecal):=\bigl|\{z\in Z(\Ecal):\exists a\in\Acal,\,
+Z(a)\ge z\}\bigr|/|Z(\Ecal)|$. Alors
+$C(\Acal,\Ecal)=|Z(\Acal)|/|Z(\Ecal)|$.
 \end{proposition}
+
+\noindent
+La précision « dans l'espace des critères » n'est pas rhétorique : compter
+les \emph{points} de $\Ecal$ au numérateur et les \emph{vecteurs} de
+$Z(\Ecal)$ au dénominateur exigerait en plus que $Z$ soit injective sur
+$\Ecal$. Nos mesures la constatent -- $143\,220$ paires vérifiées, aucune
+collision -- mais la démonstration ne l'invoque pas et n'en a pas besoin dès
+lors que les deux côtés se comptent en vecteurs.
 
 \begin{proof}
 Soient $a\in\Acal$ et $z\in Z(\Ecal)$ avec $Z(a)\ge z$ composante par
@@ -2903,11 +2917,12 @@ troisième graine retire cette conclusion : $8$ contre $2$ sur dix paires non
 nulles donne $p=0{,}109$, et \textbf{le test des signes ne conclut pas}.
 Mais il n'est pas le bon test : les deux dégradations valent $-0{,}23$ et
 $-0{,}19$ point, et il les compte à égalité avec un gain de $+38{,}77$. La
-somme des gains atteint $+137{,}1$ points contre $-0{,}42$ pour celle des
+somme des gains atteint $+137{,}56$ points contre $-0{,}42$ pour celle des
 pertes, et le test des rangs signés de Wilcoxon donne
 $\mathbf{p=0{,}020}$. Leur désaccord n'est pas un artefact : il dit la
 nature de l'effet, \emph{rare et énorme} plutôt que fréquent et petit. Sur
-huit lignes il ne fait rien ; sur quatre il retire de $14$ à $39$ points.
+huit lignes il ne fait rien ; sur \textbf{cinq} il retire de $14$ à $39$
+points.
 \end{remark}
 
 \subsection{Le vivier affamait la source qui seule peut vider le relâché}
