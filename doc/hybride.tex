@@ -2547,6 +2547,17 @@ c'est ce qui sépare leur régime du nôtre (figure~\ref{fig:boite}). L'argument
 ne vaut rien si notre propre générateur reste implicite. Le voici, sous la
 forme qui permet de le réimplémenter ailleurs.
 
+Deux choses avant le tableau, sans lesquelles il ne suffirait pas. La source
+d'aléa est le générateur PCG64 de \textsc{numpy}, initialisé par
+\texttt{default\_rng(graine)} ;
+elle est consommée comme un \textbf{flux unique}, dans l'ordre où le
+tableau donne ses lignes -- d'abord $A$ (et la correction de colonne nulle
+si elle a lieu), puis les quatre tirages latents, puis les $p$ critères
+chacun dans l'ordre $c_k$, $d_k$, $\alpha_k$, $\beta_k$, puis $f$ dans
+l'ordre $c$, $\alpha$, $d$, $\beta$. Une permutation de ces tirages donne
+d'autres instances à graine égale : l'ordre fait partie du protocole au même
+titre que les lois.
+
 \begin{table}[htbp]
 \centering
 \caption{Le générateur d'instances, tirage par tirage. Toutes les données
@@ -2676,14 +2687,26 @@ livrable (\S\ref{sec:livrable})
 \end{table}
 
 \begin{remark}[le protocole publié a été rejoué contre le code]
-Un protocole n'a de valeur que s'il se réimplémente. Nous avons donc
-réécrit le générateur \emph{à partir du seul texte ci-dessus} -- le tableau
-et les deux paragraphes, sans lire le programme -- et comparé coefficient
-par coefficient sur $180$ instances couvrant
+Un protocole n'a de valeur que s'il se réimplémente. Nous avons donc réécrit
+le générateur \emph{à partir du seul texte publié}, sans lire le programme,
+et comparé coefficient par coefficient sur $180$ instances couvrant
 $n\in\{6,8,20,40\}$, $p\in\{2,3,4\}$, trois graines et
-$\text{corr}\in\{0\,;0{,}25\,;0{,}5\,;0{,}9\,;1\}$ : \textbf{aucun écart}.
-Ce contrôle ne teste pas le programme, il teste \emph{cette section} ; s'il
-échouait, c'est le texte qui serait faux.
+$\text{corr}\in\{0\,;0{,}25\,;0{,}5\,;0{,}9\,;1\}$. Deux fois, car il y a
+deux textes : le tableau ci-dessus et ses paragraphes, puis la version
+condensée de l'article -- c'est elle le vrai test, le texte le plus court
+étant celui qui dit si l'essentiel a été gardé. \textbf{Aucun écart}, ni
+d'un côté ni de l'autre.
+
+Le contrôle porte aussi une version \emph{négative}, et c'est elle qui lui
+donne son mordant. Décrire les critères par un domaine -- « $c_k$ dans
+$[1,20]$ » -- en annonçant par ailleurs que toutes les données sont
+entières conduit un lecteur sans le code à les tirer en entiers ; cette
+lecture reproduit $A$ et $b$, puis diverge sur \emph{la totalité} des $180$
+instances. La précision « continus puis arrondis », comme le moteur et
+l'ordre des tirages, n'est donc pas de l'ornement : sans elle le protocole
+ne se réimplémente pas, et le contrôle négatif est gardé pour qu'elle ne
+puisse pas se reperdre en silence. Ce contrôle ne teste pas le programme, il
+teste \emph{le texte} ; s'il échoue, c'est le texte qui est faux.
 \end{remark}
 
 \noindent

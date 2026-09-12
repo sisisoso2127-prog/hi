@@ -1,0 +1,5 @@
+MEMOIRE  (tableau tirage par tirage)          180 instances -> AUCUN ECART
+ARTICLE  (paragraphe du plan d'experience)    180 instances -> AUCUN ECART
+CONTROLE NEGATIF (criteres lus en entiers)    180 instances -> 180 divergences
+(A, b) invariants quand seul corr change                      True
+OK
