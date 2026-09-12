@@ -3388,8 +3388,19 @@ Ce qui reste ouvert est mieux posé qu'avant, et se dit en trois points. À
 $n=40$, $\text{corr}=0$, la borne ne bouge pas alors que la procédure
 certifie qu'elle \emph{est} $\max_{\Rcal}f$ : ce qui reste tient au
 minorant, où la recherche est effectivement déficiente sans que la corriger
-suffise. La méthode n'est pas monotone en budget, et deux lignes sur six le
-restent après correction de la cause principale. Enfin le mouvement C, dont le rendement
+suffise. La méthode n'est pas monotone en budget, et deux lignes sur six le restent
+après correction de la cause principale ; leur cause est désormais
+\emph{nommée}. Sur la ligne fautive l'incumbent est identique aux deux
+plafonds, donc seule la borne recule, et la seconde route y rend
+$\max_{\Rcal}f=20{,}50$ à plafond $300$ contre $63{,}00$ à plafond $900$,
+\textbf{les deux avec le statut convergé}. Un Dinkelbach convergé rendant
+$\max_{\Rcal}f$ exactement, $\Rcal_{900}\subseteq\Rcal_{300}$ forcerait
+l'inégalité inverse : le relâché n'est donc \textbf{pas emboîté dans le
+budget}. Plus de budget donne une archive plus grande, de nouveaux centres
+s'intercalent dans le préfixe des $\beta$ coupes posées, et l'on pose
+d'autres coupes plutôt que les mêmes et davantage. La correction de principe
+-- rendre le vivier stable par préfixe -- déplacerait chaque nombre mesuré
+ici : c'est une décision de conception, pas un correctif. Enfin le mouvement C, dont le rendement
 est le plus faible -- quatre améliorations pour $316$ appels --, reste en
 place : mis à l'épreuve sur trois graines contre son ancrage et contre son
 retrait pur et simple, le banc ne tranche pas ($p=0{,}73$ au mieux), et

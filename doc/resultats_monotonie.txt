@@ -1,0 +1,69 @@
+=== 1. LES DEUX LIGNES NON MONOTONES, INSTRUMENTEES ===
+  n gr   cap      q_lb   q_ub brut        mS   q_ub=min   ecart%   ILP  tours  coupes  arch  prouve
+----------------------------------------------------------------------------------------------------
+ 30  1   300    4.3871     20.5000   87.0000    20.5000    78.60   291      2      93    20   False
+ 30  1   900    4.3871     63.0000   87.0000    63.0000    93.04   891      2     162    40   False
+----------------------------------------------------------------------------------------------------
+ 30  2   300   32.2500     41.7500   73.2500    41.7500    22.75   290      2     106    39   False
+ 30  2   900   34.2500     44.5000   73.2500    44.5000    23.03   890      2     154    40   False
+----------------------------------------------------------------------------------------------------
+ 20  1   300    3.1489     13.8333  268.0000    13.8333    77.24   290      2     109    26   False
+ 20  1   900    3.1489     11.0588  268.0000    11.0588    71.53   890      2     201    40   False
+----------------------------------------------------------------------------------------------------
+ 40  2   300    3.7170     29.2500   64.0000    29.2500    87.29   292      2      97    22   False
+ 40  2   900    3.7170     26.2857   64.0000    26.2857    85.86   891      2     258    35   False
+----------------------------------------------------------------------------------------------------
+
+=== 2. TRACE PAR TOUR DE LA BORNE Th.5' ===
+=== n=30 graine=1 plafond=300 : q_lb=4.3871  q_ub=20.5
+    tour 1  q_ref=4.3871  Q=    31  U=    7379.0  denom=4.000  -> cand=63.8952   (coupes 40)
+=== n=30 graine=1 plafond=900 : q_lb=4.3871  q_ub=63.0
+    tour 1  q_ref=4.3871  Q=    31  U=    8664.0  denom=4.000  -> cand=74.2581   (coupes 40)
+=== n=30 graine=2 plafond=300 : q_lb=32.2500  q_ub=41.75
+    tour 1  q_ref=32.2500  Q=     4  U=     152.0  denom=4.000  -> cand=41.7500   (coupes 40)
+=== n=30 graine=2 plafond=900 : q_lb=34.2500  q_ub=44.5
+    tour 1  q_ref=34.2500  Q=     4  U=     324.0  denom=4.000  -> cand=54.5000   (coupes 40)
+
+=== 3. CE QUE FAIT LA SECONDE ROUTE ===
+CE QUE FAIT LA SECONDE ROUTE, n=30 corr=0 graine=1 et 2
+  graine 1  plafond 300 : q_lb=4.3871  q_ub FINAL=20.5
+      Th.5' (dernier tour)   : 63.758064516129025
+      route TOT  (tour 1)    : statut=optimal  ub=20.5  ILP=3
+      route TARDIVE (fin)    : statut=limit  ub=31.136363636363637  ILP=2  tours=2
+      coupes=93  arch=20
+  graine 1  plafond 900 : q_lb=4.3871  q_ub FINAL=63.0
+      Th.5' (dernier tour)   : 74.25806451612904
+      route TOT  (tour 1)    : statut=optimal  ub=63.0  ILP=3
+      route TARDIVE (fin)    : statut=limit  ub=63.0  ILP=2  tours=2
+      coupes=162  arch=40
+  graine 2  plafond 300 : q_lb=32.2500  q_ub FINAL=41.75
+      Th.5' (dernier tour)   : 41.75
+      route TOT  (tour 1)    : statut=optimal  ub=41.75  ILP=2
+      route TARDIVE (fin)    : statut=optimal  ub=41.75  ILP=2  tours=2
+      coupes=106  arch=39
+  graine 2  plafond 900 : q_lb=34.2500  q_ub FINAL=44.5
+      Th.5' (dernier tour)   : 54.5
+      route TOT  (tour 1)    : statut=optimal  ub=54.5  ILP=2
+      route TARDIVE (fin)    : statut=optimal  ub=44.5  ILP=2  tours=2
+      coupes=154  arch=40
+
+=== 4. CORRECTION TENTEE (route precoce) : REFUTEE ===
+MONOTONIE EN BUDGET : route geometrique lancee UNE FOIS (production)
+contre lancee AUSSI AU TOUR 1 (geom_early)
+  n corr gr  variante      ecart@300  ecart@900  monotone   ILP 300/900
+------------------------------------------------------------------------
+ 20  0.0  1  production        77.2%      71.5%       oui       290/890
+ 20  0.0  1  geom_early        77.2%      71.5%       oui       300/900
+------------------------------------------------------------------------
+ 20  0.0  2  production        43.6%      26.6%       oui       290/890
+ 20  0.0  2  geom_early        43.6%      26.6%       oui       300/900
+------------------------------------------------------------------------
+ 30  0.0  1  production        78.6%      93.0%       NON       291/891
+ 30  0.0  1  geom_early        78.6%      93.0%       NON       300/900
+------------------------------------------------------------------------
+ 30  0.0  2  production        22.8%      23.0%       NON       290/890
+ 30  0.0  2  geom_early        22.8%      23.0%       NON       300/900
+------------------------------------------------------------------------
+ 40  0.0  2  production        87.3%      85.9%       oui       292/891
+ 40  0.0  2  geom_early        89.0%      86.5%       oui       300/900
+------------------------------------------------------------------------

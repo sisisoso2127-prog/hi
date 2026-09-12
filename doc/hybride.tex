@@ -5280,13 +5280,73 @@ l'incumbent y gagne $49{,}6\ \%$. Mais cela n'achète que $1{,}7$ point
 d'écart, parce que $q_{\text{ub}}\approx 103$ y dilue tout gain sur le
 numérateur. Les deux termes sont déficients et aucun ne suffit seul.
 
-\paragraph{La non-monotonie en budget.} Tripler le plafond dégradait
-l'écart garanti sur six lignes sur douze. L'alternance en supprime la cause
-principale -- l'affamement de l'archive -- et fait passer la monotonie de
-$1/6$ à $4/6$ sur les lignes portant le défaut. Deux lignes reculent encore,
-dont une dont les coupes d'archive sont pourtant passées de $2$ à $40$.
-Nous ne savons pas nommer la cause restante. Une méthode dont le résultat
-peut empirer quand on lui donne plus de temps reste une méthode à corriger.
+\paragraph{La non-monotonie en budget, et sa cause.} Tripler le plafond
+dégradait l'écart garanti sur six lignes sur douze. L'alternance en supprime
+la cause principale -- l'affamement de l'archive -- et fait passer la
+monotonie de $1/6$ à $4/6$ sur les lignes portant le défaut. Deux lignes
+reculent encore, toutes deux à $n=30$, $\text{corr}=0$. Les éditions
+précédentes de ce mémoire déclaraient ne pas savoir nommer la cause. Nous
+la nommons ici, et la démonstration tient en une ligne de mesure.
+
+Sur la ligne $n=30$, graine~$1$, l'incumbent est \emph{identique} aux deux
+plafonds ($q_{\text{lb}}=4{,}3871$) : c'est donc la borne, et elle seule, qui
+recule -- de $20{,}50$ à $63{,}00$. En instrumentant chaque tour on voit
+d'où elle vient. Ce n'est pas du théorème~\ref{th:seuil}, qui donne $63{,}76$
+puis $74{,}26$, mais de la seconde route, dont le Dinkelbach sur $\Rcal$
+rend au premier tour :
+\[
+  \text{plafond } 300 : \ \max_{\Rcal}f = 20{,}50,
+  \qquad
+  \text{plafond } 900 : \ \max_{\Rcal}f = 63{,}00,
+\]
+et dans les \textbf{deux} cas avec le statut \textsf{optimal}, c'est-à-dire
+\emph{convergé}. Or un Dinkelbach convergé rend $\max_{\Rcal}f$ exactement.
+Si l'on avait $\Rcal_{900}\subseteq\Rcal_{300}$, il viendrait
+$\max_{\Rcal_{900}}f\le\max_{\Rcal_{300}}f$. On mesure $63{,}00>20{,}50$.
+Donc
+\[
+  \Rcal_{900}\not\subseteq\Rcal_{300}.
+\]
+
+\noindent
+\textbf{Le relâché n'est pas emboîté dans le budget.} Voilà la cause. Un
+budget plus grand ne \emph{raffine} pas le relâché du budget plus petit : il
+en construit un autre. Le mécanisme est identifiable -- le vivier classe ses
+centres de coupe par $w^\top x$ et l'on en pose les $\beta$ premiers ; quand
+la recherche dispose de plus de budget, l'archive est plus grande, de
+nouveaux points s'\emph{intercalent} dans ce préfixe et en déplacent
+d'autres. On ne pose donc pas « les mêmes coupes et davantage », on pose
+\emph{d'autres} coupes. Rien alors ne force $\max_{\Rcal}f$ à décroître, ni
+la borne à s'améliorer. La ligne $n=30$, graine~$2$, dit la même chose :
+$41{,}75$ contre $54{,}50$ au premier tour, les deux convergés.
+
+\begin{remark}[une correction tentée, et réfutée par son propre banc]
+La seconde route n'était lancée qu'\emph{une fois}, après la boucle, donc
+sur le plus gros modèle que l'exécution ait construit. Cela suggérait une
+correction : la lancer aussi au premier tour, quand le modèle est petit.
+Elle est valide sans discussion -- toute valeur rendue par cette route est
+une borne supérieure valide, et l'on prend le minimum -- et elle ne coûte
+que trois appels entiers. Elle ne corrige \textbf{rien} : les deux lignes
+fautives restent à $78{,}6\to93{,}0$ et $22{,}8\to23{,}0$, inchangées au
+dixième de point. La raison est celle qu'on vient d'établir, et c'est ce qui
+rend le diagnostic cohérent : le premier tour \emph{lui-même} n'est pas le
+même d'un budget à l'autre. Il n'y a pas d'instant précoce où les deux
+exécutions partageraient leur relâché. Le drapeau est conservé, désactivé
+par défaut, avec cette mesure.
+\end{remark}
+
+\noindent
+La correction de principe se déduit de la cause : il faut rendre le vivier
+\emph{stable par préfixe} en budget, c'est-à-dire faire en sorte que les
+$\beta$ premiers centres ne changent pas quand l'archive grossit. Le relâché
+serait alors emboîté, et la borne monotone par construction. Nous ne
+l'appliquons pas ici, et pour une raison qui doit être dite plutôt que
+contournée : ce changement modifie \emph{quelles} coupes toute exécution
+pose, donc déplace potentiellement chaque nombre mesuré dans ce mémoire.
+C'est une décision de conception, pas un correctif, et elle demande de
+rejouer l'ensemble des campagnes. Une méthode dont le résultat peut empirer
+quand on lui donne plus de temps reste une méthode à corriger -- mais on
+sait désormais quoi corriger, et pourquoi.
 
 \paragraph{Le mouvement C.} Sa conception a été mise à l'épreuve contre son
 retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché.

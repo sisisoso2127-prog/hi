@@ -663,6 +663,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             agg_extra: int = 0,
             cglp_extra: int = 0,
             geom_bound: bool = False,
+            geom_early: bool = False,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
@@ -993,12 +994,43 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
                 if Dp is not None:
                     denom = max(Dm, Dp)      # D+ >= Dmin par construction
             cand = float(q_ref) + U / (Q * denom)
+            # trace par tour : la borne est q_ref + U/(Q*denom), et CHACUN de
+            # ces trois termes peut bouger d'un tour a l'autre. Sans la trace,
+            # une borne qui recule est indiagnosticable -- on ne sait pas
+            # lequel des trois a recule.
+            info.setdefault("trace", []).append(
+                dict(tour=rnd, q_ref=float(q_ref), Q=int(Q), U=U,
+                     denom=float(denom), cand=cand,
+                     cuts=info.get("n_cuts", 0)))
             best_ub = cand if best_ub is None else min(best_ub, cand)
 
         # -- decision de LIBERER, a la fin du premier tour ------------------
         # Hors du bloc de la borne, et non a l'interieur : un premier tour
         # peut ne produire AUCUNE borne (oracle interrompu avant sa premiere
         # relaxation, `r.ub` vaut None), et ce cas doit etre traite.
+        # -- SECONDE ROUTE, TOT : sur le modele du tour 1 -------------------
+        # Elle est sinon lancee UNE SEULE FOIS, apres la boucle, donc sur le
+        # plus gros modele que l'execution ait construit. Plus le budget est
+        # grand, plus ce modele porte de coupes, et moins la route converge
+        # dans sa part reservee : c'est le mecanisme qui rend la borne NON
+        # MONOTONE en budget. La lancer aussi tot, quand le modele est petit,
+        # ne coute que quelques appels et ne peut pas nuire a la validite --
+        # toute valeur rendue est une borne superieure valide, et on prend le
+        # minimum.
+        if geom_early and geom_actif and not proved and rnd == 1:
+            set_ilp_budget(_bud_ext)
+            reste_tot = budget - (time.time() - t0)
+            if reste_tot > 0.05:
+                avant = ORACLE_CALLS["ilp"]
+                g, st, tours = borne_geometrique(
+                    inst, model, q, reste_tot * geom_share, Dm=Dm)
+                info["geom_tot"] = st
+                info["geom_tot_ub"] = g
+                info["geom_tot_ilp"] = ORACLE_CALLS["ilp"] - avant
+                if g is not None:
+                    best_ub = g if best_ub is None else min(best_ub, g)
+            _reserver()
+
         if not reserve_faite:
             reserve_faite = True
             # Une absence de borne vaut borne qui ne ferme pas : on garde la
@@ -1332,6 +1364,7 @@ def matheuristic_P(inst: MOILFP,
                    agg_extra: int = 0,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
+                   geom_early: bool = False,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
                    budgets_separes: bool = False,
@@ -1529,6 +1562,7 @@ def matheuristic_P(inst: MOILFP,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
+                       geom_early=geom_early,
                        geom_gate=geom_gate, geom_gap=gap_hopeless,
                        pool_alterne=pool_alterne,
                        budgets_separes=budgets_separes)
