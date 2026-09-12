@@ -3492,36 +3492,57 @@ fractions.
 \begin{table}[htbp]
 \centering
 \caption{Couverture et bornes sur vérité terrain, $\text{corr}=0$, $p=3$,
-plafond déterministe de $300$ appels entiers. $\kappa$ désigne l'échelle du
-second membre. Échelle A à $\kappa$ fixé, le
-seul régime rigoureusement comparable d'un $n$ à l'autre ; échelle B à
-$\kappa$ décroissant pour garder $\Scal$ énumérable, indicative.\ \conf{0}{0}{0}}
+plafond déterministe de $300$ appels entiers, graine~$1$. $\kappa$ désigne
+l'échelle du second membre : échelle A à $\kappa$ fixé, seul régime
+rigoureusement comparable d'un $n$ à l'autre ; échelle B à $\kappa$
+décroissant pour garder $\Scal$ énumérable, indicative.
+$\text{cov}_{\text{coupes}}$ est la part de $\Scal^{+}$ effectivement
+retranchée par les coupes \emph{posées}, à distinguer de $U_{\text{coupes}}$
+qui est une borne.\ \conf{1}{1}{1}}
 \label{tab:couverture}
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{ccrrrccrrr}
+\setlength{\tabcolsep}{3.5pt}\small
+\begin{tabular}{rcrrrcccrrr}
 \toprule
-& $\kappa$ & $|\Scal|$ & $|Z(\Ecal)|$ & $|Z(\Acal)|$
- & $\text{cov}_{\Ecal}$ & $\text{cov}_{\Acal}$
+$n$ & $\kappa$ & $|\Scal|$ & $|Z(\Ecal)|$ & $|Z(\Acal)|$
+ & $\text{cov}_{\Ecal}$ & $\text{cov}_{\Acal}$ & $\text{cov}_{\text{coupes}}$
  & $\qs$ & $q_{\text{ub}}$ & $U_{\text{coupes}}$\\
 \midrule
-\multicolumn{10}{l}{\emph{Échelle A -- $\kappa$ fixé}}\\
-$6$  & $1{,}0$ & $250$    & $28$  & $16$ & $100\%$ & $100\%$ & $5{,}07$ & $5{,}07$ & $5{,}07$\\
-$8$  & $1{,}0$ & $2\,387$ & $46$  & $15$ & $100\%$ & $100\%$ & $3{,}17$ & $3{,}17$ & $9{,}00$\\
-$10$ & $1{,}0$ & $24\,152$& $70$  & $13$ & $100\%$ & $100\%$ & $37{,}67$& $37{,}67$& $39{,}33$\\
-$12$ & $1{,}0$ & $304\,497$&$202$ & $24$ & $100\%$ & $100\%$ & $4{,}35$ & $\mathbf{32{,}27}$ & $\mathbf{8{,}53}$\\
+\multicolumn{11}{l}{\emph{Échelle A -- $\kappa$ fixé}}\\
+$6$  & $1{,}0$ & $250$    & $28$  & $16$ & $100\%$ & $100\%$ & $100\%$ & $5{,}07$ & $5{,}07$ & $5{,}07$\\
+$8$  & $1{,}0$ & $2\,387$ & $46$  & $15$ & $100\%$ & $100\%$ & $0\%$ & $3{,}17$ & $3{,}17$ & $9{,}00$\\
+$10$ & $1{,}0$ & $24\,152$& $70$  & $13$ & $100\%$ & $100\%$ & $0\%$ & $37{,}67$& $37{,}67$& $39{,}33$\\
+$12$ & $1{,}0$ & $304\,497$&$202$ & $25$ & $100\%$ & $100\%$ & $\mathbf{99{,}6\%}$ & $4{,}35$ & $\mathbf{23{,}57}$ & $\mathbf{6{,}63}$\\
 \midrule
-\multicolumn{10}{l}{\emph{Échelle B -- $\kappa$ décroissant}}\\
-$12$ & $0{,}65$& $10\,486$& $78$  & $25$ & $100\%$ & $100\%$ & $4{,}15$ & $5{,}61$ & $4{,}15$\\
-$14$ & $0{,}55$& $15\,411$& $127$ & $25$ & $100\%$ & $100\%$ & $5{,}00$ & $5{,}00$ & $5{,}75$\\
-$16$ & $0{,}48$& $30\,861$& $94$  & $16$ & $100\%$ & $100\%$ & $11{,}50$& $11{,}50$& $28{,}50$\\
-$18$ & $0{,}42$& $48\,703$& $139$ & $17$ & $100\%$ & $100\%$ & $14{,}20$& $14{,}20$& $17{,}60$\\
-$20$ & $0{,}38$& $64\,268$& $136$ & $20$ & $100\%$ & $100\%$ & $8{,}13$ & $\mathbf{38{,}79}$ & $\mathbf{9{,}33}$\\
+\multicolumn{11}{l}{\emph{Échelle B -- $\kappa$ décroissant}}\\
+$12$ & $0{,}65$& $10\,486$& $78$  & $27$ & $100\%$ & $100\%$ & $0\%$ & $4{,}15$ & $4{,}15$ & $23{,}67$\\
+$14$ & $0{,}55$& $15\,411$& $127$ & $25$ & $100\%$ & $100\%$ & $0\%$ & $5{,}00$ & $5{,}00$ & $5{,}75$\\
+$16$ & $0{,}48$& $30\,861$& $94$  & $16$ & $100\%$ & $100\%$ & $0\%$ & $11{,}50$& $11{,}50$& $28{,}50$\\
+$18$ & $0{,}42$& $48\,703$& $139$ & $17$ & $100\%$ & $100\%$ & $0\%$ & $14{,}20$& $14{,}20$& $17{,}60$\\
+$20$ & $0{,}38$& $64\,268$& $136$ & $22$ & $100\%$ & $100\%$ & $0\%$ & $8{,}13$ & $8{,}13$ & $96{,}00$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Sur les $26$ lignes du lot complet ($n$ de $6$ à $20$, trois graines),
-trois faits ressortent.
+\begin{remark}[ce tableau a été remesuré, et trois lignes ont bougé]
+\label{rem:couvremes}
+Il portait le marqueur \conf{0}{0}{0} et il manquait à son en-tête la colonne
+$n$ ainsi que la colonne $\text{cov}_{\text{coupes}}$, pourtant citée dans le
+texte : deux défauts relevés et corrigés en remesurant plutôt qu'en
+rafistolant. Sur les neuf lignes, \textbf{six se reproduisent à l'identique}
+et trois ont changé -- ce sont exactement celles où la borne ne fermait pas.
+À $n=12$, $\kappa=0{,}65$, $q_{\text{ub}}$ passe de $5{,}61$ à $4{,}15$ et
+ferme ; à $n=20$, de $38{,}79$ à $8{,}13$ et ferme aussi. C'est la
+correction du §\ref{sec:seuil} qui opère, et ce tableau en donne une
+vérification indépendante : \textbf{la borne ferme désormais sur $25$ des
+$26$ lignes}.
+\end{remark}
+
+Le lot complet compte $26$ lignes. La grille en prévoit $27$ -- quatre
+tailles à $\kappa$ fixé et cinq à $\kappa$ décroissant, soit neuf cellules,
+chacune sur trois graines -- mais une cellule ($n=12$, $\kappa=1$,
+graine~$2$) est \textbf{hors de portée de l'énumération}, $|\Scal|$ y
+dépassant $400\,000$ ; elle est écartée et non remplacée. Sur ces $26$
+lignes, trois faits ressortent.
 
 \paragraph{La proposition~\ref{prop:suffisant} se vérifie, $26$ fois sur
 $26$.} $\text{cov}_{\Ecal}=100\ \%$ partout. Ce n'est pas une surprise --
@@ -3549,23 +3570,38 @@ dominer $\Scal^{+}$, et ne suffisent pas à \emph{représenter} le front. Un
 même ensemble est riche pour couper et pauvre pour rendre.
 \end{remark}
 
-\paragraph{Une perte que rien n'avait isolée : la recherche.} Sur $3$ des
-$26$ lignes, toutes à $n\ge 12$, l'incumbent n'atteint pas $\qs$. Aucun banc
-antérieur ne pouvait le voir : sans vérité terrain, un écart garanti de
+\paragraph{Une perte que rien n'avait isolée : la recherche.} Sur $1$ des
+$26$ lignes -- $n=12$, $\kappa=1$ -- l'incumbent n'atteint pas $\qs$. Aucun
+banc antérieur ne pouvait le voir : sans vérité terrain, un écart garanti de
 $90\ \%$ ne dit pas s'il vient d'une borne trop haute ou d'un minorant trop
-bas. Ici on lit les deux. À $n=12$, $\kappa=1$ : $\qs=4{,}35$ et
-$q_{\text{lb}}=3{,}10$. Une partie de l'écart affiché n'est donc pas un
-défaut de certification du tout.
+bas. Ici on lit les deux : $\qs=4{,}35$ et $q_{\text{lb}}=3{,}10$. Une
+partie de l'écart affiché n'est donc pas un défaut de certification du tout.
+Et ce n'est pas un hasard si c'est cette ligne-là : \emph{la seule où le
+minorant décroche est aussi la seule où la borne ne ferme pas}. Les deux
+pertes sont sur la même instance, et elles s'additionnent.
 
-\paragraph{Et le reste, que rien n'explique encore.} Regardons les deux
-lignes en gras. À $n=12$, la borne annoncée vaut $32{,}27$ alors que le
-maximum de $f$ sur la région \emph{réellement survivante} vaut $8{,}53$. À
-$n=20$ : $38{,}79$ contre $9{,}33$. Les coupes ont fait leur travail --
-$\text{cov}_{\text{coupes}}$ vaut $99{,}4\ \%$ et $100\ \%$ sur ces deux
-lignes -- et la borne n'en tient pas compte. L'écart n'est donc ni dans le
-nombre de coupes, ni dans leur placement, ni dans l'archive. Il est dans le
-passage de la région à la borne. C'est là qu'il faut regarder, et c'est
-l'objet de la section suivante.
+\paragraph{Et le reste, que rien n'explique encore.} Reste la ligne en gras,
+et elle est seule : la remesure rapportée par la remarque~\ref{rem:couvremes}
+a fait fermer la seconde. À $n=12$, $\kappa=1$, la borne annoncée vaut
+$23{,}57$ alors que
+le maximum de $f$ sur la région \emph{réellement survivante} vaut $6{,}63$.
+Les coupes ont fait leur travail -- $\text{cov}_{\text{coupes}}$ vaut
+$99{,}6\ \%$ sur cette ligne, la meilleure couverture de tout le lot -- et
+la borne n'en tient pas compte. L'écart n'est donc ni dans le nombre de
+coupes, ni dans leur placement, ni dans l'archive. Il est dans le passage de
+la région à la borne. C'est là qu'il faut regarder, et c'est l'objet de la
+section suivante.
+
+\begin{remark}[une ligne, et cela suffit]
+On pourrait objecter qu'un défaut visible sur une seule ligne sur $26$ ne
+mérite pas un chapitre. L'objection se retourne : cette ligne est la seule
+où les coupes retranchent vraiment quelque chose ($\text{cov}_{\text{coupes}}
+=99{,}6\ \%$ contre $0\ \%$ sur $22$ lignes), donc la seule où le défaut
+\emph{peut} se manifester. Rapporté aux lignes où la question se pose, il
+n'est pas rare du tout. Les $22$ lignes à $\text{cov}_{\text{coupes}}=0\ \%$
+ne témoignent de rien ici -- elles disent seulement que, sous ce plafond, la
+boucle n'a pas eu le temps de poser une coupe qui morde.
+\end{remark}
 
 % ============================================================================
 % ============================================================================
@@ -3574,7 +3610,7 @@ l'objet de la section suivante.
 
 La section précédente laisse une question précise : les coupes retranchent
 la quasi-totalité de $\Scal^{+}$, et la borne n'en tient pas compte --
-$32{,}27$ annoncé quand la région survivante plafonne à $8{,}53$. Le défaut
+$23{,}57$ annoncé quand la région survivante plafonne à $6{,}63$. Le défaut
 n'est donc pas dans le relâché mais dans la façon dont on en tire un nombre.
 
 \subsection{Le seuil de la borne n'a rien de particulier à l'incumbent}
