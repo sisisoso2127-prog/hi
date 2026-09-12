@@ -139,11 +139,31 @@ def epsilon_additif(A: Sequence[Vecteur], E: Sequence[Vecteur],
 # ---------------------------------------------------------------------------
 
 def couverture(A: Sequence[Vecteur], B: Sequence[Vecteur]) -> float:
-    """C(A,B) : part de B faiblement dominee par au moins un point de A."""
-    if not B:
+    """
+    C(A,B) : part des VECTEURS CRITERES DISTINCTS de B faiblement domines
+    par au moins un point de A.
+
+    Le mot « distincts » n'est pas un detail d'implementation. La
+    proposition du memoire affirme que, pour A inclus dans E, la couverture
+    degenere en rapport de cardinalite, C(A,E) = |Z(A)|/|Z(E)| ; elle est
+    posee des deux cotes DANS L'ESPACE DES CRITERES, et c'est a cette
+    condition qu'elle se demontre sans supposer Z injective sur E.
+
+    Cette fonction comptait auparavant sur la LISTE B -- une entree par
+    point efficace -- tandis que `card` comptait sur l'ENSEMBLE des vecteurs
+    distincts. Les deux quantites que le memoire annonce egales n'etaient
+    donc pas calculees sur le meme ensemble : leur egalite, verifiee ligne a
+    ligne dans le tableau des livrables, ne tenait qu'a l'absence de
+    collision dans les instances mesurees. Elle tient maintenant par
+    construction, ce qui est le seul statut acceptable pour le controle d'un
+    theoreme.
+    """
+    dB = {tuple(b) for b in B}
+    if not dB:
         return 1.0
-    n = sum(1 for b in B if any(domine_faiblement(a, b) for a in A))
-    return n / len(B)
+    dA = {tuple(a) for a in A}
+    n = sum(1 for b in dB if any(domine_faiblement(a, b) for a in dA))
+    return n / len(dB)
 
 
 def purete(A: Sequence[Vecteur], E: Sequence[Vecteur]) -> float:
@@ -190,4 +210,17 @@ if __name__ == "__main__":
     # marge sur la reference. Sans elle ce rapport vaudrait exactement 0.
     assert 0.0 < part["hv"] < 1.0, part["hv"]
     assert hypervolume([(3, 1)], [1.0, 1.0]) == 0.0  # le piege, documente
+
+    # La proposition sur la couverture, controlee LA OU ELLE POUVAIT CASSER :
+    # deux points efficaces distincts portant le meme vecteur criteres. C'est
+    # exactement le cas que l'ancien comptage sur la liste manquait.
+    Ecol = [(3, 1), (3, 1), (2, 2), (1, 3)]   # collision sur (3,1)
+    for Acol in ([(3, 1)], [(3, 1), (2, 2)], Ecol):
+        dc = indicateurs(Acol, Ecol)
+        assert abs(dc["couverture"] - dc["card"]) < 1e-12, (
+            Acol, dc["couverture"], dc["card"])
+    # et le comptage sur la liste aurait donne 2/4 la ou la proposition
+    # demande 1/3 : la difference n'est pas cosmetique.
+    assert abs(couverture([(3, 1)], Ecol) - 1 / 3) < 1e-12
+
     print("indicateurs.py : tous les controles passent")
