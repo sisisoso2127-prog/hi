@@ -697,6 +697,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             geom_bound: bool = False,
             geom_early: bool = False,
             seuil_dplus: bool = True,
+            geom_iters: int = TOURS_GEOM,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
@@ -1094,7 +1095,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         if reste > 0.05:
             avant = ORACLE_CALLS["ilp"]
             g, st, tours = borne_geometrique(inst, model, q, reste, Dm=Dm,
-                                             seuil_dplus=seuil_dplus)
+                                             seuil_dplus=seuil_dplus,
+                                             max_iter=geom_iters)
             info["geom"] = st
             info["geom_ub"] = g
             info["geom_ilp"] = ORACLE_CALLS["ilp"] - avant
@@ -1401,6 +1403,7 @@ def matheuristic_P(inst: MOILFP,
                    geom_bound: bool = False,
                    geom_early: bool = False,
                    seuil_dplus: bool = True,
+                   geom_iters: int = TOURS_GEOM,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
                    budgets_separes: bool = False,
@@ -1599,6 +1602,7 @@ def matheuristic_P(inst: MOILFP,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
                        geom_early=geom_early, seuil_dplus=seuil_dplus,
+                       geom_iters=geom_iters,
                        geom_gate=geom_gate, geom_gap=gap_hopeless,
                        pool_alterne=pool_alterne,
                        budgets_separes=budgets_separes)

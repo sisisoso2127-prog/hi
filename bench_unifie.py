@@ -51,6 +51,12 @@ def une(inst, cap, g, dplus):
 def main() -> int:
     n_gr = int(sys.argv[1]) if len(sys.argv) > 1 else 3
     cap = int(sys.argv[2]) if len(sys.argv) > 2 else 300
+    # tailles surchargeables : le gain de D_t+ ne peut se voir que la ou la
+    # route s'arrete AVANT de converger, donc sur des instances assez
+    # grandes pour que chaque appel entier coute cher.
+    global TAILLES
+    if len(sys.argv) > 3:
+        TAILLES = [int(v) for v in sys.argv[3].split(",")]
     print("=" * 96)
     print(f"FORME UNIFIEE : D_t+ au seuil retenu, contre Dmin. "
           f"plafond {cap}, {n_gr} graines")

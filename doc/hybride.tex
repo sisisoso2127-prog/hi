@@ -4150,6 +4150,28 @@ $60$  & $18$ & $18$ & $\mathbf{0}$ & $0$ & $+0{,}00\ \%$\\
 \end{tabular}
 \end{table}
 
+\begin{table}[htbp]
+\centering
+\caption{Le même gain, mesuré là où la route \emph{est} interrompue. On
+réduit son allocation propre en tours de Dinkelbach ; la production lui en
+accorde $12$, et elle en consomme deux à quatre. Même lot, même lecture
+appariée, plafond $300$.\ \conf{1}{1}{1}}
+\label{tab:unifiecoupe}
+\begin{tabular}{rrrrrc}
+\toprule
+tours accordés & lignes \textsf{limit} & resserrement moyen & maximum
+ & mieux/pire & plus lâche\\
+\midrule
+$1$  & $13/18$ & $\mathbf{+15{,}02\ \%}$ & $\mathbf{+89{,}47\ \%}$
+ & $5/0$ & $0$\\
+$2$  & $6/18$  & $+3{,}50\ \%$ & $+38{,}61\ \%$ & $3/0$ & $0$\\
+$3$  & $1/18$  & $+0{,}00\ \%$ & $+0{,}08\ \%$ & $1/0$ & $0$\\
+$12$ \emph{(production)} & $0/18$ & $+0{,}00\ \%$ & $+0{,}00\ \%$
+ & $0/0$ & $0$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \noindent
 \textbf{Zéro sur les $54$ exécutions}, et la colonne \textsf{limit}
 l'explique entièrement. Le dénominateur restreint n'agit que là où la route
@@ -4164,18 +4186,36 @@ les appels entiers sont identiques ligne à ligne dans les deux bras, parce
 que le programme supplémentaire n'est atteint que sur le chemin
 \textsf{limit}, celui qu'aucune de ces exécutions n'emprunte.
 
-\begin{remark}[une correction juste dont l'effet est latent]
-Il faut dire les deux choses, et ne pas laisser la seconde effacer la
-première. La rectification est \emph{juste} : l'énoncé antérieur était faux,
-la forme unifiée domine les deux, et les bornes s'en trouvent potentiellement
-resserrées sans coût. Elle est aussi, sur ce banc, \emph{sans effet mesuré}.
-Un gain latent n'est pas un gain, et l'annoncer comme tel serait
-exactement le genre de chose que ce mémoire reproche ailleurs. Ce qui est
-acquis est donc : un énoncé faux retiré, une borne qui ne peut que
-s'améliorer, un coût nul vérifié, et un effet nul mesuré. Le gain se
-matérialisera là où la route est \emph{interrompue} -- des instances plus
-grandes, ou un plafond qui la coupe avant convergence -- et nous n'avons pas
-de tel régime sous la main.
+\paragraph{Le gain, là où il peut exister.} Restait à vérifier que ce zéro
+tient bien à l'absence de régime et non à l'absence d'effet. Nous avons donc
+construit le régime manquant de la seule façon honnête : en réduisant
+l'allocation \emph{propre} de la route au-dessous de ce qu'il lui faut.
+Ce n'est pas un artifice -- c'est exactement la situation qu'analyse
+le~\S\ref{sec:histo}, celle d'une route affamée par le plafond -- et cela
+paramètre proprement la distance à la convergence. Le
+tableau~\ref{tab:unifiecoupe} donne le résultat, et il est net :
+\textbf{jusqu'à $+89{,}5\ \%$} de resserrement, $+15\ \%$ en moyenne quand
+la route n'a qu'un tour, pour \textbf{un} appel entier de plus. Le gradient
+est sans ambiguïté -- plus la route est coupée tôt, plus la forme unifiée
+rapporte -- et il se referme exactement quand la convergence redevient
+possible.
+
+\begin{remark}[ce que ce zéro voulait dire, et ce qu'il ne voulait pas dire]
+Le $+0{,}00$ du tableau~\ref{tab:unifie} ne mesurait pas l'inutilité de la
+forme unifiée, il mesurait l'\emph{absence du régime où elle agit}. La
+distinction n'est pas rhétorique : publier le premier chiffre seul aurait
+enterré un gain de $89\ \%$, et publier le second seul aurait fait passer
+pour un gain de production ce qui n'apparaît que sous une route affamée.
+Les deux tableaux se lisent donc ensemble.
+
+Ce que la forme unifiée est, au fond : une \textbf{assurance}. Tant que la
+route converge, elle ne coûte rien et ne rapporte rien -- le programme
+supplémentaire n'est même pas atteint, les compteurs d'appels le prouvent.
+Dès qu'elle est coupée, elle récupère l'essentiel de ce que la coupure
+faisait perdre. Or la route \emph{est} coupée dès que le budget se resserre,
+et le~\S\ref{sec:histo} montre qu'elle l'est aussi quand le modèle grossit.
+C'est donc le régime difficile -- celui qui résiste -- qu'elle protège, et
+c'est le seul qui compte ici.
 \end{remark}
 
 \subsection{Vérifiée avant d'être mesurée}

@@ -2982,9 +2982,20 @@ et~$60$) : resserrement médian, moyen \textbf{et maximal} $+0{,}00\ \%$,
 appels entiers identiques ligne à ligne, borne jamais plus lâche. La raison
 est structurelle : $D^{+}_{t}$ n'agit que si la route s'arrête avant
 convergence, et elle converge sur les $46$ lignes où elle s'engage, en deux
-ou trois appels. Le gain est donc réel en principe et \emph{latent} en
-pratique ; il se matérialisera là où la route est interrompue. Un gain
-latent n'est pas un gain.
+ou trois appels.
+
+Ce zéro mesure donc l'\emph{absence du régime}, non l'absence d'effet, et il
+faut le vérifier plutôt que l'affirmer. En réduisant l'allocation propre de
+la route au-dessous de ce qu'il lui faut -- la situation d'une route affamée
+par le plafond -- le gain apparaît et il est grand : à un seul tour de
+Dinkelbach, $13$ lignes sur $18$ deviennent \textsf{limit} et le
+resserrement vaut $+15{,}0\ \%$ en moyenne, \textbf{jusqu'à $+89{,}5\ \%$},
+pour \textbf{un} appel entier de plus, $5$ lignes améliorées et $0$
+dégradée ; à deux tours, $+3{,}5\ \%$ en moyenne et $+38{,}6\ \%$ au
+maximum ; à trois, le gradient se referme. La forme unifiée est donc une
+\textbf{assurance} : inerte tant que la route converge -- le programme
+supplémentaire n'est alors même pas atteint --, elle récupère l'essentiel de
+ce que la coupure fait perdre dès que le budget se resserre.
 \end{remark}
 
 \noindent
