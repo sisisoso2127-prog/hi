@@ -2952,19 +2952,33 @@ l'incumbent. Or rien dans la démonstration ne l'exige.
 \begin{theorem}[borne à seuil libre]
 \label{th:seuillibre}
 Soit $t$ rationnel et $G_t=N-tD$. Si $\max_{x\in\Rcal}G_t(x)\le v$ avec
-$v\ge0$, alors $\max_{x\in\Rcal}f(x)\le t+v/D_{\min}$.
+$v\ge0$, alors, en posant
+$D^{+}_{t}=\min\{D(x):x\in\Rcal,\ G_t(x)\ge0\}$ ($=+\infty$ si cet ensemble
+est vide), $\max_{x\in\Rcal}f(x)\le t+v/D^{+}_{t}$.
 \end{theorem}
 \begin{proof}
-Pour $x\in\Rcal$ : $N(x)-tD(x)\le v$ et $D(x)>0$ sous (A1), donc
-$f(x)\le t+v/D(x)\le t+v/D_{\min}$ puisque $v\ge0$.
+Soit $x\in\Rcal$, $D(x)>0$ sous (A1). Si $G_t(x)\ge0$, alors $x$ est dans
+l'ensemble définissant $D^{+}_{t}$, donc $D(x)\ge D^{+}_{t}$, et
+$f(x)\le t+(N(x)-tD(x))/D(x)\le t+v/D(x)\le t+v/D^{+}_{t}$. Sinon
+$f(x)<t\le t+v/D^{+}_{t}$ puisque $v\ge0$.
 \end{proof}
 
-Prendre $t=q$ y redonne la forme \emph{naïve} du dénominateur,
-$\qs\le q+U/(QD_{\min})$, et non le théorème~\ref{th:bound}, qui est
-strictement plus fin puisqu'il y substitue $D^{+}\ge D_{\min}$. Les deux
-énoncés sont donc incomparables -- l'un gagne sur le seuil, l'autre sur le
-dénominateur -- et c'est pourquoi on les prend au minimum, qui reste
-valide. Car \emph{chaque point du relâché
+\begin{remark}[les deux énoncés se composent]
+Prendre $t=q$ donne $D^{+}_{q}=D^{+}$ et redonne \emph{exactement} le
+théorème~\ref{th:bound} ; remplacer $D^{+}_{t}$ par le minorant plus faible
+$D_{\min}\le D^{+}_{t}$ donne la forme à seuil libre. L'énoncé ci-dessus
+\textbf{domine donc les deux}, et non leur seul minimum. Une version
+antérieure les déclarait incomparables et en prenait le minimum : c'était
+une erreur, la démonstration étant mot pour mot celle du
+théorème~\ref{th:bound} avec $q$ remplacé par $t$, et rien n'y exigeant de
+céder le dénominateur en libérant le seuil. Les bornes publiées auparavant
+restent valides -- une borne trop lâche ne ment pas -- mais elles étaient
+inutilement lâches. Coût de la forme unifiée : un programme de plus, au
+seuil retenu.
+\end{remark}
+
+\noindent
+Car \emph{chaque point du relâché
 fournit un meilleur seuil} : si l'oracle rend $x_t\in\Rcal$ avec
 $G_t(x_t)>0$, alors $f(x_t)>t$ et l'on recommence. C'est un Dinkelbach
 ordinaire, mené sur $\Rcal$ et non sur $\Scal$ ; à convergence,

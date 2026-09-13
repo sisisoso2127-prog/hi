@@ -1,0 +1,168 @@
+================================================================================================
+VALIDITE DE LA SECONDE ROUTE - verite terrain par enumeration exacte, 2 graines, plafond 200
+================================================================================================
+instance                          q*    ub sans    ub avec    statut   C1   C2   C3
+------------------------------------------------------------------------------------------------
+n5 p2 c0.00 g1               13.2000    13.2000    13.2000      None   ok   ok   ok
+n5 p2 c0.00 g2               10.5909    10.5909    10.5909      None   ok   ok   ok
+n5 p2 c0.50 g1               13.2000    13.2000    13.2000      None   ok   ok   ok
+n5 p2 c0.50 g2                4.6000     4.6000     4.6000      None   ok   ok   ok
+n5 p2 c0.90 g1               13.2000    13.2000    13.2000      None   ok   ok   ok
+n5 p2 c0.90 g2                4.6000     4.6000     4.6000      None   ok   ok   ok
+n5 p3 c0.00 g1                4.7059     4.7059     4.7059      None   ok   ok   ok
+n5 p3 c0.00 g2                7.1818     7.1818     7.1818      None   ok   ok   ok
+n5 p3 c0.50 g1                4.7059     4.7059     4.7059   optimal   ok   ok   ok
+n5 p3 c0.50 g2                7.0714     7.0714     7.0714      None   ok   ok   ok
+n5 p3 c0.90 g1                3.2500     3.2500     3.2500      None   ok   ok   ok
+n5 p3 c0.90 g2                6.4286     6.4286     6.4286      None   ok   ok   ok
+n5 p4 c0.00 g1               12.8750    12.8750    12.8750      None   ok   ok   ok
+n5 p4 c0.00 g2                3.3061     3.3061     3.3061      None   ok   ok   ok
+n5 p4 c0.50 g1                7.3125     7.3125     7.3125      None   ok   ok   ok
+n5 p4 c0.50 g2                5.5294     5.5294     5.5294      None   ok   ok   ok
+n5 p4 c0.90 g1                6.0000     6.0000     6.0000      None   ok   ok   ok
+n5 p4 c0.90 g2                5.5294     5.5294     5.5294      None   ok   ok   ok
+n6 p2 c0.00 g1                2.3846     2.3846     2.3846      None   ok   ok   ok
+n6 p2 c0.00 g2                7.3125     7.3125     7.3125      None   ok   ok   ok
+n6 p2 c0.50 g1                2.0000     2.0000     2.0000      None   ok   ok   ok
+n6 p2 c0.50 g2                5.8333     5.8333     5.8333      None   ok   ok   ok
+n6 p2 c0.90 g1                0.9286     0.9286     0.9286      None   ok   ok   ok
+n6 p2 c0.90 g2                1.9615     1.9615     1.9615      None   ok   ok   ok
+n6 p3 c0.00 g1                5.9444     5.9444     5.9444      None   ok   ok   ok
+n6 p3 c0.00 g2               11.5000    11.5000    11.5000      None   ok   ok   ok
+n6 p3 c0.50 g1                5.7778     5.7778     5.7778      None   ok   ok   ok
+n6 p3 c0.50 g2                3.5385     3.5385     3.5385      None   ok   ok   ok
+n6 p3 c0.90 g1                5.3125     5.3125     5.3125      None   ok   ok   ok
+n6 p3 c0.90 g2                2.0625     2.0625     2.0625      None   ok   ok   ok
+n6 p4 c0.00 g1               37.7500    37.7500    37.7500      None   ok   ok   ok
+n6 p4 c0.00 g2               10.7143    10.7143    10.7143      None   ok   ok   ok
+n6 p4 c0.50 g1               18.0000    18.0000    18.0000      None   ok   ok   ok
+n6 p4 c0.50 g2               10.7143    10.7143    10.7143      None   ok   ok   ok
+n6 p4 c0.90 g1                3.4583     3.4583     3.4583      None   ok   ok   ok
+n6 p4 c0.90 g2                8.7273     8.7273     8.7273      None   ok   ok   ok
+n7 p2 c0.00 g1                1.1034     1.1034     1.1034      None   ok   ok   ok
+n7 p2 c0.00 g2                4.8333     4.8333     4.8333      None   ok   ok   ok
+n7 p2 c0.50 g1                5.3333     5.3333     5.3333      None   ok   ok   ok
+n7 p2 c0.50 g2                4.8333     4.8333     4.8333      None   ok   ok   ok
+n7 p2 c0.90 g1                3.0000     3.0000     3.0000      None   ok   ok   ok
+n7 p2 c0.90 g2                1.4375     1.4375     1.4375      None   ok   ok   ok
+n7 p3 c0.00 g1                4.6250     4.6250     4.6250      None   ok   ok   ok
+n7 p3 c0.00 g2               32.6667    32.6667    32.6667      None   ok   ok   ok
+n7 p3 c0.50 g1                4.7500     4.7500     4.7500      None   ok   ok   ok
+n7 p3 c0.50 g2               32.6667    32.6667    32.6667      None   ok   ok   ok
+n7 p3 c0.90 g1                4.6250     4.6250     4.6250      None   ok   ok   ok
+n7 p3 c0.90 g2                2.6957     2.6957     2.6957      None   ok   ok   ok
+n7 p4 c0.00 g1               16.5000    16.5000    16.5000      None   ok   ok   ok
+n7 p4 c0.00 g2               34.6667    34.6667    34.6667      None   ok   ok   ok
+n7 p4 c0.50 g1                6.0000     6.0000     6.0000      None   ok   ok   ok
+n7 p4 c0.50 g2                5.0000     5.0000     5.0000      None   ok   ok   ok
+n7 p4 c0.90 g1                6.0000     6.0000     6.0000      None   ok   ok   ok
+n7 p4 c0.90 g2                5.0000     5.0000     5.0000      None   ok   ok   ok
+n8 p2 c0.00 g1                4.2692     4.2692     4.2692      None   ok   ok   ok
+n8 p2 c0.00 g2                4.0833     4.0833     4.0833      None   ok   ok   ok
+n8 p2 c0.50 g1                3.2727     3.2727     3.2727      None   ok   ok   ok
+n8 p2 c0.50 g2                2.4583     2.4583     2.4583      None   ok   ok   ok
+n8 p2 c0.90 g1                1.8571     1.8571     1.8571      None   ok   ok   ok
+n8 p2 c0.90 g2                0.8095     0.8095     0.8095      None   ok   ok   ok
+n8 p3 c0.00 g1                3.1739     3.1739     3.1739      None   ok   ok   ok
+n8 p3 c0.00 g2               10.5000    10.5000    10.5000      None   ok   ok   ok
+n8 p3 c0.50 g1                3.9474     3.9474     3.9474      None   ok   ok   ok
+n8 p3 c0.50 g2                6.7500     6.7500     6.7500      None   ok   ok   ok
+n8 p3 c0.90 g1                0.4545     0.4545     0.4545      None   ok   ok   ok
+n8 p3 c0.90 g2                6.7500     6.7500     6.7500      None   ok   ok   ok
+n8 p4 c0.00 g1                6.4286     6.4286     6.4286      None   ok   ok   ok
+n8 p4 c0.00 g2                3.2414     3.2414     3.2414      None   ok   ok   ok
+n8 p4 c0.50 g1                3.0000     3.0000     3.0000      None   ok   ok   ok
+n8 p4 c0.50 g2                2.9024     2.9024     2.9024      None   ok   ok   ok
+n8 p4 c0.90 g1                1.5000     1.5000     1.5000      None   ok   ok   ok
+n8 p4 c0.90 g2                2.6552     2.6552     2.6552      None   ok   ok   ok
+------------------------------------------------------------------------------------------------
+  C1  borne « avec » >= q*   : 72/72
+  C2  borne « sans » >= q*   : 72/72
+  C3  statut 'optimal' sain  : 72/72
+  seconde route convergee    : 1/72
+  resserrement de la borne   : median +0.00 %  moyen +0.00 %  max +0.00 %
+  VERDICT : TOUT VALIDE
+================================================================================================
+VALIDITE DE LA SECONDE ROUTE - verite terrain par enumeration exacte, 2 graines, plafond 40
+================================================================================================
+instance                          q*    ub sans    ub avec    statut   C1   C2   C3
+------------------------------------------------------------------------------------------------
+n5 p2 c0.00 g1               13.2000    13.2000    13.2000      None   ok   ok   ok
+n5 p2 c0.00 g2               10.5909    10.5909    10.5909      None   ok   ok   ok
+n5 p2 c0.50 g1               13.2000    13.2000    13.2000      None   ok   ok   ok
+n5 p2 c0.50 g2                4.6000     4.6000     4.6000      None   ok   ok   ok
+n5 p2 c0.90 g1               13.2000    13.2000    13.2000      None   ok   ok   ok
+n5 p2 c0.90 g2                4.6000     4.6000     4.6000      None   ok   ok   ok
+n5 p3 c0.00 g1                4.7059     4.7059     4.7059   optimal   ok   ok   ok
+n5 p3 c0.00 g2                7.1818     7.1818     7.1818      None   ok   ok   ok
+n5 p3 c0.50 g1                4.7059     4.7059     4.7059   optimal   ok   ok   ok
+n5 p3 c0.50 g2                7.0714     7.0714     7.0714      None   ok   ok   ok
+n5 p3 c0.90 g1                3.2500     3.2500     3.2500      None   ok   ok   ok
+n5 p3 c0.90 g2                6.4286     6.4286     6.4286      None   ok   ok   ok
+n5 p4 c0.00 g1               12.8750    12.8750    12.8750      None   ok   ok   ok
+n5 p4 c0.00 g2                3.3061    36.3243     4.0333   optimal   ok   ok   ok
+n5 p4 c0.50 g1                7.3125     7.8750     7.5714   optimal   ok   ok   ok
+n5 p4 c0.50 g2                5.5294     5.5294     5.5294      None   ok   ok   ok
+n5 p4 c0.90 g1                6.0000     6.0000     6.0000      None   ok   ok   ok
+n5 p4 c0.90 g2                5.5294     5.5294     5.5294      None   ok   ok   ok
+n6 p2 c0.00 g1                2.3846     2.3846     2.3846      None   ok   ok   ok
+n6 p2 c0.00 g2                7.3125     7.3125     7.3125   optimal   ok   ok   ok
+n6 p2 c0.50 g1                2.0000     2.3284     2.0000   optimal   ok   ok   ok
+n6 p2 c0.50 g2                5.8333    33.7200     6.5556   optimal   ok   ok   ok
+n6 p2 c0.90 g1                0.9286     0.9286     0.9286      None   ok   ok   ok
+n6 p2 c0.90 g2                1.9615     1.9615     1.9615      None   ok   ok   ok
+n6 p3 c0.00 g1                5.9444     5.9444     5.9444      None   ok   ok   ok
+n6 p3 c0.00 g2               11.5000    11.5000    11.5000      None   ok   ok   ok
+n6 p3 c0.50 g1                5.7778     5.7778     5.7778   optimal   ok   ok   ok
+n6 p3 c0.50 g2                3.5385     9.3519     4.8750   optimal   ok   ok   ok
+n6 p3 c0.90 g1                5.3125     5.3125     5.3125      None   ok   ok   ok
+n6 p3 c0.90 g2                2.0625     2.0625     2.0625      None   ok   ok   ok
+n6 p4 c0.00 g1               37.7500    37.7500    37.7500      None   ok   ok   ok
+n6 p4 c0.00 g2               10.7143    11.8333    11.2000   optimal   ok   ok   ok
+n6 p4 c0.50 g1               18.0000    18.0000    18.0000      None   ok   ok   ok
+n6 p4 c0.50 g2               10.7143    10.7143    10.7143   optimal   ok   ok   ok
+n6 p4 c0.90 g1                3.4583     3.4583     3.4583      None   ok   ok   ok
+n6 p4 c0.90 g2                8.7273     8.7273     8.7273      None   ok   ok   ok
+n7 p2 c0.00 g1                1.1034     1.1034     1.1034      None   ok   ok   ok
+n7 p2 c0.00 g2                4.8333     8.3056     6.1875   optimal   ok   ok   ok
+n7 p2 c0.50 g1                5.3333     5.3333     5.3333      None   ok   ok   ok
+n7 p2 c0.50 g2                4.8333     9.9561     5.3810   optimal   ok   ok   ok
+n7 p2 c0.90 g1                3.0000     3.0000     3.0000      None   ok   ok   ok
+n7 p2 c0.90 g2                1.4375     1.4375     1.4375      None   ok   ok   ok
+n7 p3 c0.00 g1                4.6250    17.6000     5.0000   optimal   ok   ok   ok
+n7 p3 c0.00 g2               32.6667    32.6667    32.6667      None   ok   ok   ok
+n7 p3 c0.50 g1                4.7500     7.6250     5.0000   optimal   ok   ok   ok
+n7 p3 c0.50 g2               32.6667    32.6667    32.6667   optimal   ok   ok   ok
+n7 p3 c0.90 g1                4.6250     4.6250     4.6250      None   ok   ok   ok
+n7 p3 c0.90 g2                2.6957     2.6957     2.6957      None   ok   ok   ok
+n7 p4 c0.00 g1               16.5000    16.5000    16.5000      None   ok   ok   ok
+n7 p4 c0.00 g2               34.6667    34.6667    34.6667      None   ok   ok   ok
+n7 p4 c0.50 g1                6.0000     6.0000     6.0000      None   ok   ok   ok
+n7 p4 c0.50 g2                5.0000    11.6667     6.3333   optimal   ok   ok   ok
+n7 p4 c0.90 g1                6.0000     6.0000     6.0000      None   ok   ok   ok
+n7 p4 c0.90 g2                5.0000     5.0000     5.0000      None   ok   ok   ok
+n8 p2 c0.00 g1                4.2692     4.4231     4.3182   optimal   ok   ok   ok
+n8 p2 c0.00 g2                4.0833     4.0833     4.0833      None   ok   ok   ok
+n8 p2 c0.50 g1                3.2727     3.2727     3.5556   optimal   ok   ok   ok
+n8 p2 c0.50 g2                2.4583     2.4583     2.4583      None   ok   ok   ok
+n8 p2 c0.90 g1                1.8571     1.8571     1.8571      None   ok   ok   ok
+n8 p2 c0.90 g2                0.8095     0.8095     0.8095      None   ok   ok   ok
+n8 p3 c0.00 g1                3.1739     5.7000     5.0000   optimal   ok   ok   ok
+n8 p3 c0.00 g2               10.5000    10.5000    10.5000      None   ok   ok   ok
+n8 p3 c0.50 g1                3.9474     6.2281     5.8889   optimal   ok   ok   ok
+n8 p3 c0.50 g2                6.7500     6.7500     6.7500      None   ok   ok   ok
+n8 p3 c0.90 g1                0.4545     0.4545     0.4545      None   ok   ok   ok
+n8 p3 c0.90 g2                6.7500     6.7500     6.7500      None   ok   ok   ok
+n8 p4 c0.00 g1                6.4286     6.4286     6.4286      None   ok   ok   ok
+n8 p4 c0.00 g2                3.2414     4.1680     3.4545   optimal   ok   ok   ok
+n8 p4 c0.50 g1                3.0000     6.0000     4.3333   optimal   ok   ok   ok
+n8 p4 c0.50 g2                2.9024     3.4255     3.0323   optimal   ok   ok   ok
+n8 p4 c0.90 g1                1.5000     1.5000     1.5000      None   ok   ok   ok
+n8 p4 c0.90 g2                2.6552     2.6552     2.6552      None   ok   ok   ok
+------------------------------------------------------------------------------------------------
+  C1  borne « avec » >= q*   : 72/72
+  C2  borne « sans » >= q*   : 72/72
+  C3  statut 'optimal' sain  : 72/72
+  seconde route convergee    : 24/72
+  resserrement de la borne   : median +0.00 %  moyen +7.38 %  max +88.90 %
+  VERDICT : TOUT VALIDE

@@ -195,7 +195,8 @@ def d_plus(inst: MOILFP, model: ECutModel,
 
 def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
                       budget: float, max_iter: int = TOURS_GEOM,
-                      Dm: Optional[int] = None
+                      Dm: Optional[int] = None,
+                      seuil_dplus: bool = True
                       ) -> Tuple[Optional[float], str, int]:
     """
     LE MEME TH. 5 PRIME, EVALUE A UN MEILLEUR SEUIL.
@@ -235,9 +236,21 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
     meme quand le solveur n'a pas conclu, et chaque tour produit un candidat
     valide ; on renvoie le plus petit.
 
-    INCOMPARABLE a (5') telle qu'appliquee aujourd'hui, et non superieure :
-    (5') utilise D+ >= Dmin, plus fin, et la structure du test d'efficacite.
-    Les deux se prennent donc au MINIMUM, ce qui reste valide.
+    LES DEUX ENONCES SE COMPOSENT -- une edition anterieure les disait
+    « incomparables » et en prenait le minimum, ce qui etait une erreur.
+    Pour TOUT seuil t et tout v >= max_R G_t avec v >= 0, en posant
+
+        D_t+ = min { D(x) : x dans R,  N(x) - t D(x) >= 0 },
+
+    on a  max_R f <= t + v / D_t+.  Preuve, deux cas. Si N(x) - t D(x) >= 0,
+    alors x appartient a l'ensemble qui definit D_t+, donc D(x) >= D_t+, et
+    f(x) <= t + (N(x) - t D(x))/D(x) <= t + v/D(x) <= t + v/D_t+. Sinon
+    f(x) < t <= t + v/D_t+ puisque v >= 0. C'est le seuil libre ET le
+    denominateur restreint : (5') est le cas t = q, et la forme a Dmin est
+    celle ou l'on remplace D_t+ par le minorant plus faible Dmin <= D_t+. La
+    forme unifiee DOMINE donc les deux, et pas seulement leur minimum.
+
+    Cout : UN programme de plus, au seuil final.
 
     Renvoie (borne, statut, tours) ; statut 'optimal' quand max_R f est
     atteint, 'empty' quand R est vide (alors q* = q), 'limit' sinon.
@@ -247,6 +260,7 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
         Dm = d_min(inst)
     t = Fraction(q)
     best: Optional[float] = None
+    porteur = None          # (t, Q, U, coef, const) du tour le mieux place
     fin = time.time() + budget
     tours = 0
 
@@ -274,7 +288,12 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
 
         U = max(0.0, float(res.bound))          # majorant VALIDE de max_R F_t
         cand = float(t) + U / (Q * Dm)
-        best = cand if best is None else min(best, cand)
+        if best is None or cand < best:
+            best = cand
+            # on retient DE QUEL tour vient le meilleur candidat : le
+            # denominateur restreint se calcule au seuil de CE tour-la, pas
+            # a un autre, sans quoi la borne serait fausse.
+            porteur = (Fraction(t), int(Q), U, coef.copy(), const)
         if U <= 1e-9:
             return float(t), "optimal", tours          # max_R f <= t, exactement
 
@@ -288,6 +307,19 @@ def borne_geometrique(inst: MOILFP, model: ECutModel, q: Fraction,
         if t_new <= t:
             break
         t = t_new
+
+    # -- LE DENOMINATEUR RESTREINT, AU SEUIL RETENU ------------------------
+    # Un seul programme de plus. `d_plus` minimise D sur la region intersectee
+    # avec { coef.x + const >= 0 }, c'est-a-dire { N - t D >= 0 } : c'est
+    # exactement D_t+. Interrompu, il rend un MINORANT de ce minimum, ce qui
+    # suffit -- la borne n'exige du denominateur que de minorer D la ou elle
+    # agit. On prend max(Dmin, D_t+), maximum de deux minorants valides.
+    if seuil_dplus and porteur is not None and ilp_budget_left() > 0:
+        t_p, Q_p, U_p, coef_p, const_p = porteur
+        dt = d_plus(inst, model, coef_p, const_p)
+        if dt is not None and dt > Dm:
+            cand = float(t_p) + U_p / (Q_p * dt)
+            best = cand if best is None else min(best, cand)
 
     return best, "limit", tours
 
@@ -664,6 +696,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             cglp_extra: int = 0,
             geom_bound: bool = False,
             geom_early: bool = False,
+            seuil_dplus: bool = True,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
@@ -1023,7 +1056,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             if reste_tot > 0.05:
                 avant = ORACLE_CALLS["ilp"]
                 g, st, tours = borne_geometrique(
-                    inst, model, q, reste_tot * geom_share, Dm=Dm)
+                    inst, model, q, reste_tot * geom_share, Dm=Dm,
+                    seuil_dplus=seuil_dplus)
                 info["geom_tot"] = st
                 info["geom_tot_ub"] = g
                 info["geom_tot_ilp"] = ORACLE_CALLS["ilp"] - avant
@@ -1059,7 +1093,8 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         reste = budget - (time.time() - t0)
         if reste > 0.05:
             avant = ORACLE_CALLS["ilp"]
-            g, st, tours = borne_geometrique(inst, model, q, reste, Dm=Dm)
+            g, st, tours = borne_geometrique(inst, model, q, reste, Dm=Dm,
+                                             seuil_dplus=seuil_dplus)
             info["geom"] = st
             info["geom_ub"] = g
             info["geom_ilp"] = ORACLE_CALLS["ilp"] - avant
@@ -1365,6 +1400,7 @@ def matheuristic_P(inst: MOILFP,
                    cglp_extra: int = 0,
                    geom_bound: bool = False,
                    geom_early: bool = False,
+                   seuil_dplus: bool = True,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
                    budgets_separes: bool = False,
@@ -1562,7 +1598,7 @@ def matheuristic_P(inst: MOILFP,
                        lemma_strikes=lemma_strikes, height_rank=height_rank,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
-                       geom_early=geom_early,
+                       geom_early=geom_early, seuil_dplus=seuil_dplus,
                        geom_gate=geom_gate, geom_gap=gap_hopeless,
                        pool_alterne=pool_alterne,
                        budgets_separes=budgets_separes)

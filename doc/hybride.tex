@@ -1832,11 +1832,12 @@ Deux points de la route~2 méritent d'être soulignés, parce qu'ils sont
 exactement ce que la version antérieure de cet algorithme n'avait pas.
 Le seuil $t$ avance sur \emph{n'importe quel} point du relâché : pour un
 \emph{majorant}, l'efficacité du point ne sert à rien, et l'exiger coûtait
-tout l'écart entre $q$ et $\max_{\Rcal}f$ (\S\ref{sec:seuil}). Et les deux
-routes sont \emph{incomparables} -- la première dispose de $D^{+}\ge
-D_{\min}$, la seconde d'un meilleur seuil -- donc on les prend toutes deux
-et l'on garde le minimum, qui reste valide. La version sans route~2 est
-décrite à l'annexe~\ref{sec:histo}.
+tout l'écart entre $q$ et $\max_{\Rcal}f$ (\S\ref{sec:seuil}). Et le seuil
+libre \emph{n'oblige pas} à renoncer au dénominateur restreint : la
+route~2 évalue $D^{+}_{t}$ au seuil qu'elle a atteint, d'où une borne qui
+contient celle de la route~1 au lieu de lui être incomparable
+(théorème~\ref{th:seuil}). La version sans route~2 est décrite à
+l'annexe~\ref{sec:histo}.
 
 \begin{remark}[validité malgré un incumbent mobile]
 Chaque tour produit une borne valide sur $\qs$ pour le $q$ \emph{de ce tour}.
@@ -3977,20 +3978,55 @@ La certification pose $q=P/Q$, résout $U\ \ge\ \max_{\Rcal}F_q$ avec
 $F_q=QN-PD$, et conclut $\qs\le q+U/(Q D^{+})$. Le seuil est \emph{toujours}
 l'incumbent. Or rien dans la démonstration ne l'exige.
 
-\begin{theorem}[borne à seuil libre]
+\begin{theorem}[borne à seuil libre et dénominateur restreint]
 \label{th:seuil}
-Soit $t$ un rationnel quelconque et $G_t=N-tD$. Si l'on a
-$\max_{x\in\Rcal}G_t(x)\le v$ pour un $v\ge 0$, alors
+Soit $t$ un rationnel quelconque et $G_t=N-tD$. Si
+$\max_{x\in\Rcal}G_t(x)\le v$ pour un $v\ge 0$, alors, en posant
 \[
-  \max_{x\in\Rcal}f(x)\ \le\ t+\frac{v}{D_{\min}},
-  \qquad D_{\min}=\min_{x\in\Scal}D(x)>0 .
+  D^{+}_{t}\ =\ \min\bigl\{D(x)\ :\ x\in\Rcal,\ G_t(x)\ge 0\bigr\}
+  \qquad (=+\infty\ \text{si cet ensemble est vide}),
+\]
+on a
+\[
+  \max_{x\in\Rcal}f(x)\ \le\ t+\frac{v}{D^{+}_{t}} .
 \]
 \end{theorem}
 
 \begin{proof}
-Pour $x\in\Rcal$ on a $N(x)-tD(x)\le v$, et $D(x)>0$ sous~(A1) ; donc
-$f(x)=N(x)/D(x)\le t+v/D(x)$, et $v\ge0$ donne
-$v/D(x)\le v/D_{\min}$. \end{proof}
+Soit $x\in\Rcal$, et $D(x)>0$ sous~(A1). Deux cas.
+
+Si $G_t(x)\ge 0$, alors $x$ appartient à l'ensemble qui définit
+$D^{+}_{t}$, donc $D(x)\ge D^{+}_{t}$. De $N(x)-tD(x)\le v$ on tire
+$f(x)=N(x)/D(x)\le t+\bigl(N(x)-tD(x)\bigr)/D(x)\le t+v/D(x)$, et
+$v\ge 0$ avec $D(x)\ge D^{+}_{t}$ donne $v/D(x)\le v/D^{+}_{t}$.
+
+Si $G_t(x)<0$, alors $f(x)<t\le t+v/D^{+}_{t}$, toujours parce que
+$v\ge 0$.
+
+Dans les deux cas $f(x)\le t+v/D^{+}_{t}$. \end{proof}
+
+\begin{remark}[les deux énoncés se composent -- rectification]
+\label{rem:composition}
+Une version antérieure de ce mémoire énonçait ce théorème avec $D_{\min}$ au
+dénominateur, en concluait qu'il était \emph{incomparable} à la
+borne~\eqref{eq:borne} -- meilleur sur le seuil, moins bon sur le
+dénominateur -- et prenait le minimum des deux. C'était une erreur, et elle
+coûtait quelque chose : les deux gains ne s'opposent pas, ils
+\textbf{se composent}. La démonstration ci-dessus est mot pour mot celle
+de~\eqref{eq:borne} avec $q$ remplacé par $t$ ; rien dans cette démonstration
+n'exigeait que le seuil fût l'incumbent, et rien n'exigeait non plus de
+renoncer au dénominateur restreint quand on change de seuil.
+
+Les deux énoncés antérieurs en sont les deux spécialisations :
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $t=q$ donne $D^{+}_{q}=D^{+}$ et l'on retrouve
+  exactement~\eqref{eq:borne} ;
+\item remplacer $D^{+}_{t}$ par le minorant plus faible
+  $D_{\min}\le D^{+}_{t}$ donne la forme à seuil libre publiée jusqu'ici.
+\end{itemize}
+La forme ci-dessus \textbf{domine donc les deux}, et pas seulement leur
+minimum. Son coût est d'un programme de plus, au seuil retenu.
+\end{remark}
 
 \begin{remark}[le gain $D^{+}$ n'était jamais réalisé]
 La borne resserrée~\eqref{eq:borne} gagne sur sa forme naïve
@@ -4024,17 +4060,15 @@ resserrer. L'arrondi se fait \emph{vers le bas} : un dénominateur surestimé
 rendrait la borne fausse.
 \end{remark}
 
-Le lien avec la borne~\eqref{eq:borne} demande d'être posé exactement, sans
-quoi les deux routes paraissent redondantes. Prendre $t=q$ dans le
-théorème~\ref{th:seuil} donne $G_q=F_q/Q$, donc $v=U/Q$, donc
-$\max_{\Rcal}f\le q+U/(Q\,D_{\min})$ : on retrouve la \emph{forme naïve} du
-dénominateur, et \emph{non} la borne~\eqref{eq:borne}, qui est strictement
-plus fine puisqu'elle y substitue $D^{+}\ge D_{\min}$ -- c'est le gain~(b)
-ci-dessus. Le théorème~\ref{th:seuil} ne redonne donc pas
-la borne~\eqref{eq:borne} et ne la contient pas : il l'améliore sur le
-\emph{seuil} et lui cède sur le \emph{dénominateur}. C'est là toute la
-raison pour laquelle les deux routes sont incomparables et pour laquelle on
-les prend au minimum, qui reste valide.
+Le lien avec la borne~\eqref{eq:borne} demande d'être posé exactement.
+Prendre $t=q$ dans le théorème~\ref{th:seuil} donne $G_q=F_q/Q$, donc
+$v=U/Q$, et $D^{+}_{q}=D^{+}$ : on retrouve alors \emph{exactement}
+la borne~\eqref{eq:borne}. Le théorème~\ref{th:seuil} la \textbf{contient}
+donc comme cas particulier, et l'étend en libérant le seuil sans rien céder
+sur le dénominateur. Il n'y a pas ici deux bornes incomparables dont on
+prendrait le minimum faute de mieux, mais une seule qui les couvre toutes
+les deux -- la remarque~\ref{rem:composition} dit ce que la version
+antérieure de ce texte affirmait à tort, et ce que cette erreur coûtait.
 
 Mais tout $t$ convient, et
 \emph{chaque point du relâché en fournit un meilleur} : si l'ILP rend un
@@ -4067,14 +4101,19 @@ $\max_{\Rcal}f$, sans rien acheter. C'est une garde utile appliquée au
 mauvais endroit, et c'est le genre d'erreur qu'aucune relecture ne trouve :
 il a fallu mesurer la région survivante pour la voir.
 
-\begin{remark}[les deux routes sont incomparables]
-La première utilise $D^{+}\ge D_{\min}$, plus fin, et la structure du test
-d'efficacité -- elle peut donc descendre \emph{sous} $\max_{\Scal}f$, et
-elle le fait. La seconde utilise un meilleur seuil. Aucune ne majore
-l'autre : sur les $26$ lignes de vérité terrain, la seconde est meilleure
-$3$ fois, moins bonne $20$ fois, égale $3$ fois -- mais ses trois victoires
-sont précisément les lignes difficiles. Le minimum de deux bornes valides
-étant valide, on les prend toutes les deux.
+\begin{remark}[ce que la rectification change au banc]
+Les chiffres publiés plus haut -- la seconde route meilleure $3$ fois sur
+$26$, moins bonne $20$ fois, égale $3$ -- comparaient la forme à $D_{\min}$
+à la borne~\eqref{eq:borne}. Cette comparaison n'a plus d'objet : il n'y a
+plus deux bornes à départager, mais une seule qui les contient toutes deux
+(théorème~\ref{th:seuil}, remarque~\ref{rem:composition}). Ce qui reste à
+mesurer n'est donc pas « laquelle gagne » mais \emph{ce que le dénominateur
+restreint achète au seuil libre}, sur les lignes où la seconde route
+\emph{ne converge pas} -- à convergence $v\le 0$, la borne vaut $t$
+exactement et le dénominateur n'y joue aucun rôle. Les bornes publiées avant
+cette rectification
+restent \textbf{valides} -- elles majoraient $\qs$, et une borne trop lâche
+ne ment pas -- mais elles étaient inutilement lâches.
 \end{remark}
 
 \subsection{Vérifiée avant d'être mesurée}
