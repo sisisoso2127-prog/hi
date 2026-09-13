@@ -385,7 +385,8 @@ def rank_dominated(dominated: Sequence[np.ndarray],
 def build_cut_pool(dominated: Sequence[np.ndarray],
                    archive: Sequence[np.ndarray],
                    w: np.ndarray,
-                   alterne: bool = True) -> List[tuple]:
+                   alterne: bool = True,
+                   ordre: str = "surrogat") -> List[tuple]:
     """
     UN SEUL vivier de coupes, alimente par DEUX sources.
 
@@ -444,6 +445,26 @@ def build_cut_pool(dominated: Sequence[np.ndarray],
     candidats, et la TOTALITE a celle qui reste quand l'autre est epuisee --
     l'effet « automatique » que le vivier commun promettait sans le tenir.
 
+    ORDRE STABLE EN BUDGET (`ordre="insertion"`). Le classement par w^T x
+    n'est PAS stable quand le budget grandit : l'archive grossit, de
+    nouveaux points s'intercalent dans le prefixe des beta premiers et en
+    deplacent d'autres. On ne pose alors pas « les memes coupes et
+    davantage » mais D'AUTRES coupes, le relache n'est pas emboite dans le
+    budget, et la borne peut reculer -- c'est le mecanisme etabli au
+    diagnostic de non-monotonie.
+
+    L'ordre d'INSERTION, lui, est monotone en budget : la trajectoire de la
+    phase 1 ne depend pas du plafond total, qui decide seulement QUAND elle
+    s'arrete, de sorte que l'archive a plafond B est un prefixe de l'archive
+    a plafond B' > B (le dictionnaire de l'archive preserve l'ordre
+    d'insertion, et `dominated` est une liste appendue dans l'ordre de
+    decouverte). Classer sur cet ordre rend le vivier stable par prefixe,
+    donc le relache emboite et la borne monotone PAR CONSTRUCTION.
+
+    Ce n'est pas gratuit : on renonce a poser d'abord les centres qui tirent
+    U le plus haut. C'est un troc -- monotonie contre qualite de coupe -- et
+    il se mesure.
+
     Renvoie une liste de couples (point, origine) avec origine dans
     {"dom", "arch"}.
     """
@@ -456,12 +477,14 @@ def build_cut_pool(dominated: Sequence[np.ndarray],
                 continue
             seen.add(key)
             par_source[kind].append((np.asarray(x, dtype=int), kind))
-    for k in par_source:
-        par_source[k].sort(key=lambda t: -float(wv @ t[0]))
+    if ordre != "insertion":
+        for k in par_source:
+            par_source[k].sort(key=lambda t: -float(wv @ t[0]))
 
     if not alterne:
         pool = par_source["dom"] + par_source["arch"]
-        pool.sort(key=lambda t: -float(wv @ t[0]))
+        if ordre != "insertion":
+            pool.sort(key=lambda t: -float(wv @ t[0]))
         return pool
 
     d, a = par_source["dom"], par_source["arch"]
@@ -698,6 +721,7 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
             geom_early: bool = False,
             seuil_dplus: bool = True,
             geom_iters: int = TOURS_GEOM,
+            vivier_stable: bool = False,
             geom_share: float = 0.25,
             geom_gate: bool = False,
             geom_gap: float = 0.5,
@@ -846,9 +870,13 @@ def certify(inst: MOILFP, q: Fraction, x_cur: np.ndarray,
         else:
             w0_coef, _, _, _ = surrogate(inst, q)
             pending = [(x, k, None) for x, k in
-                       build_cut_pool(rank_dominated(dominated, w0_coef),
-                                      arch_pts, w0_coef,
-                                      alterne=pool_alterne)]
+                       build_cut_pool(
+                           dominated if vivier_stable
+                           else rank_dominated(dominated, w0_coef),
+                           arch_pts, w0_coef,
+                           alterne=pool_alterne,
+                           ordre="insertion" if vivier_stable
+                           else "surrogat")]
 
     for rnd in range(1, max_rounds + 1):
         left = budget_coupes - (time.time() - t0)
@@ -1404,6 +1432,7 @@ def matheuristic_P(inst: MOILFP,
                    geom_early: bool = False,
                    seuil_dplus: bool = True,
                    geom_iters: int = TOURS_GEOM,
+                   vivier_stable: bool = False,
                    geom_gate: bool = False,
                    pool_alterne: bool = True,
                    budgets_separes: bool = False,
@@ -1602,7 +1631,7 @@ def matheuristic_P(inst: MOILFP,
                        agg_extra=agg_extra, cglp_extra=cglp_extra,
                        geom_bound=geom_bound if geom is None else geom,
                        geom_early=geom_early, seuil_dplus=seuil_dplus,
-                       geom_iters=geom_iters,
+                       geom_iters=geom_iters, vivier_stable=vivier_stable,
                        geom_gate=geom_gate, geom_gap=gap_hopeless,
                        pool_alterne=pool_alterne,
                        budgets_separes=budgets_separes)
