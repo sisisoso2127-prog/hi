@@ -4110,10 +4110,72 @@ plus deux bornes à départager, mais une seule qui les contient toutes deux
 mesurer n'est donc pas « laquelle gagne » mais \emph{ce que le dénominateur
 restreint achète au seuil libre}, sur les lignes où la seconde route
 \emph{ne converge pas} -- à convergence $v\le 0$, la borne vaut $t$
-exactement et le dénominateur n'y joue aucun rôle. Les bornes publiées avant
+exactement et le dénominateur n'y joue aucun rôle. La réponse est le
+tableau~\ref{tab:unifie}, et elle est \emph{zéro}. Les bornes publiées avant
 cette rectification
 restent \textbf{valides} -- elles majoraient $\qs$, et une borne trop lâche
 ne ment pas -- mais elles étaient inutilement lâches.
+\end{remark}
+
+\subsection{Ce que la forme unifiée achète : rien ici, et pourquoi}
+\label{sec:unifie}
+
+Le théorème~\ref{th:seuil} domine les deux énoncés antérieurs. Reste à
+mesurer ce que cela vaut. La réponse est franche, et elle ne nous arrange
+pas.
+
+\begin{table}[htbp]
+\centering
+\caption{La forme unifiée contre la forme à $D_{\min}$, lecture appariée --
+même instance, même graine, seul le dénominateur change. $n\in\{20,30,40\}$,
+$\text{corr}\in\{0\,;0{,}5\}$, trois graines, trois plafonds déterministes.
+« statut » est celui de la seconde route.\ \conf{1}{1}{1}}
+\label{tab:unifie}
+\begin{tabular}{rrrrrr}
+\toprule
+plafond & lignes & \textsf{optimal} & \textsf{limit} & route absente
+ & resserrement\\
+\midrule
+$300$ & $18$ & $13$ & $\mathbf{0}$ & $5$ & $+0{,}00\ \%$\\
+$120$ & $18$ & $15$ & $\mathbf{0}$ & $3$ & $+0{,}00\ \%$\\
+$60$  & $18$ & $18$ & $\mathbf{0}$ & $0$ & $+0{,}00\ \%$\\
+\midrule
+\multicolumn{4}{l}{total : $54$ exécutions, $0$ ligne \textsf{limit}}
+ & \multicolumn{2}{r}{médiane, moyenne et \textbf{maximum} $+0{,}00\ \%$}\\
+\multicolumn{6}{l}{borne unifiée plus lâche que l'ancienne : $0$ fois
+ -- elle la domine par construction}\\
+\multicolumn{6}{l}{appels entiers consommés : \textbf{identiques} ligne à
+ ligne dans les deux bras}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Zéro sur les $54$ exécutions}, et la colonne \textsf{limit}
+l'explique entièrement. Le dénominateur restreint n'agit que là où la route
+s'arrête \emph{avant} d'avoir convergé : à convergence on a $v\le 0$, la
+borne vaut $t$ exactement, et $D^{+}_{t}$ ne peut rien y ajouter. Or la
+route converge partout où elle s'engage -- $46$ lignes sur $46$ -- en deux
+ou trois appels entiers. Il n'existe, dans les régimes mesurés ici, aucune
+ligne où le gain \emph{puisse} se manifester.
+
+Le coût est nul pour la même raison, et c'est vérifié plutôt que supposé :
+les appels entiers sont identiques ligne à ligne dans les deux bras, parce
+que le programme supplémentaire n'est atteint que sur le chemin
+\textsf{limit}, celui qu'aucune de ces exécutions n'emprunte.
+
+\begin{remark}[une correction juste dont l'effet est latent]
+Il faut dire les deux choses, et ne pas laisser la seconde effacer la
+première. La rectification est \emph{juste} : l'énoncé antérieur était faux,
+la forme unifiée domine les deux, et les bornes s'en trouvent potentiellement
+resserrées sans coût. Elle est aussi, sur ce banc, \emph{sans effet mesuré}.
+Un gain latent n'est pas un gain, et l'annoncer comme tel serait
+exactement le genre de chose que ce mémoire reproche ailleurs. Ce qui est
+acquis est donc : un énoncé faux retiré, une borne qui ne peut que
+s'améliorer, un coût nul vérifié, et un effet nul mesuré. Le gain se
+matérialisera là où la route est \emph{interrompue} -- des instances plus
+grandes, ou un plafond qui la coupe avant convergence -- et nous n'avons pas
+de tel régime sous la main.
 \end{remark}
 
 \subsection{Vérifiée avant d'être mesurée}

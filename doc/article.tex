@@ -2975,6 +2975,16 @@ céder le dénominateur en libérant le seuil. Les bornes publiées auparavant
 restent valides -- une borne trop lâche ne ment pas -- mais elles étaient
 inutilement lâches. Coût de la forme unifiée : un programme de plus, au
 seuil retenu.
+
+\emph{Effet mesuré : nul, et il faut le dire.} Lecture appariée sur
+$54$ exécutions ($n\in\{20,30,40\}$, trois graines, plafonds $300$, $120$
+et~$60$) : resserrement médian, moyen \textbf{et maximal} $+0{,}00\ \%$,
+appels entiers identiques ligne à ligne, borne jamais plus lâche. La raison
+est structurelle : $D^{+}_{t}$ n'agit que si la route s'arrête avant
+convergence, et elle converge sur les $46$ lignes où elle s'engage, en deux
+ou trois appels. Le gain est donc réel en principe et \emph{latent} en
+pratique ; il se matérialisera là où la route est interrompue. Un gain
+latent n'est pas un gain.
 \end{remark}
 
 \noindent
