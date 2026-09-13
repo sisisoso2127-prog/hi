@@ -5477,17 +5477,80 @@ par défaut, avec cette mesure.
 \end{remark}
 
 \noindent
-La correction de principe se déduit de la cause : il faut rendre le vivier
-\emph{stable par préfixe} en budget, c'est-à-dire faire en sorte que les
-$\beta$ premiers centres ne changent pas quand l'archive grossit. Le relâché
-serait alors emboîté, et la borne monotone par construction. Nous ne
-l'appliquons pas ici, et pour une raison qui doit être dite plutôt que
-contournée : ce changement modifie \emph{quelles} coupes toute exécution
-pose, donc déplace potentiellement chaque nombre mesuré dans ce mémoire.
-C'est une décision de conception, pas un correctif, et elle demande de
-rejouer l'ensemble des campagnes. Une méthode dont le résultat peut empirer
-quand on lui donne plus de temps reste une méthode à corriger -- mais on
-sait désormais quoi corriger, et pourquoi.
+La correction se déduit de la cause : il faut un ordre de vivier
+\emph{monotone en budget}. L'ordre d'\textbf{insertion} l'est, et cela se
+vérifie plutôt que s'espère -- la trajectoire de la phase~1 ne dépend pas du
+plafond total, qui décide seulement \emph{quand} elle s'arrête, de sorte que
+l'archive à plafond $B$ est un préfixe de celle à plafond $B'>B$. Classer
+les centres sur cet ordre rend le relâché emboîté, donc la borne monotone
+\emph{par construction}. Nous l'avons implémenté et mesuré.
+
+\begin{table}[htbp]
+\centering
+\caption{L'ordre stable par préfixe : ce qu'il corrige et ce qu'il coûte.
+Haut : les six lignes du diagnostic, écart garanti à $300$ puis $900$
+appels. Bas : coût à plafond fixe sur les $18$ lignes du lot d'échelle, un
+$\Delta$ positif étant une dégradation.\ \conf{1}{1}{1}}
+\label{tab:vivierstable}
+\begin{tabular}{lrrr}
+\toprule
+ & ordre par substitut & ordre d'insertion &\\
+\midrule
+\multicolumn{4}{l}{\emph{monotonie -- six lignes du diagnostic}}\\
+lignes monotones & $4/6$ & $\mathbf{6/6}$ &\\
+$n=30$, graine~$1$ & $78{,}6\to\mathbf{93{,}0}$ & $78{,}6\to\mathbf{71{,}0}$
+ & $-22$ pt\\
+$n=30$, graine~$2$ & $22{,}8\to\mathbf{23{,}0}$ & $23{,}7\to\mathbf{14{,}9}$
+ & $-8$ pt\\
+$n=40$, $\text{corr}=0{,}5$ & $43{,}9\to\mathbf{0{,}0}$
+ & $43{,}9\to 18{,}5$ & $+18$ pt\\
+\midrule
+\multicolumn{4}{l}{\emph{coût -- $18$ lignes, plafond $300$}}\\
+$\Delta$ d'écart garanti & --- & médian $+0{,}00$ pt & moyen $+0{,}24$ pt\\
+pire ligne & --- & $+3{,}56$ pt & meilleure $-3{,}04$ pt\\
+optimalité prouvée & $5/18$ & $5/18$ & inchangé\\
+lignes identiques & --- & $14/18$ &\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Le défaut est corrigé} : $6/6$ lignes monotones contre $4/6$, et les
+deux lignes fautives ne sont pas rattrapées de justesse -- à plafond $900$
+la borne passe de $93{,}0$ à $71{,}0$ et de $23{,}0$ à $14{,}9$. \textbf{Le
+coût sur l'écart garanti est quasi nul} : $\Delta$ médian $+0{,}00$ point,
+moyen $+0{,}24$, $14$ lignes sur $18$ identiques, et le nombre de preuves
+\emph{inchangé}, $5/18$ dans les deux bras.
+
+Deux réserves, que nous ne passons pas sous silence, et que porte la
+remarque~\ref{rem:vivierprix}.
+
+\begin{remark}[monotone n'est pas meilleur, et le temps n'est pas l'appel]
+\label{rem:vivierprix}
+D'abord, à $n=40$, $\text{corr}=0{,}5$, l'ordre par substitut atteint
+$0{,}0\ \%$ à plafond $900$ -- il \emph{prouve} l'optimalité -- là où
+l'ordre stable plafonne à $18{,}5\ \%$. La monotonie y est respectée
+($43{,}9\to 18{,}5$) et la borne pourtant bien plus mauvaise : rendre une
+méthode monotone ne la rend pas meilleure, cela lui interdit seulement de
+reculer.
+
+Ensuite, une mesure que notre unité de coût ne sait pas voir. À $n=40$,
+l'ordre stable demande, \emph{à nombre d'appels entiers égal}, des dizaines
+de minutes là où l'ordre par substitut en demande quelques-unes : les coupes
+faibles laissent le relâché si grand qu'une seule relaxation devient
+intraitable en temps. L'appel entier, que ce mémoire défend ailleurs comme
+la bonne unité parce qu'il est indépendant de la machine, est ici
+\emph{aveugle} au prix réel. Nous le signalons parce que c'est exactement le
+reproche que nous adressons ailleurs aux unités mal choisies, et qu'il vaut
+aussi contre la nôtre.
+\end{remark}
+
+\noindent
+Le drapeau existe et reste \textbf{désactivé par défaut} : l'activer change
+\emph{quelles} coupes toute exécution pose, donc impose de rejouer
+l'ensemble des campagnes avant que le moindre chiffre de ce mémoire puisse
+être réécrit. Ce qui est acquis ici est le diagnostic, la correction, et son
+prix mesuré.
 
 \paragraph{Le mouvement C.} Sa conception a été mise à l'épreuve contre son
 retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché.
