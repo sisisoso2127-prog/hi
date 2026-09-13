@@ -141,8 +141,8 @@ davantage les chiffres que le résultat lui-même. La borne de certification
 n'a rien de particulier à l'incumbent : évaluée à un \textbf{seuil libre},
 avancé sur n'importe quel point du relâché, elle ouvre une seconde route
 incomparable à la première, dont on prend le minimum -- effet rare et
-énorme, jusqu'à $+38{,}77$ points d'écart garanti, $+137{,}56$ de gains
-cumulés contre $-0{,}42$ de pertes. Et le vivier de coupes, qui classait ses
+énorme, jusqu'à $+38{,}77$ points d'écart garanti, $+131{,}31$ de gains
+cumulés contre $-0{,}19$ de pertes. Et le vivier de coupes, qui classait ses
 deux sources sur une seule échelle, \textbf{affamait l'archive} jusqu'à zéro
 coupe d'archive sur deux lignes sur six, alors qu'elle est la seule à
 pouvoir vider le relâché ; les classer dans chaque source puis
@@ -323,7 +323,7 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       incomparable à la première, dont on prend le minimum. C'est le levier
       le plus fort mesuré ici, et sa forme est rare et énorme plutôt que
       fréquente et petite : jusqu'à $+38{,}77$ points sur une ligne,
-      $+137{,}56$ de gains cumulés contre $-0{,}42$ de pertes.
+      $+131{,}31$ de gains cumulés contre $-0{,}19$ de pertes.
 \item \textbf{L'archive mesurée comme livrable} (\S\ref{sec:livrable}) :
       le sous-ensemble de $\Ecal$ que l'énoncé demande est enfin mesuré
       contre $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de
@@ -1105,11 +1105,11 @@ trois graines, plafond déterministe de $300$ appels entiers.\
 \toprule
 & écart médian & écart moyen & optimalité prouvée\\
 \midrule
-plafond commun & $27{,}6\ \%$ & $33{,}8\ \%$ & $5/18$\\
+plafond commun & $28{,}1\ \%$ & $34{,}1\ \%$ & $5/18$\\
 un plafond par source & $27{,}4\ \%$ & $33{,}9\ \%$ & $5/18$\\
 \midrule
-\multicolumn{4}{l}{séparés contre commun : mieux $3$, pire $3$, égal $12$}\\
-\multicolumn{4}{l}{écart extrême : $-3{,}56$ et $+2{,}68$ point}\\
+\multicolumn{4}{l}{séparés contre commun : mieux $3$, pire $2$, égal $13$}\\
+\multicolumn{4}{l}{écart extrême : $-0{,}35$ et $+2{,}61$ point}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1118,10 +1118,10 @@ un plafond par source & $27{,}4\ \%$ & $33{,}9\ \%$ & $5/18$\\
 \textbf{Aucun effondrement.} Les preuves sont identiques -- $5/18$ dans les
 deux bras -- et l'écart médian diffère de deux dixièmes de point. Le
 mécanisme est pourtant bien sollicité : sur cinq lignes, le bras à budgets
-séparés pose nettement plus de coupes ($106\!\to\!126$, $108\!\to\!115$,
-$40\!\to\!64$, $102\!\to\!114$, $106\!\to\!121$, soit jusqu'à $+60\ \%$), et
-sur ces cinq lignes précisément l'écart bouge de $+0{,}47$, $0$, $0$, $0$ et
-$-0{,}34$ point. La saturation que le chiffre publié décrivait ne se produit
+séparés pose nettement plus de coupes ($106\!\to\!125$, $109\!\to\!115$,
+$40\!\to\!64$, $102\!\to\!114$, $102\!\to\!120$, soit jusqu'à $+60\ \%$), et
+sur ces cinq lignes précisément l'écart bouge de $+1{,}38$, $0$, $0$, $0$ et
+$+2{,}61$ point. La saturation que le chiffre publié décrivait ne se produit
 pas.
 
 \begin{remark}[ce que nous retirons, et ce que nous ne retirons pas]
@@ -3047,10 +3047,10 @@ lignes instables & \multicolumn{2}{c}{$0/8$} & \multicolumn{2}{c}{$0/8$}\\
 \multicolumn{5}{l}{\emph{lecture appariée} (même instance, même graine)}\\
 preuves gagnées / perdues & \multicolumn{2}{c}{$\mathbf{57}$ / $\mathbf{0}$}
                           & \multicolumn{2}{c}{$\mathbf{30}$ / $\mathbf{0}$}\\
-delta d'appels par paire & \multicolumn{2}{c}{médiane $-1$, total $-494$}
-                         & \multicolumn{2}{c}{médiane $\mathbf{-51}$,
-                           total $-3\,771$}\\
-& \multicolumn{2}{c}{$55/80$ en baisse}
+delta d'appels par paire & \multicolumn{2}{c}{médiane $-1$, total $-461$}
+                         & \multicolumn{2}{c}{médiane $\mathbf{-52}$,
+                           total $-3\,741$}\\
+& \multicolumn{2}{c}{$53/80$ en baisse}
 & \multicolumn{2}{c}{$67/80$ en baisse}\\
 \bottomrule
 \end{tabular}
@@ -4328,64 +4328,79 @@ graines}.\ \conf{1}{1}{1}}
 \toprule
 $n$ & corr & sans & avec & gain & t & $n$ & corr & sans & avec & gain & t\\
 \midrule
-$20$ & $0$   & $97{,}6$ & $77{,}2$ & $\mathbf{+20{,}36}$ & $2$
+$20$ & $0$   & $97{,}8$ & $80{,}8$ & $\mathbf{+17{,}03}$ & $3$
  & $30$ & $0{,}5$ & $16{,}1$ & $1{,}2$ & $\mathbf{+14{,}85}$ & $2$\\
-$20$ & $0$   & $43{,}6$ & $43{,}6$ & $+0{,}00$ & $2$
+$20$ & $0$   & $40{,}6$ & $40{,}6$ & $+0{,}00$ & $2$
  & $30$ & $0{,}5$ & $13{,}7$ & $13{,}7$ & $+0{,}00$ & $2$\\
 $20$ & $0$   & $72{,}0$ & $37{,}4$ & $\mathbf{+34{,}63}$ & $3$
  & $30$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --\\
 $20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --
  & $40$ & $0$ & $96{,}6$ & $96{,}5$ & $+0{,}02$ & $3$\\
 $20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --
- & $40$ & $0$ & $93{,}2$ & $87{,}3$ & $+5{,}93$ & $4$\\
+ & $40$ & $0$ & $92{,}6$ & $87{,}3$ & $+5{,}28$ & $4$\\
 $20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --
- & $40$ & $0$ & $57{,}1$ & $57{,}4$ & $\mathbf{-0{,}23}$ & $2$\\
+ & $40$ & $0$ & $61{,}0$ & $60{,}3$ & $+0{,}67$ & $2$\\
 $30$ & $0$ & $93{,}1$ & $78{,}6$ & $\mathbf{+14{,}52}$ & $3$
  & $40$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & --\\
-$30$ & $0$ & $22{,}8$ & $22{,}8$ & $+0{,}00$ & $2$
+$30$ & $0$ & $23{,}7$ & $23{,}7$ & $+0{,}00$ & $2$
  & $40$ & $0{,}5$ & $82{,}7$ & $43{,}9$ & $\mathbf{+38{,}77}$ & $3$\\
-$30$ & $0$ & $41{,}0$ & $32{,}5$ & $+8{,}48$ & $3$
+$30$ & $0$ & $38{,}0$ & $32{,}5$ & $+5{,}54$ & $3$
  & $40$ & $0{,}5$ & $16{,}6$ & $16{,}7$ & $\mathbf{-0{,}19}$ & $2$\\
 \midrule
 \multicolumn{12}{l}{reproductibilité $18/18$ \quad$\bullet$\quad
  encadrements tous valides \quad$\bullet$\quad convergée $13/18$}\\
-\multicolumn{12}{l}{améliorées $8$, dégradées $2$, inchangées $8$
- \quad$\bullet$\quad gain médian $+0{,}00$, moyen $+7{,}62$,
+\multicolumn{12}{l}{améliorées $\mathbf{9}$, dégradées $\mathbf{1}$,
+ inchangées $8$ \quad$\bullet$\quad gain médian $+0{,}01$, moyen $+7{,}28$,
  maximum $+38{,}77$}\\
-\multicolumn{12}{l}{somme des \emph{gains} $\mathbf{+137{,}56}$, somme des
- \emph{pertes} $-0{,}42$, net $+137{,}14$ point}\\
+\multicolumn{12}{l}{somme des \emph{gains} $\mathbf{+131{,}31}$, somme des
+ \emph{pertes} $-0{,}19$, net $+131{,}12$ point}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Deux tests, deux réponses, et c'est le résultat.} Avec deux
-graines nous annoncions $p=0{,}031$ au test des signes. La troisième graine
-retire cette conclusion : $8$ améliorées contre $2$ dégradées sur $10$
-paires non nulles donne $p=0{,}109$. \textbf{Le test des signes ne conclut
-pas.}
+\paragraph{Les deux tests concluent, et il a fallu trois versions du banc
+pour en arriver là.} Avec deux graines nous annoncions $p=0{,}031$ au test
+des signes ; la troisième graine retirait cette conclusion ($8$ contre $2$
+sur $10$ paires non nulles, $p=0{,}109$) et nous avions publié ce désaccord
+comme un résultat. Le vivier stable le change une dernière fois : $9$
+améliorées contre $1$ dégradée sur $10$ paires non nulles donne
+$\mathbf{p=0{,}021}$, et \textbf{le test des signes conclut}. Le test des
+rangs signés de Wilcoxon, qui pèse les amplitudes, donne $W=2$ et
+$\mathbf{p=0{,}0059}$. Les deux s'accordent.
 
-Mais il n'est pas le bon test ici, et la raison se lit dans le tableau. Les
-deux dégradations valent $-0{,}23$ et $-0{,}19$ point ; le test des signes
-les compte à égalité avec un gain de $+38{,}77$. Or la somme des gains vaut
-$+137{,}56$ points contre $-0{,}42$ pour celle des pertes -- un rapport de
-$\mathbf{327{,}5}$ pour un. Le \emph{net}, $+137{,}14$, est ce dont la
-moyenne annoncée plus haut est tirée ($137{,}14/18=+7{,}62$) ; les deux
-quantités ne se confondent pas. Le test des rangs signés de Wilcoxon, qui pèse les
-amplitudes, donne $W=5$ et $\mathbf{p=0{,}020}$.
+Il faut dire ce que cela retire et ce que cela laisse. Cela retire
+l'argument que nous tirions de leur désaccord -- il n'y a plus de désaccord
+à interpréter. Cela ne retire \emph{rien} à la nature de l'effet, que le
+tableau montre directement : la seule dégradation vaut $-0{,}19$ point,
+la somme des gains atteint $+131{,}31$ contre $-0{,}19$ pour celle des
+pertes -- un rapport de $\mathbf{691}$ pour un --, et le \emph{net},
+$+131{,}12$, est ce dont la moyenne est tirée ($131{,}12/18=+7{,}28$). Sur
+huit lignes l'effet ne fait rien du tout ; sur \textbf{cinq} il retire de
+$14$ à $39$ points -- $38{,}77$, $34{,}63$, $17{,}03$, $14{,}85$ et
+$14{,}52$. Il reste \emph{rare et énorme} plutôt que fréquent et petit ;
+simplement, il est maintenant assez net pour que le comptage des signes le
+voie aussi. La remarque~\ref{rem:troisversions} tire le bilan de ces trois
+versions successives.
 
-Nous rapportons les deux. Ce que leur désaccord dit n'est pas un artefact
-statistique mais la nature de l'effet : il est \emph{rare et énorme} plutôt
-que fréquent et petit. Sur huit lignes il ne fait rien du tout ; sur
-\textbf{cinq} il retire de $14$ à $39$ points -- $38{,}77$, $34{,}63$,
-$20{,}36$, $14{,}85$ et $14{,}52$. Un levier de cette forme ne se juge pas au
-comptage des signes.
+\begin{remark}[trois versions d'un même banc, et pourquoi les publier toutes]
+\label{rem:troisversions}
+Ce paragraphe a porté successivement « $p=0{,}031$, l'effet est établi »,
+puis « $p=0{,}109$, le test ne conclut pas, et c'est leur désaccord qui est
+le résultat », puis le présent « $p=0{,}021$, les deux concluent ». Aucune
+de ces trois versions n'était un mensonge au moment où elle a été écrite ;
+la première manquait de graines, la seconde mesurait une méthode dont le
+relâché n'était pas emboîté dans le budget. Nous laissons l'historique
+visible plutôt que de présenter le dernier chiffre comme s'il avait toujours
+été là : un lecteur qui voit trois valeurs successives sait ce que vaut la
+quatrième.
+\end{remark}
 
 \paragraph{L'ordre de grandeur.} Le levier précédent -- la coupe générée
 sans binaire -- rapporte exactement $0{,}00$ point dans cette même
 configuration, et n'atteignait $0{,}11$ que sur le socle bien plus lâche de
 la configuration d'origine (§\ref{sec:cglp}).
 Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, puis $34{,}63$,
-$20{,}36$, $14{,}85$ et $14{,}52$. Ce n'est pas le même phénomène mesuré
+$17{,}03$, $14{,}85$ et $14{,}52$. Ce n'est pas le même phénomène mesuré
 plus finement, c'est un autre phénomène.
 
 \begin{remark}[les deux corrections se recouvrent, et il faut le dire]
@@ -4571,7 +4586,7 @@ card\,\% & couv\,\% & $HV$\,\% & $\varepsilon^+$ & $z^\ast\!\in\!\mathcal{A}$\\
 $6$ & $3$ & $0{,}00$ & $1\,436$ & $88$  & $15$ & $17{,}0$ & $17{,}0$ & $90{,}6$ & $0{,}146$ & oui\\
 $6$ & $3$ & $0{,}00$ & $1\,130$ & $114$ & $17$ & $14{,}9$ & $14{,}9$ & $79{,}7$ & $0{,}280$ & oui\\
 $7$ & $3$ & $0{,}00$ & $5\,275$ & $27$  & $11$ & $40{,}7$ & $40{,}7$ & $96{,}2$ & $0{,}101$ & oui\\
-$7$ & $4$ & $0{,}00$ & $1\,931$ & $218$ & $19$ & $8{,}7$  & $8{,}7$  & $68{,}2$ & $0{,}503$ & oui\\
+$7$ & $4$ & $0{,}00$ & $1\,931$ & $218$ & $17$ & $7{,}8$  & $7{,}8$  & $67{,}4$ & $0{,}503$ & oui\\
 $8$ & $3$ & $0{,}00$ & $2\,754$ & $42$  & $12$ & $28{,}6$ & $28{,}6$ & $76{,}4$ & $0{,}722$ & oui\\
 $6$ & $3$ & $0{,}50$ & $1\,436$ & $26$  & $13$ & $50{,}0$ & $50{,}0$ & $92{,}3$ & $0{,}128$ & oui\\
 $7$ & $3$ & $0{,}50$ & $5\,275$ & $17$  & $12$ & $70{,}6$ & $70{,}6$ & $95{,}2$ & $0{,}117$ & oui\\

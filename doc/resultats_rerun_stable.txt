@@ -1,0 +1,175 @@
+=== VALIDITE (verify_geom, plafonds 200 et 40) ===
+instance                          q*    ub sans    ub avec    statut   C1   C2   C3
+  C1  borne « avec » >= q*   : 72/72
+  C2  borne « sans » >= q*   : 72/72
+  C3  statut 'optimal' sain  : 72/72
+  seconde route convergee    : 1/72
+  resserrement de la borne   : median +0.00 %  moyen +0.00 %  max +0.00 %
+  VERDICT : TOUT VALIDE
+=== CAP 40 ===
+instance                          q*    ub sans    ub avec    statut   C1   C2   C3
+  C1  borne « avec » >= q*   : 72/72
+  C2  borne « sans » >= q*   : 72/72
+  C3  statut 'optimal' sain  : 72/72
+  seconde route convergee    : 24/72
+  resserrement de la borne   : median +0.00 %  moyen +7.38 %  max +88.90 %
+  VERDICT : TOUT VALIDE
+
+=== REGIME CIBLE (10 graines) ===
+========================================================================================================
+REGIME CIBLE SOUS PLAFOND DETERMINISTE DE 100 APPELS  [V* S* D*]   10 graines
+========================================================================================================
+instance                  |E|          ecart median      optimalite prouvee          ILP med.   det.
+                                    sans       avec       sans         avec     sans     avec
+--------------------------------------------------------------------------------------------------------
+molfp_n7_m4_p4_c000_s3    218      22.1%       0.0%       0/10       10/10       99       99     ok
+molfp_n7_m4_p4_c025_s3    198      53.6%      13.0%       0/10        0/10       99      100     ok
+molfp_n6_m4_p4_c000_s3    185      13.3%       0.0%       0/10        9/10       95       94     ok
+molfp_n7_m4_p3_c025_s1    112      37.5%       0.0%       0/10       10/10      100       99     ok
+molfp_n5_m3_p4_c000_s2     54      26.8%       0.0%       0/10       10/10       99       99     ok
+molfp_n8_m5_p3_c000_s1     46      24.2%       0.0%       0/10       10/10       99       88     ok
+molfp_n7_m4_p4_c050_s3     30      38.9%       0.0%       0/10        8/10       99       91     ok
+molfp_n6_m4_p2_c025_s1     26       0.0%       0.0%      10/10       10/10       90       70     ok
+--------------------------------------------------------------------------------------------------------
+  optimalite prouvee : sans 10/80   avec 67/80
+  lecture APPARIEE   : gagnees 57   perdues 0   inchangees 23
+  delta d'appels     : mediane -1   total -461   53/80 en baisse
+  encadrements valides : 160/160
+  lignes instables     : 0/8
+
+========================================================================================================
+REGIME CIBLE SOUS PLAFOND DETERMINISTE DE 300 APPELS  [V* S* D*]   10 graines
+========================================================================================================
+instance                  |E|          ecart median      optimalite prouvee          ILP med.   det.
+                                    sans       avec       sans         avec     sans     avec
+--------------------------------------------------------------------------------------------------------
+molfp_n7_m4_p4_c000_s3    218       0.0%       0.0%      10/10       10/10      238      208     ok
+molfp_n7_m4_p4_c025_s3    198      27.7%       0.0%       0/10       10/10      295      273     ok
+molfp_n6_m4_p4_c000_s3    185       0.0%       0.0%       8/10       10/10      249      211     ok
+molfp_n7_m4_p3_c025_s1    112       0.0%       0.0%       6/10       10/10      292      207     ok
+molfp_n5_m3_p4_c000_s2     54      15.8%       0.0%       0/10       10/10      295      216     ok
+molfp_n8_m5_p3_c000_s1     46       0.0%       0.0%       7/10       10/10      265      196     ok
+molfp_n7_m4_p4_c050_s3     30       0.0%       0.0%       9/10       10/10      272      199     ok
+molfp_n6_m4_p2_c025_s1     26       0.0%       0.0%      10/10       10/10      174      180     ok
+--------------------------------------------------------------------------------------------------------
+  optimalite prouvee : sans 50/80   avec 80/80
+  lecture APPARIEE   : gagnees 30   perdues 0   inchangees 50
+  delta d'appels     : mediane -52   total -3741   67/80 en baisse
+  encadrements valides : 160/160
+  lignes instables     : 0/8
+
+========================================================================================================
+BILAN
+  plafond  100 appels : sans 10/80   avec 67/80   apparie +57 / -0
+  plafond  300 appels : sans 50/80   avec 80/80   apparie +30 / -0
+  (2630 s)
+
+=== TERMINE ===
+
+=== BUDGETS ===
+============================================================================
+VIVIER : UN PLAFOND OU DEUX - plafond 300 appels, 3 graines
+============================================================================
+   n  corr  gr  ecart commun  ecart separes    gain   coupes c/s  prouve c/s
+----------------------------------------------------------------------------
+  20  0.00   1         80.8%          80.8%   +0.00      109/108         F/F
+  20  0.00   2         40.6%          41.0%   -0.35      102/101         F/F
+  20  0.00   3         37.4%          37.4%   +0.00        84/84         F/F
+  20  0.50   1          0.0%           0.0%   +0.00        32/32         T/T
+  20  0.50   2          0.0%           0.0%   +0.00        56/56         T/T
+  20  0.50   3          0.0%           0.0%   +0.00        57/57         T/T
+  30  0.00   1         78.6%          78.6%   +0.00        93/93         F/F
+  30  0.00   2         23.7%          22.3%   +1.38      106/125         F/F
+  30  0.00   3         32.5%          32.5%   +0.00      109/115         F/F
+  30  0.50   1          1.2%           1.2%   +0.00        83/83         F/F
+  30  0.50   2         13.7%          13.7%   +0.00        91/89         F/F
+  30  0.50   3          0.0%           0.0%   +0.00        40/64         T/T
+  40  0.00   1         96.5%          96.5%   +0.00      102/114         F/F
+  40  0.00   2         87.3%          87.2%   +0.07        93/95         F/F
+  40  0.00   3         60.3%          57.7%   +2.61      102/120         F/F
+  40  0.50   1          0.0%           0.0%   +0.00        56/56         T/T
+  40  0.50   2         43.9%          43.9%   +0.00        87/87         F/F
+  40  0.50   3         16.7%          16.9%   -0.19        89/87         F/F
+----------------------------------------------------------------------------
+  ecart median   commun  28.1%   separes  27.4%
+  ecart moyen    commun  34.1%   separes  33.9%
+  optimalite prouvee   commun 5/18   separes 5/18
+  `separes` contre `commun` : MIEUX 3  PIRE 2  EGAL 13
+
+  Si `separes` degrade, la regle du vivier unique est fondee.
+  Sinon, la justification publiee tombe et il faut le dire.
+
+=== SECONDE ROUTE (tab:geom) ===
+================================================================================================================
+SECONDE ROUTE (seuil avance sur le relache) - plafond 300 appels entiers, 3 graines, declencheur DESACTIVE
+================================================================================================================
+   n  corr  gr  reprod  ecart sans  ecart avec  gain pts   statut  tours  ILP 2e   coupes s/a     ILP s/a  coherent
+----------------------------------------------------------------------------------------------------------------
+  20  0.00   1     oui       97.8%       80.8%   +17.03  optimal      3       3    113/109     300/291          ok
+  20  0.00   2     oui       40.6%       40.6%    +0.00  optimal      2       2    105/102     300/290          ok
+  20  0.00   3     oui       72.0%       37.4%   +34.63  optimal      3       3     88/84      300/291          ok
+  20  0.50   1     oui        0.0%        0.0%    +0.00     None      0       0     32/32      143/143          ok
+  20  0.50   2     oui        0.0%        0.0%    +0.00     None      0       0     56/56      214/214          ok
+  20  0.50   3     oui        0.0%        0.0%    +0.00     None      0       0     57/57      249/249          ok
+  30  0.00   1     oui       93.1%       78.6%   +14.52  optimal      3       3     95/93      300/291          ok
+  30  0.00   2     oui       23.7%       23.7%    +0.00  optimal      2       2    110/106     300/290          ok
+  30  0.00   3     oui       38.0%       32.5%    +5.54  optimal      3       3    113/109     300/291          ok
+  30  0.50   1     oui       16.1%        1.2%   +14.85  optimal      2       2     87/83      300/290          ok
+  30  0.50   2     oui       13.7%       13.7%    +0.00  optimal      2       2     95/91      300/290          ok
+  30  0.50   3     oui        0.0%        0.0%    +0.00     None      0       0     40/40      272/272          ok
+  40  0.00   1     oui       96.6%       96.5%    +0.02  optimal      3       3    105/102     300/291          ok
+  40  0.00   2     oui       92.6%       87.3%    +5.28  optimal      4       4     97/93      300/292          ok
+  40  0.00   3     oui       61.0%       60.3%    +0.67  optimal      2       2    105/102     300/290          ok
+  40  0.50   1     oui        0.0%        0.0%    +0.00     None      0       0     56/56      197/197          ok
+  40  0.50   2     oui       82.7%       43.9%   +38.77  optimal      3       3     90/87      300/291          ok
+  40  0.50   3     oui       16.6%       16.7%    -0.19  optimal      2       2     92/89      300/290          ok
+----------------------------------------------------------------------------------------------------------------
+  REPRODUCTIBILITE : 18/18 lignes stables
+  points d'ecart garanti gagnes : median +0.01   moyen +7.28   max +38.77   min -0.19
+  MIEUX 9   PIRE 1   EGAL 8
+  SECONDE ROUTE CONVERGEE (max_R f atteint) : 13/18
+  COHERENCE des encadrements : TOUT VALIDE
+
+  Lecture du cout. La seconde route se paie sur le MEME plafond
+  d'appels entiers : la colonne « coupes » montre ce que la boucle
+  de coupes a du ceder pour la financer. Un gain positif signifie
+  donc qu'un seuil avance vaut mieux que les coupes abandonnees.
+
+=== LIVRABLE ===
+==================================================================================
+PARTIE A -- l'archive comme front approche, budget ILP = 180  [V* S* D*]
+==================================================================================
+   n   p  corr      |S|  |ZE|  |ZA|  card%  couv%    HV%   eps+ purete  z*∈A   ILP
+----------------------------------------------------------------------------------
+   6   3  0.00    1436    88    15    17.0     17.0    90.6   0.146   1.00   oui   113
+   6   3  0.00    1130   114    17    14.9     14.9    79.7   0.280   1.00   oui   110
+   7   3  0.00    5275    27    11    40.7     40.7    96.2   0.101   1.00   oui   121
+   7   4  0.00    1931   218    17     7.8      7.8    67.4   0.503   1.00   oui   129
+   8   3  0.00    2754    42    12    28.6     28.6    76.4   0.722   1.00   oui   129
+   6   3  0.50    1436    26    13    50.0     50.0    92.3   0.128   1.00   oui   122
+   7   3  0.50    5275    17    12    70.6     70.6    95.2   0.117   1.00   oui   129
+   8   3  0.50    2754     6     5    83.3     83.3    99.9   0.058   1.00   oui   107
+----------------------------------------------------------------------------------
+  medianes : card 40.7%   couv 40.7%   HV 92.3%   eps+ 0.146
+  purete = 1 sur 8/8 instances
+  z* present dans l'archive : 8/8
+
+==================================================================================
+PARTIE B -- l'archive s'ameliore-t-elle avec le budget ?  [V* S* D*]
+==================================================================================
+    n   p  corr   |ZA|@60  |ZA|@180  |ZA|@540   couv@60  couv@180  couv@540     HV@60    HV@180    HV@540
+----------------------------------------------------------------------------------
+   6   3   0.00          8        15        21      9.1%     17.0%     23.9%     72.6%     90.6%     93.7%
+   6   3   0.00          6        17        27      5.3%     14.9%     23.7%     68.1%     79.7%     91.9%
+   7   3   0.00          9        11        12     33.3%     40.7%     44.4%     86.9%     96.2%     98.0%
+   7   4   0.00          9        17        36      4.1%      7.8%     16.5%     57.4%     67.4%     79.5%
+   8   3   0.00          8        12        19     19.0%     28.6%     45.2%     57.3%     76.4%     98.9%
+   6   3   0.50         12        13        19     46.2%     50.0%     73.1%     73.4%     92.3%     97.3%
+   7   3   0.50          9        12        16     52.9%     70.6%     94.1%     92.8%     95.2%    100.0%
+   8   3   0.50          6         5         5    100.0%     83.3%     83.3%    100.0%     99.9%     99.9%
+----------------------------------------------------------------------------------
+  archive plus grande en triplant trois fois le budget : 7/8
+  hypervolume en hausse                                : 7/8
+  aucun mouvement du tout                              : 0/8
+
+=== TERMINE ===

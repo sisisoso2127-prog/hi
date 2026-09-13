@@ -312,7 +312,7 @@ efficace}, et où $q_{\text{ub}}$ est le minimum de deux bornes valides
       théorème de certification n'a rien de particulier à l'incumbent, et
       l'évaluer à un seuil avancé sur le relâché ouvre une seconde route,
       incomparable à la première. Effet rare et énorme : jusqu'à $+38{,}77$
-      points d'écart garanti, $+137{,}56$ de gains cumulés contre $-0{,}42$
+      points d'écart garanti, $+131{,}31$ de gains cumulés contre $-0{,}19$
       de pertes.
 \item \textbf{L'archive rendue et mesurée} (\S\ref{sec:livrable}) : le
       sous-ensemble de $\Ecal$ que produit la méthode est évalué contre
@@ -3022,18 +3022,21 @@ inchangées, gain maximal $+38{,}77$ points. Coût propre : $2$ à $4$ appels
 entiers. Validité vérifiée par énumération exacte sur $72$ instances à deux
 plafonds, $144$ exécutions, aucune violation.
 
-\begin{remark}[deux tests, deux réponses]
-Avec deux graines nous annoncions $p=0{,}031$ au test des signes. La
-troisième graine retire cette conclusion : $8$ contre $2$ sur dix paires non
-nulles donne $p=0{,}109$, et \textbf{le test des signes ne conclut pas}.
-Mais il n'est pas le bon test : les deux dégradations valent $-0{,}23$ et
-$-0{,}19$ point, et il les compte à égalité avec un gain de $+38{,}77$. La
-somme des gains atteint $+137{,}56$ points contre $-0{,}42$ pour celle des
-pertes, et le test des rangs signés de Wilcoxon donne
-$\mathbf{p=0{,}020}$. Leur désaccord n'est pas un artefact : il dit la
-nature de l'effet, \emph{rare et énorme} plutôt que fréquent et petit. Sur
-huit lignes il ne fait rien ; sur \textbf{cinq} il retire de $14$ à $39$
-points.
+\begin{remark}[trois versions d'un même banc]
+Ce résultat a porté successivement trois valeurs, et nous les laissons
+visibles. Avec deux graines : $p=0{,}031$ au test des signes, effet établi.
+Avec trois : $8$ contre $2$ sur dix paires non nulles, $p=0{,}109$, le test
+ne conclut pas, et nous publiions ce désaccord comme un résultat. Avec le
+vivier stable par préfixe, qui rend le relâché emboîté dans le budget :
+$\mathbf{9}$ contre $\mathbf{1}$, $\mathbf{p=0{,}021}$, et \textbf{le test
+des signes conclut} ; le test des rangs signés de Wilcoxon donne $W=2$ et
+$\mathbf{p=0{,}0059}$. Les deux s'accordent désormais, ce qui retire
+l'argument tiré de leur désaccord mais rien à la nature de l'effet : la
+seule dégradation vaut $-0{,}19$ point, la somme des gains atteint
+$+131{,}31$ contre $-0{,}19$ pour celle des pertes, et sur huit lignes
+l'effet ne fait rien tandis que sur \textbf{cinq} il retire de $14$ à $39$
+points. Il reste \emph{rare et énorme} ; il est simplement assez net pour
+que le comptage des signes le voie aussi.
 \end{remark}
 
 \subsection{Le vivier affamait la source qui seule peut vider le relâché}
@@ -3596,7 +3599,7 @@ $84\to 56$ preuves à budgets séparés
 « sans effet au-delà de $n\ge 20$ »
   & $98{,}6\to 77{,}2$ et $93{,}9\to 78{,}6$ & \S\ref{sec:defauts}\\
 $p=0{,}031$ pour la seconde route
-  & $p=0{,}109$ aux signes, $0{,}020$ à Wilcoxon & \S\ref{sec:defauts}\\
+  & $p=0{,}109$ puis $\mathbf{0{,}021}$ aux signes & \S\ref{sec:defauts}\\
 mouvement C : $3$ contre $3$ (deux graines)
   & $4/4$ et $5/3$ (trois graines) & \S\ref{sec:mouvements}\\
 \bottomrule
