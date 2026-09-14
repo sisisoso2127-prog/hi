@@ -3808,6 +3808,8 @@ $40$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $17$\\
 \midrule
 \multicolumn{6}{l}{reproductibilité $\mathbf{18/18}$ \quad$\bullet$\quad
  tous les encadrements valides}\\
+\multicolumn{6}{l}{$\mathbf{8}$ des $18$ lignes recalculées dans un
+ \emph{processus séparé} : identiques à la cellule près}\\
 \multicolumn{6}{l}{améliorées $\mathbf{4}$, dégradées $\mathbf{0}$,
  inchangées $\mathbf{14}$ ; médiane $+0{,}00$, moyenne $+0{,}36$,}\\
 \multicolumn{6}{l}{\quad maximum $\mathbf{+4{,}95}$, minimum $+0{,}00$
@@ -3888,6 +3890,18 @@ résultat : \textbf{quatre} lignes améliorées sur dix-huit, aucune dégradée,
 un maximum de $\mathbf{+4{,}95}$ points à $n=40$, $\text{corr}=0$, et
 $+0{,}97$ sur une ligne dont l'écart de référence ne vaut plus que
 $6{,}7\ \%$.
+
+Ces lignes ne reposent pas sur une exécution unique. Le banc rejoue déjà
+chaque configuration deux fois \emph{dans le même processus} -- c'est la
+colonne « reprod » --, ce qui ne teste que l'absence d'aléa interne. La
+grille ayant dû être répartie sur plusieurs processus pour tenir dans le
+temps disponible, huit des dix-huit lignes se sont trouvées calculées
+\textbf{deux fois dans des processus distincts}, dont les deux lignes non
+nulles $+4{,}95$ et $+0{,}97$. Les huit sont identiques à la cellule près :
+même écart, même gain, même nombre de coupes, même compte d'appels entiers
+et linéaires. C'est un contrôle que nous n'avions pas prévu et que le
+découpage a offert ; nous le rapportons parce qu'il est plus fort que celui
+qui était prévu.
 
 Ce n'est pas un grand gain, et il ne faut pas le vendre pour tel : la
 médiane reste nulle, la moyenne vaut $+0{,}36$ point contre des écarts de
