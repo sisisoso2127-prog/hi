@@ -1170,11 +1170,11 @@ recopié de travers et rien ne dit lequel ; il a été obtenu sous un budget en
 à l'autre ; et le chemin de code correspondant avait été supprimé, rendant
 la mesure irreproductible. Nous l'avons reconstruit et remesuré sous plafond
 déterministe, sur $18$ instances et trois graines : écart médian
-$27{,}6\ \%$ contre $27{,}4\ \%$, écart moyen $33{,}8$ contre $33{,}9$,
-optimalité prouvée $5/18$ \emph{dans les deux bras}, et mieux $3$ / pire $3$
-/ égal $12$. \textbf{Aucun effondrement.} Le mécanisme est pourtant
+$28{,}1\ \%$ contre $27{,}4\ \%$, écart moyen $34{,}1$ contre $33{,}9$,
+optimalité prouvée $5/18$ \emph{dans les deux bras}, et mieux $3$ / pire $2$
+/ égal $13$. \textbf{Aucun effondrement.} Le mécanisme est pourtant
 sollicité : sur cinq lignes le bras à budgets séparés pose jusqu'à
-$60\ \%$ de coupes en plus, et l'écart y bouge de $+0{,}47$ à $-0{,}34$
+$60\ \%$ de coupes en plus, et l'écart y bouge de $+1{,}38$ à $+2{,}61$
 point.
 
 Le lot n'étant pas le même -- l'ancienne mesure portait sur $90$ instances à
@@ -1349,9 +1349,11 @@ plafond la borne supérieure passe de $206{,}0$ à $\mathbf{115{,}2}$, et à
 $300$ appels, à $q_{\text{lb}}$ identique, de $27{,}86$ à $\mathbf{8{,}86}$
 -- soit un écart garanti de $86{,}6$ à $\mathbf{57{,}9\ \%}$. Ce que nous
 retirons est donc la forme \emph{absolue} de « aucun recul » : la forme que
-la mesure soutient est qu'aucune preuve n'est perdue et aucune borne
-relâchée, jamais, aux deux plafonds et sur les deux lots, mais qu'un
-\emph{minorant} peut reculer quand le budget est très serré.
+la mesure soutient est qu'aucune \emph{preuve} n'est perdue, jamais, sur
+aucun lot ni aucun plafond -- tandis qu'un minorant peut reculer quand le
+budget est serré, et qu'une borne peut se relâcher au sommet de l'échelle.
+Sur les deux lots figés, en revanche, aucune borne ne se relâche à aucun
+plafond.
 \end{remark}
 
 
@@ -1368,24 +1370,24 @@ d'efficacité améliore.\ \conf{1}{1}{1}}
 & & \multicolumn{3}{c|}{plafond $100$} & \multicolumn{3}{c}{plafond $300$}\\
 $n$ & corr & sans & avec & $\Delta$ & sans & avec & $\Delta$\\
 \midrule
-$30$ & $0{,}00$ & $88{,}5$ & $86{,}7$ & $+1{,}7$ & $80{,}4$ & $71{,}3$ & $\mathbf{+9{,}2}$\\
-$30$ & $0{,}50$ & $26{,}5$ & $12{,}5$ & $\mathbf{+14{,}0}$ & $7{,}0$ & $\mathbf{0{,}0}$ & $+7{,}0$\\
-$30$ & $0{,}90$ & $42{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+42{,}2}$ & $35{,}1$ & $\mathbf{0{,}0}$ & $\mathbf{+35{,}2}$\\
-$40$ & $0{,}00$ & $93{,}5$ & $93{,}5$ & $+0{,}0$ & $91{,}7$ & $87{,}4$ & $+4{,}4$\\
+$30$ & $0{,}00$ & $88{,}5$ & $86{,}7$ & $+1{,}7$ & $80{,}4$ & $72{,}2$ & $\mathbf{+8{,}2}$\\
+$30$ & $0{,}50$ & $26{,}5$ & $12{,}5$ & $\mathbf{+14{,}0}$ & $7{,}5$ & $6{,}9$ & $+0{,}6$\\
+$30$ & $0{,}90$ & $42{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+42{,}2}$ & $35{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+35{,}2}$\\
+$40$ & $0{,}00$ & $93{,}5$ & $93{,}5$ & $+0{,}0$ & $91{,}3$ & $87{,}8$ & $+3{,}5$\\
 $40$ & $0{,}50$ & $55{,}4$ & $64{,}0$ & $\mathbf{-8{,}6}$ & $9{,}1$ & $\mathbf{0{,}0}$ & $+9{,}1$\\
-$40$ & $0{,}90$ & $31{,}0$ & $24{,}1$ & $+6{,}9$ & $13{,}8$ & $8{,}8$ & $+4{,}9$\\
-$50$ & $0{,}00$ & $83{,}8$ & $85{,}3$ & $-1{,}5$ & $76{,}0$ & $75{,}5$ & $+0{,}4$\\
-$50$ & $0{,}50$ & $68{,}1$ & $65{,}2$ & $+3{,}0$ & $28{,}5$ & $20{,}2$ & $+8{,}2$\\
+$40$ & $0{,}90$ & $31{,}0$ & $24{,}1$ & $+6{,}9$ & $17{,}6$ & $10{,}8$ & $+6{,}8$\\
+$50$ & $0{,}00$ & $83{,}8$ & $85{,}3$ & $-1{,}5$ & $75{,}7$ & $73{,}9$ & $+1{,}8$\\
+$50$ & $0{,}50$ & $68{,}1$ & $65{,}2$ & $+3{,}0$ & $28{,}5$ & $20{,}3$ & $+8{,}3$\\
 $50$ & $0{,}90$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}0$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}0$\\
 \midrule
 \multicolumn{2}{l|}{mieux / pire / égal (18 paires)}
  & \multicolumn{3}{c|}{$10$ / $\mathbf{4}$ / $4$}
- & \multicolumn{3}{c}{$\mathbf{13}$ / $\mathbf{0}$ / $5$}\\
+ & \multicolumn{3}{c}{$\mathbf{12}$ / $1$ / $5$}\\
 \multicolumn{2}{l|}{$\Delta$ médian}
- & \multicolumn{3}{c|}{$+0{,}44$} & \multicolumn{3}{c}{$\mathbf{+5{,}94}$}\\
+ & \multicolumn{3}{c|}{$+0{,}44$} & \multicolumn{3}{c}{$\mathbf{+4{,}39}$}\\
 \multicolumn{2}{l|}{reculs : preuve / valeur / borne}
  & \multicolumn{3}{c|}{$0$ / $3$ / $3$}
- & \multicolumn{3}{c}{$\mathbf{0}$ / $\mathbf{0}$ / $\mathbf{0}$}\\
+ & \multicolumn{3}{c}{$\mathbf{0}$ / $1$ / $1$}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1394,12 +1396,11 @@ $50$ & $0{,}90$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}0$ & $\mathbf{0{,}
 \textbf{Au sommet de l'échelle, le plafond décide du signe.} À $n\ge 30$ la
 méthode ne prouve presque rien : compter les preuves y renverrait zéro
 contre zéro, et l'axe informatif devient l'écart garanti. À $300$ appels,
-\emph{aucune} paire n'est dégradée et aucun recul n'apparaît sur aucun des
-trois axes -- la coupe d'efficacité ne nuit jamais, et le minorant est
-identique dans les dix-huit paires, tout le gain passant par
-$q_{\text{ub}}$. À $100$ appels pour $n=40$ ou $50$, en revanche, il n'y a
-pas de quoi financer à la fois la recherche et les coupes : $4$ paires
-dégradées et $6$ reculs. Ce n'est donc pas la taille qui retourne le signe
+douze des dix-huit paires sont améliorées, \emph{une} est dégradée et cinq
+restent inchangées ; aucune preuve n'est perdue, mais un minorant recule une
+fois et une borne se relâche une fois. À $100$ appels pour $n=40$ ou $50$,
+en revanche, il n'y a pas de quoi financer à la fois la recherche et les
+coupes : $4$ paires dégradées et $6$ reculs. Ce n'est donc pas la taille qui retourne le signe
 mais le rapport budget/taille. Enfin $\text{corr}$ commande plus que $n$ :
 à front mince le gain reste massif et se solde par des preuves, à front
 épais il décroît avec la taille jusqu'à s'annuler vers $n=50$.
@@ -2760,7 +2761,7 @@ card\,\% & $HV$\,\% & $\varepsilon^+$ & $z^\ast\!\in\!\Acal$\\
 $6$ & $3$ & $0{,}00$ & $1\,436$ & $88$  & $15$ & $17{,}0$ & $90{,}6$ & $0{,}146$ & oui\\
 $6$ & $3$ & $0{,}00$ & $1\,130$ & $114$ & $17$ & $14{,}9$ & $79{,}7$ & $0{,}280$ & oui\\
 $7$ & $3$ & $0{,}00$ & $5\,275$ & $27$  & $11$ & $40{,}7$ & $96{,}2$ & $0{,}101$ & oui\\
-$7$ & $4$ & $0{,}00$ & $1\,931$ & $218$ & $19$ & $8{,}7$  & $68{,}2$ & $0{,}503$ & oui\\
+$7$ & $4$ & $0{,}00$ & $1\,931$ & $218$ & $17$ & $7{,}8$  & $67{,}4$ & $0{,}503$ & oui\\
 $8$ & $3$ & $0{,}00$ & $2\,754$ & $42$  & $12$ & $28{,}6$ & $76{,}4$ & $0{,}722$ & oui\\
 $6$ & $3$ & $0{,}50$ & $1\,436$ & $26$  & $13$ & $50{,}0$ & $92{,}3$ & $0{,}128$ & oui\\
 $7$ & $3$ & $0{,}50$ & $5\,275$ & $17$  & $12$ & $70{,}6$ & $95{,}2$ & $0{,}117$ & oui\\
@@ -3075,13 +3076,15 @@ demande aucun paramètre : classer à l'intérieur de chaque source, puis
 \textbf{alterner}. Chaque source obtient la moitié des places quand les deux
 ont des candidats, et la totalité quand l'autre est épuisée.
 
-\paragraph{Effet.} Au plafond nominal : mieux $2$, pire $1$, égal $3$. Au
-plafond triplé : mieux $\mathbf{5}$, pire $\mathbf{0}$, égal $1$, gain
-médian $+13{,}17$ points. Les coupes d'archive posées passent de
-$[0,\,12,\,2,\,10,\,15,\,0]$ à $[40,\,40,\,40,\,40,\,35,\,36]$ : le plafond
-de lot est désormais atteint partout. Une ligne passe de $88{,}1\ \%$
-d'écart à $\mathbf{0{,}0\ \%}$ : l'optimalité y est \emph{prouvée}, par
-épuisement du relâché.
+\paragraph{Effet.} Au plafond nominal : mieux $\mathbf{4}$, pire
+$\mathbf{0}$, égal $2$. Au plafond triplé : mieux $\mathbf{6}$, pire
+$\mathbf{0}$, égal $\mathbf{0}$, gain médian $+14{,}04$ points. Les coupes
+d'archive posées passent de $[0,\,0,\,0,\,0,\,0,\,0]$ à
+$[40,\,40,\,40,\,40,\,35,\,36]$ : le plafond de lot est désormais atteint
+partout. Une ligne passe de $46{,}2\ \%$ d'écart à $\mathbf{18{,}5\ \%}$,
+soit près de deux tiers retirés. Et l'alternance est \textbf{monotone en
+budget sur $6/6$ lignes} contre $4/6$ au classement commun : plus aucune ne
+recule quand on triple le plafond.
 
 \subsection{Le gain $D^{+}$ n'était jamais réalisé}
 
