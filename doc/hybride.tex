@@ -199,11 +199,13 @@ dégénère en rapport de cardinalité et n'apporte rien -- ce qui vaut pour
 toute méthode qui certifie avant d'archiver.
 
 La remesure est poussée jusqu'à $n=50$, que ce mémoire n'atteignait pas : au
-plafond de $300$ appels la coupe d'efficacité n'y dégrade \emph{aucune} des
-dix-huit paires et n'y produit aucun recul, le minorant restant identique
-partout et tout le gain passant par la borne supérieure ; au plafond de
-$100$, en revanche, elle dégrade quatre paires -- ce n'est donc pas la
-taille qui retourne le signe, mais le rapport entre budget et taille.
+plafond de $300$ appels la coupe d'efficacité améliore douze des dix-huit
+paires, en dégrade \emph{une}, et laisse les cinq autres inchangées ; au
+plafond de $100$ elle en dégrade quatre -- ce n'est donc pas la taille qui
+retourne le signe, mais le rapport entre budget et taille. Aucune preuve
+n'est perdue à aucun des deux plafonds ; un minorant recule une fois et une
+borne se relâche une fois au plafond $300$, trois fois chacun au
+plafond~$100$.
 
 Les limites sont énoncées avec la même précision que les gains : à $n\ge 20$
 et front épais la méthode ne conclut toujours pas -- l'écart garanti y reste
@@ -3263,8 +3265,8 @@ recul : valeur plus faible & \multicolumn{2}{c}{$\mathbf{1}$}
                            & \multicolumn{2}{c}{$0$}\\
 recul : borne plus lâche & \multicolumn{2}{c}{$0$}
                          & \multicolumn{2}{c}{$0$}\\
-delta d'appels par paire & \multicolumn{2}{c}{médiane $-1$, total $-681$}
-                         & \multicolumn{2}{c}{médiane $+0$, total $-1\,860$}\\
+delta d'appels par paire & \multicolumn{2}{c}{médiane $-1$, total $-682$}
+                         & \multicolumn{2}{c}{médiane $-1$, total $-1\,889$}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -3335,22 +3337,22 @@ coupe les sépare.\ \conf{1}{1}{1}}
 $n$ & corr & gr & sans & avec & $\Delta$ & sans & avec & $\Delta$\\
 \midrule
 $30$ & $0{,}00$ & $1$ & $96{,}3$ & $95{,}6$ & $+0{,}67$
-                      & $96{,}0$ & $80{,}6$ & $\mathbf{+15{,}41}$\\
+                      & $95{,}8$ & $80{,}6$ & $\mathbf{+15{,}28}$\\
 $30$ & $0{,}00$ & $2$ & $80{,}6$ & $77{,}8$ & $+2{,}82$
-                      & $64{,}9$ & $61{,}9$ & $+3{,}02$\\
+                      & $64{,}9$ & $63{,}7$ & $+1{,}23$\\
 $30$ & $0{,}50$ & $1$ & $30{,}4$ & $8{,}4$ & $\mathbf{+21{,}98}$
-                      & $4{,}5$ & $\mathbf{0{,}0}$ & $+4{,}52$\\
+                      & $5{,}3$ & $\mathbf{0{,}0}$ & $+5{,}26$\\
 $30$ & $0{,}50$ & $2$ & $22{,}6$ & $16{,}6$ & $+5{,}99$
-                      & $9{,}6$ & $\mathbf{0{,}0}$ & $+9{,}58$\\
+                      & $9{,}6$ & $13{,}7$ & $\mathbf{-4{,}13}$\\
 $30$ & $0{,}90$ & $1$ & $35{,}3$ & $\mathbf{0{,}0}$ & $\mathbf{+35{,}34}$
                       & $33{,}1$ & $\mathbf{0{,}0}$ & $\mathbf{+33{,}13}$\\
 $30$ & $0{,}90$ & $2$ & $49{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+49{,}16}$
                       & $37{,}2$ & $\mathbf{0{,}0}$ & $\mathbf{+37{,}20}$\\
 \midrule
 $40$ & $0{,}00$ & $1$ & $93{,}3$ & $93{,}3$ & $+0{,}00$
-                      & $91{,}7$ & $90{,}4$ & $+1{,}36$\\
+                      & $90{,}8$ & $90{,}4$ & $+0{,}47$\\
 $40$ & $0{,}00$ & $2$ & $93{,}7$ & $93{,}7$ & $+0{,}00$
-                      & $91{,}7$ & $84{,}4$ & $+7{,}35$\\
+                      & $91{,}7$ & $85{,}2$ & $+6{,}50$\\
 $40$ & $0{,}50$ & $1$ & $44{,}9$ & $58{,}8$ & $\mathbf{-13{,}94}$
                       & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$\\
 $40$ & $0{,}50$ & $2$ & $66{,}0$ & $69{,}3$ & $-3{,}29$
@@ -3358,12 +3360,12 @@ $40$ & $0{,}50$ & $2$ & $66{,}0$ & $69{,}3$ & $-3{,}29$
 $40$ & $0{,}90$ & $1$ & $22{,}9$ & $\mathbf{0{,}0}$ & $+22{,}92$
                       & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$\\
 $40$ & $0{,}90$ & $2$ & $39{,}2$ & $48{,}2$ & $-9{,}03$
-                      & $27{,}5$ & $17{,}7$ & $+9{,}74$\\
+                      & $35{,}1$ & $21{,}6$ & $+13{,}54$\\
 \midrule
 $50$ & $0{,}00$ & $1$ & $76{,}0$ & $79{,}3$ & $-3{,}26$
                       & $59{,}6$ & $59{,}6$ & $+0{,}00$\\
 $50$ & $0{,}00$ & $2$ & $91{,}6$ & $91{,}4$ & $+0{,}21$
-                      & $92{,}3$ & $91{,}4$ & $+0{,}88$\\
+                      & $91{,}7$ & $88{,}2$ & $+3{,}51$\\
 $50$ & $0{,}50$ & $1$ & $43{,}1$ & $40{,}9$ & $+2{,}20$
                       & $33{,}0$ & $24{,}2$ & $+8{,}73$\\
 $50$ & $0{,}50$ & $2$ & $93{,}1$ & $89{,}4$ & $+3{,}74$
@@ -3375,15 +3377,15 @@ $50$ & $0{,}90$ & $2$ & $\mathbf{0{,}0}$ & $\mathbf{0{,}0}$ & $+0{,}00$
 \midrule
 \multicolumn{3}{l|}{mieux / pire / égal}
  & \multicolumn{3}{c|}{$10$ / $\mathbf{4}$ / $4$}
- & \multicolumn{3}{c}{$\mathbf{13}$ / $\mathbf{0}$ / $5$}\\
+ & \multicolumn{3}{c}{$\mathbf{12}$ / $1$ / $5$}\\
 \multicolumn{3}{l|}{$\Delta$ médian \quad$\bullet$\quad moyen}
  & \multicolumn{3}{c|}{$+0{,}44$ \quad$\bullet$\quad $+6{,}42$}
- & \multicolumn{3}{c}{$\mathbf{+5{,}94}$ \quad$\bullet$\quad $+8{,}71$}\\
+ & \multicolumn{3}{c}{$\mathbf{+4{,}39}$ \quad$\bullet$\quad $+8{,}14$}\\
 \multicolumn{3}{l|}{optimalité prouvée}
- & \multicolumn{3}{c|}{$2\to 5$} & \multicolumn{3}{c}{$4\to\mathbf{9}$}\\
+ & \multicolumn{3}{c|}{$2\to 5$} & \multicolumn{3}{c}{$4\to\mathbf{8}$}\\
 \multicolumn{3}{l|}{reculs : preuve / valeur / borne}
  & \multicolumn{3}{c|}{$0$ / $\mathbf{3}$ / $\mathbf{3}$}
- & \multicolumn{3}{c}{$\mathbf{0}$ / $\mathbf{0}$ / $\mathbf{0}$}\\
+ & \multicolumn{3}{c}{$\mathbf{0}$ / $1$ / $1$}\\
 \bottomrule
 \end{tabular}
 \end{table}
