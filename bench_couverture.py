@@ -293,9 +293,15 @@ def agreger(lignes: List[Dict[str, object]]) -> None:
     etablissement de sa condition de cloture -- aucun point efficace retire
     ne bat l incumbent. Donc q* <= max(q, U_cut).
 
-    Les deux routes sont INCOMPARABLES : aucune ne majore l autre. Le MINIMUM
-    de deux bornes valides etant valide, la colonne « min » est ce que la
-    methode pourrait annoncer SANS CHANGER UNE SEULE COUPE.
+    Ces deux lectures ne sont PAS incomparables -- une version anterieure le
+    croyait et en prenait le minimum. Elles se composent : pour tout seuil t
+    et tout v >= max_R (N - tD) avec v >= 0, en posant
+    D_t+ = min { D(x) : x dans R, N(x) - t D(x) >= 0 }, on a
+    max_R f <= t + v / D_t+. Le Th. 5 est le cas t = q, et la forme a Dmin
+    celle ou D_t+ est remplace par un minorant plus faible. La colonne
+    « min » reste VALIDE et reste ce que la methode pourrait annoncer sans
+    changer une seule coupe ; elle n est simplement plus la meilleure
+    lecture disponible.
     """
     par_n: Dict[int, List[Dict[str, object]]] = {}
     for d in lignes:
@@ -374,8 +380,10 @@ def verdict(lignes: List[Dict[str, object]], titre: str) -> None:
             egal += 1
     print(f"  ROUTE GEOMETRIQUE contre Th. 5 prime : "
           f"MEILLEURE {mieux}   PIRE {pire}   EGALE {egal}")
-    print(f"  -> les deux routes sont INCOMPARABLES. Leur minimum est une "
-          f"borne VALIDE. Elle n est pas")
+    print(f"  -> ces deux lectures SE COMPOSENT (seuil libre ET denominateur "
+          f"restreint) ; leur")
+    print(f"  minimum reste VALIDE sans etre la meilleure lecture. Elle n est "
+          f"pas")
     print(f"  gratuite pour autant : U_cut demande un Dinkelbach sur R, "
           f"soit quelques ILP de plus.")
     print(f"  Ce qu elle ne demande pas, c est une coupe de plus -- "
