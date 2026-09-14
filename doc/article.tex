@@ -2139,10 +2139,13 @@ théorème~\ref{th:bound}.
 \section{Protocole de validation}
 
 \paragraph{Quelle version de la méthode chaque tableau mesure-t-il ?} La
-section~\ref{sec:defauts} corrige trois défauts, et les trois déplacent les
+section~\ref{sec:defauts} corrige quatre défauts, et tous déplacent les
 chiffres -- l'un de plus de $70$ points sur une instance. Les tableaux qui
 précèdent cette section ont été mesurés \emph{avant} ces corrections. Chacun
-porte donc un marqueur à trois positions : \textsf{V} pour le vivier
+porte un marqueur à trois positions ; le quatrième défaut n'y figure pas,
+toutes les campagnes de cet article ayant été rejouées après sa correction,
+de sorte qu'une quatrième position vaudrait $\bullet$ partout. Les trois
+positions sont : \textsf{V} pour le vivier
 ($\circ$ classement commun, $\bullet$ alterné), \textsf{S} pour la borne à
 seuil libre ($\circ$ absente, $\bullet$ présente), \textsf{D} pour le
 dénominateur $D^{+}$ ($\circ$ inopérant en pratique, $\bullet$ réparé).
@@ -2936,13 +2939,16 @@ resserre, et nous en avons un cas mesuré (remarque~\ref{rem:recullot}).
 C'est la tension des deux livrables, prise du côté du décideur : la
 garantie s'améliore, la solution remise empire. Tant que ce point n'est pas corrigé, l'usage recommandé est de conserver le meilleur encadrement rencontré et non le dernier : deux encadrements valides du même $\qs$ s'intersectent en un encadrement valide, donc garder $\max q_{\text{lb}}$ et $\min q_{\text{ub}}$ sur toutes les exécutions ne coûte aucune hypothèse.
 
-\section{Trois défauts trouvés par la mesure}
+\section{Quatre défauts trouvés par la mesure}
 \label{sec:defauts}
 
 Les résultats qui précèdent ont été obtenus avec une version de la méthode
-que la suite a corrigée sur trois points. Chacun a été trouvé en mesurant, et
-non en relisant le code ; chacun a d'abord été diagnostiqué à tort. Nous les
-rapportons dans cet ordre parce que c'est celui où ils se sont présentés.
+que la suite a corrigée sur quatre points. Chacun a été trouvé en mesurant,
+et non en relisant le code ; chacun a d'abord été diagnostiqué à tort. Nous
+les rapportons dans cet ordre parce que c'est celui où ils se sont
+présentés -- le quatrième n'a été nommé qu'après que les trois premiers
+eurent été corrigés, et il explique ce que leur correction laissait en
+suspens.
 
 \subsection{Le théorème de certification était évalué au mauvais seuil}
 
@@ -3114,6 +3120,54 @@ d'origine à la courante, se lit ainsi sur les trois régimes que la
 section~\ref{sec:echelle} donnait pour immuables :
 $98{,}6\to\mathbf{77{,}2}$, $93{,}9\to\mathbf{78{,}6}$,
 $96{,}6\to 96{,}5\ \%$, et $78{,}9\to\mathbf{1{,}2}$ à $\text{corr}=0{,}5$.
+\end{remark}
+
+\subsection{Le relâché n'était pas emboîté dans le budget}
+\label{sec:emboite}
+
+Les trois corrections précédentes laissaient un défaut ouvert : tripler le
+plafond \emph{dégradait} l'écart garanti sur deux lignes sur six. Une
+méthode dont le résultat peut empirer quand on lui donne plus de temps est
+une méthode à corriger, et les versions antérieures de ce texte déclaraient
+ne pas savoir nommer la cause.
+
+\paragraph{Le fait, et sa lecture.} Sur la ligne fautive l'incumbent est
+\emph{identique} aux deux plafonds : seule la borne recule, de $20{,}50$ à
+$63{,}00$. La seconde route y rend $\max_{\Rcal}f=20{,}50$ à plafond $300$
+et $63{,}00$ à plafond $900$, \textbf{les deux avec le statut convergé}. Un
+Dinkelbach convergé rendant $\max_{\Rcal}f$ exactement,
+$\Rcal_{900}\subseteq\Rcal_{300}$ forcerait l'inégalité inverse. Donc
+\[
+  \Rcal_{900}\not\subseteq\Rcal_{300} .
+\]
+
+\paragraph{La cause.} Le relâché n'est pas \textbf{emboîté} dans le budget.
+Le vivier classe ses centres de coupe par $w^{\top}x$ et l'on pose les
+$\beta$ premiers ; quand la recherche dispose de plus de budget, l'archive
+est plus grande et de nouveaux points s'\emph{intercalent} dans ce préfixe.
+On ne pose donc pas « les mêmes coupes et davantage », on pose
+\emph{d'autres} coupes -- et rien ne force alors $\max_{\Rcal}f$ à décroître.
+
+\paragraph{La correction.} Il faut un ordre \emph{monotone en budget}.
+L'ordre d'\textbf{insertion} l'est, et cela se vérifie : la trajectoire de
+la recherche ne dépend pas du plafond total, qui décide seulement
+\emph{quand} elle s'arrête, de sorte que l'archive à plafond $B$ est un
+préfixe de celle à plafond $B'>B$. Le relâché devient emboîté et la borne
+monotone \emph{par construction}.
+
+\paragraph{Effet.} La monotonie passe de $4/6$ à $\mathbf{6/6}$ et plus
+aucune ligne ne recule. Le coût sur l'écart garanti est nul -- $\Delta$
+médian $+0{,}00$ point sur $18$ lignes, $14$ identiques, preuves inchangées
+$5/18$ -- et le coût en temps l'est aussi au plafond usuel ($\times 1{,}0$ à
+nombre d'appels égal ; $\times 2{,}9$ au plafond triplé seulement). Toutes
+les campagnes de cet article ont été rejouées sous cet ordre.
+
+\begin{remark}[monotone n'est pas meilleur]
+Sur une ligne ($n=40$, $\text{corr}=0{,}5$), l'ancien ordre atteignait
+$0{,}0\ \%$ à plafond $900$ -- il \emph{prouvait} l'optimalité -- là où
+l'ordre stable plafonne à $18{,}5\ \%$. La monotonie y est respectée
+($43{,}9\to 18{,}5$) et la borne pourtant plus mauvaise. Rendre une méthode
+monotone ne la rend pas meilleure : cela lui interdit de reculer.
 \end{remark}
 
 \section{Jusqu'où hybrider ? une expérience}
@@ -3430,29 +3484,19 @@ immuables de $98{,}6$, $93{,}9$ et $96{,}6\ \%$ à $77{,}2$, $78{,}6$ et
 $96{,}5\ \%$, et une instance à $\text{corr}=0{,}5$ de $78{,}9$ à
 $1{,}2\ \%$.
 
-Ce qui reste ouvert est mieux posé qu'avant, et se dit en trois points. À
-$n=40$, $\text{corr}=0$, la borne ne bouge pas alors que la procédure
+Ce qui reste ouvert est mieux posé qu'avant, et se dit en deux points --
+un de moins qu'auparavant, la non-monotonie en budget ayant été nommée puis
+corrigée (§\ref{sec:emboite}).
+
+À $n=40$, $\text{corr}=0$, la borne ne bouge pas alors que la procédure
 certifie qu'elle \emph{est} $\max_{\Rcal}f$ : ce qui reste tient au
 minorant, où la recherche est effectivement déficiente sans que la corriger
-suffise. La méthode n'est pas monotone en budget, et deux lignes sur six le restent
-après correction de la cause principale ; leur cause est désormais
-\emph{nommée}. Sur la ligne fautive l'incumbent est identique aux deux
-plafonds, donc seule la borne recule, et la seconde route y rend
-$\max_{\Rcal}f=20{,}50$ à plafond $300$ contre $63{,}00$ à plafond $900$,
-\textbf{les deux avec le statut convergé}. Un Dinkelbach convergé rendant
-$\max_{\Rcal}f$ exactement, $\Rcal_{900}\subseteq\Rcal_{300}$ forcerait
-l'inégalité inverse : le relâché n'est donc \textbf{pas emboîté dans le
-budget}. Plus de budget donne une archive plus grande, de nouveaux centres
-s'intercalent dans le préfixe des $\beta$ coupes posées, et l'on pose
-d'autres coupes plutôt que les mêmes et davantage. La correction de principe
--- rendre le vivier stable par préfixe -- déplacerait chaque nombre mesuré
-ici : c'est une décision de conception, pas un correctif. Enfin le mouvement C, dont le rendement
-est le plus faible -- quatre améliorations pour $316$ appels --, reste en
-place : mis à l'épreuve sur trois graines contre son ancrage et contre son
-retrait pur et simple, le banc ne tranche pas ($p=0{,}73$ au mieux), et
-c'est notre \emph{diagnostic} qui est réfuté, l'ancrage étant le plus
-mauvais des trois traitements. Trancher demande davantage de graines que
-nous n'en avons jouées.
+suffise. Enfin le mouvement C, dont le rendement est le plus faible --
+quatre améliorations pour $316$ appels --, reste en place : mis à l'épreuve
+sur trois graines contre son ancrage et contre son retrait pur et simple, le
+banc ne tranche pas ($p=0{,}73$ pour les deux traitements), et c'est notre
+\emph{diagnostic} qui est réfuté, l'ancrage étant le plus mauvais des trois.
+Trancher demande davantage de graines que nous n'en avons jouées.
 
 \paragraph{Établir la comparaison externe.} Elle est faite.
 \cite{zerdani2011} a été réimplémenté -- simplexe rationnel exact révélant
