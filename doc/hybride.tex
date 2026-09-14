@@ -1645,14 +1645,14 @@ identique, \textbf{trois graines} ($18$ lignes). Écarts garantis.\
 & médiane & moyenne & contre \emph{libre} & signes & Wilcoxon\\
 \midrule
 \textbf{libre} (tel quel) & $0{,}0\ \%$ & $17{,}1\ \%$ & -- & -- & --\\
-ancré ($e_j\ge0$) & $0{,}0\ \%$ & $19{,}5\ \%$
- & mieux $4$, pire $4$ & $1{,}00$ & $0{,}84$\\
-retiré & $0{,}0\ \%$ & $\mathbf{16{,}6\ \%}$
- & mieux $5$, pire $3$ & $0{,}73$ & $0{,}74$\\
+ancré ($e_j\ge0$) & $0{,}0\ \%$ & $19{,}9\ \%$
+ & mieux $3$, pire $5$ & $0{,}73$ & --\\
+retiré & $0{,}0\ \%$ & $\mathbf{16{,}4\ \%}$
+ & mieux $5$, pire $3$ & $0{,}73$ & --\\
 \midrule
 \multicolumn{6}{l}{sommes appariées contre \emph{libre} :
- ancré $+20{,}1$ / $\mathbf{-64{,}3}$ \quad$\bullet$\quad
- retiré $+51{,}3$ / $-42{,}5$}\\
+ ancré $+21{,}2$ / $\mathbf{-71{,}0}$ \quad$\bullet$\quad
+ retiré $+55{,}3$ / $-42{,}9$}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1661,10 +1661,10 @@ retiré & $0{,}0\ \%$ & $\mathbf{16{,}6\ \%}$
 \textbf{Le banc ne tranche pas, et c'est le résultat.} Avec deux graines,
 les deux traitements donnaient $3$ améliorées contre $3$ dégradées. La
 troisième graine déplace l'aiguille sans la faire basculer : le retrait
-prend la tête, en moyenne ($16{,}6$ contre $17{,}1\ \%$) comme au comptage
+prend la tête, en moyenne ($16{,}4$ contre $17{,}1\ \%$) comme au comptage
 ($5$ contre $3$), mais à $p=0{,}73$ -- c'est-à-dire à rien. Les sommes
-appariées le disent mieux que les tests : $+51{,}3$ points gagnés contre
-$-42{,}5$ perdus. Retirer C gagne et perd à peu près autant, ce qui est la
+appariées le disent mieux que les tests : $+55{,}3$ points gagnés contre
+$-42{,}9$ perdus. Retirer C gagne et perd à peu près autant, ce qui est la
 définition d'une absence de conclusion.
 
 Nous gardons donc la version libre. Non parce qu'elle est la meilleure --
@@ -5600,9 +5600,9 @@ davantage.
 retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché.
 Avec deux graines les deux traitements donnaient $3$ améliorées contre $3$
 dégradées ; la troisième graine déplace l'aiguille sans la faire basculer --
-ancré : mieux $4$, pire $4$ ($p=0{,}73$ au mieux) ; retiré : mieux $5$,
-pire $3$ --, et les sommes appariées, $+51{,}3$ points gagnés contre
-$-42{,}5$ perdus, disent mieux que les tests qu'il n'y a rien à conclure. Ce qui est acquis est négatif de notre côté -- l'ancrage que nous
+ancré : mieux $3$, pire $5$ ; retiré : mieux $5$, pire $3$, les deux à
+$p=0{,}73$ --, et les sommes appariées, $+55{,}3$ points gagnés contre
+$-42{,}9$ perdus, disent mieux que les tests qu'il n'y a rien à conclure. Ce qui est acquis est négatif de notre côté -- l'ancrage que nous
 proposions est le plus mauvais des trois -- et méthodologique : le rendement
 d'un opérateur compte ses succès, pas ce qu'ils valent, et le retirer coûte
 jusqu'à un tiers de l'incumbent. Trancher demande davantage de graines que
@@ -5744,7 +5744,7 @@ $84\to 56$ preuves à budgets séparés
 $p=0{,}031$ pour la seconde route
   & $p=0{,}109$ aux signes, $0{,}020$ à Wilcoxon & \S\ref{sec:seuil}\\
 mouvement C : $3$ contre $3$ (deux graines)
-  & $4/4$ et $5/3$ (trois graines) & tableau~\ref{tab:mouvementc}\\
+  & $3/5$ et $5/3$ (trois graines) & tableau~\ref{tab:mouvementc}\\
 \bottomrule
 \end{tabular}
 \end{center}
