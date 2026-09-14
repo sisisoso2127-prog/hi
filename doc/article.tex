@@ -13,6 +13,7 @@
 \usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{multirow}
+\usepackage{float}       % [H] : le flottant reste OU IL EST ECRIT
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
@@ -222,7 +223,7 @@ font de même pour un MOILFP. Notre problème suppose ce travail impossible à
 l'échelle visée -- c'est précisément parce que $\Ecal$ est trop gros pour
 être énuméré qu'il faut optimiser sans l'engendrer.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Deux axes, quatre cases. Notre problème occupe la case que ni
 Zerdani et Moulaï ni Drici et collaborateurs ne couvrent.\ \conf{0}{0}{0}}
@@ -460,7 +461,7 @@ intégratives publiées -- \emph{local branching}~\cite{fischetti2003},
 \textsc{Rins}~\cite{danna2005} -- le sont dans un seul sens : l'exact sert
 la recherche.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Position de ce travail. Ce qui est revendiqué n'est pas
 l'intégration -- elle est courante -- mais sa
@@ -769,7 +770,7 @@ et, les coefficients étant entiers, on remonte au plafond entier du minorant
 continu. Le coût est d'un programme linéaire par critère et par coupe,
 comptabilisé séparément des programmes en nombres entiers.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Renforcement du big-M, 8 instances, 8 coupes chacune. $M_{\text{réel}}$
 est calculé sur $\Scal$ \emph{énuméré} : la validité n'est pas postulée.\ \conf{0}{0}{0}}
@@ -910,7 +911,7 @@ défaut d'implémentation, non une preuve d'optimalité.
 
 \subsection{Effet mesuré}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Théorème naïf contre théorème~\ref{th:bound}, à budget identique,
 8 instances du régime cible. Les deux colonnes sont produites par le même
@@ -1192,7 +1193,7 @@ On classe donc les candidats des deux sources ensemble sous le plafond
 global déjà réglé -- et c'est le \emph{classement} commun, non le plafond
 commun, qui se révélera fautif (§\ref{sec:defauts}).
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Régime cible, 8 instances $\times$ 10 graines, budget identique de
 $7+5$~s, vérité terrain disponible.\ \conf{0}{0}{0}}
@@ -1225,7 +1226,7 @@ instance, la figure du régime cible.
 \end{remark}
 
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le même régime sous plafond \textbf{déterministe} d'appels entiers,
 mêmes 8 instances, mêmes 10 graines, les deux bras en configuration
@@ -1281,7 +1282,7 @@ $0{,}0\ \%$. La première est \texttt{n7 m4 p4 c0.25}, celle dont la
 section~\ref{sec:echelle} mesure qu'il faut $433$~s et $177$ coupes pour la
 prouver par l'oracle seul.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Lot figé, 90 instances, budget identique de 12~s. Toutes les
 vérifications $C_1$--$C_4$ passent.\ \conf{0}{0}{0}}
@@ -1301,7 +1302,7 @@ matheuristique & 84/90 & \textbf{90/90} & 124 & $0{,}9$~s & 0\\
 \end{table}
 
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le lot figé sous plafond \textbf{déterministe} d'appels entiers ;
 la seule différence entre les deux bras est la coupe d'efficacité.\
@@ -1357,7 +1358,7 @@ plafond.
 \end{remark}
 
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Échelle sous plafond \textbf{déterministe} d'appels entiers,
 $m=n/2+1$, $p=3$, deux graines, prolongée à $n=50$. Écarts garantis
@@ -1558,7 +1559,7 @@ plus explorateur, $J$ plein redonne le voisinage vide ci-dessus.
 Décrire trois mouvements ne dit pas lequel travaille. Sur douze instances à
 plafond déterministe de $300$ appels :
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Rendement des mouvements et profondeur des chaînes de réparation.
 Un « succès » est une amélioration \emph{stricte} de l'incumbent.\ \conf{0}{1}{1}}
@@ -1760,7 +1761,7 @@ Les hypothèses (A1) et (A2) sont vérifiées : $d_k\ge 0$, $b_k\ge 1$, $A\ge 0$
 à colonnes non nulles. Les bornes explicites donnent
 $\overline{x}=(3,4)$, et $|\Scal|=14$.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le domaine $\Scal$ en entier. Les cinq points efficaces forment
 $\Ecal$. Noter que $f$ est maximale sur $\Scal$ en $x=(0,0)$, point
@@ -1801,7 +1802,7 @@ elle est atteinte n'est \emph{pas} une solution admissible de (P). C'est en
 miniature la difficulté que toute la construction cherche à traiter :
 optimiser $f$ sur $\Scal$ est facile et ne répond pas à la question.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=1.15]
   \fill[black!7] (0,0) -- (3,0) -- (2,3) -- (0,4) -- cycle;
@@ -1836,7 +1837,7 @@ la relaxation $x=(0,0)$, atteint le point efficace $(2,3)$ en un pas
 \label{fig:ex2decision}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=11.2cm,height=7.2cm,
@@ -1898,7 +1899,7 @@ $q_0=27/16$, l'algorithme fait \textbf{deux} itérations :
 Rappelons que $F$ est ici la forme \emph{entière} $Q\,(N-qD)$ avec $q=P/Q$ :
 sa nullité est testée exactement, sans tolérance.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=11.2cm,height=6.6cm,
@@ -1978,7 +1979,7 @@ l'optimum de (P), mais l'ensemble efficace complet.
 Ici $|\Scal|=47$ et $|\Ecal|=6$ : le tableau complet de $\Scal$ n'a plus
 d'intérêt, seul $\Ecal$ est reproduit.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{L'ensemble efficace de l'exemple à trois variables.\ \conf{0}{0}{0}}
 \label{tab:ex3E}
@@ -2024,7 +2025,7 @@ solveur :
   q_1=\tfrac{7}{4},\ F(q_1)=0\ \Rightarrow\ \qs=\tfrac{7}{4}.
 \]
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=11.4cm,height=6.2cm,
@@ -2056,7 +2057,7 @@ archive contient \textbf{6 points, soit exactement $\Ecal$}.
 
 \subsection{Schéma d'ensemble de la méthode}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[
    x=1cm, y=1cm,
@@ -2186,7 +2187,7 @@ $e_k$ sur $\Scal$ énuméré.
 L'énumération plafonne vers $n=8$. Au-delà, les garanties se contrôlent
 néanmoins, car elles sont \emph{auto-certifiantes}.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Contrôles ne requérant pas $\qs$.\ \confna}
 \begin{tabular}{clp{9.6cm}}
@@ -2293,7 +2294,7 @@ linéaire. C'est exactement l'hypothèse des auteurs.
 
 \paragraph{Résultat.}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Confrontation à~\cite[section~5]{zerdani2011}.\ \conf{0}{0}{0}}
 \label{tab:externe}
@@ -2452,7 +2453,7 @@ C'est un biais de survie. On sépare donc deux questions.
 
 \subsection{Q1 --- coût parmi les instances résolues}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Corrélations de Spearman avec le nombre d'appels au solveur,
 censurées exclues. \emph{***} : $p<10^{-3}$, \emph{*} : $p<5\cdot 10^{-2}$.\ \conf{0}{0}{0}}
@@ -2481,7 +2482,7 @@ résolution.
 
 \subsection{Q2 --- échec total : le sens inverse}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Censurées contre résolues (Mann--Whitney bilatéral).\ \conf{0}{0}{0}}
 \begin{tabular}{lrrr}
@@ -2513,7 +2514,7 @@ résultat négatif, et il est utile : il délimite ce qu'il reste à trouver.
 
 \subsection{Q3 et Q4 --- corrélation et taille}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \begin{minipage}{0.48\textwidth}
 \centering
@@ -2572,7 +2573,7 @@ grille systématique $n\times p\times\text{corr}\times$ graine : contrairement
 aux lots choisis \emph{a posteriori} parce qu'une méthode y échouait,
 l'argument n'est pas circulaire.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Lot figé, 90 instances, budget identique de 12~s par méthode.\ \conf{0}{0}{0}}
 \label{tab:lot}
@@ -2589,7 +2590,7 @@ méthode exacte & 73/90 & 76/90 & 92 & $1{,}5$~s & \textbf{0}\\
 \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Détail par strate.\ \conf{0}{0}{0}}
 \begin{tabular}{llcc}
@@ -2640,7 +2641,7 @@ déterministes suppriment.
 \subsection{Passage à l'échelle : deux axes orthogonaux}
 \label{sec:echelle}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Écart garanti médian, grille $n\times\text{corr}$, 30~s par méthode.\ \conf{0}{0}{0}}
 \label{tab:echelle}
@@ -2750,7 +2751,7 @@ colonnes card et couv y sont identiques sur les huit instances, ce qui est
 la proposition et non une coïncidence. La remarque vaut pour toute méthode
 qui certifie avant d'archiver.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{L'archive mesurée contre $\Ecal$ énuméré, budget de 180 appels
 \ILP. $\varepsilon^+$ normalisé par l'étendue de chaque critère.\ \conf{1}{1}{1}}
@@ -3054,7 +3055,7 @@ $w^{\top}x$ décroissant, et que l'effet en serait « automatique et
 souhaitable ». La mesure dit le contraire. En triplant le plafond, donc en
 allongeant la recherche, donc en récoltant plus de points dominés :
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Six exécutions, $n=20,30,40$, plafond triplé.\ \conf{0}{1}{0}}
 \begin{tabular}{lcccccc}
@@ -3216,7 +3217,7 @@ désormais celle qui aboutit.
 
 \subsection{Ce que l'expérience donne}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Lot figé, 90 instances, budget identique de 12~s. Toutes les
 vérifications $C_1$--$C_4$ passent pour les trois méthodes.\ \conf{0}{0}{0}}
@@ -3280,7 +3281,7 @@ atteignaient environ 90 coupes, soit $p$ binaires chacune ; chaque
 sous-problème devenait trop lourd pour que l'oracle referme quoi que ce soit,
 alors même qu'il disposait de deux fois plus de temps.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Réglage du plafond de coupes, 4 instances $\times$ 4 graines.\ \conf{0}{0}{0}}
 \begin{tabular}{lcc}
@@ -3529,7 +3530,7 @@ pas le même problème.
 \end{remark}
 
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{La coupe d'efficacité sur le terrain de chacun, à plafond
 \textbf{déterministe} d'appels. Les plafonds étoilés sont ceux sous lesquels

@@ -12,6 +12,7 @@
 \usepackage[margin=2.4cm]{geometry}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{float}       % [H] : le flottant reste OU IL EST ECRIT
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{tikz}
@@ -539,7 +540,7 @@ métaheuristique. C'est le cas de \emph{local branching}~\cite{fischetti2003}
 et de \textsc{Rins}~\cite{danna2005}, deux hybridations intégratives mais
 \emph{unidirectionnelles} : l'exact sert la recherche.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Position de ce travail dans la classification de Puchinger et
 Raidl. Ce qui est revendiqué n'est pas l'intégration -- elle est courante --
@@ -648,7 +649,7 @@ contrôle \emph{strict} impose (A1)--(A2) et sert à valider notre générateur,
 un contrôle \emph{faible} impose (i)--(ii) et sert à lire la littérature.
 \end{remark}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Ce qui est vérifié dans chaque expérience. « boîte » indique
 d'où vient la bornitude.\ \confna}
@@ -1097,7 +1098,7 @@ tout.
 
 Nous l'avons donc reconstruit et remesuré sous plafond déterministe.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Un plafond commun contre un plafond par source, $18$ instances,
 trois graines, plafond déterministe de $300$ appels entiers.\
@@ -1163,7 +1164,7 @@ le classement le fait. »
 La mesure dit le contraire. En triplant le plafond -- donc en allongeant la
 recherche, donc en récoltant davantage de points dominés :
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Effet du triplement du plafond sous classement commun. L'archive
 double, le nombre total de coupes augmente, et les coupes \emph{d'archive}
@@ -1216,7 +1217,7 @@ sans le tenir.
 Trois conditions avaient été posées \emph{avant} la mesure, la troisième
 pouvant condamner l'alternance.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Classement commun contre alternance, sur les six lignes portant le
 défaut. « arch. » compte les coupes d'archive effectivement posées.\ \conf{0}{1}{1} contre \conf{1}{1}{1}}
@@ -1316,7 +1317,7 @@ C'est elle, et elle seule, qui distingue cette méthode d'une matheuristique
 ordinaire : ailleurs l'exact sert la recherche, ici la recherche fournit à
 l'exact la matière dont il manque.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \resizebox{0.99\textwidth}{!}{%
 \begin{tikzpicture}[
@@ -1562,7 +1563,7 @@ C'est le mécanisme qui remplace le \emph{shaking}, et il est propre à ce
 problème : il n'existe que parce que la certification produit une archive.
 \end{remark}
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[H]
 \caption{\textsc{Recherche} -- phase~1\ \conf{1}{1}{1}}
 \label{alg:recherche}
 \KwIn{instance, budget, \texttt{max\_stall}}
@@ -1600,7 +1601,7 @@ $\textit{stall}\leftarrow 0$\;
 Décrire une recherche ne dit pas laquelle de ses pièces travaille. Sur
 $12$ instances à plafond déterministe de $300$ appels :
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Rendement des structures de voisinage et profondeur des chaînes de
 réparation. Un « succès » est une amélioration \emph{stricte} de
@@ -1634,7 +1635,7 @@ correspondante -- l'ancrer par des planchers $e_j(x)\ge 0$, exactement ce
 qui fait marcher A -- a été mise à l'épreuve contre son retrait pur et
 simple.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Trois traitements du mouvement C, mêmes instances, plafond
 identique, \textbf{trois graines} ($18$ lignes). Écarts garantis.\
@@ -1723,7 +1724,7 @@ qui permet à la phase~2 d'annoncer un encadrement, et non une estimation.
 Trois procédures suffisent. La première établit la clôture, la deuxième
 construit le vivier, la troisième est la boucle de certification.
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[H]
 \caption{\textsc{Clôture}$(a,q)$ -- un seul programme de faisabilité\ \confna}
 \label{alg:clot}
 \KwIn{$a\in\Ecal$ certifié, incumbent $q=P/Q$}
@@ -1740,7 +1741,7 @@ $r\leftarrow$ résoudre ce programme de \emph{faisabilité}\;
 \Return $r.x$ \Comment*[r]{efficace \emph{et} meilleur que $q$}
 \end{algorithm}
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[H]
 \caption{\textsc{Vivier}$(\mathcal{D},\Acal,w)$ -- une seule réserve, deux
 sources \textbf{alternées}\ \conf{1}{1}{1}}
 \label{alg:vivier}
@@ -1770,7 +1771,7 @@ source capable de vider $\Rcal$ -- jusqu'à zéro coupe d'archive sur deux
 lignes sur six (\S\ref{sec:alternance}, tableau~\ref{tab:famine}). Cette
 version antérieure est conservée à l'annexe~\ref{sec:histo}.
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[H]
 \caption{\textsc{Certifier}$(q,\bar x,\mathcal{D},\Acal,\text{budget})$ --
 la boucle de certification\ \conf{1}{1}{1}}
 \label{alg:cert}
@@ -1991,7 +1992,7 @@ le script \texttt{illustration.py}, qui réexécute la méthode et revérifie
 chaque encadrement. Aucun n'est recopié à la main.
 \end{remark}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=1.32,font=\small]
 % polyedre
@@ -2063,7 +2064,7 @@ $12$ contre $q^{\star}=14/5$, est retranché dès la première coupe : c'est
 lui qui rendait la borne $\max_{\Scal}f$ fausse de $77\ \%$, et il tombe
 sans qu'aucun point efficace ne soit perdu.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=3.05,font=\small]
 % zone efficacité (a = (4,2), Z = (0.8889, 1.4286))
@@ -2152,7 +2153,7 @@ figure~\ref{fig:i2panels} montre $\Rcal_A$ après chaque coupe.
   \node[below=2pt,font=\scriptsize,align=center] at (2.05,-0.75) {#1};
 \end{tikzpicture}}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tabular}{@{}c@{\hspace{9mm}}c@{\hspace{9mm}}c@{}}
 \panel{$0$ coupe\\$|\Rcal_A|=22$}{(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(1,0),(1,1),(1,2),(1,3),(1,4),(2,0),(2,1),(2,2),(2,3),(3,0),(3,1),(3,2),(3,3),(4,0),(4,1),(4,2)}
@@ -2177,7 +2178,7 @@ $|\Rcal|\ge 5$ toujours.\ \confna}
 \label{fig:i2panels}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=11.6cm,height=5.4cm,
@@ -2217,7 +2218,7 @@ Le tableau~\ref{tab:i2traj} donne, à chaque étape, les quantités exactes du
 théorème~\ref{th:archbound}. \emph{Une seule} coupe d'efficacité suffit à
 faire tomber $U$ à $0$, donc à prouver l'optimalité.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{$\mathcal{I}_2$ : trajectoire des deux coupes, $q=14/5$,
 $U=\max_{\Rcal}\{QN-PD\}$, borne $=q+U/(QD^{+})$. Les valeurs sont exactes
@@ -2251,7 +2252,7 @@ $U=\max_{\Rcal}\{QN-PD\}$, borne $=q+U/(QD^{+})$. Les valeurs sont exactes
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=12.4cm,height=6.2cm,
@@ -2324,7 +2325,7 @@ $(1,0,4)$, $(2,0,2)$, $(2,2,0)$, $(2,1,1)$ ; le cinquième point efficace,
 $(2,0,1)$, n'est \emph{pas} trouvé. Les points dominés collectés : $0$,
 là encore.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=3.6,font=\small]
 \fill[cfond] (-0.03,0.28) rectangle (1.0,1.4444);
@@ -2368,7 +2369,7 @@ pas ici : il finit \emph{exactement} sur ce point.\ \confna}
 
 \subsection{Trajectoire}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{$\mathcal{I}_3$ : trajectoire, $q=3$. La borne atteint $\qs$ après
 \textbf{deux} coupes d'efficacité, contre \textbf{huit} coupes de dominance
@@ -2398,7 +2399,7 @@ pas ici : il finit \emph{exactement} sur ce point.\ \confna}
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=12.4cm,height=5.8cm,
@@ -2507,7 +2508,7 @@ un fichier avec leur infrastructure commune. Le déplacement a été fait
 après découpage rend une sortie identique à celle d'avant, ligne pour ligne,
 à la seule exception du chronomètre.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Les trois leviers. $\circ$ = absent, $\bullet$ = présent.\ \confna}
 \label{tab:config}
@@ -2586,7 +2587,7 @@ l'ordre $c$, $\alpha$, $d$, $\beta$. Une permutation de ces tirages donne
 d'autres instances à graine égale : l'ordre fait partie du protocole au même
 titre que les lois.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le générateur d'instances, tirage par tirage. Toutes les données
 sont \textbf{entières} : c'est ce qui permet un test d'efficacité
@@ -2677,7 +2678,7 @@ $\text{corr}\in\{0\,;0{,}25\,;0{,}5\,;0{,}9\,;1\}$.
 est lié à celui des variables par $m=\max(3,\lfloor n/2\rfloor+1)$, partout
 et sauf mention contraire.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Où chaque campagne du mémoire tire ses instances. « graines »
 désigne les graines du \emph{générateur}, sauf pour le régime cible, dont
@@ -2768,7 +2769,7 @@ qu'\emph{aucune} valeur ne peut faire mieux ni pire. Un banc saturé ne
 mesure pas une insensibilité, il mesure son propre plafond. Nous avons donc
 cherché où se trouve la marge, et balayé là.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Sensibilité aux réglages, un facteur à la fois autour de la
 configuration de production. Strate~A : régime cible, plafond $80$,
@@ -2934,7 +2935,7 @@ croisées inter-méthodes.
 
 \subsection{Régime cible}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Régime cible, $8$ instances $\times$ $10$ graines, budget identique
 de $7+5$~s, vérité terrain disponible.\ \conf{0}{0}{0}}
@@ -2957,7 +2958,7 @@ delta des appels par paire & \multicolumn{2}{c}{médiane $\mathbf{-12}$,
 \end{table}
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=13cm,height=5.6cm,
@@ -3052,7 +3053,7 @@ rendu} retournant à la certification. Sous un plafond compté en appels, ce
 temps rendu n'est plus une ressource. Le gain pouvait donc n'être qu'un
 effet d'horloge. Il fallait le mesurer, non l'argumenter.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Régime cible sous plafond \textbf{déterministe} d'appels entiers,
 mêmes $8$ instances, mêmes $10$ graines. Les deux bras portent la
@@ -3128,7 +3129,7 @@ inerte.
 
 \subsection{Lot systématique}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Lot figé, $90$ instances, budget identique de $12$~s. Toutes les
 vérifications croisées passent.\ \conf{0}{0}{0}}
@@ -3158,7 +3159,7 @@ distributions \emph{indépendantes}. Les lire comme un gain par instance est
 une faute, et nous l'avons commise avant de la mesurer. La comparaison
 correcte est \textbf{appariée} : même instance, même graine, on retranche.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Lecture appariée du même lot. Le signe change.\ \conf{0}{0}{0}}
 \label{tab:apparie}
@@ -3184,7 +3185,7 @@ réparti. L'instance médiane ne gagne rien. Écrire « strictement positif sur
 tous les axes », comme le suggérait la première lecture, aurait été faux.
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=12.6cm,height=6.6cm,
@@ -3222,7 +3223,7 @@ appariée vaut $+1$ alors que le total baisse de $5{,}2\ \%$.\ \conf{0}{0}{0}}
 critères -- c'est-à-dire par épaisseur du front -- le signe est net et
 conforme à la théorie.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Delta apparié des appels au solveur entier, par régime.\ \conf{0}{0}{0}}
 \label{tab:corr}
@@ -3257,7 +3258,7 @@ instance non reproductible exclue. Trois axes de recul sont vérifiés, et non
 le seul compte des preuves : perdre une preuve, rendre une \emph{valeur}
 plus faible, ou une \emph{borne} plus lâche.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Lot figé de $90$ instances sous plafond \textbf{déterministe}
 d'appels entiers ; la seule différence entre les deux bras est la coupe
@@ -3341,7 +3342,7 @@ termes séparément. La grille est celle de l'étude d'échelle -- $m=n/2+1$,
 $p=3$, $\text{corr}\in\{0\,;0{,}5\,;0{,}9\}$, deux graines -- prolongée à
 $n=50$, que ce mémoire n'atteignait pas.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Échelle sous plafond \textbf{déterministe} d'appels entiers. Écarts
 garantis en \%, $\Delta>0$ signifiant que la coupe d'efficacité
@@ -3464,7 +3465,7 @@ archive. Le banc \emph{vérifie} ce déterminisme au lieu de le supposer :
 chaque configuration est jouée deux fois et toute ligne instable est exclue
 de la conclusion.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Banc déterministe, plafond de $100$ appels, $90$ instances. Les
 \emph{deux} bras posent des coupes d'efficacité : seul le
@@ -3516,7 +3517,7 @@ qui certifie chaque point rendu. Cette variante est donc \emph{gratuite} :
 zéro programme entier de clôture.
 \end{remark}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Diversification par coupes d'efficacité. $24$ paires,
 $n=20$ à $50$, budget déterministe de $700$ appels, comparaison appariée.\ \conf{0}{0}{0}}
@@ -3534,7 +3535,7 @@ gain sur $q_{\text{lb}}$ & médiane $+0{,}00\ \%$, moyenne $+4{,}72\ \%$\\
 \end{table}
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=12.6cm,height=5.6cm,
@@ -3579,7 +3580,7 @@ faire.
 \subsection{Où elle n'apporte rien, et pourquoi le diagnostic était faux}
 \label{sec:echellehonnete}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=12cm,height=5.4cm,
@@ -3702,7 +3703,7 @@ polyèdre, et le point incriminé avait déjà été retiré par une coupe
 antérieure. C'est une distinction qu'il faut faire, sous peine de rejeter
 une implémentation correcte -- ou, plus grave, d'en accepter une fausse.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Coupe par programme générateur, budget déterministe de $300$ appels
 entiers, comparaison appariée, chaque exécution jouée deux fois. Écarts en
@@ -3875,7 +3876,7 @@ fractions.
 
 \subsection{La mesure}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Couverture et bornes sur vérité terrain, $\text{corr}=0$, $p=3$,
 plafond déterministe de $300$ appels entiers, graine~$1$. $\kappa$ désigne
@@ -4151,7 +4152,7 @@ Le théorème~\ref{th:seuil} domine les deux énoncés antérieurs. Reste à
 mesurer ce que cela vaut. La réponse est franche, et elle ne nous arrange
 pas.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{La forme unifiée contre la forme à $D_{\min}$, lecture appariée --
 même instance, même graine, seul le dénominateur change. $n\in\{20,30,40\}$,
@@ -4177,7 +4178,7 @@ $60$  & $18$ & $18$ & $\mathbf{0}$ & $0$ & $+0{,}00\ \%$\\
 \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le même gain, mesuré là où la route \emph{est} interrompue. On
 réduit son allocation propre en tours de Dinkelbach ; la production lui en
@@ -4255,7 +4256,7 @@ même par énumération exhaustive, en arithmétique rationnelle exacte, sur
 $72$ instances ($n$ de $5$ à $8$, $p$ de $2$ à $4$, $\text{corr}$ dans
 $\{0;0{,}5;0{,}9\}$).
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Validité de la seconde route contre vérité terrain. Le plafond
 serré est nécessaire : sous un plafond confortable ces instances se prouvent
@@ -4309,7 +4310,7 @@ aussi, et pour la même raison de séquence : quand la libération se décide,
 le premier tour a \emph{déjà} tourné sous le plafond réduit, et rendre la
 part ne rend pas les coupes qu'il n'a pas posées.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le déclencheur contre son absence, mêmes douze instances, même
 plafond de $300$ appels entiers, comparaison appariée.\ \conf{0}{1}{0}}
@@ -4344,7 +4345,7 @@ procédure qu'il finance.
 
 \subsection{Ce que cela déplace}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Seconde route, budget déterministe de $300$ appels entiers,
 comparaison appariée, chaque exécution jouée deux fois, \textbf{trois
@@ -4599,7 +4600,7 @@ change, ce qui confirme au passage qu'aucune collision n'était survenue.
 
 \subsection{Ce que l'archive vaut}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{L'archive mesurée contre $E$ énuméré, budget de $180$ appels ILP.
 Instances énumérables ($|S|$ de $1\,130$ à $5\,275$), $\varepsilon^+$
@@ -4667,7 +4668,7 @@ La question décide si le front approché est un livrable ou un artefact. Un
 ensemble de points qui ne bouge pas quand on triple l'effort n'approche
 rien : il enregistre où l'algorithme est passé.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le même lot à trois budgets d'appels ILP. Chaque colonne est une
 exécution indépendante, pas un raffinement de la précédente.\ \conf{1}{1}{1}}
@@ -4882,7 +4883,7 @@ Aucun de ces travaux ne place le fractionnaire des deux côtés à la fois ;
 c'est cette conjonction qui définit (P), et c'est elle qui interdit les
 raccourcis dont chacun d'eux dispose.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Le problème traité, chez les uns et chez les autres.\ \confna}
 \label{tab:positionnement}
@@ -4916,7 +4917,7 @@ Avant de mesurer quoi que ce soit, il faut établir que nos objets sont bien
 les leurs. Les deux articles donnent un exemple entièrement résolu ; nous
 les reprenons à l'identique.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Les deux exemples publiés, reproduits.\ \confna}
 \label{tab:exemples}
@@ -5048,7 +5049,7 @@ $45$ appels médians de leur côté ne sont donc pas leur coût réel, mais la
 part de leur coût que cette unité sait voir.
 \end{remark}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Match, $24$ instances, vérité terrain par énumération. Les deux
 colonnes de coût sont dans la \emph{même} unité ; les lignes suivantes
@@ -5103,7 +5104,7 @@ difficulté du problème. On observe le phénomène directement sur une instance
 tenter de le certifier.
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{semilogxaxis}[width=12.6cm,height=5.4cm,
@@ -5159,7 +5160,7 @@ numérateur de $f$ sur $[-10,10]$, et $q$, $\beta$ tels que
 $q^{\top}x+\beta>0$ sur le domaine. Leurs tailles sont reprises telles
 quelles.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Notre méthode sur le protocole et les tailles de Drici
 \emph{et al.}, $10$ instances par taille, budget déterministe de $1500$
@@ -5198,7 +5199,7 @@ couple $(n,m)$ ne mesure pas la difficulté : les \emph{bornes des variables}
 la mesurent. Des contraintes sur $[1,30]$ avec un second membre sur
 $[50,100]$ donnent des variables bornées par $2$ ou $3$.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{« $n=40$ » ne désigne pas le même problème d'un protocole à
 l'autre. Colonne « publiée » : l'instance de la figure~\ref{fig:boite}
@@ -5234,7 +5235,7 @@ nous le disons aussi.
 \end{remark}
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=11.4cm,height=5.2cm,
@@ -5283,7 +5284,7 @@ mémoire. Nous appliquons ici le banc apparié des
 courante ne différant que par la coupe d'efficacité, plafond en appels,
 chaque configuration jouée deux fois, trois axes de recul vérifiés.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{La coupe d'efficacité sur le terrain de chacun, à plafond
 \textbf{déterministe} d'appels. Les plafonds marqués d'une étoile sont ceux
@@ -5530,7 +5531,7 @@ l'archive à plafond $B$ est un préfixe de celle à plafond $B'>B$. Classer
 les centres sur cet ordre rend le relâché emboîté, donc la borne monotone
 \emph{par construction}. Nous l'avons implémenté et mesuré.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{L'ordre stable par préfixe : ce qu'il corrige et ce qu'il coûte.
 Haut : les six lignes du diagnostic, écart garanti à $300$ puis $900$
@@ -5713,7 +5714,7 @@ au tableau~\ref{tab:geom}.
 
 \subsection{La figure d'échelle, dans sa version antérieure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=12cm,height=5.0cm,
