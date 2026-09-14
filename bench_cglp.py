@@ -54,8 +54,12 @@ def marqueur() -> str:
     return f"[V{'*' if CFG_ALT else 'o'} S{'*' if CFG_GEOM else 'o'} D*]"
 
 
-TAILLES = [20, 30, 40]
-CORRS = [0.0, 0.5]
+# Sous-grille selectionnable par variables d'environnement. Le protocole est
+# inchange : les memes (n, corr, graine) donnent les memes lignes, le banc
+# etant deterministe. Cela sert uniquement a repartir une grille longue sur
+# plusieurs processus, ou a reprendre les lignes manquantes d'un run coupe.
+TAILLES = [int(x) for x in os.environ.get("CGLP_TAILLES", "20,30,40").split(",")]
+CORRS = [float(x) for x in os.environ.get("CGLP_CORRS", "0.0,0.5").split(",")]
 GRAINES = [1]
 
 
@@ -82,7 +86,11 @@ def main() -> int:
     # GRAINES restait a 1 : six lignes pour un resultat negatif, c'est peu.
     # Le troisieme argument permet d'en ajouter sans changer le protocole.
     global GRAINES
-    GRAINES = list(range(1, (int(sys.argv[3]) if len(sys.argv) > 3 else 1) + 1))
+    if os.environ.get("CGLP_GRAINES"):
+        GRAINES = [int(x) for x in os.environ["CGLP_GRAINES"].split(",")]
+    else:
+        GRAINES = list(range(1,
+                             (int(sys.argv[3]) if len(sys.argv) > 3 else 1) + 1))
 
     print("=" * 108)
     print(f"COUPE PAR PROGRAMME GENERATEUR - plafond {cap} appels entiers, "
