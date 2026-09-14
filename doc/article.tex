@@ -3295,13 +3295,18 @@ dégradait l'écart garanti sur six lignes sur douze, et la décomposition est
 sans ambiguïté : la part imputable à l'incumbent n'est \emph{jamais}
 négative, celle imputable à la borne n'est \emph{jamais} positive. Plus de
 budget donnait donc un incumbent meilleur ou égal et une borne pire ou
-égale. La cause principale -- l'affamement de l'archive dans le vivier
-(§\ref{sec:defauts}) -- est corrigée, et la monotonie passe de $1/6$ à
-$4/6$ sur les lignes portant le défaut. Deux lignes reculent encore, dont
-une dont les coupes d'archive sont pourtant passées de $2$ à $40$. Nous ne
-savons pas nommer la cause restante. \textbf{Une méthode dont le résultat
-peut empirer quand on lui donne plus de temps reste une méthode à
-corriger.}
+égale. Il a fallu deux corrections. La première -- l'affamement de l'archive dans
+le vivier (§\ref{sec:defauts}) -- portait la monotonie à $4/6$ ; deux lignes
+reculaient encore et nous ne savions pas nommer la cause. La seconde la
+nomme : le vivier n'était pas \emph{stable par préfixe} en budget, donc le
+relâché n'y était pas emboîté, et une exécution plus longue posait
+\emph{d'autres} coupes plutôt que les mêmes et davantage. Classer les
+centres par ordre d'insertion -- monotone en budget, la trajectoire de la
+recherche ne dépendant pas du plafond total -- rend le relâché emboîté et la
+borne monotone par construction. \textbf{Le défaut est clos} : $6/6$ lignes
+monotones, plus aucun recul, à coût nul sur l'écart garanti ($\Delta$ médian
+$+0{,}00$ point, preuves inchangées) et sans surcoût en temps au plafond
+usuel ($\times 1{,}0$ à nombre d'appels égal).
 
 \paragraph{Le big-M est une piste fermée.} Le tableau~\ref{tab:bigm} le
 montre : le minorant continu atteint pratiquement le minimum entier.

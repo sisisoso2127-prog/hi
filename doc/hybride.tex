@@ -146,7 +146,7 @@ cumulés contre $-0{,}19$ de pertes. Et le vivier de coupes, qui classait ses
 deux sources sur une seule échelle, \textbf{affamait l'archive} jusqu'à zéro
 coupe d'archive sur deux lignes sur six, alors qu'elle est la seule à
 pouvoir vider le relâché ; les classer dans chaque source puis
-\emph{alterner} rétablit la monotonie en budget de $1/6$ à $4/6$.
+\emph{alterner} rétablit la monotonie en budget, $4/6$ à $\mathbf{6/6}$.
 
 Les mesures sont rapportées par \textbf{paires} -- même instance, même
 graine, les deux variantes -- et jamais en comparant deux médianes
@@ -299,7 +299,7 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       sur deux lignes sur six -- alors qu'elle est la seule source capable
       de \emph{vider} le relâché. On classe donc à l'intérieur de chaque
       source, puis on alterne, sans paramètre nouveau. La monotonie en
-      budget passe de $1/6$ à $4/6$, et une ligne de $88{,}1\ \%$ d'écart
+      budget passe de $4/6$ à $\mathbf{6/6}$, et une ligne de $46{,}2\ \%$ d'écart
       garanti à $\mathbf{0{,}0\ \%}$.
       \emph{Nous avions annoncé ici qu'une mise en \oe uvre à budgets
       séparés perdait $28$ preuves sur $90$. Ce chiffre est retiré}
@@ -1225,53 +1225,60 @@ défaut. « arch. » compte les coupes d'archive effectivement posées.\ \conf{0
 $n$ & corr & gr. & vivier & écart @$300$ & écart @$900$ & monotone
  & arch.@$300$ & arch.@$900$\\
 \midrule
-$20$ & $0$ & $1$ & commun & $88{,}8\ \%$ & $93{,}6\ \%$ & non & $26$ & $0$\\
-$20$ & $0$ & $1$ & \textbf{alterné} & $\mathbf{77{,}2\ \%}$ & $\mathbf{71{,}5\ \%}$ & oui & $26$ & $40$\\
+$20$ & $0$ & $1$ & commun & $88{,}8\ \%$ & $87{,}6\ \%$ & oui & $25$ & $0$\\
+$20$ & $0$ & $1$ & \textbf{alterné} & $\mathbf{80{,}8\ \%}$ & $\mathbf{68{,}5\ \%}$ & oui & $26$ & $40$\\
 \midrule
-$20$ & $0$ & $2$ & commun & $42{,}3\ \%$ & $31{,}5\ \%$ & oui & $28$ & $12$\\
-$20$ & $0$ & $2$ & \textbf{alterné} & $43{,}6\ \%$ & $\mathbf{26{,}6\ \%}$ & oui & $29$ & $40$\\
+$20$ & $0$ & $2$ & commun & $43{,}6\ \%$ & $26{,}6\ \%$ & oui & $28$ & $0$\\
+$20$ & $0$ & $2$ & \textbf{alterné} & $\mathbf{40{,}6\ \%}$ & $\mathbf{21{,}5\ \%}$ & oui & $29$ & $40$\\
 \midrule
-$30$ & $0$ & $1$ & commun & $78{,}6\ \%$ & $93{,}0\ \%$ & non & $20$ & $2$\\
-$30$ & $0$ & $1$ & \textbf{alterné} & $78{,}6\ \%$ & $93{,}0\ \%$ & non & $20$ & $40$\\
+$30$ & $0$ & $1$ & commun & $78{,}6\ \%$ & $92{,}6\ \%$ & non & $20$ & $0$\\
+$30$ & $0$ & $1$ & \textbf{alterné} & $78{,}6\ \%$ & $\mathbf{71{,}0\ \%}$ & \textbf{oui} & $20$ & $40$\\
 \midrule
-$30$ & $0$ & $2$ & commun & $27{,}1\ \%$ & $41{,}5\ \%$ & non & $33$ & $10$\\
-$30$ & $0$ & $2$ & \textbf{alterné} & $\mathbf{22{,}8\ \%}$ & $\mathbf{23{,}0\ \%}$ & non & $39$ & $40$\\
+$30$ & $0$ & $2$ & commun & $27{,}1\ \%$ & $23{,}9\ \%$ & oui & $15$ & $0$\\
+$30$ & $0$ & $2$ & \textbf{alterné} & $\mathbf{23{,}7\ \%}$ & $\mathbf{14{,}9\ \%}$ & oui & $39$ & $40$\\
 \midrule
-$40$ & $0$ & $2$ & commun & $87{,}3\ \%$ & $93{,}8\ \%$ & non & $22$ & $15$\\
-$40$ & $0$ & $2$ & \textbf{alterné} & $87{,}3\ \%$ & $\mathbf{85{,}9\ \%}$ & oui & $22$ & $35$\\
+$40$ & $0$ & $2$ & commun & $87{,}3\ \%$ & $93{,}3\ \%$ & non & $22$ & $0$\\
+$40$ & $0$ & $2$ & \textbf{alterné} & $87{,}3\ \%$ & $\mathbf{84{,}5\ \%}$ & \textbf{oui} & $22$ & $35$\\
 \midrule
-$40$ & $0{,}5$ & $2$ & commun & $43{,}9\ \%$ & $88{,}1\ \%$ & non & $16$ & $0$\\
-$40$ & $0{,}5$ & $2$ & \textbf{alterné} & $43{,}9\ \%$ & $\mathbf{0{,}0\ \%}$ & oui & $16$ & $36$\\
+$40$ & $0{,}5$ & $2$ & commun & $48{,}8\ \%$ & $46{,}2\ \%$ & oui & $16$ & $0$\\
+$40$ & $0{,}5$ & $2$ & \textbf{alterné} & $\mathbf{43{,}9\ \%}$ & $\mathbf{18{,}5\ \%}$ & oui & $16$ & $36$\\
 \midrule
-\multicolumn{9}{l}{plafond $300$ : mieux $2$, pire $1$, égal $3$
- \quad$\bullet$\quad gain médian $+0{,}00$, moyen $+2{,}44$}\\
-\multicolumn{9}{l}{plafond $900$ : mieux $\mathbf{5}$, pire $\mathbf{0}$,
- égal $1$ \quad$\bullet$\quad gain médian $\mathbf{+13{,}17}$, moyen
- $+23{,}56$}\\
-\multicolumn{9}{l}{monotonie $1/6\to 4/6$ \quad$\bullet$\quad coupes
- d'archive à $900$ : $[0,12,2,10,15,0]\to[40,40,40,40,35,36]$}\\
+\multicolumn{9}{l}{plafond $300$ : mieux $\mathbf{4}$, pire $\mathbf{0}$,
+ égal $2$ \quad$\bullet$\quad gain médian $+3{,}24$, moyen $+3{,}23$}\\
+\multicolumn{9}{l}{plafond $900$ : mieux $\mathbf{6}$, pire $\mathbf{0}$,
+ égal $\mathbf{0}$ \quad$\bullet$\quad gain médian $\mathbf{+14{,}04}$,
+ moyen $+15{,}22$}\\
+\multicolumn{9}{l}{monotonie $4/6\to\mathbf{6/6}$ \quad$\bullet$\quad coupes
+ d'archive à $900$ : $[0,0,0,0,0,0]\to[40,40,40,40,35,36]$}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{enumerate}
-\item \textbf{ne pas dégrader au plafond nominal} -- tenue : mieux $2$,
-  pire $1$ (de $1{,}3$ point), égal $3$ ;
+\item \textbf{ne pas dégrader au plafond nominal} -- tenue, et sans
+  réserve : mieux $4$, \textbf{pire $0$}, égal $2$ ;
 \item \textbf{empêcher l'effondrement} -- tenue complètement : le plafond de
   lot est atteint sur toutes les lignes ;
-\item \textbf{rétablir la monotonie} -- tenue à moitié : $1/6\to 4/6$.
+\item \textbf{rétablir la monotonie} -- tenue \textbf{entièrement} :
+  $4/6\to\mathbf{6/6}$.
 \end{enumerate}
 
-La ligne $n=40$, $\text{corr}=0{,}5$ passe de $88{,}1\ \%$ à
-$\mathbf{0{,}0\ \%}$ : l'optimalité y est \emph{prouvée}. C'est précisément
+La ligne $n=40$, $\text{corr}=0{,}5$ passe de $46{,}2\ \%$ à
+$\mathbf{18{,}5\ \%}$, soit près de deux tiers d'écart garanti retirés.
+C'est précisément
 ce qu'une coupe de dominance ne peut pas produire -- vider le relâché -- et
 il a suffi que l'archive cesse d'être affamée.
 
-\begin{remark}[ce qui n'est pas guéri]
-Deux lignes sur six reculent encore quand on triple le budget, dont une
-($n=30$, $\text{corr}=0$) dont les coupes d'archive sont pourtant passées de
-$2$ à $40$. L'affamement était une cause réelle de la non-monotonie ; ce
-n'était pas la seule. Nous ne savons pas nommer l'autre.
+\begin{remark}[il a fallu deux corrections, pas une]
+Ce tableau a longtemps porté « deux lignes sur six reculent encore, et nous
+ne savons pas nommer l'autre cause ». L'affamement de l'archive était une
+cause réelle de la non-monotonie, et ce n'était pas la seule : la seconde
+est que le vivier n'était pas \emph{stable par préfixe} en budget, de sorte
+que le relâché n'y était pas emboîté (§\ref{sec:histo}). Les deux corrigées,
+la monotonie est complète -- $6/6$ -- et plus aucune ligne ne recule. Nous
+laissons la trace de l'état intermédiaire parce qu'il aura tenu plusieurs
+versions de ce mémoire, et qu'une cause « non nommée » qui finit par l'être
+mérite d'être racontée dans cet ordre.
 \end{remark}
 
 % ============================================================================
@@ -5436,13 +5443,16 @@ l'incumbent y gagne $49{,}6\ \%$. Mais cela n'achète que $1{,}7$ point
 d'écart, parce que $q_{\text{ub}}\approx 103$ y dilue tout gain sur le
 numérateur. Les deux termes sont déficients et aucun ne suffit seul.
 
-\paragraph{La non-monotonie en budget, et sa cause.} Tripler le plafond
-dégradait l'écart garanti sur six lignes sur douze. L'alternance en supprime
-la cause principale -- l'affamement de l'archive -- et fait passer la
-monotonie de $1/6$ à $4/6$ sur les lignes portant le défaut. Deux lignes
-reculent encore, toutes deux à $n=30$, $\text{corr}=0$. Les éditions
-précédentes de ce mémoire déclaraient ne pas savoir nommer la cause. Nous
-la nommons ici, et la démonstration tient en une ligne de mesure.
+\paragraph{La non-monotonie en budget : corrigée.} Ce point a été le défaut
+ouvert le plus durable de ce travail, et il est clos. Tripler le plafond
+dégradait l'écart garanti sur six lignes sur douze. L'alternance a d'abord
+retiré la cause principale -- l'affamement de l'archive -- portant la
+monotonie à $4/6$ ; deux lignes reculaient encore, toutes deux à $n=30$,
+$\text{corr}=0$, et les éditions précédentes de ce mémoire déclaraient ne
+pas savoir nommer la cause restante. Elle est nommée ci-dessous, et sa
+correction porte la monotonie à $\mathbf{6/6}$ : \textbf{plus aucune ligne
+ne recule quand on triple le budget}. Nous gardons le raisonnement entier,
+parce que c'est lui qui a désigné la correction.
 
 Sur la ligne $n=30$, graine~$1$, l'incumbent est \emph{identique} aux deux
 plafonds ($q_{\text{lb}}=4{,}3871$) : c'est donc la borne, et elle seule, qui
@@ -5561,11 +5571,28 @@ aussi contre la nôtre.
 \end{remark}
 
 \noindent
-Le drapeau existe et reste \textbf{désactivé par défaut} : l'activer change
-\emph{quelles} coupes toute exécution pose, donc impose de rejouer
-l'ensemble des campagnes avant que le moindre chiffre de ce mémoire puisse
-être réécrit. Ce qui est acquis ici est le diagnostic, la correction, et son
-prix mesuré.
+\textbf{L'ordre stable est devenu le comportement par défaut}, et toutes les
+campagnes de ce mémoire ont été rejouées sous lui : c'est ce que porte le
+tableau~\ref{tab:alternance}, où l'alternance est désormais monotone $6/6$
+et n'est plus jamais battue -- mieux $4$ / pire $0$ à plafond $300$,
+mieux $6$ / pire $0$ à plafond $900$. La validité a été recontrôlée avant
+tout chiffre : $72/72$ aux trois contrôles et aux deux plafonds.
+
+\begin{remark}[le prix en temps, mesuré et non supposé]
+Nous avons d'abord écrit que l'ordre stable rendait les campagnes
+« beaucoup plus lentes ». C'était une généralisation abusive, tirée de deux
+bancs qui traînaient. Mesuré à \emph{nombre d'appels entiers égal} :
+\[
+  n=20,\ \text{plafond }300 : \times 0{,}9,\qquad
+  n=30 : \times 1{,}0,\qquad
+  n=40 : \times 1{,}0,
+\]
+c'est-à-dire \textbf{aucun surcoût} au plafond où tourne l'essentiel des
+campagnes. Le surcoût existe bel et bien, mais au plafond $900$ seulement :
+$\times 2{,}9$ à $n=20$. C'est là, et là seulement, que les coupes plus
+faibles laissent un relâché assez grand pour que chaque relaxation coûte
+davantage.
+\end{remark}
 
 \paragraph{Le mouvement C.} Sa conception a été mise à l'épreuve contre son
 retrait (tableau~\ref{tab:mouvementc}), et le banc n'a pas tranché.
