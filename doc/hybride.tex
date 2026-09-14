@@ -215,11 +215,14 @@ borne y étant certifiée égale à $\max_{\Rcal}f$ --, et à budget d'appels é
 le théorème de clôture n'achète aucune preuve supplémentaire : c'est un gain
 de coût, non de capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
 programme générateur, y est construite et vérifiée : sur dix-huit lignes et
-trois graines, pour $180$ coupes produites, son gain vaut
-\textbf{exactement zéro} -- pas une ligne améliorée, pas une dégradée --,
-et cela jusque sur une instance dont l'écart de référence est descendu à
-$1{,}2\ \%$. Cela \emph{infirme} le diagnostic que nous avions nous-mêmes
-posé sur l'origine de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
+trois graines, pour $149$ coupes produites, son gain médian est \textbf{nul}
+et sa moyenne vaut $+0{,}01$ point, et cela jusque sur une instance dont
+l'écart de référence est descendu à $1{,}2\ \%$. Le même banc repris à
+budget triple lui fait gagner jusqu'à $+4{,}95$ points : le levier n'est pas
+inerte, il est \emph{affamé de budget}. Dans les deux cas le gain reste
+d'un ordre de grandeur sans commune mesure avec l'écart, ce qui
+\emph{infirme} le diagnostic que nous avions nous-mêmes posé sur l'origine
+de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
 $3$ variables, exposent le mécanisme pas à pas.
 \end{abstract}
 
@@ -883,8 +886,8 @@ gain que dans un algorithme différent, qui ne réparerait qu'une
 c'est-à-dire une autre répartition du budget, non l'ajout d'une source.
 
 Trois mesures de ce mémoire suggèrent en outre un rendement faible : la
-coupe générée ne gagne $\mathbf{0{,}00}$ point sur $18$ lignes malgré $180$
-coupes posées (§\ref{sec:cglp}) ; doubler le plafond de coupes ne change ni
+coupe générée gagne $\mathbf{0{,}01}$ point en moyenne sur $18$ lignes
+malgré $149$ coupes posées (§\ref{sec:cglp}) ; doubler le plafond de coupes ne change ni
 les preuves ni l'écart (tableau~\ref{tab:budgets}) ; et le vivier dépasse
 déjà son plafond sur la plupart des lignes. \textbf{Le nombre de centres
 candidats n'est pas le verrou.} Nous énonçons cette attente \emph{avant} de
@@ -2560,10 +2563,12 @@ propres instances) et n'y débordent pas.
 Restait le cas où l'hétérogénéité pouvait compter : la
 section~\ref{sec:cglp} raisonnait sur un écart de $98{,}6\ \%$ là où la
 configuration courante en donne $77{,}2$ sur la même instance. Elle a été
-remesurée, et sa conclusion s'en trouve \emph{renforcée} plutôt que
-corrigée : sur la base améliorée, le gain de la coupe générée tombe de
-$+0{,}11$ à $+0{,}00$ point sur les six lignes. Le tableau~\ref{tab:cglp}
-porte les deux configurations.
+remesurée, et sa conclusion tient : sur la base améliorée et à
+dix-huit lignes, le gain de la coupe générée est nul en médiane, avec
+$+0{,}45$ point au mieux et $-0{,}19$ au pire, contre $+0{,}11$ sur le socle
+d'origine. Le tableau~\ref{tab:cglp} porte les deux configurations, et le
+tableau~\ref{tab:cglp900} le même banc à budget triple, où le levier cesse
+d'être inerte sans pour autant entamer l'écart.
 \end{remark}
 
 \subsection{Le générateur, en toutes lettres}
@@ -3657,7 +3662,7 @@ l'explication tombée. La sous-section suivante le met malgré tout à
 l'épreuve, parce qu'il avait été formulé avant, et l'infirme lui aussi par
 un chemin indépendant.
 
-\subsection{Supprimer le coût en binaires ne suffit pas}
+\subsection{Supprimer le coût en binaires ne suffit pas sous ce budget}
 \label{sec:cglp}
 
 \paragraph{Une coupe disjonctive sans aucune binaire.} Soit $P$ le relâché
@@ -3708,8 +3713,9 @@ une implémentation correcte -- ou, plus grave, d'en accepter une fausse.
 \caption{Coupe par programme générateur, budget déterministe de $300$ appels
 entiers, comparaison appariée, chaque exécution jouée deux fois. Écarts en
 pourcentage. Remesuré dans les \emph{deux} configurations, et à
-\textbf{trois graines} dans la seconde.\ \conf{0}{0}{0} \emph{et}
-\conf{1}{1}{1}}
+\textbf{trois graines} dans la seconde. La colonne de droite a été reprise
+intégralement sous le vivier stable par préfixe devenu défaut
+(tableau~\ref{tab:vivierstable}).\ \conf{0}{0}{0} \emph{et} \conf{1}{1}{1}}
 \label{tab:cglp}
 \setlength{\tabcolsep}{4pt}\small
 \begin{tabular}{ccrrrr|rrrr}
@@ -3719,46 +3725,95 @@ pourcentage. Remesuré dans les \emph{deux} configurations, et à
 \cmidrule(lr){3-6}\cmidrule(l){7-10}
 $n$ & corr & sans & avec & gain & coupes & sans & avec & gain & coupes\\
 \midrule
-$20$ & $0$    & $98{,}6$ & $98{,}5$ & $+0{,}11$ & $13$
-              & $77{,}2$ & $77{,}2$ & $\mathbf{0{,}00}$ & $20$\\
+$20$ & $0$& $98{,}6$ & $98{,}5$ & $+0{,}11$ & $13$
+              & $80{,}8$ & $80{,}8$ & $+0{,}00$ & $10$\\
      &        &          &          &           &
-              & $43{,}6$ & $43{,}6$ & $\mathbf{0{,}00}$ & $12$\\
+              & $40{,}6$ & $40{,}6$ & $+0{,}00$ & $10$\\
      &        &          &          &           &
-              & $37{,}4$ & $37{,}4$ & $\mathbf{0{,}00}$ & $5$\\
-$20$ & $0{,}5$& $0{,}0$  & $0{,}0$  & $+0{,}00$ & $0$
-              & $0{,}0$  & $0{,}0$  & $\mathbf{0{,}00}$ & $0,7,0$\\
-$30$ & $0$    & $93{,}9$ & $93{,}8$ & $+0{,}06$ & $12$
-              & $78{,}6$ & $78{,}6$ & $\mathbf{0{,}00}$ & $16$\\
+              & $37{,}4$ & $37{,}4$ & $+0{,}00$ & $6$\\
+$20$ & $0{,}5$& $0{,}0$ & $0{,}0$ & $+0{,}00$ & $0$
+              & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $0$\\
      &        &          &          &           &
-              & $22{,}8$ & $22{,}8$ & $\mathbf{0{,}00}$ & $17$\\
+              & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $6$\\
      &        &          &          &           &
-              & $32{,}5$ & $32{,}5$ & $\mathbf{0{,}00}$ & $24$\\
+              & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $0$\\
+$30$ & $0$& $93{,}9$ & $93{,}8$ & $+0{,}06$ & $12$
+              & $78{,}6$ & $78{,}6$ & $+0{,}00$ & $13$\\
+     &        &          &          &           &
+              & $23{,}7$ & $23{,}2$ & $\mathbf{+0{,}45}$ & $23$\\
+     &        &          &          &           &
+              & $32{,}5$ & $32{,}5$ & $+0{,}00$ & $23$\\
 $30$ & $0{,}5$& $78{,}9$ & $78{,}9$ & $+0{,}00$ & $3$
-              & $\mathbf{1{,}2}$ & $\mathbf{1{,}2}$ & $\mathbf{0{,}00}$ & $6$\\
+              & $\mathbf{1{,}2}$ & $\mathbf{1{,}2}$ & $+0{,}00$ & $4$\\
      &        &          &          &           &
-              & $13{,}7$ & $13{,}7$ & $\mathbf{0{,}00}$ & $7$\\
+              & $13{,}7$ & $13{,}7$ & $+0{,}00$ & $5$\\
      &        &          &          &           &
-              & $0{,}0$  & $0{,}0$  & $\mathbf{0{,}00}$ & $0$\\
-$40$ & $0$    & $96{,}6$ & $96{,}6$ & $+0{,}00$ & $12$
-              & $96{,}5$ & $96{,}5$ & $\mathbf{0{,}00}$ & $11$\\
+              & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $0$\\
+$40$ & $0$& $96{,}6$ & $96{,}6$ & $+0{,}00$ & $12$
+              & $96{,}5$ & $96{,}5$ & $+0{,}00$ & $15$\\
      &        &          &          &           &
-              & $87{,}3$ & $87{,}3$ & $\mathbf{0{,}00}$ & $15$\\
+              & $87{,}3$ & $87{,}3$ & $+0{,}00$ & $7$\\
      &        &          &          &           &
-              & $57{,}4$ & $57{,}4$ & $\mathbf{0{,}00}$ & $10$\\
-$40$ & $0{,}5$& $0{,}0$  & $0{,}0$  & $+0{,}00$ & $9$
-              & $0{,}0$  & $0{,}0$  & $\mathbf{0{,}00}$ & $11$\\
+              & $60{,}3$ & $60{,}3$ & $+0{,}00$ & $10$\\
+$40$ & $0{,}5$& $0{,}0$ & $0{,}0$ & $+0{,}00$ & $9$
+              & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $4$\\
      &        &          &          &           &
-              & $43{,}9$ & $43{,}9$ & $\mathbf{0{,}00}$ & $16$\\
+              & $43{,}9$ & $43{,}9$ & $+0{,}00$ & $10$\\
      &        &          &          &           &
-              & $16{,}7$ & $16{,}7$ & $\mathbf{0{,}00}$ & $3$\\
+              & $16{,}7$ & $16{,}9$ & $\mathbf{-0{,}19}$ & $3$\\
 \midrule
 \multicolumn{10}{l}{reproductibilité $6/6$ puis $\mathbf{18/18}$
  \quad$\bullet$\quad tous les encadrements valides}\\
 \multicolumn{10}{l}{\conf{0}{0}{0} : améliorées $2$, dégradées $0$,
  inchangées $4$ ; maximum $+0{,}11$}\\
-\multicolumn{10}{l}{\conf{1}{1}{1} : améliorées $\mathbf{0}$, dégradées
- $\mathbf{0}$, inchangées $\mathbf{18}$ ; maximum
- $\mathbf{+0{,}00}$, pour $\mathbf{180}$ coupes générées}\\
+\multicolumn{10}{l}{\conf{1}{1}{1} : améliorées $\mathbf{1}$, dégradées
+ $\mathbf{1}$, inchangées $\mathbf{16}$ ; médiane $\mathbf{+0{,}00}$,
+ moyenne $+0{,}01$,}\\
+\multicolumn{10}{l}{\quad maximum $+0{,}45$, minimum $-0{,}19$, pour
+ $\mathbf{149}$ coupes générées}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Le \emph{même} banc, budget déterministe porté de $300$ à
+$\mathbf{900}$ appels entiers, tout le reste inchangé : trois graines,
+comparaison appariée, chaque exécution jouée deux fois. Sous ce budget la
+coupe générée cesse d'être inerte.\ \conf{1}{1}{1}}
+\label{tab:cglp900}
+\setlength{\tabcolsep}{5pt}\small
+\begin{tabular}{ccrrrr}
+\toprule
+$n$ & corr & écart sans & écart avec & gain & coupes\\
+\midrule
+$20$ & $0$ & $68{,}5$ & $68{,}5$ & $+0{,}00$ & $58$\\
+     &        & $21{,}5$ & $21{,}0$ & $\mathbf{+0{,}50}$ & $25$\\
+     &        & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $14$\\
+$20$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $0$\\
+     &        & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $16$\\
+     &        & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $13$\\
+$30$ & $0$ & $71{,}0$ & $70{,}9$ & $\mathbf{+0{,}10}$ & $87$\\
+     &        & $14{,}9$ & $14{,}9$ & $+0{,}00$ & $41$\\
+     &        & $6{,}9$ & $6{,}9$ & $+0{,}00$ & $49$\\
+$30$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $4$\\
+     &        & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $8$\\
+     &        & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $0$\\
+$40$ & $0$ & $93{,}6$ & $88{,}7$ & $\mathbf{+4{,}95}$ & $55$\\
+     &        & $84{,}5$ & $84{,}5$ & $+0{,}00$ & $22$\\
+     &        & $6{,}7$ & $5{,}7$ & $\mathbf{+0{,}97}$ & $29$\\
+$40$ & $0{,}5$ & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $17$\\
+     &        & $18{,}5$ & $18{,}5$ & $+0{,}00$ & $33$\\
+     &        & $0{,}0$ & $0{,}0$ & $+0{,}00$ & $7$\\
+\midrule
+\multicolumn{6}{l}{reproductibilité $\mathbf{18/18}$ \quad$\bullet$\quad
+ tous les encadrements valides}\\
+\multicolumn{6}{l}{améliorées $\mathbf{4}$, dégradées $\mathbf{0}$,
+ inchangées $\mathbf{14}$ ; médiane $+0{,}00$, moyenne $+0{,}36$,}\\
+\multicolumn{6}{l}{\quad maximum $\mathbf{+4{,}95}$, pour $\mathbf{478}$
+ coupes générées}\\
+\multicolumn{6}{l}{coût réel : $7\,670 \to 10\,560$ programmes linéaires,
+ soit $\mathbf{2\,890}$ de plus}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -3776,37 +3831,87 @@ arithmétique : avec $q_{\text{lb}}\approx 3{,}7$ et $q_{\text{ub}}\approx
 dixième de point. Sur les six lignes, le gain médian est \emph{nul} et le
 maximum vaut $0{,}11$ point, contre des écarts de $79$ à $99\ \%$.
 
-\paragraph{Remesuré sur une base bien meilleure, le résultat se
-\emph{durcit}.} Ce banc a d'abord été mené en \conf{0}{0}{0}, sur six
-lignes et une seule graine, avec des écarts de référence allant de $79$ à
-$99\ \%$. Deux objections étaient recevables : $0{,}11$ point se perd dans
-le bruit d'un socle aussi lâche, et six mesures ne fondent pas un résultat
-négatif. La remesure retire les deux. Sur \textbf{dix-huit lignes} et trois
-graines, dont les écarts de référence descendent jusqu'à
-$\mathbf{1{,}2\ \%}$, le gain de la coupe générée vaut $\mathbf{+0{,}00}$
-point partout -- pas une ligne améliorée, pas une dégradée, maximum comme
-minimum nuls.
+\paragraph{Remesuré sur une base bien meilleure, le résultat tient --
+mais cesse d'être \emph{exact}.} Ce banc a d'abord été mené en
+\conf{0}{0}{0}, sur six lignes et une seule graine, avec des écarts de
+référence allant de $79$ à $99\ \%$. Deux objections étaient recevables :
+$0{,}11$ point se perd dans le bruit d'un socle aussi lâche, et six mesures
+ne fondent pas un résultat négatif. La remesure retire les deux. Sur
+\textbf{dix-huit lignes} et trois graines, dont les écarts de référence
+descendent jusqu'à $\mathbf{1{,}2\ \%}$, le gain de la coupe générée est nul
+en médiane et vaut $+0{,}01$ point en moyenne : \emph{une} ligne améliorée
+de $+0{,}45$, \emph{une} dégradée de $-0{,}19$, seize inchangées.
 
-Et ce n'est pas faute de coupes : \textbf{$180$} sont produites au total,
-jusqu'à $24$ sur une seule ligne. Le mécanisme fonctionne, ses coupes sont
-valides, son effet sur l'écart garanti est \emph{exactement} nul. Le coût,
-lui, n'est pas nul : la colonne \textsc{Pl} passe par exemple de $330$ à
-$388$ programmes linéaires, soit $58$ de plus pour rien.
+\begin{remark}[une formulation qui était trop forte d'un cran]
+\label{rem:cglpexact}
+Ce paragraphe a longtemps affirmé $+0{,}00$ \emph{partout}, et le tableau
+portait « améliorées $0$, dégradées $0$, inchangées $18$ ». C'était vrai
+sous l'ordre de vivier alors en vigueur, et cela a cessé de l'être quand
+l'ordre stable par préfixe est devenu le défaut
+(tableau~\ref{tab:vivierstable}) : la reprise intégrale du banc sous ce
+défaut fait apparaître les deux lignes non nulles ci-dessus. Le résultat
+n'est donc pas « exactement nul » mais « nul à un demi-point près sur des
+écarts de $1$ à $96\ \%$ ». La conclusion ne bouge pas ; la formulation,
+si. Nous la corrigeons plutôt que de la maintenir, parce qu'un zéro exact
+est une affirmation plus forte qu'un zéro mesuré, et que seule la seconde
+est soutenue.
+\end{remark}
+
+\noindent
+La ligne dégradée mérite un mot, car une coupe \emph{valide} qui dégrade
+l'écart garanti n'a rien d'une contradiction. Elle est valide, donc elle ne
+retire aucune solution admissible ; mais elle modifie le relâché, donc la
+trajectoire de la recherche \emph{à budget fixe}. Le $-0{,}19$ est le prix
+d'une trajectoire déplacée, non une faute de validité : les dix-huit
+encadrements restent cohérents.
+
+Et ce n'est pas faute de coupes : \textbf{$149$} sont produites au total,
+jusqu'à $23$ sur une seule ligne. Le coût, lui, n'est pas nul : la colonne
+\textsc{Pl} passe de $4\,637$ à $5\,311$ programmes linéaires, soit $674$ de
+plus pour un centième de point.
 
 Le cas décisif est la ligne $n=30$, $\text{corr}=0{,}5$, graine~$1$. Son
 écart de référence est passé de $78{,}9$ à $\mathbf{1{,}2\ \%}$ : la borne
-y est à un point de fermer, et six coupes générées ne la ferment pas. Tant
-que l'écart valait $79\ \%$, on pouvait croire que la coupe agissait sans
-qu'on le voie ; à $1{,}2\ \%$, cet argument n'est plus disponible.
+y est à un point de fermer, et quatre coupes générées ne la ferment pas.
+Tant que l'écart valait $79\ \%$, on pouvait croire que la coupe agissait
+sans qu'on le voie ; à $1{,}2\ \%$, cet argument n'est plus disponible.
 
-\paragraph{Ce que ce résultat négatif corrige.} Il ne dit pas seulement que
-la coupe générée est insuffisante ; il infirme le \emph{diagnostic} qui
-l'avait motivée. Nous avions conclu de la section précédente que le verrou
-était le coût en binaires. Or ce coût est ici entièrement supprimé -- les
-coupes générées sont illimitées et n'occupent aucune place -- et l'écart ne
-bouge pas, dans \emph{aucune} des deux configurations.
-\textbf{Lever le plafond ne suffit donc pas}, et la conclusion précédente
-était trop rapide.
+\paragraph{Le plafond de \emph{coupes} était levé ; celui du \emph{budget}
+ne l'était pas.} Tout ce qui précède est mesuré à $300$ appels entiers. Ce
+chiffre n'a jamais été justifié : il vient du banc voisin, où il servait à
+tenir le temps d'exécution. Or la coupe générée ne mord qu'\emph{après} que
+la recherche a produit des points de coupe utiles, et à $300$ appels elle
+n'en produit que dix à quinze par ligne. Le banc a donc été repris à
+$\mathbf{900}$ appels -- tout le reste identique, mêmes instances, mêmes
+graines, même appariement -- et le tableau~\ref{tab:cglp900} en donne le
+résultat : \textbf{quatre} lignes améliorées sur dix-huit, aucune dégradée,
+un maximum de $\mathbf{+4{,}95}$ points à $n=40$, $\text{corr}=0$, et
+$+0{,}97$ sur une ligne dont l'écart de référence ne vaut plus que
+$6{,}7\ \%$.
+
+Ce n'est pas un grand gain, et il ne faut pas le vendre pour tel : la
+médiane reste nulle, la moyenne vaut $+0{,}36$ point contre des écarts de
+$7$ à $94\ \%$, et les $2\,890$ programmes linéaires supplémentaires ne sont
+pas gratuits. Mais l'\emph{énoncé} change de nature. Le levier n'est pas
+inerte ; il est \textbf{affamé de budget}. Sous $300$ appels il ne dispose
+pas des points de coupe qui le rendraient utile, et l'on mesurait alors une
+propriété du budget en croyant mesurer une propriété du levier.
+
+\paragraph{Ce que ce résultat corrige.} Il ne dit pas seulement que la coupe
+générée est insuffisante ; il infirme le \emph{diagnostic} qui l'avait
+motivée. Nous avions conclu de la section précédente que le verrou était le
+coût en binaires. Or ce coût est ici entièrement supprimé -- les coupes
+générées sont illimitées et n'occupent aucune place -- et l'écart de
+référence reste entre $7$ et $96\ \%$ dans les trois configurations
+mesurées. \textbf{Supprimer le coût en binaires ne suffit donc pas}, et la
+conclusion précédente était trop rapide.
+
+Il faut cependant énoncer cette réfutation à la bonne portée, et la version
+antérieure ne le faisait pas. Elle disait « l'écart ne bouge pas » ; le
+juste énoncé est « l'écart bouge de moins d'un point sous $300$ appels et de
+moins de cinq sous $900$, là où il faudrait qu'il bouge de quatre-vingts ».
+La différence compte, parce que la première formulation ferme la piste et la
+seconde la laisse ouverte à un budget que nous n'avons pas mesuré.
 
 Nous avions alors avancé une explication de remplacement : à ces tailles, la
 région que l'on sait retrancher ne représenterait qu'une part négligeable de
@@ -4420,13 +4525,16 @@ la première manquait de graines, la seconde mesurait une méthode dont le
 relâché n'était pas emboîté dans le budget. Nous laissons l'historique
 visible plutôt que de présenter le dernier chiffre comme s'il avait toujours
 été là : un lecteur qui voit trois valeurs successives sait ce que vaut la
-quatrième.
+quatrième. La remarque~\ref{rem:cglpexact} rapporte une correction de même
+nature sur le banc de la coupe générée, où c'est un zéro \emph{exact} qui a
+dû devenir un zéro \emph{mesuré}.
 \end{remark}
 
 \paragraph{L'ordre de grandeur.} Le levier précédent -- la coupe générée
-sans binaire -- rapporte exactement $0{,}00$ point dans cette même
-configuration, et n'atteignait $0{,}11$ que sur le socle bien plus lâche de
-la configuration d'origine (§\ref{sec:cglp}).
+sans binaire -- rapporte $0{,}01$ point en moyenne dans cette même
+configuration, $0{,}45$ sur sa meilleure ligne, et $0{,}11$ sur le socle
+bien plus lâche de la configuration d'origine ; même à budget triple, où il
+cesse d'être inerte, son maximum vaut $4{,}95$ (§\ref{sec:cglp}).
 Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, puis $34{,}63$,
 $17{,}03$, $14{,}85$ et $14{,}52$. Ce n'est pas le même phénomène mesuré
 plus finement, c'est un autre phénomène.
@@ -5439,10 +5547,13 @@ La première n'est plus celle que nous pensions. Nous avions désigné le
 plafond de coupes -- donc le coût de $p$ binaires -- comme le verrou
 suivant. La section~\ref{sec:cglp} lève ce coût entièrement, par un
 programme générateur produisant des coupes disjonctives valides sans aucune
-binaire, en nombre illimité : l'écart garanti gagne \emph{exactement} zéro
-en configuration courante, sur dix-huit lignes et $180$ coupes, et
-n'atteignait $0{,}11$ point que sur le socle plus lâche d'origine. Le
-plafond n'était donc pas le verrou.
+binaire, en nombre illimité : sur dix-huit lignes et $149$ coupes, l'écart
+garanti gagne $0{,}01$ point en moyenne, $0{,}45$ au mieux, $-0{,}19$ au
+pire. Repris à budget triple, le levier cesse d'être inerte -- quatre lignes
+améliorées, jusqu'à $4{,}95$ points -- sans que l'écart, qui vaut $7$ à
+$94\ \%$, en soit entamé. Le plafond de coupes n'était donc pas le verrou ;
+sous un budget serré, ce n'était même pas le levier que nous croyions
+mesurer.
 
 Nous avions alors avancé, à sa place, que la région retranchable serait
 négligeable devant ce qui sépare $\Rcal$ de $\Ecal$. La
