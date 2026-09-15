@@ -1083,9 +1083,9 @@ l'archive et l'incumbent en ayant besoin. Elle ne deviendrait un gain que
 dans un algorithme qui ne réparerait qu'une \emph{fraction} des résultats --
 une autre répartition du budget, non l'ajout d'une source. Et trois mesures
 de ce mémoire indiquent que \textbf{le nombre de centres candidats n'est pas
-le verrou} : la coupe générée ne gagne rien sur $18$ lignes malgré $180$
-coupes, doubler le plafond ne change ni preuves ni écart, et le vivier
-sature déjà.
+le verrou} : la coupe générée gagne $0{,}01$ point en moyenne sur $18$
+lignes malgré $149$ coupes, doubler le plafond ne change ni preuves ni
+écart, et le vivier sature déjà.
 
 L'ouverture théorique est donc réelle et pratiquement vide. Nous le
 rapportons plutôt que de laisser croire à un gain que rien n'étaie.
@@ -3396,15 +3396,23 @@ Le premier a été levé entièrement : une coupe disjonctive obtenue par
 programme générateur~\cite{balas1993} est valide sans aucune binaire, donc
 illimitée. Le banc, d'abord mené sur six lignes et une graine, l'a été
 ensuite sur \textbf{dix-huit lignes et trois graines} en configuration
-courante. Le gain de la coupe générée y vaut $\mathbf{+0{,}00}$ point
-\emph{partout} : pas une ligne améliorée, pas une dégradée, maximum comme
-minimum nuls. Et ce n'est pas faute de coupes -- $\mathbf{180}$ sont
-produites au total, jusqu'à $24$ sur une seule ligne -- ni sans coût, la
-colonne des programmes linéaires passant par exemple de $330$ à $388$.
+courante. Le gain de la coupe générée y est \textbf{nul en médiane} et
+vaut $+0{,}01$ point en moyenne : une ligne améliorée de $+0{,}45$, une
+dégradée de $-0{,}19$, seize inchangées. Et ce n'est pas faute de coupes --
+$\mathbf{149}$ sont produites au total, jusqu'à $23$ sur une seule ligne --
+ni sans coût, la colonne des programmes linéaires passant de $4\,637$ à
+$5\,311$.
+
+Le même banc repris à budget \textbf{triple} change la nature de l'énoncé :
+quatre lignes sur dix-huit y sont améliorées, aucune dégradée, jusqu'à
+$\mathbf{+4{,}95}$ points. Le levier n'est donc pas inerte, il est
+\emph{affamé de budget} -- mais son gain reste, dans les deux régimes, sans
+commune mesure avec un écart de $7$ à $94\ \%$.
 
 Le cas décisif est une instance dont l'écart de référence est tombé à
-$\mathbf{1{,}2\ \%}$ : la borne y est à un point de fermer, et six coupes
-générées ne la ferment pas. Tant que l'écart valait $79\ \%$ on pouvait
+$\mathbf{1{,}2\ \%}$ : la borne y est à un point de fermer, et quatre
+coupes générées ne la ferment pas. Tant que l'écart valait $79\ \%$ on
+pouvait
 croire que la coupe agissait sans qu'on le voie ; à $1{,}2\ \%$, l'argument
 n'est plus disponible.
 
