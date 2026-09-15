@@ -737,7 +737,13 @@ entière, de même signe que $\Zk(x)-\Zk(\bar x)$, d'où
   \Zk(x)>\Zk(\bar x)\iff e^{\bar x}_k(x)\ge 1 .
 \end{equation}
 
-\paragraph{Brique 2 -- borne resserrée.} Soit $q=P/Q$ atteinte par un point
+\paragraph{Brique 2 -- borne resserrée.} Le passage de
+$f=N/D$ à la fonction affine $QN-PD$ au seuil $q=P/Q$ est la
+linéarisation de Dinkelbach~\cite{dinkelbach1967}, dans la forme qu'en
+donnent Martos~\cite{martos1964} et Cambini \emph{et
+al.}~\cite{cambini1992} pour le fractionnaire linéaire : $f(x)>q$ équivaut
+à $QN(x)-PD(x)>0$, et majorer cette quantité majore $f$. Ce qui suit
+n'est classique que jusque-là. Soit $q=P/Q$ atteinte par un point
 efficace, $\Rcal$ un relâché contenant $\Ecal$,
 $U\ge\max\bigl\{0,\ \max_{x\in\Rcal}\{QN(x)-PD(x)\}\bigr\}$ et
 $D^{+}=\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$ -- valant $+\infty$ si cet
@@ -747,7 +753,28 @@ ensemble est vide. Alors
   \qquad\text{et }\ \max_{\Rcal}\{QN-PD\}\le 0\ \Rightarrow\ \qs=q .
 \end{equation}
 
-\paragraph{Brique 3 -- coupe de dominance.} Si $\bar x$ est
+\begin{remark}[ce qui est repris et ce qui ne l'est pas, dans cette brique]
+\label{rem:attrib2}
+La forme \emph{naïve} de cette borne -- celle qui prend
+$D_{\min}=\min_{x\in\Scal}D(x)$ au dénominateur -- se déduit directement de
+la linéarisation citée ci-dessus et nous la considérons comme acquise. Le
+dénominateur \emph{restreint} $D^{+}$, minimum pris sur la seule région où
+$QN-PD\ge 0$, ne nous est en revanche apparu dans aucune des références de
+ce mémoire ; comme $D^{+}\ge D_{\min}$, il donne mécaniquement une borne
+plus fine, et l'écart entre les deux est mesuré au
+tableau~\ref{tab:unifiecoupe} (remarque~\ref{rem:attrib2} pour la portée
+exacte de cette revendication). Nous l'annonçons donc comme une
+contribution, en précisant que cette revendication porte sur ce que nous
+avons lu et non sur la littérature entière : un antécédent nous ôterait le
+point sans rien retirer aux mesures.
+\end{remark}
+
+\paragraph{Brique 3 -- coupe de dominance.} C'est l'outil classique de
+l'optimisation sur l'ensemble efficace, sous la forme disjonctive
+qu'emploient Chergui et Moulaï~\cite{chergui2008}, Jorge~\cite{jorge2009}
+et Sylva et Crema~\cite{sylva2004}, et dont les deux méthodes auxquelles
+nous nous comparons~\cite{zerdani2011,drici2018} font leur unique moyen de
+retranchement. Nous la reprenons sans modification. Si $\bar x$ est
 \emph{dominé}, la région $\{x\in\Scal : Z(x)\le Z(\bar x)\}$ ne contient
 aucun point efficace, et se retranche par la disjonction
 \begin{equation}\label{eq:disj}
@@ -933,14 +960,15 @@ $\Rcal$ peut-il se vider ? & \textbf{jamais} ($\Rcal\supseteq\Ecal$) & \textbf{o
 
 \subsection{La borne reste valide}
 
-\begin{theorem}[Borne sur le relâché d'archive]\label{th:archbound}
-Soient $A\subseteq\Ecal$ un ensemble de points efficaces \emph{certifiés},
+\begin{theorem}[Borne sur le relâché de coupes]\label{th:archbound}
+Soient $A\subseteq\Scal$ un ensemble de centres de coupe \emph{quelconques},
 $q=P/Q$ la valeur de l'incumbent, et supposons la \textbf{condition de
 clôture}
 \begin{equation}\label{eq:cloture}
   \forall a\in A:\qquad
-  \max\{f(x)\ :\ x\in\Scal,\ Z(x)=Z(a)\}\ \le\ q .
+  \max\{f(x)\ :\ x\in\Ecal,\ Z(x)=Z(a)\}\ \le\ q ,
 \end{equation}
+avec la convention $\max\emptyset=-\infty$.
 Soient $U\ge\max\bigl\{0,\ \max_{x\in\Rcal_A}\{QN(x)-PD(x)\}\bigr\}$ et
 $D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$, avec la convention
 $D^{+}=+\infty$ -- donc $U/(QD^{+})=0$ -- lorsque cet ensemble est vide
@@ -951,8 +979,10 @@ $D^{+}=+\infty$ -- donc $U/(QD^{+})=0$ -- lorsque cet ensemble est vide
 \end{theorem}
 
 \begin{proof}
-Soit $x^{\star}\in\Ecal$ atteignant $\qs$. Par le
-théorème~\ref{th:effcut}, deux cas. Ou bien $Z(x^{\star})=Z(a)$ pour un
+Soit $x^{\star}\in\Ecal$ atteignant $\qs$. Le théorème~\ref{th:effcut} vaut
+pour un centre $a\in\Scal$ \emph{quelconque}, de sorte que l'inclusion
+$\Ecal\subseteq\Rcal_A\cup\{x:\exists a\in A,\ Z(x)=Z(a)\}$ tient pour
+$A\subseteq\Scal$. Deux cas. Ou bien $Z(x^{\star})=Z(a)$ pour un
 $a\in A$ : alors $\qs=f(x^{\star})\le q$ par~\eqref{eq:cloture}, et
 l'inégalité est acquise puisque $U\ge 0$. Ou bien
 $x^{\star}\in\Rcal_A$ : l'argument de~\eqref{eq:borne} s'applique mot pour
@@ -985,6 +1015,36 @@ tronquée, et toutes les bornes qui en découlent sont exactes -- vérification
 faite par énumération exhaustive en arithmétique rationnelle sur les deux
 instances. C'était l'énoncé qui était trop large, pas le calcul qui était
 faux.
+\end{remark}
+
+\begin{remark}[pourquoi $A\subseteq\Scal$ et non $A\subseteq\Ecal$]
+\label{rem:melange}
+L'énoncé a longtemps demandé $A\subseteq\Ecal$. Ce n'est pas ce que
+l'algorithme construit : la boucle de certification
+(algorithme~\ref{alg:cert}) verse dans un \emph{seul} relâché les coupes
+des deux sources, celles centrées sur l'archive et celles centrées sur des
+points dominés, de sorte que le $A$ effectif est $\mathcal{D}\cup\Acal$ et
+que $\mathcal{D}\not\subseteq\Ecal$. Le théorème ne couvrait donc pas
+l'usage qui en est fait, et c'est exactement le carcan que la
+remarque~\ref{rem:aeff} signale pour le théorème~\ref{th:effcut} : il
+survivait ici.
+
+Il se lève sans rien coûter, pour la raison qui le levait là-bas. La
+démonstration n'utilise le centre $a$ que par le
+théorème~\ref{th:effcut}, qui vaut pour $a\in\Scal$ quelconque. Et la
+condition de clôture, énoncée sur $\Ecal$ et non sur $\Scal$, est
+\emph{automatiquement} vérifiée aux centres dominés : si $\bar x$ est
+dominé, tout $x$ de même vecteur critères l'est aussi, l'ensemble
+$\{x\in\Ecal : Z(x)=Z(\bar x)\}$ est vide, et le maximum y vaut $-\infty$.
+C'est pourquoi l'algorithme n'appelle \textsc{Clôture} que sur les centres
+d'archive : il n'omet rien, il ne paie que ce qui est dû.
+
+Énoncer la clôture sur $\Ecal$ plutôt que sur $\Scal$ est d'ailleurs la
+bonne portée même pour les centres d'archive : la démonstration ne
+l'applique qu'à $x^{\star}$, qui est efficace. La procédure
+\textsc{Clôture} établit en fait la condition plus forte, sur $\Scal$ tout
+entier, ce qui reste correct -- elle prouve plus que nécessaire, elle ne
+prouve pas autre chose.
 \end{remark}
 
 \subsection{Une preuve inaccessible à la coupe de dominance}
@@ -1871,9 +1931,11 @@ la boucle de certification\ \conf{1}{1}{1}}
 \label{alg:cert}
 \KwIn{incumbent $q$ atteint en $\bar x\in\Ecal$, $\mathcal{D}$, $\Acal$,
       budget $B$, taille de lot $\beta$, nombre de tours $\rho$}
-\KwOut{$q_{\text{lb}}\le\qs\le q_{\text{ub}}$, et le drapeau \textsf{prouvé}}
+\KwOut{$q_{\text{lb}}\le\qs\le q_{\text{ub}}$, et le drapeau \textsf{prouvé}
+ -- correction et terminaison : théorème~\ref{th:global}}
 $\Rcal\leftarrow\Scal$ ; $q_{\text{ub}}\leftarrow+\infty$ ;
-$n_{\text{arch}}\leftarrow 0$\;
+$n_{\text{arch}}\leftarrow 0$
+\Comment*[r]{$\Rcal$ mêle les deux sources, cf.\ remarque~\ref{rem:melange}}
 $V\leftarrow$ \textsc{Vivier}$(\mathcal{D},\Acal,w(q))$\;
 \For{$t\leftarrow 1$ \KwTo $\rho$}{
   \lIf{budget épuisé}{\Break}
@@ -1889,7 +1951,7 @@ $V\leftarrow$ \textsc{Vivier}$(\mathcal{D},\Acal,w(q))$\;
       \Comment*[r]{coupe d'\textbf{efficacité}, Th.~\ref{th:effcut}}
     }{
       $\Rcal\leftarrow\Rcal\cap\{x:\exists k,\,e^a_k(x)\ge 1\}$
-      \Comment*[r]{coupe de dominance}
+      \Comment*[r]{dominance : clôture \emph{automatique}}
     }
     retirer $a$ de $V$\;
   }
@@ -1942,6 +2004,69 @@ route~2 évalue $D^{+}_{t}$ au seuil qu'elle a atteint, d'où une borne qui
 contient celle de la route~1 au lieu de lui être incomparable
 (théorème~\ref{th:seuil}). La version sans route~2 est décrite à
 l'annexe~\ref{sec:histo}.
+
+\begin{theorem}[correction et terminaison de la certification]
+\label{th:global}
+Soit l'algorithme~\ref{alg:cert} lancé avec un incumbent $q=f(\bar x)$,
+$\bar x\in\Ecal$. Alors :
+\begin{enumerate}[label=(\roman*),leftmargin=2.1em]
+\item \textbf{il termine}, en au plus $\rho$ tours, chacun consommant au
+  moins un appel entier du budget $B$ ou épuisant le vivier $V$, qui est
+  fini et dont on retire $\beta$ éléments par tour ;
+\item \textbf{l'invariant $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ est vrai à
+  tout instant}, quel que soit le point de sortie ;
+\item \textbf{le drapeau \textsf{prouvé} n'est levé que si
+  $q_{\text{ub}}\le q$}, auquel cas $\qs=q$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{(i)} Le vivier est fini -- au plus $|\mathcal{D}|+|\Acal|$ centres --
+et chaque passage de la boucle interne en retire $\beta$ sans jamais en
+ajouter ; la boucle externe est bornée par $\rho$ et par l'épuisement du
+budget, testé au début de chaque tour. Le seul branchement qui
+\emph{recommence} un tour est la branche faisable de \textsc{Clôture}, et
+elle ne peut se produire qu'un nombre fini de fois : elle n'est empruntée
+que lorsqu'elle fait \emph{croître strictement} $q$, or $q$ prend ses
+valeurs dans $f(\Scal)$, qui est fini. La route~2 est bornée par
+\textsc{tours\_geom}.
+
+\emph{(ii)} Le minorant est acquis par construction : $q=f(\bar x)$ avec
+$\bar x\in\Ecal$ à tout instant -- l'incumbent n'est remplacé que par un
+point dont l'efficacité a été certifiée, par le test de la brique~1 pour
+les points rendus par l'oracle, et par la remarque~\ref{rem:aeff} pour le
+point rendu par la branche faisable de \textsc{Clôture} -- donc
+$q\le\qs$. Pour le majorant, les quatre sorties se traitent séparément.
+\begin{itemize}[leftmargin=1.4em]
+\item $\Rcal=\emptyset$ avec $n_{\text{arch}}>0$ : proposition~\ref{prop:vide}
+  donne $\qs=q$.
+\item $r$ résolu et $r.\text{valeur}\le 0$ : c'est
+  $\max_{\Rcal}\{QN-PD\}\le 0$, et~\eqref{eq:borne} donne $\qs=q$.
+\item Route~1 : théorème~\ref{th:archbound}, applicable car le $A$
+  accumulé vérifie $A\subseteq\Scal$ et la condition de
+  clôture~\eqref{eq:cloture} -- établie par \textsc{Clôture} pour les
+  centres d'archive, automatique pour les centres dominés
+  (remarque~\ref{rem:melange}).
+\item Route~2 : théorème~\ref{th:seuil} et
+  proposition~\ref{prop:geomvalide}.
+\end{itemize}
+Chaque sortie fournit donc un majorant valide de $\qs$, et
+$q_{\text{ub}}$ n'est mis à jour que par un $\min$ avec un tel majorant.
+Comme $\qs$ ne dépend pas du tour où la borne a été posée, le minimum de
+bornes valides reste valide, y compris si $q$ a changé entre-temps.
+
+\emph{(iii)} Le drapeau rendu est la condition $q_{\text{ub}}\le q$. Avec
+$q\le\qs\le q_{\text{ub}}$ de \emph{(ii)}, elle force $\qs=q$. Les trois
+sorties qui rendent \textsf{prouvé} directement rendent $q_{\text{ub}}=q$,
+ce qui la satisfait.
+\end{proof}
+
+\noindent
+Ce théorème est ce qui autorise la formule « encadrement valide à tout
+instant » employée dans tout ce mémoire : il ne suffit pas que chaque
+brique soit correcte séparément, il faut que leur \emph{composition} dans
+la boucle le soit, y compris lorsque l'incumbent bouge en cours de route et
+lorsque l'oracle est interrompu par le budget.
 
 \begin{remark}[validité malgré un incumbent mobile]
 Chaque tour produit une borne valide sur $\qs$ pour le $q$ \emph{de ce tour}.
