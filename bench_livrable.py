@@ -39,6 +39,7 @@ Usage :  python bench_livrable.py [partie]      partie dans {A, B, AB}
 from __future__ import annotations
 
 import os
+import statistics
 import sys
 import time
 from typing import Dict, List
@@ -136,7 +137,12 @@ def partie_A() -> List[Dict]:
         res.append(d)
         print(ligne(d), flush=True)
     print(BARRE)
-    med = lambda k: sorted(x[k] for x in res)[len(res) // 2]
+    # statistics.median et non sorted(...)[n//2] : sur un nombre PAIR de
+    # lignes, l'indice n//2 rend la cinquieme valeur de huit, c'est-a-dire
+    # la mediane SUPERIEURE, et non la moyenne des deux valeurs centrales.
+    # Le memoire tire une lecon sur les medianes qui mentent ; il n'etait
+    # pas tenable que la sienne en soit une.
+    med = lambda k: statistics.median([x[k] for x in res])
     print(f"  medianes : card {100*med('card'):.1f}%   couv "
           f"{100*med('couverture'):.1f}%   HV {100*med('hv'):.1f}%   "
           f"eps+ {med('eps'):.3f}")

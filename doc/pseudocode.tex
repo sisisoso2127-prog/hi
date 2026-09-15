@@ -380,8 +380,13 @@ prouvés.
 \begin{theorem}
 Soit $q=P/Q$ atteinte par un point efficace (donc $q\le q^\star$),
 $\Rcal\supseteq\Ecal$ un relâché obtenu par accumulation de coupes,
-$U\ge F_{\Rcal}(q)=\max_{x\in\Rcal}\{QN(x)-PD(x)\}$ et
-$D^{+}=\min\{D(x) : x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$. Alors
+$U\ge\max\{0,\ F_{\Rcal}(q)\}$ avec
+$F_{\Rcal}(q)=\max_{x\in\Rcal}\{QN(x)-PD(x)\}$, et
+$D^{+}=\min\{D(x) : x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$, valant $+\infty$ --
+donc $U/(QD^{+})=0$ -- si cet ensemble est vide. La troncature à $0$ n'est
+pas cosmétique : dès qu'une coupe a retranché tout ce qui dépassait le
+seuil, $F_{\Rcal}(q)$ devient strictement négatif, et un $U$ négatif ferait
+descendre la borne sous $q$. Alors
 \[
   q^\star\ \le\ q+\frac{U}{Q\,D^{+}},
   \qquad\text{et si } U\le 0 \text{ alors } q^\star=q .
@@ -401,8 +406,15 @@ qui n'y porte pas de numéro, prend $\Rcal=\Scal$ et
 $D_{\min}=\min_{x\in\Scal}D(x)$ ; comme le minimum définissant $D^{+}$ porte
 sur un sous-ensemble, $D^{+}\ge D_{\min}$ et la borne ci-dessus est
 mécaniquement plus fine. Le théorème~8 de l'article, lui, évalue la même
-borne à un seuil \emph{libre} : il n'est pas plus fort, il gagne sur le
-seuil et cède sur le dénominateur, et les deux se prennent au minimum.
+borne à un seuil \emph{libre}. Nous avons longtemps écrit que les deux
+énoncés étaient incomparables et qu'il fallait en prendre le minimum ;
+c'est faux, et les deux démonstrations se composent. Pour tout seuil
+rationnel $t$, tout $v\ge\max_{\Rcal}(N-tD)$ avec $v\ge 0$, et
+$D^{+}_{t}=\min\{D(x):x\in\Rcal,\ N(x)-tD(x)\ge 0\}$ ($=+\infty$ si vide),
+on a $\max_{\Rcal}f\le t+v/D^{+}_{t}$. Le théorème~5 en est le cas $t=q$ ;
+le théorème~8 celui où $D^{+}_{t}$ est remplacé par le $D_{\min}$ plus
+faible. La forme unifiée \emph{domine les deux}, et non leur minimum, au
+prix d'un seul programme supplémentaire au seuil retenu.
 
 \begin{algorithm}[H]
 \caption{\textsc{Certifier}$(q,\mathcal{D},B,\lambda,T)$ --- Théorème 5 (borne resserrée)}
@@ -412,9 +424,9 @@ seuil et cède sur le dénominateur, et les deux se prennent au minimum.
 \KwOut{$(q_{\text{ub}},\textsf{prouvé},q)$ avec $q\le q^\star\le q_{\text{ub}}$}
 $\Rcal\gets$ modèle vide ;\quad $q_{\text{ub}}\gets+\infty$ ;\quad
 $D_{\min}\gets\bot$\;
-$\mathcal{P}\gets$ $\mathcal{D}$ dédoublonné, trié par
-$\bigl(Qc-Pd\bigr)^{\!\top}x$ \emph{décroissant}
-  \Comment*[r]{ceux qui tirent $U$ vers le haut}
+$\mathcal{P}\gets$ $\mathcal{D}$ dédoublonné, dans son \textbf{ordre
+d'insertion}
+  \Comment*[r]{stable par préfixe, donc borne monotone}
 \For{$t\gets 1$ \KwTo $T$}{
   \lIf{budget épuisé}{\Break}
   $q_{\text{ref}}\gets q$ ;\quad $P/Q\gets q_{\text{ref}}$ ;\quad

@@ -131,7 +131,7 @@ La méthode rend deux objets et non un : la valeur encadrée, et
 l'\emph{archive} des points efficaces certifiés rencontrés en chemin --
 le sous-ensemble de $\Ecal$ que demande l'énoncé. Nous le mesurons contre
 $\Ecal$ énuméré (section~\ref{sec:livrable}) : pureté~$1$ sur $8/8$
-instances, médiane de $40{,}7\,\%$ des points du front pour $92{,}3\,\%$
+instances, médiane de $34{,}7\,\%$ des points du front pour $91{,}5\,\%$
 de son hypervolume, et une archive qui s'enrichit avec le budget sur $7$
 lignes sur $8$. Nous établissons au passage que l'indicateur de couverture
 n'a aucun contenu face à un ensemble certifié efficace, où il coïncide avec
@@ -317,8 +317,8 @@ efficace}, et où $q_{\text{ub}}$ est le minimum de deux bornes valides
       de pertes.
 \item \textbf{L'archive rendue et mesurée} (\S\ref{sec:livrable}) : le
       sous-ensemble de $\Ecal$ que produit la méthode est évalué contre
-      $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de $40{,}7\ \%$ des
-      points du front pour $92{,}3\ \%$ de son hypervolume -- et l'on
+      $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de $34{,}7\ \%$ des
+      points du front pour $91{,}5\ \%$ de son hypervolume -- et l'on
       établit au passage que l'indicateur de couverture, opposé à un
       ensemble certifié efficace, dégénère en rapport de cardinalité.
 \item \textbf{Un protocole de validation à trois niveaux}, dont un niveau qui
@@ -1051,8 +1051,9 @@ clôture} :
   \text{pour tout } a\in A,\qquad
   \max\{f(x)\ :\ x\in\Scal,\ Z(x)=Z(a)\}\ \le\ q .
 \]
-Soient $U\ge\max_{x\in\Rcal_A}\{QN(x)-PD(x)\}$ et
-$D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$. Alors
+Soient $U\ge\max\bigl\{0,\ \max_{x\in\Rcal_A}\{QN(x)-PD(x)\}\bigr\}$ et
+$D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$, avec la convention
+$D^{+}=+\infty$ -- donc $U/(QD^{+})=0$ -- lorsque cet ensemble est vide. Alors
 \[
   \qs\ \le\ q+\frac{U}{Q\,D^{+}} .
 \]
@@ -1215,7 +1216,7 @@ validité $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ & 80/80 & \textbf{80/80}\\
 \begin{remark}[ce tableau n'est pas reproductible, et il faut le dire]
 Il est arbitré par un budget en \emph{temps} ($7+5$~s), non par un plafond
 d'appels. Or nous établissons plus loin (§\ref{sec:negatif}) qu'un tel
-budget fait varier le nombre d'appels entiers d'une exécution à l'autre dans
+budget fait varier \emph{la valeur rendue} d'une exécution à l'autre dans
 un rapport atteignant $125\ \%$, sur la même instance et la même machine.
 Une version antérieure de ce mémoire portait $57/80$ et $75/80$ pour la
 \emph{même} expérience : ce n'était pas une faute de recopie mais un autre
@@ -1452,7 +1453,7 @@ est l'axe des preuves : $+2$ certificats, sans aucune régression de valeur.
 
 \paragraph{Une seconde réserve : le budget en temps.} Ce lot est arbitré
 par un budget de $12$~s. Or, réexécuté à l'identique, un budget en temps
-fait varier le nombre d'appels entiers d'une exécution à l'autre dans un
+fait varier \emph{la valeur rendue} d'une exécution à l'autre dans un
 rapport allant jusqu'à $125\ \%$ sur la même instance et la même machine.
 Aucune affirmation de « non-régression » ne peut donc reposer sur ce
 protocole. Les bancs ultérieurs remplacent le budget en secondes par un
@@ -2771,22 +2772,22 @@ $6$ & $3$ & $0{,}50$ & $1\,436$ & $26$  & $13$ & $50{,}0$ & $92{,}3$ & $0{,}128$
 $7$ & $3$ & $0{,}50$ & $5\,275$ & $17$  & $12$ & $70{,}6$ & $95{,}2$ & $0{,}117$ & oui\\
 $8$ & $3$ & $0{,}50$ & $2\,754$ & $6$   & $5$  & $83{,}3$ & $99{,}9$ & $0{,}058$ & oui\\
 \midrule
-\multicolumn{6}{l}{médianes} & $40{,}7$ & $92{,}3$ & $0{,}146$ & $8/8$\\
+\multicolumn{6}{l}{médianes} & $34{,}7$ & $91{,}5$ & $0{,}137$ & $8/8$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{La pureté vaut $1$ sur les huit instances}
--- $104$ points, aucun faussement annoncé efficace. C'est le résultat le
+-- $102$ points, aucun faussement annoncé efficace. C'est le résultat le
 moins spectaculaire du tableau et le plus important : une métaheuristique
 multiobjectif usuelle rend une approximation dont une part est dominée et ne
 le sait pas. Ici la certification précède l'insertion, et la mesure le
 confirme au lieu de le postuler.
 
 \paragraph{L'archive est creuse mais bien placée}
--- médiane $40{,}7\,\%$ des points de $Z(\Ecal)$ pour $92{,}3\,\%$ de son
+-- médiane $34{,}7\,\%$ des points de $Z(\Ecal)$ pour $91{,}5\,\%$ de son
 hypervolume, $HV\,\%$ dépassant card\,\% sur les huit lignes d'un facteur
-$1{,}2$ à $7{,}8$. La recherche étant pilotée par $f$, elle rend peu de
+$1{,}2$ à $8{,}6$. La recherche étant pilotée par $f$, elle rend peu de
 points, mais ceux qui portent le volume. Le point $f$-optimal appartient à
 l'archive partout : le sous-ensemble rendu \emph{contient} la solution du
 problème posé, il n'est pas un objet à côté d'elle.
@@ -2804,7 +2805,7 @@ $\Ecal$ entier, et le tableau dit de combien nous en sommes loin.
 Le même lot relancé à $60$, $180$ et $540$ appels \ILP\ donne une archive
 plus grande \emph{et} un hypervolume plus élevé sur $7$ lignes sur $8$ ;
 aucune n'est immobile, et cinq dépassent $97\,\%$ d'hypervolume au budget
-haut. La ligne la plus difficile ($n=7$, $p=4$) passe de $9$ à $37$ points.
+haut. La ligne la plus difficile ($n=7$, $p=4$) passe de $9$ à $36$ points.
 C'est ce qui distingue un front approché d'un simple relevé de trajectoire.
 La huitième ligne régresse ($6$ points puis $5$) : $|Z(\Ecal)|$ n'y vaut que
 $6$, l'archive au petit budget est le front entier et l'on ne peut que
@@ -2908,8 +2909,8 @@ souvent un \emph{proxy} de sa préférence, construit avant de voir les
 solutions ; l'usage courant en aide multicritère à la décision est de
 proposer un petit ensemble de compromis efficaces et de laisser l'arbitrage
 final se faire devant eux~\cite{roy1985}. L'archive est cet ensemble, et la
-section~\ref{sec:livrable} en donne la mesure : médiane de $40{,}7\ \%$ des
-points du front pour $92{,}3\ \%$ de son hypervolume, et $x_{\text{best}}$
+section~\ref{sec:livrable} en donne la mesure : médiane de $34{,}7\ \%$ des
+points du front pour $91{,}5\ \%$ de son hypervolume, et $x_{\text{best}}$
 toujours dedans. Autrement dit, si le décideur récuse $x_{\text{best}}$ parce
 que $f$ le représentait mal, il ne repart pas de rien : les alternatives
 qu'on lui remet couvrent l'essentiel du volume du front, et chacune est
@@ -2925,13 +2926,16 @@ vecteurs critères ne doit pas lire le regret dans l'intervalle : il doit lire
 l'archive et son $\varepsilon^+$ (\S\ref{sec:livrable}), qui sont les
 quantités faites pour cela. Les deux garanties ne se remplacent pas.
 
-\paragraph{Attendre plus longtemps peut affaiblir la garantie.} La méthode
-n'est pas monotone en budget : en triplant le plafond, l'écart garanti
-recule encore sur deux lignes sur six, et nous ne savons pas nommer la cause
-restante (\S\ref{sec:negatif}). Pour un usage décisionnel c'est un défaut
-sérieux, et c'est ici qu'il faut l'écrire plutôt que dans une liste de
-résultats négatifs : un décideur qui accorde plus de temps s'attend à une
-garantie meilleure ou égale, jamais pire. Au sein d'une
+\paragraph{Attendre plus longtemps a longtemps pu affaiblir la garantie.}
+La méthode n'était pas monotone en budget : en triplant le plafond, l'écart
+garanti reculait sur deux lignes sur six. Pour un usage décisionnel c'était
+un défaut sérieux -- un décideur qui accorde plus de temps s'attend à une
+garantie meilleure ou égale, jamais pire -- et c'est ici qu'il fallait
+l'écrire plutôt que dans une liste de résultats négatifs. Le défaut est
+désormais \textbf{corrigé}, sa cause était double, et la monotonie est
+complète, $6/6$ (\S\ref{sec:negatif}). Nous laissons le paragraphe plutôt
+que de l'effacer, parce que la recommandation qu'il porte ne dépend pas du
+défaut et vaut toujours. Au sein d'une
 \emph{même} exécution la solution rendue ne se dégrade pas -- l'archive ne
 perd aucun point et $q_{\text{lb}}$ ne décroît jamais --, mais rien de tel
 ne vaut d'une exécution à l'autre : à budget égal, changer de configuration
@@ -2953,7 +2957,7 @@ suspens.
 
 \subsection{Le théorème de certification était évalué au mauvais seuil}
 
-La certification pose $q=P/Q$, borne $U\ge\max_{\Rcal}F_q$ avec
+La certification pose $q=P/Q$, borne $U\ge\max\{0,\max_{\Rcal}F_q\}$ avec
 $F_q=QN-PD$, et conclut $\qs\le q+U/(QD^{+})$. Le seuil est toujours
 l'incumbent. Or rien dans la démonstration ne l'exige.
 
@@ -3339,8 +3343,7 @@ sur $8$. Un même ensemble peut être riche pour couper et pauvre pour
 rendre.
 
 \paragraph{Une perte que rien n'avait isolée : la recherche.} La même mesure
-montre que l'incumbent manque $\qs$ sur $3$ lignes de $26$, toutes à
-$n\ge12$. Sans vérité terrain, un écart de $90\ \%$ ne dit pas s'il vient
+montre que l'incumbent manque $\qs$ sur $1$ ligne de $26$, à $n=12$. Sans vérité terrain, un écart de $90\ \%$ ne dit pas s'il vient
 d'une borne trop haute ou d'un minorant trop bas ; ici on lit les deux. En
 triplant le budget de la seule recherche, l'incumbent progresse sur $5$
 lignes sur $12$, jusqu'à $+49{,}6\ \%$. Mais cela n'achète que $1{,}7$ point
@@ -3442,12 +3445,12 @@ Elles sont énoncées ici plutôt que laissées à découvrir.
 \item \textbf{Un seul solveur.} Le comptage des appels atténue la dépendance
       sans la supprimer.
 \item \textbf{L'archive n'approche pas $\Ecal$ entier.} Elle en rend une
-      médiane de $40{,}7\,\%$ des points, et $8{,}7\,\%$ seulement sur
+      médiane de $34{,}7\,\%$ des points, et $7{,}8\,\%$ seulement sur
       l'instance où $|Z(\Ecal)|=218$, avec un $\varepsilon^+$ qui y monte à
       $0{,}503$ (section~\ref{sec:livrable}). Ce n'est pas un défaut
       d'implémentation mais une conséquence de la conception : la recherche
       est pilotée par $f$, et aucun opérateur ne vise la diversité du front
-      pour elle-même. L'hypervolume ($92{,}3\,\%$ en médiane) dit que la
+      pour elle-même. L'hypervolume ($91{,}5\,\%$ en médiane) dit que la
       partie rendue en porte l'essentiel du volume ; ce n'est pas la même
       chose que l'approcher tout entier, et nous ne le prétendons pas.
 \end{enumerate}

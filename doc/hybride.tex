@@ -192,7 +192,7 @@ seulement une valeur encadrée, mais l'archive des points efficaces
 certifiés, qui est le sous-ensemble de $\Ecal$ demandé par l'énoncé.
 Mesurée contre $\Ecal$ énuméré, elle est de pureté~$1$ sur $8/8$ instances -- aucun
 point faussement annoncé efficace sur $104$ --, creuse en cardinalité
-(médiane $40{,}7\,\%$) et riche en hypervolume (médiane $92{,}3\,\%$),
+(médiane $34{,}7\,\%$) et riche en hypervolume (médiane $91{,}5\,\%$),
 contient toujours la solution du problème d'optimisation, et s'enrichit avec
 le budget sur $7$ lignes sur $8$. Nous y établissons aussi que l'indicateur
 de couverture, opposé à la vraie frontière un ensemble certifié efficace,
@@ -333,7 +333,7 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
 \item \textbf{L'archive mesurée comme livrable} (\S\ref{sec:livrable}) :
       le sous-ensemble de $\Ecal$ que l'énoncé demande est enfin mesuré
       contre $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de
-      $40{,}7\ \%$ des points du front pour $92{,}3\ \%$ de son
+      $34{,}7\ \%$ des points du front pour $91{,}5\ \%$ de son
       hypervolume --, avec une proposition qui vaut au-delà de ce travail :
       face à un ensemble \emph{certifié} efficace, l'indicateur de
       couverture dégénère en rapport de cardinalité et n'apprend rien.
@@ -721,8 +721,9 @@ entière, de même signe que $\Zk(x)-\Zk(\bar x)$, d'où
 
 \paragraph{Brique 2 -- borne resserrée.} Soit $q=P/Q$ atteinte par un point
 efficace, $\Rcal$ un relâché contenant $\Ecal$,
-$U\ge\max_{x\in\Rcal}\{QN(x)-PD(x)\}$ et
-$D^{+}=\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$. Alors
+$U\ge\max\bigl\{0,\ \max_{x\in\Rcal}\{QN(x)-PD(x)\}\bigr\}$ et
+$D^{+}=\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$ -- valant $+\infty$ si cet
+ensemble est vide. Alors
 \begin{equation}\label{eq:borne}
   \qs\ \le\ q+\frac{U}{Q\,D^{+}},
   \qquad\text{et } U\le 0 \Rightarrow \qs=q .
@@ -922,8 +923,10 @@ clôture}
   \forall a\in A:\qquad
   \max\{f(x)\ :\ x\in\Scal,\ Z(x)=Z(a)\}\ \le\ q .
 \end{equation}
-Soient $U\ge\max_{x\in\Rcal_A}\{QN(x)-PD(x)\}$ et
-$D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$. Alors
+Soient $U\ge\max\bigl\{0,\ \max_{x\in\Rcal_A}\{QN(x)-PD(x)\}\bigr\}$ et
+$D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$, avec la convention
+$D^{+}=+\infty$ -- donc $U/(QD^{+})=0$ -- lorsque cet ensemble est vide
+(remarque~\ref{rem:uzero}). Alors
 \[
   \boxed{\ \qs\ \le\ q+\frac{U}{Q\,D^{+}}\ }
 \]
@@ -939,6 +942,32 @@ mot à $\Rcal_A$, soit
 $f(x^{\star})-q=\bigl(QN(x^\star)-PD(x^\star)\bigr)/\bigl(Q D(x^\star)\bigr)
 \le U/(Q D^{+})$.
 \end{proof}
+
+\begin{remark}[une hypothèse que la démonstration utilisait sans la demander]
+\label{rem:uzero}
+L'énoncé demandait $U\ge\max_{\Rcal_A}\{QN-PD\}$ et rien de plus, alors que
+la démonstration invoque $U\ge 0$ dans son premier cas -- « l'inégalité est
+acquise puisque $U\ge 0$ ». Les deux ne coïncident pas : dès qu'une coupe
+a retranché tout ce qui dépassait le seuil, le maximum devient
+\emph{strictement négatif}, et un $U$ négatif ferait descendre la borne
+sous $q$, ce qui est faux. L'hypothèse a donc été ramenée à ce que la
+preuve utilise réellement, $U\ge\max\{0,\max_{\Rcal_A}\{QN-PD\}\}$.
+
+Le même énoncé laissait $D^{+}$ indéfini quand l'ensemble
+$\{x\in\Rcal_A : QN(x)-PD(x)\ge 0\}$ est vide -- ce qui arrive exactement
+dans ce cas-là. La convention $D^{+}=+\infty$, donc $U/(QD^{+})=0$, est
+maintenant écrite ; elle rend la borne égale à $q$, ce qui est la bonne
+valeur. Le théorème~\ref{th:seuil}, plus tardif, portait déjà les deux
+précautions : c'est l'énoncé ancien qui était en retard sur sa propre
+généralisation.
+
+Aucun chiffre publié ne change. Les colonnes $U$ des
+tableaux~\ref{tab:i2traj} et~\ref{tab:i3traj} affichaient déjà la quantité
+tronquée, et toutes les bornes qui en découlent sont exactes -- vérification
+faite par énumération exhaustive en arithmétique rationnelle sur les deux
+instances. C'était l'énoncé qui était trop large, pas le calcul qui était
+faux.
+\end{remark}
 
 \subsection{Une preuve inaccessible à la coupe de dominance}
 
@@ -1750,11 +1779,13 @@ sources \textbf{alternées}\ \conf{1}{1}{1}}
 \label{alg:vivier}
 \KwIn{points dominés $\mathcal{D}$, archive $\Acal$, substitut $w=Qc-Pd$}
 \KwOut{liste de couples (point, origine), les deux sources alternées}
-$L_{\textsf{dom}}\leftarrow$ les $x\in\mathcal{D}$ distincts, triés par
-  $w^{\top}x$ \emph{décroissant}\;
-$L_{\textsf{arch}}\leftarrow$ les $a\in\Acal$ distincts, triés par
-  $w^{\top}a$ \emph{décroissant}
-  \Comment*[r]{classement \emph{à l'intérieur de} chaque source}
+$L_{\textsf{dom}}\leftarrow$ les $x\in\mathcal{D}$ distincts, dans leur
+  \textbf{ordre d'insertion}\;
+$L_{\textsf{arch}}\leftarrow$ les $a\in\Acal$ distincts, dans leur
+  \textbf{ordre d'insertion}
+  \Comment*[r]{stable par préfixe : \emph{défaut}}
+\lIf{$\textsf{ordre}=\textsf{substitut}$}{trier chaque liste par
+  $w^{\top}x$ décroissant \Comment*[r]{variante, non monotone}}
 $V\leftarrow\emptyset$\;
 \While{$L_{\textsf{dom}}\neq\emptyset$ \textbf{ou} $L_{\textsf{arch}}\neq\emptyset$}{
   \lIf{$L_{\textsf{dom}}\neq\emptyset$}{déplacer sa tête en queue de $V$,
@@ -1909,12 +1940,14 @@ def build_cut_pool(dominated, archive, w, alterne=True):
                 continue
             seen.add(key)
             par_source[kind].append((np.asarray(x, dtype=int), kind))
-    for k in par_source:
-        par_source[k].sort(key=lambda t: -float(wv @ t[0]))
+    if ordre != "insertion":         # defaut : on NE trie PAS
+        for k in par_source:
+            par_source[k].sort(key=lambda t: -float(wv @ t[0]))
 
     if not alterne:                      # version anterieure, cf. annexe
         pool = par_source["dom"] + par_source["arch"]
-        pool.sort(key=lambda t: -float(wv @ t[0]))
+        if ordre != "insertion":
+            pool.sort(key=lambda t: -float(wv @ t[0]))
         return pool
 
     d, a = par_source["dom"], par_source["arch"]
@@ -2141,7 +2174,9 @@ de~\eqref{eq:cloture}.
 Le vivier ne contient ici que des points d'archive -- la recherche n'a
 traversé aucun point dominé (§\ref{sec:verrou}) --, si bien que l'alternance
 de l'algorithme~\ref{alg:vivier} se réduit au tri de cette unique source.
-L'ordre est celui de $w^{\top}x$ décroissant, avec $w=Qc-Pd=(15,-23)$ pour
+L'ordre y est celui de $w^{\top}x$ décroissant -- la variante, non le
+défaut, retenue ici pour que l'illustration reste lisible -- avec
+$w=Qc-Pd=(15,-23)$ pour
 $q=14/5$, soit $(4,2),(3,3),(2,3),(1,4),(0,5)$. La
 figure~\ref{fig:i2panels} montre $\Rcal_A$ après chaque coupe.
 
@@ -2224,7 +2259,10 @@ faire tomber $U$ à $0$, donc à prouver l'optimalité.
 \begin{table}[H]
 \centering
 \caption{$\mathcal{I}_2$ : trajectoire des deux coupes, $q=14/5$,
-$U=\max_{\Rcal}\{QN-PD\}$, borne $=q+U/(QD^{+})$. Les valeurs sont exactes
+$U=\max\{0,\max_{\Rcal}\{QN-PD\}\}$, borne $=q+U/(QD^{+})$. La colonne $U$
+est bien tronquée à $0$ : c'est la quantité qu'exige le
+théorème~\ref{th:archbound}, et non le maximum nu, qui vaut ici
+$-15$, $-37$, $-60$, $-83$ aux étapes $1$ à $4$. Les valeurs sont exactes
 (rationnelles).\ \confna}
 \label{tab:i2traj}
 \setlength{\tabcolsep}{6pt}
@@ -2374,7 +2412,9 @@ pas ici : il finit \emph{exactement} sur ce point.\ \confna}
 
 \begin{table}[H]
 \centering
-\caption{$\mathcal{I}_3$ : trajectoire, $q=3$. La borne atteint $\qs$ après
+\caption{$\mathcal{I}_3$ : trajectoire, $q=3$, $U$ tronqué à $0$ comme au
+tableau~\ref{tab:i2traj} -- le maximum nu vaut $-2$, $-6$, $-6$ aux
+étapes $2$ à $4$. La borne atteint $\qs$ après
 \textbf{deux} coupes d'efficacité, contre \textbf{huit} coupes de dominance
 -- prises, une fois de plus, dans un vivier que la recherche n'a pas produit.\ \confna}
 \label{tab:i3traj}
@@ -2455,13 +2495,22 @@ L'ordre du vivier a changé après coup : il est désormais \textbf{stable par
 préfixe} en budget, ce qui rend le relâché emboîté et la borne monotone
 (§\ref{sec:histo}). C'est un quatrième levier, et il déplace lui aussi des
 chiffres. Nous ne lui avons pas donné de position dans le marqueur, pour une
-raison qui vaut d'être dite plutôt que subie : \emph{toutes} les campagnes
-de cette édition ont été rejouées sous lui, de sorte qu'une quatrième
-position vaudrait $\bullet$ partout et n'informerait de rien. Les seuls
-tableaux mesurés sous l'ancien ordre sont ceux de l'annexe~\ref{sec:histo},
-qui sont là pour cela. La règle reste donc : ce que porte le marqueur à
-trois positions distingue les tableaux entre eux ; l'ordre du vivier, lui,
-est celui de la version courante partout ailleurs.
+raison qui vaut d'être dite plutôt que subie : tous les tableaux qui
+portent \conf{1}{1}{1} ont été rejoués sous lui, de sorte qu'une quatrième
+position y vaudrait $\bullet$ partout et n'informerait de rien.
+
+Ce n'est pas la même chose que « tout a été rejoué », et une version
+antérieure de cette remarque l'écrivait ainsi, à tort. Neuf tableaux de ce
+mémoire portent \conf{0}{0}{0} -- les tableaux~\ref{tab:res1},
+\ref{tab:res2}, \ref{tab:apparie}, \ref{tab:corr}, \ref{tab:determ},
+\ref{tab:divers}, \ref{tab:match}, \ref{tab:boite} et la colonne gauche
+du~\ref{tab:cglp} -- et ceux-là mesurent la méthode d'origine, ordre du
+vivier inclus. C'est précisément ce que leur marqueur annonce, et c'est
+pourquoi ils sont conservés : ils datent une version, ils ne la
+représentent pas. La règle est donc : le marqueur à trois positions
+distingue les tableaux entre eux, et l'ordre du vivier suit la première
+position -- ancien là où elle vaut $\circ$, stable par préfixe là où elle
+vaut $\bullet$.
 \end{remark}
 
 
@@ -3003,7 +3052,7 @@ déjà prouvée $8$ fois sur $10$, complète simplement sa série.\ \conf{0}{0}{
 
 \begin{remark}[ce tableau n'est pas reproductible]
 Il est arbitré par un budget en \emph{temps} ($7+5$~s), non par un plafond
-d'appels -- or un tel budget fait varier le nombre d'appels entiers d'une
+d'appels -- or un tel budget fait varier \emph{la valeur rendue} d'une
 exécution à l'autre dans un rapport atteignant $125\ \%$
 (§\ref{sec:determ}). Une version antérieure portait $57/80$ et $75/80$ pour
 la \emph{même} expérience : autre tirage du même processus, non faute de
@@ -3048,7 +3097,7 @@ annonce $20$.
 
 Le tableau~\ref{tab:res1} est le chiffre qui ouvre ce mémoire, et il est
 compté en \emph{secondes}. C'est l'unité que nous refusons partout ailleurs :
-au §\ref{sec:determ} parce qu'elle fait varier le nombre d'appels de
+au §\ref{sec:determ} parce qu'elle fait varier la valeur rendue de
 $125\ \%$ d'une exécution à l'autre, et au §\ref{sec:matchzm} parce que
 « les secondes ne compareraient rien ». Annoncer le résultat principal dans
 la seule unité que le protocole récuse est une faute, et elle est aggravée
@@ -3099,7 +3148,7 @@ pas en secondes.
 
 \paragraph{Et elle coûte moins, pas plus.} Le bras qui pose des coupes
 d'efficacité consomme \emph{moins} d'appels que celui qui n'en pose pas, aux
-deux plafonds -- médiane $-1$ à $100$, $-51$ à $300$, et $67$ paires sur $80$
+deux plafonds -- médiane $-1$ à $100$, $-52$ à $300$, et $67$ paires sur $80$
 en baisse au plafond haut. La raison est mécanique : une preuve obtenue plus
 tôt arrête la boucle plus tôt. Les preuves montent \emph{et} le coût baisse,
 comme le tableau~\ref{tab:res1} l'annonçait -- mais pour une raison qui
@@ -4603,8 +4652,8 @@ $96{,}6$ contre $96{,}5$ -- alors même que le statut « convergée » certifie
 que la borne annoncée \emph{est} $\max_{\Rcal}f$. Si le majorant ne peut
 plus descendre, ce qui reste tient à l'autre terme de l'écart :
 $q_{\text{lb}}$. Or la section~\ref{sec:couverture} a précisément établi, là
-où la vérité terrain existe, que l'incumbent manque $\qs$ sur $3$ lignes de
-$26$, toutes à $n\ge 12$. L'hypothèse est donc que ce qui reste à ces
+où la vérité terrain existe, que l'incumbent manque $\qs$ sur $1$ ligne de
+$26$, à $n=12$. L'hypothèse est donc que ce qui reste à ces
 tailles n'est plus un défaut de certification mais un défaut de
 \emph{recherche} -- ce qui déplacerait l'effort à l'opposé exact de là où
 nous l'avons porté jusqu'ici. Nous ne l'avons pas encore mesuré.
@@ -4742,7 +4791,7 @@ $6$ & $3$ & $0{,}50$ & $1\,436$ & $26$  & $13$ & $50{,}0$ & $50{,}0$ & $92{,}3$ 
 $7$ & $3$ & $0{,}50$ & $5\,275$ & $17$  & $12$ & $70{,}6$ & $70{,}6$ & $95{,}2$ & $0{,}117$ & oui\\
 $8$ & $3$ & $0{,}50$ & $2\,754$ & $6$   & $5$  & $83{,}3$ & $83{,}3$ & $99{,}9$ & $0{,}058$ & oui\\
 \midrule
-\multicolumn{6}{l}{médianes} & $40{,}7$ & $40{,}7$ & $92{,}3$ & $0{,}146$ & $8/8$\\
+\multicolumn{6}{l}{médianes} & $34{,}7$ & $34{,}7$ & $91{,}5$ & $0{,}137$ & $8/8$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -4754,20 +4803,20 @@ C'est le résultat le plus important du tableau et le moins spectaculaire :
 aucun point rendu n'est faussement annoncé efficace. Une métaheuristique
 multiobjectif usuelle rend une approximation dont une part est dominée et ne
 le sait pas ; ici le test d'efficacité passe avant l'insertion,
-et la mesure le confirme sur $104$ points au total. C'est la contrepartie de
+et la mesure le confirme sur $102$ points au total. C'est la contrepartie de
 notre coût par point.
 
 \paragraph{L'archive est creuse mais bien placée.}
-Médiane : $40{,}7\,\%$ des points de $Z(E)$, et $92{,}3\,\%$ de son
+Médiane : $34{,}7\,\%$ des points de $Z(E)$, et $91{,}5\,\%$ de son
 hypervolume. Le rapport est constant dans le sens de l'inégalité sur les
 huit lignes -- $HV\,\%$ dépasse card\,\% partout, d'un facteur $1{,}2$ à
-$7{,}8$, et d'autant plus que le front est épais. Ce n'est pas un hasard : la recherche est pilotée par $f$ et un point
+$8{,}6$, et d'autant plus que le front est épais. Ce n'est pas un hasard : la recherche est pilotée par $f$ et un point
 qui améliore $f$ est, sur ces instances, un point avancé du front. On rend
 donc peu de points, mais ceux qui portent le volume.
 
 \paragraph{Où c'est faible, et pourquoi.}
 La ligne $n=7$, $p=4$ est la plus mauvaise de toutes les colonnes :
-$8{,}7\,\%$ de cardinalité, $68{,}2\,\%$ d'hypervolume, $\varepsilon^+ =
+$7{,}8\,\%$ de cardinalité, $67{,}4\,\%$ d'hypervolume, $\varepsilon^+ =
 0{,}503$. C'est aussi celle où $|Z(E)| = 218$, six fois la médiane des
 autres. Le régime est clair et il ne faut pas l'habiller : \emph{à budget
 fixe, l'archive ne suit pas la croissance de $E$}. Un $\varepsilon^+$ de
@@ -4803,10 +4852,10 @@ exécution indépendante, pas un raffinement de la précédente.\ \conf{1}{1}{1}
 $n$ & $p$ & corr & $60$ & $180$ & $540$ & $60$ & $180$ & $540$
 & $60$ & $180$ & $540$\\
 \midrule
-$6$ & $3$ & $0{,}00$ & $12$ & $15$ & $21$ & $13{,}6$ & $17{,}0$ & $23{,}9$ & $73{,}0$ & $90{,}6$ & $93{,}7$\\
-$6$ & $3$ & $0{,}00$ & $6$  & $17$ & $28$ & $5{,}3$  & $14{,}9$ & $24{,}6$ & $68{,}1$ & $79{,}7$ & $92{,}1$\\
+$6$ & $3$ & $0{,}00$ & $8$  & $15$ & $21$ & $9{,}1$  & $17{,}0$ & $23{,}9$ & $72{,}6$ & $90{,}6$ & $93{,}7$\\
+$6$ & $3$ & $0{,}00$ & $6$  & $17$ & $27$ & $5{,}3$  & $14{,}9$ & $23{,}7$ & $68{,}1$ & $79{,}7$ & $91{,}9$\\
 $7$ & $3$ & $0{,}00$ & $9$  & $11$ & $12$ & $33{,}3$ & $40{,}7$ & $44{,}4$ & $86{,}9$ & $96{,}2$ & $98{,}0$\\
-$7$ & $4$ & $0{,}00$ & $9$  & $19$ & $37$ & $4{,}1$  & $8{,}7$  & $17{,}0$ & $57{,}4$ & $68{,}2$ & $79{,}7$\\
+$7$ & $4$ & $0{,}00$ & $9$  & $17$ & $36$ & $4{,}1$  & $7{,}8$  & $16{,}5$ & $57{,}4$ & $67{,}4$ & $79{,}5$\\
 $8$ & $3$ & $0{,}00$ & $8$  & $12$ & $19$ & $19{,}0$ & $28{,}6$ & $45{,}2$ & $57{,}3$ & $76{,}4$ & $98{,}9$\\
 $6$ & $3$ & $0{,}50$ & $12$ & $13$ & $19$ & $46{,}2$ & $50{,}0$ & $73{,}1$ & $73{,}4$ & $92{,}3$ & $97{,}3$\\
 $7$ & $3$ & $0{,}50$ & $9$  & $12$ & $16$ & $52{,}9$ & $70{,}6$ & $94{,}1$ & $92{,}8$ & $95{,}2$ & $100{,}0$\\
@@ -4818,7 +4867,7 @@ $8$ & $3$ & $0{,}50$ & $6$  & $5$  & $5$  & $100{,}0$& $83{,}3$ & $83{,}3$ & $10
 Sept lignes sur huit croissent en cardinalité \emph{et} en hypervolume, et
 aucune n'est immobile. Cinq lignes sur huit dépassent $97\,\%$
 d'hypervolume au budget élevé. La ligne $n=7$, $p=4$ -- la plus difficile -- quadruple son
-archive de $9$ à $37$ points. L'archive répond donc à l'effort : c'est un
+archive de $9$ à $36$ points. L'archive répond donc à l'effort : c'est un
 livrable.
 
 La huitième ligne demande une explication, et elle en a une. À $n=8$,
@@ -4839,8 +4888,8 @@ retirer la ligne.
 \begin{enumerate}
 \item La méthode rend un sous-ensemble de $E$ \emph{certifié} -- pureté $1$
   sur $8/8$, vérifiée et non postulée.
-\item Ce sous-ensemble est creux en cardinalité (médiane $40{,}7\,\%$) et
-  riche en hypervolume (médiane $92{,}3\,\%$) : il tient la partie du front
+\item Ce sous-ensemble est creux en cardinalité (médiane $34{,}7\,\%$) et
+  riche en hypervolume (médiane $91{,}5\,\%$) : il tient la partie du front
   que $f$ désigne, qui est celle que le sujet demande.
 \item Il contient toujours la solution du problème d'optimisation.
 \item Il s'enrichit quand le budget croît, sur $7$ lignes sur $8$.
@@ -4950,8 +4999,8 @@ souvent un \emph{proxy} de sa préférence, construit avant de voir les
 solutions ; l'usage courant en aide multicritère à la décision est de
 proposer un petit ensemble de compromis efficaces et de laisser l'arbitrage
 final se faire devant eux~\cite{roy1985}. L'archive est cet ensemble, et la
-section~\ref{sec:livrable} en donne la mesure : médiane de $40{,}7\ \%$ des
-points du front pour $92{,}3\ \%$ de son hypervolume, et $x_{\text{best}}$
+section~\ref{sec:livrable} en donne la mesure : médiane de $34{,}7\ \%$ des
+points du front pour $91{,}5\ \%$ de son hypervolume, et $x_{\text{best}}$
 toujours dedans. Autrement dit, si le décideur récuse $x_{\text{best}}$ parce
 que $f$ le représentait mal, il ne repart pas de rien : les alternatives
 qu'on lui remet couvrent l'essentiel du volume du front, et chacune est
@@ -4967,13 +5016,18 @@ vecteurs critères ne doit pas lire le regret dans l'intervalle : il doit lire
 l'archive et son $\varepsilon^+$ (\S\ref{sec:livrable}), qui sont les
 quantités faites pour cela. Les deux garanties ne se remplacent pas.
 
-\paragraph{Attendre plus longtemps peut affaiblir la garantie.} La méthode
-n'est pas monotone en budget : en triplant le plafond, l'écart garanti
-recule encore sur deux lignes sur six, et nous ne savons pas nommer la cause
-restante (voir la conclusion, « la non-monotonie en budget »). Pour un usage décisionnel c'est un défaut
-sérieux, et c'est ici qu'il faut l'écrire plutôt que dans une liste de
-résultats négatifs : un décideur qui accorde plus de temps s'attend à une
-garantie meilleure ou égale, jamais pire. Au sein d'une
+\paragraph{Attendre plus longtemps a longtemps pu affaiblir la garantie.}
+La méthode n'était pas monotone en budget : en triplant le plafond, l'écart
+garanti reculait sur deux lignes sur six. Pour un usage décisionnel c'était
+un défaut sérieux -- un décideur qui accorde plus de temps s'attend à une
+garantie meilleure ou égale, jamais pire -- et c'est ici qu'il fallait
+l'écrire plutôt que dans une liste de résultats négatifs. Le défaut est
+désormais \textbf{corrigé} : la cause en était double, l'archive affamée et
+un vivier qui n'était pas stable par préfixe, et les deux levées la
+monotonie est complète, $6/6$ (tableau~\ref{tab:vivierstable} et la
+conclusion, « la non-monotonie en budget »). Nous laissons le paragraphe
+plutôt que de l'effacer, parce que la recommandation qu'il porte ne dépend
+pas du défaut et vaut toujours. Au sein d'une
 \emph{même} exécution la solution rendue ne se dégrade pas -- l'archive ne
 perd aucun point et $q_{\text{lb}}$ ne décroît jamais --, mais rien de tel
 ne vaut d'une exécution à l'autre : à budget égal, changer de configuration
@@ -5534,8 +5588,8 @@ qu'elles délimitent exactement ce que ce travail établit.
       progrès, et la contribution porte donc entièrement sur la
       \emph{certification}. Aux tailles où de la place existe, nous
       disposons maintenant de la mesure qui nous manquait, et elle est
-      contre nous : l'incumbent manque $\qs$ sur $3$ lignes de $26$, toutes
-      à $n\ge 12$ (§\ref{sec:couverture}), et tripler le budget de la seule
+      contre nous : l'incumbent manque $\qs$ sur $1$ ligne de $26$, à
+      $n=12$ (§\ref{sec:couverture}), et tripler le budget de la seule
       recherche le fait progresser jusqu'à $+49{,}6\ \%$. Cela n'achète que
       $1{,}7$ point d'écart garanti, parce que $q_{\text{ub}}\approx 103$ y
       dilue tout gain porté au numérateur : les deux termes sont
@@ -5544,13 +5598,13 @@ qu'elles délimitent exactement ce que ce travail établit.
       budget d'appels égal il n'en gagne aucune (\S\ref{sec:determ}) : c'est
       un gain de coût, non de capacité.
 \item \textbf{L'archive n'approche pas $\Ecal$ entier.} Elle en rend une
-      médiane de $40{,}7\ \%$ des points -- et $8{,}7\ \%$ sur l'instance
+      médiane de $34{,}7\ \%$ des points -- et $7{,}8\ \%$ sur l'instance
       où $|Z(\Ecal)|=218$ --, avec un $\varepsilon^+$ qui monte alors à
       $0{,}503$ (§\ref{sec:livrable}). Ce n'est pas une défaillance de
       l'implémentation mais une conséquence de la conception : la recherche
       est pilotée par $f$ et \emph{aucun opérateur ne vise la diversité du
       front pour elle-même}. Ce que nous rendons est la partie du front que
-      $f$ désigne, et l'hypervolume ($92{,}3\ \%$ en médiane) dit qu'elle
+      $f$ désigne, et l'hypervolume ($91{,}5\ \%$ en médiane) dit qu'elle
       en porte l'essentiel du volume ; ce n'est pas la même chose que
       l'approcher tout entier, et nous ne le prétendons pas.
 \end{enumerate}
@@ -5623,8 +5677,9 @@ Donc
 \noindent
 \textbf{Le relâché n'est pas emboîté dans le budget.} Voilà la cause. Un
 budget plus grand ne \emph{raffine} pas le relâché du budget plus petit : il
-en construit un autre. Le mécanisme est identifiable -- le vivier classe ses
-centres de coupe par $w^\top x$ et l'on en pose les $\beta$ premiers ; quand
+en construit un autre. Le mécanisme est identifiable -- le vivier classait
+ses centres de coupe par $w^\top x$ et l'on en posait les $\beta$ premiers ;
+quand
 la recherche dispose de plus de budget, l'archive est plus grande, de
 nouveaux points s'\emph{intercalent} dans ce préfixe et en déplacent
 d'autres. On ne pose donc pas « les mêmes coupes et davantage », on pose
