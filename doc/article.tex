@@ -110,7 +110,10 @@ domaine ne fait.
 
 Quatre résultats structurent la construction. Le test d'efficacité du
 théorème~\ref{th:eff} est \emph{entièrement entier}, donc exact sans
-tolérance numérique, et fournit gratuitement un certificat de dominance
+tolérance numérique -- exactitude qui se transmet à la mise en {\oe}uvre
+tant que les coefficients restent sous $2^{53}$, seuil dont les plus
+grandes instances mesurées ici restent à neuf ordres de grandeur --, et
+fournit gratuitement un certificat de dominance
 réutilisable comme mouvement de recherche. Le théorème~\ref{th:effcut}
 autorise une coupe autour d'un point \emph{quelconque} du domaine : la
 région retranchée ne contient, parmi les points efficaces, que ceux de même
@@ -283,7 +286,10 @@ suivante : \emph{à tout instant, la méthode dispose d'un encadrement valide}
 \]
 où $q_{\text{lb}}=f(x_{\text{best}})$ avec $x_{\text{best}}$ \emph{certifié
 efficace}, et où $q_{\text{ub}}$ est le minimum de deux bornes valides
-(th.~\ref{th:bound} et th.~\ref{th:seuillibre}). Les contributions sont :
+(th.~\ref{th:bound} et th.~\ref{th:seuillibre}). La
+proposition~\ref{prop:global} établit cette propriété pour les quatre
+sorties de la boucle, et elle est vérifiée sur $608$ exécutions sur $608$.
+Les contributions sont :
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
 \item \textbf{Un test d'efficacité intégral} (th.~\ref{th:eff}), exact sans
@@ -677,7 +683,15 @@ optimiste, c'est-à-dire la méthode inutilisable.
 
 \subsection{Dinkelbach à paramètre rationnel}
 
-Le schéma est celui de Dinkelbach~\cite{dinkelbach1967}, mené ici en
+La linéarisation $f(x)>q \iff QN(x)-PD(x)>0$ au seuil $q=P/Q$, et la borne
+naïve qui s'en déduit avec $D_{\min}$ au dénominateur, sont acquises
+\cite{dinkelbach1967,martos1964,cambini1992} ; le dénominateur
+\emph{restreint} $D^{+}$, pris sur la seule région où $QN-PD\ge 0$, ne nous
+est apparu dans aucune de ces références et est ici revendiqué -- la
+revendication portant sur ce que nous avons lu. La coupe de dominance, elle,
+est l'outil classique du domaine \cite{chergui2008,jorge2009,sylva2004},
+repris sans modification. Le schéma est celui de
+Dinkelbach~\cite{dinkelbach1967}, mené ici en
 arithmétique rationnelle exacte : la valeur optimale du sous-problème étant
 \emph{entière}, le test d'arrêt devient exact et aucun $\varepsilon$ n'est à
 régler.
@@ -826,6 +840,34 @@ avec $\bar x$ efficace, $g(\bar x)=\max_{\Rcal}g\ge\max_{\Ecal}g$ et
 $\bar x\in\Ecal$, donc $\bar x$ est optimal sur $\Ecal$. Chaque coupe retire
 au moins $\bar x$ et $\Scal$ est fini : l'algorithme termine.
 \end{proposition}
+
+\begin{proposition}[correction globale de la boucle de certification]
+\label{prop:global}
+La boucle de certification termine, et l'invariant
+$q_{\text{lb}}\le\qs\le q_{\text{ub}}$ est vrai à tout instant, quelle que
+soit celle de ses quatre sorties qui est empruntée.
+\end{proposition}
+
+\begin{proof}
+\emph{Terminaison.} Le vivier de centres est fini et chaque tour en retire
+$\beta$ sans jamais en ajouter ; le nombre de tours est borné, et le budget
+testé à chaque entrée. La seule branche qui recommence un tour est la
+branche faisable de la clôture, empruntée uniquement lorsqu'elle fait
+croître \emph{strictement} $q$ : comme $q$ prend ses valeurs dans
+$f(\Scal)$, fini, elle ne peut l'être qu'un nombre fini de fois.
+
+\emph{Invariant.} Le minorant vaut $f(x_{\text{best}})$ avec
+$x_{\text{best}}\in\Ecal$ à tout instant, l'incumbent n'étant remplacé que
+par un point dont l'efficacité est certifiée ; donc $q_{\text{lb}}\le\qs$.
+Pour le majorant, les quatre sorties sont couvertes respectivement par la
+proposition~\ref{prop:vide} (relâché vide), par
+$\max_{\Rcal}\{QN-PD\}\le 0$, par le théorème~\ref{th:archbound} (première
+route) et par le théorème~\ref{th:seuillibre} (seconde route). Chacune
+fournit un majorant valide de $\qs$, et $q_{\text{ub}}$ n'est mis à jour
+que par un minimum de tels majorants ; comme $\qs$ ne dépend pas du tour où
+la borne a été posée, le minimum reste valide même si $q$ a changé
+entre-temps.
+\end{proof}
 
 \noindent
 \emph{Comportement anytime.} À chaque itération on dispose de
@@ -1044,12 +1086,13 @@ qui interdisait jusqu'ici de le faire. Elle se lève par une condition qui se
 vérifie, et à bon compte.
 
 \begin{theorem}[Borne sur le relâché d'archive]\label{th:archbound}
-Soient $A\subseteq\Ecal$ un ensemble de points efficaces certifiés,
+Soient $A\subseteq\Scal$ un ensemble de centres de coupe \emph{quelconques},
 $q=P/Q$ la valeur de l'incumbent, et supposons la \emph{condition de
 clôture} :
 \[
   \text{pour tout } a\in A,\qquad
-  \max\{f(x)\ :\ x\in\Scal,\ Z(x)=Z(a)\}\ \le\ q .
+  \max\{f(x)\ :\ x\in\Ecal,\ Z(x)=Z(a)\}\ \le\ q ,
+  \qquad \max\emptyset=-\infty .
 \]
 Soient $U\ge\max\bigl\{0,\ \max_{x\in\Rcal_A}\{QN(x)-PD(x)\}\bigr\}$ et
 $D^{+}=\min\{D(x):x\in\Rcal_A,\ QN(x)-PD(x)\ge 0\}$, avec la convention
@@ -1060,12 +1103,28 @@ $D^{+}=+\infty$ -- donc $U/(QD^{+})=0$ -- lorsque cet ensemble est vide. Alors
 \end{theorem}
 
 \begin{proof}
-Soit $x^\star\in\Ecal$ atteignant $\qs$. Par le théorème~\ref{th:effcut},
-ou bien $Z(x^\star)=Z(a)$ pour un $a\in A$, et alors $\qs=f(x^\star)\le q$
-par la condition de clôture, donc l'inégalité est acquise puisque
-$U\ge 0$ ; ou bien $x^\star\in\Rcal_A$, et l'argument du
+Soit $x^\star\in\Ecal$ atteignant $\qs$. Le théorème~\ref{th:effcut} vaut
+pour un centre $a\in\Scal$ quelconque, de sorte que l'inclusion
+$\Ecal\subseteq\Rcal_A\cup\{x:\exists a\in A,\ Z(x)=Z(a)\}$ tient pour
+$A\subseteq\Scal$. Ou bien $Z(x^\star)=Z(a)$ pour un $a\in A$, et alors
+$\qs=f(x^\star)\le q$ par la condition de clôture, donc l'inégalité est
+acquise puisque $U\ge 0$ ; ou bien $x^\star\in\Rcal_A$, et l'argument du
 théorème~\ref{th:bound} s'applique mot pour mot à $\Rcal_A$.
 \end{proof}
+
+\begin{remark}[pourquoi $A\subseteq\Scal$, et pourquoi la clôture porte sur
+$\Ecal$]
+L'algorithme verse dans un \emph{seul} relâché les coupes centrées sur
+l'archive et celles centrées sur des points dominés : le $A$ effectif n'est
+pas inclus dans $\Ecal$, et un énoncé restreint aux centres efficaces ne
+couvrirait pas son propre usage. Il n'a pas à l'être : la démonstration
+n'utilise le centre que par le théorème~\ref{th:effcut}, valable pour tout
+$a\in\Scal$. Et énoncer la clôture sur $\Ecal$ -- ce que la preuve seule
+exige, $x^\star$ étant efficace -- la rend \emph{automatique} aux centres
+dominés : si $\bar x$ est dominé, tout point de même vecteur critères l'est
+aussi, l'ensemble est vide et le maximum vaut $-\infty$. C'est pourquoi la
+clôture n'est calculée que sur les centres d'archive.
+\end{remark}
 
 \begin{proposition}[Relâché vide : une preuve inaccessible à la coupe de
 dominance]\label{prop:vide}
