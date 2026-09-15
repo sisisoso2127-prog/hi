@@ -401,7 +401,7 @@ Un chapitre est consacré à ce que la méthode \emph{rend} : non pas
 seulement une valeur encadrée, mais l'archive des points efficaces
 certifiés, qui est le sous-ensemble de $\Ecal$ demandé par l'énoncé.
 Mesurée contre $\Ecal$ énuméré, elle est de pureté~$1$ sur $8/8$ instances -- aucun
-point faussement annoncé efficace sur $104$ --, creuse en cardinalité
+point faussement annoncé efficace sur $102$ --, creuse en cardinalité
 (médiane $34{,}7\,\%$) et riche en hypervolume (médiane $91{,}5\,\%$),
 contient toujours la solution du problème d'optimisation, et s'enrichit avec
 le budget sur $7$ lignes sur $8$. Nous y établissons aussi que l'indicateur
@@ -420,7 +420,7 @@ plafond~$100$.
 
 Les limites sont énoncées avec la même précision que les gains : à $n\ge 20$
 et front épais la méthode ne conclut toujours pas -- l'écart garanti y reste
-de $77$ à $96{,}5\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
+de $79$ à $96{,}5\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
 borne y étant certifiée égale à $\max_{\Rcal}f$ --, et à budget d'appels égal
 le théorème de clôture n'achète aucune preuve supplémentaire : c'est un gain
 de coût, non de capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
@@ -554,9 +554,15 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       dominance et la coupe d'efficacité en sont les deux corollaires,
       selon que cette réserve est automatiquement vide (centre dominé) ou
       qu'il faut l'établir (centre efficace).
-\item \textbf{Théorème~\ref{th:archbound} (borne sur le relâché d'archive).}
-      Sous une condition de clôture, la borne resserrée reste valide sur ce
-      relâché plus petit.
+\item \textbf{Théorème~\ref{th:archbound} (borne sur le relâché de
+      coupes).} Sous une condition de clôture, la borne resserrée reste
+      valide sur ce relâché plus petit. L'énoncé vaut pour un ensemble de
+      centres \emph{quelconques} -- donc pour le vivier mêlé que
+      l'algorithme construit réellement -- et la condition de clôture, portée
+      sur $\Ecal$, devient automatique aux centres dominés
+      (remarque~\ref{rem:melange}). Le dénominateur restreint $D^{+}$ qu'il
+      emploie est ce qui le sépare de la forme naïve reprise de la
+      littérature (remarque~\ref{rem:attrib2}).
 \item \textbf{Proposition~\ref{prop:vide} (relâché vide).} Si le relâché se
       vide, $\qs=q$. La coupe de dominance ne peut jamais produire cette
       preuve, puisqu'elle \emph{préserve} $\Ecal$.
@@ -583,6 +589,14 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       séparés perdait $28$ preuves sur $90$. Ce chiffre est retiré}
       (\S\ref{sec:vivier}) : remesuré sous plafond déterministe il ne
       montre aucun effondrement -- $5/18$ preuves dans les deux bras.
+\item \textbf{Théorème~\ref{th:global} (correction et terminaison).} La
+      boucle de certification termine, et l'invariant
+      $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ est vrai à tout instant, pour
+      chacune de ses quatre sorties. C'est ce qui autorise la formule
+      « encadrement valide à tout instant » : il ne suffit pas que chaque
+      brique soit correcte, il faut que leur \emph{composition} le soit,
+      y compris quand l'incumbent bouge en cours de route et quand l'oracle
+      est interrompu par le budget.
 \item \textbf{La coupe d'efficacité comme opérateur de recherche}
       (\S\ref{sec:divers}) : couper autour de toute l'archive rend un point
       \emph{garanti neuf} en vecteur critères, et cet usage-là n'exige
@@ -1042,11 +1056,10 @@ dénominateur \emph{restreint} $D^{+}$, minimum pris sur la seule région où
 $QN-PD\ge 0$, ne nous est en revanche apparu dans aucune des références de
 ce mémoire ; comme $D^{+}\ge D_{\min}$, il donne mécaniquement une borne
 plus fine, et l'écart entre les deux est mesuré au
-tableau~\ref{tab:unifiecoupe} (remarque~\ref{rem:attrib2} pour la portée
-exacte de cette revendication). Nous l'annonçons donc comme une
-contribution, en précisant que cette revendication porte sur ce que nous
-avons lu et non sur la littérature entière : un antécédent nous ôterait le
-point sans rien retirer aux mesures.
+tableau~\ref{tab:unifiecoupe}. Cette revendication porte sur ce que nous
+avons lu, non sur la littérature entière : un antécédent nous ôterait le
+point sans rien retirer aux mesures. Nous l'annonçons donc comme une
+contribution.
 \end{remark}
 
 \paragraph{Brique 3 -- coupe de dominance.} C'est l'outil classique de
@@ -1065,7 +1078,11 @@ aucun point efficace, et se retranche par la disjonction
 \end{equation}
 C'est la seule opération de resserrement disponible avant ce mémoire. Son
 coût est de $p$ variables binaires par coupe -- il faut le garder en tête,
-c'est lui qui impose un plafond (\S\ref{sec:vivier}).
+car c'est ce coût, et non un rendement décroissant, qui limite le nombre de
+coupes qu'on peut poser. Nous avions écrit qu'il « impose un plafond » ;
+le balayage de sensibilité ne montre aucun plafond de \emph{rendement}
+(remarque~\ref{rem:genou}), et c'est la section~\ref{sec:cglp} qui mesure
+ce que devient la méthode quand ce coût est supprimé.
 
 % ============================================================================
 \section{Le verrou : la coupe de dominance n'a rien à mordre}
@@ -3404,8 +3421,8 @@ l'avantage d'être vraie.
 \begin{remark}[une médiane qui ment, et comment nous l'avons su]
 \label{rem:medianeartefact}
 Deux facteurs semblaient dire le contraire de la production : une fraction
-LNS constante à $0{,}4$ améliorait l'écart médian de $7{,}56$ points, et
-\texttt{max\_stall}$=1$ de $7{,}21$. Le compte apparié disait déjà l'inverse
+LNS constante à $0{,}4$ améliorait l'écart médian de $11{,}74$ points, et
+\texttt{max\_stall}$=1$ de $12{,}14$. Le compte apparié disait déjà l'inverse
 -- plus de lignes dégradées qu'améliorées -- et une médiane qui baisse
 pendant que la majorité des lignes monte n'est pas un résultat, c'est un
 symptôme d'échantillon trop petit : la strate~B ne compte que huit
@@ -3444,20 +3461,24 @@ seule est un mauvais juge, et c'est le compte apparié qui tranche.
 
 \paragraph{Quatre réglages ne pilotent rien, et c'est une information.}
 $k_{\text{élite}}$, $k_{\text{hasard}}$, la garde $\varepsilon$ et le menu
-de diversification déplacent l'écart de $2$ à $5$ points -- c'est-à-dire
-dans le bruit que la remarque~\ref{rem:medianeartefact} vient de
-caractériser -- sans jamais changer le nombre de preuves. Leur valeur n'a
-pas besoin d'être \emph{justifiée}, elle a besoin d'être \emph{dite}, ce que
-ce mémoire ne faisait pas. On notera tout de même que $k_{\text{hasard}}=4$
-n'est battu par aucune des quatre autres valeurs \emph{à la lecture
-appariée} : $k_{\text{hasard}}=16$ abaisse l'écart médian de $0{,}19$ point
-mais sur une instance contre deux, ce qui est le profil que la
-remarque~\ref{rem:medianeartefact} apprend à ne pas lire comme un gain. Sur
-la colonne médiane elle-même, il \emph{est} donc devant, et c'était une
-omission de l'écrire autrement. Supprimer la part aléatoire
-($k_{\text{hasard}}=0$) coûte en revanche $1{,}98$ point sans aucune
-instance améliorée, $0$ contre $4$ : elle sert à quelque chose, même si sa
-taille exacte importe peu.
+de diversification déplacent l'écart, de la meilleure à la pire de leurs
+valeurs, de $4$ à $8$ points -- $4{,}88$, $4{,}31$, $4{,}04$ et $7{,}91$ --
+sans jamais changer le nombre de preuves, à une unité près pour
+$k_{\text{élite}}$. Leur valeur n'a pas besoin d'être \emph{justifiée},
+elle a besoin d'être \emph{dite}, ce que ce mémoire ne faisait pas.
+
+Il faut ajouter que le banc ne place pas non plus la valeur de production
+en tête de son facteur. $k_{\text{hasard}}=16$ abaisse l'écart médian de
+$\mathbf{1{,}38}$ point et son compte apparié est $2/2$ : ce n'est pas une
+défaite de la production sur ce compte, mais ce n'est pas une victoire non
+plus -- c'est une \emph{égalité}, assortie d'un avantage sur la colonne
+médiane. Nous ne pouvons donc pas écrire que $k_{\text{hasard}}=4$ est
+imbattu, et nous ne l'écrivons plus -- la remarque~\ref{rem:medianeartefact}
+dit pourquoi une médiane seule ne suffirait pas non plus à l'affirmer dans
+l'autre sens. Ce que le banc établit est plus
+modeste : \emph{supprimer} la part aléatoire coûte $0{,}79$ point pour une
+instance améliorée contre trois dégradées, de sorte qu'elle sert à quelque
+chose ; sa taille exacte, elle, n'est pas départagée.
 
 \paragraph{Une piste que nous ne refermons pas.} Sur la strate~A, deux
 configurations indépendantes montent à $\mathbf{17/24}$ preuves contre
@@ -4206,7 +4227,7 @@ au-delà de $n\ge 20$ » est donc \textbf{retirée}. Ce qui subsiste est plus
       y certifie que le majorant annoncé \emph{est} $\max_{\Rcal}f$. Le
       verrou y a changé de terme, il est passé du côté de
       $q_{\text{lb}}$ (§\ref{sec:couverture}) ;
-\item même à $77\ \%$ et $78\ \%$, l'écart reste sans usage décisionnel
+\item même à $81\ \%$ et $79\ \%$, l'écart reste sans usage décisionnel
       (§\ref{sec:aide}). Avoir divisé le résidu par un quart ne fait pas
       une méthode qui conclut à ces tailles ;
 \item le §\ref{sec:echelledeterm} prolonge cette frontière jusqu'à $n=50$
@@ -5530,7 +5551,7 @@ même :
 
 \noindent
 Le troisième régime n'est pas rare chez nous : à $n\ge 20$ et critères
-indépendants, l'écart garanti vaut encore $77$, $79$ et $96{,}5\ \%$ dans la
+indépendants, l'écart garanti vaut encore $81$, $79$ et $96{,}5\ \%$ dans la
 configuration courante (§\ref{sec:echellehonnete}). Nous ne le présentons pas
 comme un service rendu au décideur, mais comme un aveu utilisable : la
 méthode y dit qu'elle ne garantit rien, plutôt que de laisser croire le
@@ -6142,7 +6163,7 @@ qu'elles délimitent exactement ce que ce travail établit.
       est plus étroit. D'une part $n=40$, $\text{corr}=0$ ne bouge pas --
       $96{,}6$ contre $96{,}5$ -- et le statut « convergée » y certifie que
       le majorant \emph{est} $\max_{\Rcal}f$ : le verrou y est passé du côté
-      de $q_{\text{lb}}$. D'autre part un écart de $77\ \%$ reste sans usage
+      de $q_{\text{lb}}$. D'autre part un écart de $79\ \%$ reste sans usage
       décisionnel (§\ref{sec:aide}) : la méthode ne conclut toujours pas à
       ces tailles. L'explication mécanique que nous en donnions -- la
       recherche sature le plafond de points dominés, aucune coupe
@@ -6422,8 +6443,8 @@ déposée}. Le dépôt contient, en plus des programmes :
 \item les $55$ modules Python, dont $9$ de méthode, $30$ de bancs de mesure
   et $8$ de vérification ;
 \item le générateur d'instances \texttt{molfp\_instance.py}, dont le
-  protocole complet est donné au §\ref{sec:generateur} -- de sorte que
-  \emph{aucune} instance n'a besoin d'être transportée : elles se
+  protocole complet est donné au §\ref{sec:generateur} -- de sorte
+  qu'\emph{aucune} instance n'a besoin d'être transportée : elles se
   régénèrent à l'identique depuis leur graine ;
 \item les journaux bruts de chaque campagne rapportée ici, ce qui permet de
   refaire les agrégats sans relancer les calculs ;
@@ -6436,8 +6457,8 @@ déposée}. Le dépôt contient, en plus des programmes :
 propre déterminisme en rejouant chaque configuration deux fois. Une
 exécution sur une autre machine doit donc rendre les mêmes chiffres, à la
 version du solveur près. L'environnement de référence est Python~3.11,
-\textsc{NumPy}~2.4, \textsc{SciPy}~1.17, le solveur étant \textsc{Highs}
-tel que distribué par \textsc{SciPy}~\cite{huangfu2018}. Les
+\textsc{NumPy}~2.4, \textsc{SciPy}~1.17, le solveur étant \textsc{HiGHS}
+tel que distribué par \textsc{SciPy}~\cite{huangfu2018}. La
 section~\ref{sec:generateur} donne le protocole
 de génération avec assez de précision pour que le générateur
 soit réimplémentable à partir du seul texte -- ce que nous avons vérifié

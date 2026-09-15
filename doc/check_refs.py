@@ -142,6 +142,21 @@ def controle(path: str) -> List[str]:
     for lab in sorted(tous_labs - refs):
         if labs.get(lab) in enonces:
             pbs.append(f"enonce etiquete mais jamais invoque : {lab}")
+
+    # -- 4. renvois CIRCULAIRES ---------------------------------------------
+    # Un enonce qui se cite lui-meme satisfait le controle 3 -- l'etiquette
+    # EST invoquee -- sans rien apporter au lecteur, qui est deja dedans. Le
+    # controle 3 verifie la NATURE de la cible, pas son IDENTITE ; il faut
+    # donc une regle de plus. Cas rencontre : une remarque renvoyant a
+    # elle-meme « pour la portee exacte de cette revendication ».
+    for env in ENVS:
+        for m in re.finditer(r"\\begin\{" + env + r"\}", sans_comm):
+            fin = sans_comm.find("\\end{" + env + "}", m.end())
+            bloc = sans_comm[m.end(): fin if fin > 0 else len(sans_comm)]
+            siens = set(re.findall(r"\\label\{([^}]+)\}", bloc))
+            cites = set(re.findall(r"\\(?:eq|page|auto)?ref\{([^}]+)\}", bloc))
+            for lab in sorted(siens & cites):
+                pbs.append(f"renvoi CIRCULAIRE : {lab} se cite lui-meme")
     return pbs
 
 
