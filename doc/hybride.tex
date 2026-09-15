@@ -704,12 +704,37 @@ validation externe, et elle est sans conséquence puisque
 globalement et violée localement, sans que le lecteur en soit averti, est
 une faute -- même quand rien n'en dépend.
 
-\begin{remark}[intégralité]\label{rem:int}
+\begin{remark}[intégralité, et la condition sous laquelle elle se transmet]
+\label{rem:int}
 Les quantités $e_k$ et $QN-PD$ introduites plus bas sont \emph{entières}.
 Les tests d'arrêt portant sur elles sont donc exacts, sans tolérance
 numérique. C'est ce qui rend sûres les équivalences
 « $e_k(x)>0 \iff e_k(x)\ge 1$ » et « $f(x)>q \iff QN(x)-PD(x)\ge 1$ »
 utilisées de façon répétée.
+
+Cette exactitude est celle du \emph{raisonnement} ; il faut dire à quelle
+condition elle survit à la \emph{mise en {\oe}uvre}. Les coefficients sont
+construits en arithmétique rationnelle exacte -- $q$ est un
+\texttt{Fraction}, et $Q\,\text{num}-P\,\text{den}$ est une opération
+entière -- puis convertis en \texttt{float64} à l'entrée du solveur. Un
+entier est représenté \emph{exactement} en \texttt{float64} tant que sa
+valeur absolue reste sous $2^{53}\approx 9\cdot 10^{15}$ ; la conversion
+est donc sans perte sous ce seuil, et l'exactitude se transmet. Au-dessus,
+elle ne se transmettrait plus, et les coefficients croissent avec le
+dénominateur de $q$.
+
+Ce n'est donc pas une garantie inconditionnelle mais une garantie
+\emph{vérifiable}, et nous l'avons vérifiée plutôt que supposée. En
+instrumentant la construction des lignes sur les plus grandes instances du
+mémoire, le coefficient de plus grande amplitude vaut $1{,}7\cdot 10^{6}$
+à $n=40$ et $1{,}5\cdot 10^{6}$ à $n=20$, pour un dénominateur de $q$
+montant à $3{,}4\cdot 10^{4}$ : neuf ordres de grandeur sous le seuil.
+Dans les régimes mesurés ici, la marge n'est donc pas serrée, elle est
+inatteignable. Sur des instances où elle le deviendrait, le remède est
+connu et déjà nommé dans le code -- borner le dénominateur de $q$ par
+\texttt{Fraction.limit\_denominator}, au prix d'un seuil légèrement moins
+avancé et d'aucune perte de validité, puisque toute la théorie vaut pour
+un $q$ \emph{quelconque} atteint par un point efficace.
 \end{remark}
 
 \subsection{Trois briques}
