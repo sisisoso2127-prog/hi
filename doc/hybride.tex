@@ -726,7 +726,7 @@ $D^{+}=\min\{D(x):x\in\Rcal,\ QN(x)-PD(x)\ge 0\}$ -- valant $+\infty$ si cet
 ensemble est vide. Alors
 \begin{equation}\label{eq:borne}
   \qs\ \le\ q+\frac{U}{Q\,D^{+}},
-  \qquad\text{et } U\le 0 \Rightarrow \qs=q .
+  \qquad\text{et }\ \max_{\Rcal}\{QN-PD\}\le 0\ \Rightarrow\ \qs=q .
 \end{equation}
 
 \paragraph{Brique 3 -- coupe de dominance.} Si $\bar x$ est
@@ -4110,10 +4110,23 @@ efficace qu'on ne le croyait.} $\text{cov}_{\Acal}\ge 99\ \%$ sur $26$
 lignes sur $26$, alors que l'archive ne retient qu'entre $20$ et $35\ \%$
 des vecteurs critères de $\Ecal$ (médiane par échelle). Une petite archive
 domine donc déjà la quasi-totalité de $\Scal^{+}$ : la seconde explication
-tombe comme la première. Et le résultat a une portée propre, en
-dehors du diagnostic : il dit qu'\emph{il ne sert à rien de grossir
-l'archive pour resserrer la borne}. Ce n'est pas en la remplissant qu'on
-gagnera là.
+tombe comme la première. Et le résultat a une portée propre, en dehors du
+diagnostic -- mais il faut l'énoncer à sa mesure exacte, parce qu'une
+version antérieure le disait trop fort. Ce qui est mesuré ici, c'est que la
+\emph{couverture} sature : au-delà de $20$ à $35\ \%$ de $\Ecal$, les points
+supplémentaires ne dominent rien que les précédents ne dominaient déjà.
+Grossir l'archive n'y ajoute donc pas de pouvoir de coupe.
+
+Ce n'est pas dire que l'archive est sans effet sur la borne, et le
+tableau~\ref{tab:alternance} interdit de le croire : quand le vivier
+l'affamait, \emph{zéro} coupe d'archive était posée sur deux lignes sur six,
+et rétablir leur pose fait gagner $14{,}04$ points d'écart en médiane. Les
+deux énoncés portent sur des choses différentes -- combien de points
+l'archive \emph{contient}, et combien de ses points sont effectivement
+\emph{posés} en centres de coupe. Le premier sature tôt ; le second était le
+verrou. C'est une distinction qu'il faut tenir, sous peine de conclure d'une
+saturation de couverture que la source ne sert à rien, alors qu'elle est la
+seule à pouvoir vider le relâché.
 
 \begin{remark}[à ne pas transporter au chapitre~\ref{sec:livrable}]
 Cette conclusion vaut pour un usage précis, et un seul : l'archive comme
