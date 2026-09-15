@@ -192,6 +192,133 @@ Examinateur  & \JuryExamB\\
 \noindent
 On considère le problème (P) : maximiser une fonction linéaire fractionnaire
 $f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
+fractionnaire multi-objectif en nombres entiers. Les méthodes exactes du
+domaine ne coupent qu'autour de points \emph{dominés} ; nous établissons
+qu'une coupe valide peut être centrée sur \emph{n'importe quel} point
+réalisable, donc sur les points \textbf{efficaces} que produit une
+recherche heuristique. Il en résulte une hybridation où le flux
+d'information s'inverse : la partie heuristique alimente la partie exacte
+en centres de coupe, au lieu d'être certifiée par elle. Une condition de
+clôture, d'un seul programme de faisabilité par point, lève la seule
+réserve. Deux conséquences suivent : si le relâché se \emph{vide},
+l'optimalité est prouvée sans qu'aucune borne n'ait été évaluée ; et la
+borne de certification, évaluée à un \textbf{seuil libre} plutôt qu'à
+l'incumbent, ouvre une seconde route dont la forme unifiée domine les deux.
+
+La méthode rend à tout instant une solution dont l'efficacité est
+\emph{certifiée} et un encadrement valide de la valeur optimale, propriétés
+établies par un théorème de correction globale et vérifiées sur $608$
+exécutions sur $608$. Sur le régime cible, à budget déterministe d'appels
+strictement égal, la coupe d'efficacité gagne $\mathbf{57}$ preuves
+d'optimalité sur $80$ et n'en perd aucune. Le mémoire rapporte au même rang
+les résultats négatifs et les corrections que la mesure a imposées en
+chemin, dont deux qui déplacent les chiffres davantage que le résultat
+principal.
+
+\medskip
+\noindent\textbf{Mots-clés.} Optimisation sur l'ensemble efficace ;
+programmation linéaire fractionnaire multiobjectif en nombres entiers
+(MOILFP) ; coupe d'efficacité ; programmation disjonctive ; algorithme de
+Dinkelbach ; matheuristique ; borne de certification ; budget déterministe
+d'appels.
+
+\medskip
+\noindent\textbf{Abstract.} We consider problem~(P): maximising a linear
+fractional function $f$ over the set $\Ecal$ of efficient solutions of a
+multiple objective integer linear fractional program. Exact methods in the
+literature cut only around \emph{dominated} points; we establish that a
+valid cut may be centred at \emph{any} feasible point, hence at the
+\textbf{efficient} points produced by a heuristic search. This yields a
+hybridisation in which the flow of information is reversed: the heuristic
+part feeds cut centres to the exact part, rather than being certified by
+it. A closure condition, costing one feasibility program per point,
+removes the only caveat. Two consequences follow: if the relaxation becomes
+\emph{empty}, optimality is proved without evaluating any bound; and the
+certification bound, evaluated at a \textbf{free threshold} rather than at
+the incumbent, opens a second route whose unified form dominates both. The
+method returns, at any interruption, a solution whose efficiency is
+\emph{certified} together with a valid enclosure of the optimal value --
+properties established by a global correctness theorem and verified on
+$608$ runs out of $608$. Under a strictly equal deterministic budget of
+solver calls, the efficiency cut gains $\mathbf{57}$ optimality proofs out
+of $80$ and loses none.
+
+\medskip
+\noindent\textbf{Keywords.} Optimisation over the efficient set; MOILFP;
+efficiency cut; disjunctive programming; Dinkelbach's algorithm;
+matheuristic; certification bound; deterministic call budget.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+\listoftables
+\bigskip
+
+\listoffigures
+\bigskip
+
+% ------------------------------------------------------ table des notations
+\section*{Notations}
+\addcontentsline{toc}{section}{Notations}
+\small
+\begin{center}
+\begin{tabular}{@{}ll@{\qquad}ll@{}}
+\toprule
+\multicolumn{2}{@{}l}{\emph{Problème et ensembles}}
+ & \multicolumn{2}{l@{}}{\emph{Certification}}\\
+\midrule
+$\Scal$ & réalisables entiers, $Ax\le b$, $x\in\mathbb{Z}^n_+$
+ & $q$ & valeur de l'incumbent, $q=P/Q$\\
+$\Ecal$ & solutions \emph{efficaces}, $\Ecal\subseteq\Scal$
+ & $\qs$ & $\max_{\Ecal}f$, la valeur cherchée\\
+$\Acal$ & archive, $\Acal\subseteq\Ecal$, certifiée
+ & $q_{\text{lb}}$ & minorant courant, $=f(x_{\text{best}})$\\
+$\mathcal{D}$ & points \emph{dominés} collectés
+ & $q_{\text{ub}}$ & majorant courant\\
+$\Rcal$, $\Rcal_A$ & relâché, après les coupes de $A$
+ & $U$ & majorant de $\max_{\Rcal}\{QN-PD\}$, tronqué à $0$\\
+$\Scal^{+}$ & $\{x\in\Scal : f(x)>\qs\}$
+ & $D_{\min}$ & $\min_{x\in\Scal}D(x)$\\
+$Z(x)$ & vecteur critères $(\Zk(x))_k$
+ & $D^{+}$ & $\min\{D(x):x\in\Rcal,\ QN-PD\ge 0\}$\\
+$\Zk=\Nk/\Dk$ & $k$-ième critère fractionnaire
+ & $D^{+}_{t}$ & idem au seuil libre $t$ (th.~\ref{th:seuil})\\
+$f=N/D$ & fonction à optimiser sur $\Ecal$
+ & $\theta(\bar x)$ & test d'efficacité, $=0 \iff \bar x\in\Ecal$\\
+$e^a_k$ & forme entière de $\Zk(x)-\Zk(a)$
+ & $G_t$ & $N-tD$, numérateur au seuil $t$\\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Réglages}}
+ & \multicolumn{2}{l@{}}{\emph{Mesure}}\\
+\midrule
+$\beta$ & coupes posées par tour (lot)
+ & $\text{cov}_{\Ecal}$ & part de $\Scal^{+}$ coupée depuis $\Ecal$\\
+$\rho$ & tours de certification
+ & $\text{cov}_{\Acal}$ & idem depuis l'archive seule\\
+$k_{\text{élite}}$ & bases d'élite du voisinage
+ & $\text{cov}_{\text{coupes}}$ & idem par les coupes effectivement posées\\
+$k_{\text{hasard}}$ & bases tirées au hasard
+ & $HV$ & hypervolume de l'archive, en \% de $Z(\Ecal)$\\
+\texttt{max\_stall} & tours sans progrès tolérés
+ & $\varepsilon^{+}$ & indicateur epsilon additif, normalisé\\
+$\kappa$ & échelle du second membre ($\texttt{rhs\_scale}$)
+ & \conf{0}{0}{0} & marqueur de configuration (\S\ref{sec:marqueur})\\
+corr & corrélation entre critères, épaisseur du front
+ & \ILP & appel au solveur \emph{entier}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\normalsize
+\bigskip
+
+% ============================================================================
+\clearpage
+\section*{Résumé étendu}
+\addcontentsline{toc}{section}{Résumé étendu}
+\noindent
+On considère le problème (P) : maximiser une fonction linéaire fractionnaire
+$f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
 fractionnaire multi-objectif en nombres entiers. Ce mémoire est organisé
 autour d'\emph{un} résultat, qu'il traite complètement, et rapporte les
 corrections que la mesure lui a imposées en chemin. Le résultat est une
@@ -307,26 +434,73 @@ d'un ordre de grandeur sans commune mesure avec l'écart, ce qui
 \emph{infirme} le diagnostic que nous avions nous-mêmes posé sur l'origine
 de ce verrou. Deux illustrations numériques entièrement détaillées, à $2$ puis
 $3$ variables, exposent le mécanisme pas à pas.
+\clearpage
 
-\medskip
-\noindent\textbf{Mots-clés.} Optimisation sur l'ensemble efficace ;
-programmation linéaire fractionnaire multiobjectif en nombres entiers
-(MOILFP) ; coupe d'efficacité ; programmation disjonctive ; algorithme de
-Dinkelbach ; matheuristique ; borne de certification ; budget déterministe
-d'appels.
-\end{abstract}
-
-\tableofcontents
-\bigskip
-
-\listoftables
-\bigskip
-
-\listoffigures
-\bigskip
-
-% ============================================================================
 \section{Introduction}
+
+\subsection{Problématique, objectifs, méthode et plan}
+\label{sec:pbm}
+
+\paragraph{La problématique.} Optimiser une fonction sur l'ensemble efficace
+d'un programme multi-objectif est un problème dont la difficulté ne vient
+pas de la taille du domaine mais de la \emph{nature} de la contrainte :
+l'ensemble $\Ecal$ sur lequel on optimise n'est ni convexe, ni décrit par des
+inégalités, ni même énumérable en pratique dès que le front s'épaissit.
+Deux voies existent dans la littérature. Les méthodes \emph{exactes}
+énumèrent $\Ecal$ ou le parcourent par coupes successives : elles concluent,
+mais leur coût explose avec la taille. Les \emph{métaheuristiques} trouvent
+vite de bonnes solutions, mais ne savent rien dire de leur qualité -- et,
+dans ce problème précis, ne savent même pas garantir que la solution rendue
+est efficace. Le praticien est donc placé devant un choix qui n'en est pas
+un : une preuve hors d'atteinte, ou une solution sans garantie.
+
+\paragraph{Les objectifs.} Ce mémoire poursuit trois objectifs, dans cet
+ordre de priorité.
+\begin{enumerate}[label=(O\arabic*),leftmargin=3em]
+\item \textbf{Rendre une solution dont l'efficacité est certifiée}, et non
+  supposée, quel que soit l'instant où le calcul est interrompu.
+\item \textbf{Rendre un encadrement valide} $q_{\text{lb}}\le\qs\le
+  q_{\text{ub}}$ à tout instant, de sorte qu'un budget épuisé avant la
+  preuve laisse néanmoins une garantie chiffrée -- un majorant du regret.
+\item \textbf{Réduire l'écart de cet encadrement} à budget fixé, en
+  exploitant une information que les méthodes existantes laissent
+  inutilisée : les points \emph{efficaces} déjà trouvés.
+\end{enumerate}
+
+\paragraph{L'idée directrice.} Les méthodes du domaine coupent autour des
+points \emph{dominés}. Nous montrons qu'on peut couper autour de
+\emph{n'importe quel} point réalisable -- en particulier autour des points
+efficaces que la recherche produit en abondance et qu'aucune méthode
+n'exploitait pour retrancher. C'est la \emph{coupe d'efficacité}, et elle
+donne accès à une preuve que la coupe de dominance ne peut pas produire :
+vider le relâché. L'hybridation exacte--heuristique n'est donc pas un
+assemblage de commodité, mais la conséquence d'un théorème : la recherche
+alimente la certification en centres de coupe, et la certification rend à
+la recherche des régions où chercher.
+
+\paragraph{La méthode de travail.} Chaque affirmation de ce mémoire est
+soit démontrée, soit mesurée, et le texte dit toujours laquelle des deux.
+Les mesures suivent trois règles dont nous ne dérogeons pas : budget
+\emph{déterministe} en appels au solveur entier plutôt qu'en secondes, de
+sorte qu'une exécution rejouée rende exactement le même résultat ; lecture
+\emph{appariée}, même instance et même graine dans les deux bras, jamais
+deux médianes indépendantes ; et publication des résultats \emph{négatifs}
+au même rang que les autres, y compris lorsqu'ils infirment une explication
+que nous avions nous-mêmes avancée. Le mémoire porte la trace de ces
+réfutations plutôt que de présenter un raisonnement lissé après coup.
+
+\paragraph{Le plan.} Les sections~\ref{sec:litt} et~\ref{sec:cadre}
+situent le problème et rappellent, sans les redémontrer, les trois briques
+réutilisées. La section~\ref{sec:verrou} établit le verrou : la coupe de
+dominance n'a rien à mordre quand la recherche est bonne. Les
+sections~\ref{sec:effcut} à~\ref{sec:algo} construisent la contribution --
+coupe d'efficacité, condition de clôture, vivier unique, algorithme complet
+avec sa preuve de correction. Deux illustrations entièrement détaillées, à
+$2$ puis $3$ variables, exposent le mécanisme pas à pas. La
+section~\ref{sec:res} rapporte les mesures, la section~\ref{sec:livrable}
+traite l'archive comme livrable, la section~\ref{sec:aide} l'usage en aide
+à la décision, et la section~\ref{sec:compar} la comparaison avec les deux
+méthodes du domaine dont notre problème généralise les deux moitiés.
 
 \subsection{Le problème}
 
@@ -458,6 +632,7 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
 
 % ============================================================================
 \section{Revue de la littérature}
+\label{sec:litt}
 \label{sec:revue}
 
 Six courants se rejoignent dans (P), et il faut les parcourir séparément
@@ -2778,6 +2953,7 @@ détail d'exposition : chacun des trois déplace les chiffres, l'un d'eux de
 plus de $70$ points sur une instance. Un tableau ne dit donc rien sans dire
 \emph{quelle} version de la méthode il mesure, et nous n'avons pas tout
 remesuré. Chaque tableau porte donc un marqueur à trois positions.
+\label{sec:marqueur}
 
 \begin{remark}[un quatrième levier, et pourquoi il n'a pas sa position]
 \label{rem:quatrieme}
@@ -5427,6 +5603,7 @@ garantie s'améliore, la solution remise empire. Tant que ce point n'est pas cor
 
 % ============================================================================
 \section{Comparaison avec les méthodes du domaine}
+\label{sec:compar}
 \label{sec:comparaison}
 
 \subsection{Trois problèmes voisins, et pourquoi aucun n'est le nôtre}
@@ -6225,6 +6402,104 @@ n'instruit pas.
 
 % ============================================================================
 \appendix
+
+% ============================================================================
+\section{Disponibilité du code et des données}
+\label{sec:dispo}
+
+Ce mémoire renvoie à des programmes -- \texttt{molfp\_core.py},
+\texttt{molfp\_hybride.py}, \texttt{illustration.py},
+\texttt{zerdani\_moulai.py}, \texttt{check\_refs.py} -- et à des lots
+d'instances qu'il faut pouvoir obtenir pour que ses résultats soient
+vérifiables. Cette section dit où, et sous quelles conditions.
+
+\paragraph{Le dépôt.} L'intégralité du code, des bancs de mesure et des
+journaux d'exécution est déposée à l'adresse
+\aRemplir{URL du dépôt (par exemple Zenodo, avec DOI, ou le dépôt
+institutionnel)}, sous la révision \aRemplir{identifiant de la révision
+déposée}. Le dépôt contient, en plus des programmes :
+\begin{itemize}[leftmargin=1.4em]
+\item les $55$ modules Python, dont $9$ de méthode, $30$ de bancs de mesure
+  et $8$ de vérification ;
+\item le générateur d'instances \texttt{molfp\_instance.py}, dont le
+  protocole complet est donné au §\ref{sec:generateur} -- de sorte que
+  \emph{aucune} instance n'a besoin d'être transportée : elles se
+  régénèrent à l'identique depuis leur graine ;
+\item les journaux bruts de chaque campagne rapportée ici, ce qui permet de
+  refaire les agrégats sans relancer les calculs ;
+\item le lot figé de $90$ instances au format \textsc{Json}, pour les
+  comparaisons qui ne passent pas par le générateur.
+\end{itemize}
+
+\paragraph{Reproduire.} Tous les bancs de ce mémoire sont bornés en
+\emph{appels au solveur entier} et non en secondes, et vérifient leur
+propre déterminisme en rejouant chaque configuration deux fois. Une
+exécution sur une autre machine doit donc rendre les mêmes chiffres, à la
+version du solveur près. L'environnement de référence est Python~3.11,
+\textsc{NumPy}~2.4, \textsc{SciPy}~1.17, le solveur étant \textsc{Highs}
+tel que distribué par \textsc{SciPy}~\cite{huangfu2018}. Les
+section~\ref{sec:generateur} donne le protocole
+de génération avec assez de précision pour que le générateur
+soit réimplémentable à partir du seul texte -- ce que nous avons vérifié
+en le réécrivant sans lire le code.
+
+\paragraph{Ce que la vérification externe couvre.} Le module
+\texttt{verify\_protocole.py} régénère $180$ instances à partir du seul
+texte publié et les compare à celles du code, coefficient par coefficient.
+\texttt{check\_refs.py} vérifie que chaque renvoi à un énoncé numéroté
+désigne bien un énoncé de la nature annoncée, ce que \LaTeX{} ne contrôle
+pas. Les deux sont dans le dépôt et se lancent sans argument.
+
+% ============================================================================
+\section{Complexité, et ce qui arrive quand le solveur échoue}
+\label{sec:complexite}
+
+\paragraph{Complexité.} Le problème (P) est \textsf{NP}-difficile : il
+contient l'optimisation linéaire en nombres entiers comme cas particulier
+($p=1$, $d_k=0$, $b_k=1$), et le seul test d'appartenance à $\Ecal$ est
+déjà un programme entier (brique~1). Aucune borne polynomiale n'est donc
+attendue, et ce mémoire n'en propose pas. Ce qui se compte utilement est
+le \emph{nombre d'appels au solveur}, et c'est l'unité de tous nos bancs.
+Par tour de certification, l'algorithme~\ref{alg:cert} consomme au plus
+$\beta$ appels de clôture -- un par centre d'archive du lot -- plus un
+appel de séparation, soit $O(\rho\beta)$ appels pour la boucle entière,
+auxquels s'ajoutent au plus \textsc{tours\_geom} appels pour la seconde
+route. La taille des programmes, elle, croît avec le nombre de coupes
+posées : chaque coupe disjonctive ajoute $p$ variables binaires, ce qui
+est précisément le coût que la coupe par programme générateur supprime
+(§\ref{sec:cglp}).
+
+\paragraph{Quand le solveur échoue.} Un solveur peut rendre trois choses
+qui ne sont pas un optimum : un statut d'interruption par le budget, un
+statut d'infaisabilité, ou une erreur. La méthode traite les trois sans
+jamais produire une garantie fausse, et c'est un point de conception plutôt
+qu'une précaution ajoutée après coup.
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Interrompu.} La valeur rendue n'est pas $\max_{\Rcal}$ mais
+  un majorant de celui-ci -- la borne duale. Elle reste donc utilisable
+  telle quelle dans le théorème~\ref{th:archbound}, qui ne demande que
+  $U\ge\max$. En revanche le \emph{minorant} $D^{+}$ tiré d'une résolution
+  interrompue est arrondi vers le bas, faute de quoi la borne serait trop
+  optimiste. C'est la troisième position du marqueur de configuration.
+\item \textbf{Infaisable.} Sur la clôture, c'est le cas favorable : il
+  \emph{établit} la condition. Sur la séparation, il signifie
+  $\Rcal=\emptyset$ et déclenche la proposition~\ref{prop:vide}. Un statut
+  d'infaisabilité \emph{erroné} a toutefois été observé sur un sommet
+  dégénéré ; la parade est dans le code, non dans une tolérance :
+  les lignes entières sont divisées par le pgcd de leurs coefficients
+  avant d'être posées, ce qui réduit les amplitudes sans changer
+  l'ensemble réalisable.
+\item \textbf{Erreur ou budget épuisé entre deux tours.} La boucle sort
+  avec le meilleur encadrement déjà obtenu. C'est exactement ce que le
+  théorème~\ref{th:global} garantit : l'invariant
+  $q_{\text{lb}}\le\qs\le q_{\text{ub}}$ ne dépend d'aucune sortie
+  particulière, et $q_{\text{ub}}$ n'ayant été mis à jour que par des
+  minima de majorants valides, sa valeur courante l'est aussi.
+\end{itemize}
+Le seul comportement que la méthode ne couvre pas est un solveur qui
+rendrait un optimum \emph{faux} en le déclarant prouvé. Aucune méthode ne
+s'en protège, et c'est la raison pour laquelle nos bancs vérifient
+systématiquement $q_{\text{lb}}\le q_{\text{ub}}$ plutôt que de le supposer.
 \section{Annexe -- historique des versions}
 \label{sec:histo}
 
