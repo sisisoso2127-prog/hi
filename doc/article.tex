@@ -92,6 +92,8 @@ multi-objectif en nombres entiers}
 \author{}
 \date{}
 
+\input{valeurs}
+
 \begin{document}
 \maketitle
 \vspace{-2\baselineskip}
@@ -140,7 +142,7 @@ La méthode rend deux objets et non un : la valeur encadrée, et
 l'\emph{archive} des points efficaces certifiés rencontrés en chemin --
 le sous-ensemble de $\Ecal$ que demande l'énoncé. Nous le mesurons contre
 $\Ecal$ énuméré (section~\ref{sec:livrable}) : pureté~$1$ sur $8/8$
-instances, médiane de $34{,}7\,\%$ des points du front pour $91{,}5\,\%$
+instances, médiane de $\cardMed{}\,\%$ des points du front pour $\hvMed{}\,\%$
 de son hypervolume, et une archive qui s'enrichit avec le budget sur $7$
 lignes sur $8$. Nous établissons au passage que l'indicateur de couverture
 n'a aucun contenu face à un ensemble certifié efficace, où il coïncide avec
@@ -324,13 +326,13 @@ Les contributions sont :
 \item \textbf{Une borne à seuil libre} (th.~\ref{th:seuillibre}) : le
       théorème de certification n'a rien de particulier à l'incumbent, et
       l'évaluer à un seuil avancé sur le relâché ouvre une seconde route,
-      incomparable à la première. Effet rare et énorme : jusqu'à $+38{,}77$
+      incomparable à la première. Effet rare et énorme : jusqu'à $+\gainGeomMax{}$
       points d'écart garanti, $+131{,}31$ de gains cumulés contre $-0{,}19$
       de pertes.
 \item \textbf{L'archive rendue et mesurée} (\S\ref{sec:livrable}) : le
       sous-ensemble de $\Ecal$ que produit la méthode est évalué contre
-      $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de $34{,}7\ \%$ des
-      points du front pour $91{,}5\ \%$ de son hypervolume -- et l'on
+      $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de $\cardMed{}\ \%$ des
+      points du front pour $\hvMed{}\ \%$ de son hypervolume -- et l'on
       établit au passage que l'indicateur de couverture, opposé à un
       ensemble certifié efficace, dégénère en rapport de cardinalité.
 \item \textbf{Un protocole de validation à trois niveaux}, dont un niveau qui
@@ -1550,10 +1552,10 @@ $[0,12,2,10,15,0]$ à $[40,40,40,40,35,36]$ au plafond haut.
 
 \textbf{Le résultat négatif ne tombe qu'en partie.} Sous la configuration
 courante et à plafond déterministe, deux des trois points bougent nettement
--- $98{,}6\to 80{,}8\ \%$ à $n=20$ et $93{,}9\to 78{,}6\ \%$ à $n=30$ --,
+-- $\ecartVingtOrig{}\to \ecartVingt{}\ \%$ à $n=20$ et $\ecartTrenteOrig{}\to \ecartTrente{}\ \%$ à $n=30$ --,
 et l'affirmation « la méthode est sans effet au-delà de $n\ge 20$ » est
 \textbf{retirée}. Ce qui subsiste est plus étroit : à $n=40$,
-$\text{corr}=0$, l'écart ne bouge pas ($96{,}6$ contre $96{,}5$), et ce n'est
+$\text{corr}=0$, l'écart ne bouge pas ($\ecartQuaranteOrig{}$ contre $\ecartQuarante{}$), et ce n'est
 pas faute de borne -- le statut « convergée » y certifie que le majorant
 \emph{est} $\max_{\Rcal}f$, de sorte que le verrou y est passé du côté de
 $q_{\text{lb}}$. Et un écart de $77\ \%$ reste sans usage décisionnel
@@ -1747,7 +1749,7 @@ configuration de production prouve $24/24$ et \emph{aucune} valeur ne peut
 alors rien montrer, un banc saturé mesurant son propre plafond et non une
 insensibilité. Le balayage porte donc sur deux strates à marge réelle :
 régime cible à plafond $80$ ($13/24$ preuves) et $n=20$ à plafond $300$
-($12{,}14\ \%$ d'écart médian).
+($\ecartProd{}\ \%$ d'écart médian).
 
 Deux valeurs sont les seules que le banc départage, et il ne les départage
 pas en leur faveur : $\beta$ et $\rho$ sont les seuls facteurs d'effet
@@ -2864,7 +2866,7 @@ le sait pas. Ici la certification précède l'insertion, et la mesure le
 confirme au lieu de le postuler.
 
 \paragraph{L'archive est creuse mais bien placée}
--- médiane $34{,}7\,\%$ des points de $Z(\Ecal)$ pour $91{,}5\,\%$ de son
+-- médiane $\cardMed{}\,\%$ des points de $Z(\Ecal)$ pour $\hvMed{}\,\%$ de son
 hypervolume, $HV\,\%$ dépassant card\,\% sur les huit lignes d'un facteur
 $1{,}2$ à $8{,}6$. La recherche étant pilotée par $f$, elle rend peu de
 points, mais ceux qui portent le volume. Le point $f$-optimal appartient à
@@ -2988,8 +2990,8 @@ souvent un \emph{proxy} de sa préférence, construit avant de voir les
 solutions ; l'usage courant en aide multicritère à la décision est de
 proposer un petit ensemble de compromis efficaces et de laisser l'arbitrage
 final se faire devant eux~\cite{roy1985}. L'archive est cet ensemble, et la
-section~\ref{sec:livrable} en donne la mesure : médiane de $34{,}7\ \%$ des
-points du front pour $91{,}5\ \%$ de son hypervolume, et $x_{\text{best}}$
+section~\ref{sec:livrable} en donne la mesure : médiane de $\cardMed{}\ \%$ des
+points du front pour $\hvMed{}\ \%$ de son hypervolume, et $x_{\text{best}}$
 toujours dedans. Autrement dit, si le décideur récuse $x_{\text{best}}$ parce
 que $f$ le représentait mal, il ne repart pas de rien : les alternatives
 qu'on lui remet couvrent l'essentiel du volume du front, et chacune est
@@ -3109,7 +3111,7 @@ non retranchée valait $6{,}63$.
 
 \paragraph{Effet.} Sur dix-huit instances (trois graines) à budget
 déterministe de $300$ appels : $8$ améliorées, $2$ dégradées, $8$
-inchangées, gain maximal $+38{,}77$ points. Coût propre : $2$ à $4$ appels
+inchangées, gain maximal $+\gainGeomMax{}$ points. Coût propre : $2$ à $4$ appels
 entiers. Validité vérifiée par énumération exacte sur $72$ instances à deux
 plafonds, $144$ exécutions, aucune violation.
 
@@ -3203,8 +3205,8 @@ attaquent le même écart par deux côtés ; les annoncer séparément sans cett
 réserve reviendrait à compter deux fois. L'effet cumulé, de la configuration
 d'origine à la courante, se lit ainsi sur les trois régimes que la
 section~\ref{sec:echelle} donnait pour immuables :
-$98{,}6\to\mathbf{80{,}8}$, $93{,}9\to\mathbf{78{,}6}$,
-$96{,}6\to 96{,}5\ \%$, et $78{,}9\to\mathbf{1{,}2}$ à $\text{corr}=0{,}5$.
+$\ecartVingtOrig{}\to\mathbf{\ecartVingt{}}$, $\ecartTrenteOrig{}\to\mathbf{\ecartTrente{}}$,
+$\ecartQuaranteOrig{}\to \ecartQuarante{}\ \%$, et $78{,}9\to\mathbf{1{,}2}$ à $\text{corr}=0{,}5$.
 \end{remark}
 
 \subsection{Le relâché n'était pas emboîté dans le budget}
@@ -3525,12 +3527,12 @@ Elles sont énoncées ici plutôt que laissées à découvrir.
 \item \textbf{Un seul solveur.} Le comptage des appels atténue la dépendance
       sans la supprimer.
 \item \textbf{L'archive n'approche pas $\Ecal$ entier.} Elle en rend une
-      médiane de $34{,}7\,\%$ des points, et $7{,}8\,\%$ seulement sur
+      médiane de $\cardMed{}\,\%$ des points, et $7{,}8\,\%$ seulement sur
       l'instance où $|Z(\Ecal)|=218$, avec un $\varepsilon^+$ qui y monte à
       $0{,}503$ (section~\ref{sec:livrable}). Ce n'est pas un défaut
       d'implémentation mais une conséquence de la conception : la recherche
       est pilotée par $f$, et aucun opérateur ne vise la diversité du front
-      pour elle-même. L'hypervolume ($91{,}5\,\%$ en médiane) dit que la
+      pour elle-même. L'hypervolume ($\hvMed{}\,\%$ en médiane) dit que la
       partie rendue en porte l'essentiel du volume ; ce n'est pas la même
       chose que l'approcher tout entier, et nous ne le prétendons pas.
 \end{enumerate}
@@ -3564,8 +3566,8 @@ réfutés : le coût en binaires, puis la couverture de l'archive
 le \emph{seuil} auquel la borne est évaluée, et l'\emph{échelle} sur
 laquelle le vivier classe ses deux sources (§\ref{sec:defauts}). Les corriger
 fait passer les trois régimes que le tableau~\ref{tab:echelle} donnait pour
-immuables de $98{,}6$, $93{,}9$ et $96{,}6\ \%$ à $80{,}8$, $78{,}6$ et
-$96{,}5\ \%$, et une instance à $\text{corr}=0{,}5$ de $78{,}9$ à
+immuables de $\ecartVingtOrig{}$, $\ecartTrenteOrig{}$ et $\ecartQuaranteOrig{}\ \%$ à $\ecartVingt{}$, $\ecartTrente{}$ et
+$\ecartQuarante{}\ \%$, et une instance à $\text{corr}=0{,}5$ de $78{,}9$ à
 $1{,}2\ \%$.
 
 Ce qui reste ouvert est mieux posé qu'avant, et se dit en deux points --

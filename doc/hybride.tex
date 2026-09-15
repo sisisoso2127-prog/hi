@@ -133,6 +133,8 @@ multi-objectif en nombres entiers}
 \author{}
 \date{}
 
+\input{valeurs}
+
 \begin{document}
 
 % ---------------------------------------------------------------- garde ---
@@ -349,7 +351,7 @@ davantage les chiffres que le résultat lui-même. La borne de certification
 n'a rien de particulier à l'incumbent : évaluée à un \textbf{seuil libre},
 avancé sur n'importe quel point du relâché, elle ouvre une seconde route
 incomparable à la première, dont on prend le minimum -- effet rare et
-énorme, jusqu'à $+38{,}77$ points d'écart garanti, $+131{,}31$ de gains
+énorme, jusqu'à $+\gainGeomMax{}$ points d'écart garanti, $+131{,}31$ de gains
 cumulés contre $-0{,}19$ de pertes. Et le vivier de coupes, qui classait ses
 deux sources sur une seule échelle, \textbf{affamait l'archive} jusqu'à zéro
 coupe d'archive sur deux lignes sur six, alors qu'elle est la seule à
@@ -402,7 +404,7 @@ seulement une valeur encadrée, mais l'archive des points efficaces
 certifiés, qui est le sous-ensemble de $\Ecal$ demandé par l'énoncé.
 Mesurée contre $\Ecal$ énuméré, elle est de pureté~$1$ sur $8/8$ instances -- aucun
 point faussement annoncé efficace sur $102$ --, creuse en cardinalité
-(médiane $34{,}7\,\%$) et riche en hypervolume (médiane $91{,}5\,\%$),
+(médiane $\cardMed{}\,\%$) et riche en hypervolume (médiane $\hvMed{}\,\%$),
 contient toujours la solution du problème d'optimisation, et s'enrichit avec
 le budget sur $7$ lignes sur $8$. Nous y établissons aussi que l'indicateur
 de couverture, opposé à la vraie frontière un ensemble certifié efficace,
@@ -420,7 +422,7 @@ plafond~$100$.
 
 Les limites sont énoncées avec la même précision que les gains : à $n\ge 20$
 et front épais la méthode ne conclut toujours pas -- l'écart garanti y reste
-de $79$ à $96{,}5\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
+de $79$ à $\ecartQuarante{}\ \%$, et sur la ligne $n=40$ il ne bouge pas du tout, la
 borne y étant certifiée égale à $\max_{\Rcal}f$ --, et à budget d'appels égal
 le théorème de clôture n'achète aucune preuve supplémentaire : c'est un gain
 de coût, non de capacité. Une coupe disjonctive sans aucune variable binaire, obtenue par
@@ -614,12 +616,12 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       $\Rcal$ et non sur $\Scal$ --, elle devient une seconde route,
       incomparable à la première, dont on prend le minimum. C'est le levier
       le plus fort mesuré ici, et sa forme est rare et énorme plutôt que
-      fréquente et petite : jusqu'à $+38{,}77$ points sur une ligne,
+      fréquente et petite : jusqu'à $+\gainGeomMax{}$ points sur une ligne,
       $+131{,}31$ de gains cumulés contre $-0{,}19$ de pertes.
 \item \textbf{L'archive mesurée comme livrable} (\S\ref{sec:livrable}) :
       le sous-ensemble de $\Ecal$ que l'énoncé demande est enfin mesuré
       contre $\Ecal$ énuméré -- pureté $1$ sur $8/8$, médiane de
-      $34{,}7\ \%$ des points du front pour $91{,}5\ \%$ de son
+      $\cardMed{}\ \%$ des points du front pour $\hvMed{}\ \%$ de son
       hypervolume --, avec une proposition qui vaut au-delà de ce travail :
       face à un ensemble \emph{certifié} efficace, l'indicateur de
       couverture dégénère en rapport de cardinalité et n'apprend rien.
@@ -1724,7 +1726,7 @@ Les trois cellules déjà publiées ailleurs se retrouvent à l'identique dans
 ce plan -- la ligne \textsf{commun/insertion} reproduit cellule par cellule
 la colonne « commun » de ce tableau, et la ligne
 \textsf{alterné/substitut} reproduit les trois valeurs
-$78{,}6\to93{,}0$, $22{,}8\to23{,}0$ et $43{,}9\to0{,}0$ du
+$\ecartTrente{}\to93{,}0$, $22{,}8\to23{,}0$ et $43{,}9\to0{,}0$ du
 tableau~\ref{tab:vivierstable} --, ce qui vérifie au passage que les trois
 bancs mesuraient bien la même chose.
 
@@ -3093,8 +3095,8 @@ appartiennent au régime difficile ($\text{corr}=0$, $n\ge 20$ sur nos
 propres instances) et n'y débordent pas.
 
 Restait le cas où l'hétérogénéité pouvait compter : la
-section~\ref{sec:cglp} raisonnait sur un écart de $98{,}6\ \%$ là où la
-configuration courante en donne $80{,}8$ sur la même instance. Elle a été
+section~\ref{sec:cglp} raisonnait sur un écart de $\ecartVingtOrig{}\ \%$ là où la
+configuration courante en donne $\ecartVingt{}$ sur la même instance. Elle a été
 remesurée, et sa conclusion tient : sur la base améliorée et à
 dix-huit lignes, le gain de la coupe générée est nul en médiane, avec
 $+0{,}45$ point au mieux et $-0{,}19$ au pire, contre $+0{,}11$ sur le socle
@@ -3314,7 +3316,7 @@ cherché où se trouve la marge, et balayé là.
 configuration de production. Strate~A : régime cible, plafond $80$,
 $8$~instances $\times$ $3$ graines d'algorithme -- la production y prouve
 $13/24$, c'est le \emph{nombre de preuves} qui se lit. Strate~B : $n=20$,
-plafond $300$ -- la production y laisse $12{,}14\ \%$ d'écart garanti
+plafond $300$ -- la production y laisse $\ecartProd{}\ \%$ d'écart garanti
 médian. Lecture appariée : même instance, même graine.\ \conf{1}{1}{1}}
 \label{tab:sensib}
 \setlength{\tabcolsep}{4pt}\small
@@ -3404,7 +3406,7 @@ $\beta=80$ et $160$ rendaient l'écart de $\beta=40$ à l'identique. C'était
 vrai du banc tel qu'il avait été mesuré, et cela a cessé de l'être quand
 l'ordre de vivier stable par préfixe est devenu le défaut : la reprise
 intégrale sous ce défaut dégrade la ligne de production de $10{,}94$ à
-$12{,}14$ et laisse $\beta=80$ à $10{,}94$. Ce qui était une saturation est
+$\ecartProd{}$ et laisse $\beta=80$ à $10{,}94$. Ce qui était une saturation est
 devenu un \emph{gain}, unanime sur les quatre instances qui bougent.
 
 Il faut donc retirer la justification, et ne pas la remplacer par une autre
@@ -3422,7 +3424,7 @@ l'avantage d'être vraie.
 \label{rem:medianeartefact}
 Deux facteurs semblaient dire le contraire de la production : une fraction
 LNS constante à $0{,}4$ améliorait l'écart médian de $11{,}74$ points, et
-\texttt{max\_stall}$=1$ de $12{,}14$. Le compte apparié disait déjà l'inverse
+\texttt{max\_stall}$=1$ de $\ecartProd{}$. Le compte apparié disait déjà l'inverse
 -- plus de lignes dégradées qu'améliorées -- et une médiane qui baisse
 pendant que la majorité des lignes monte n'est pas un résultat, c'est un
 symptôme d'échantillon trop petit : la strate~B ne compte que huit
@@ -4216,14 +4218,14 @@ phrase « aucune coupe d'efficacité n'est posée » ne décrit plus la méthode
 
 \textbf{Le résultat négatif, lui, ne tombe qu'en partie.} Sous la
 configuration courante et à plafond déterministe, deux des trois points
-bougent nettement : $98{,}6\to 80{,}8$ à $n=20$ et $93{,}9\to 78{,}6$ à
+bougent nettement : $\ecartVingtOrig{}\to \ecartVingt{}$ à $n=20$ et $\ecartTrenteOrig{}\to \ecartTrente{}$ à
 $n=30$ (§\ref{sec:seuil}). L'affirmation « la méthode est sans effet
 au-delà de $n\ge 20$ » est donc \textbf{retirée}. Ce qui subsiste est plus
 étroit et plus intéressant :
 
 \begin{itemize}[leftmargin=*,itemsep=2pt]
-\item à $n=40$, $\text{corr}=0$, l'écart ne bouge pas -- $96{,}6$ contre
-      $96{,}5$ -- et ce n'est pas faute de borne : le statut « convergée »
+\item à $n=40$, $\text{corr}=0$, l'écart ne bouge pas -- $\ecartQuaranteOrig{}$ contre
+      $\ecartQuarante{}$ -- et ce n'est pas faute de borne : le statut « convergée »
       y certifie que le majorant annoncé \emph{est} $\max_{\Rcal}f$. Le
       verrou y a changé de terme, il est passé du côté de
       $q_{\text{lb}}$ (§\ref{sec:couverture}) ;
@@ -4410,7 +4412,7 @@ mordent : à $n=20$, $\text{corr}=0$, la borne supérieure passe de $230{,}26$
 borne dans ce régime ; tout ce qui avait été essayé auparavant l'y laissait
 strictement inchangée.
 
-Mais l'écart garanti, lui, passe de $98{,}6$ à $98{,}5\ \%$. La raison est
+Mais l'écart garanti, lui, passe de $\ecartVingtOrig{}$ à $98{,}5\ \%$. La raison est
 arithmétique : avec $q_{\text{lb}}\approx 3{,}7$ et $q_{\text{ub}}\approx
 230$, réduire la borne supérieure de $7\ \%$ ne déplace le rapport que d'un
 dixième de point. Sur les six lignes, le gain médian est \emph{nul} et le
@@ -5111,7 +5113,7 @@ $30$ & $0$ & $38{,}0$ & $32{,}5$ & $+5{,}54$ & $3$
  encadrements tous valides \quad$\bullet$\quad convergée $13/18$}\\
 \multicolumn{12}{l}{améliorées $\mathbf{9}$, dégradées $\mathbf{1}$,
  inchangées $8$ \quad$\bullet$\quad gain médian $+0{,}01$, moyen $+7{,}28$,
- maximum $+38{,}77$}\\
+ maximum $+\gainGeomMax{}$}\\
 \multicolumn{12}{l}{somme des \emph{gains} $\mathbf{+131{,}31}$, somme des
  \emph{pertes} $-0{,}19$, net $+131{,}12$ point}\\
 \bottomrule
@@ -5137,7 +5139,7 @@ la somme des gains atteint $+131{,}31$ contre $-0{,}19$ pour celle des
 pertes -- un rapport de $\mathbf{691}$ pour un --, et le \emph{net},
 $+131{,}12$, est ce dont la moyenne est tirée ($131{,}12/18=+7{,}28$). Sur
 huit lignes l'effet ne fait rien du tout ; sur \textbf{cinq} il retire de
-$14$ à $39$ points -- $38{,}77$, $34{,}63$, $17{,}03$, $14{,}85$ et
+$14$ à $39$ points -- $\gainGeomMax{}$, $34{,}63$, $17{,}03$, $14{,}85$ et
 $14{,}52$. Il reste \emph{rare et énorme} plutôt que fréquent et petit ;
 simplement, il est maintenant assez net pour que le comptage des signes le
 voie aussi. La remarque~\ref{rem:troisversions} tire le bilan de ces trois
@@ -5163,7 +5165,7 @@ sans binaire -- rapporte $0{,}01$ point en moyenne dans cette même
 configuration, $0{,}45$ sur sa meilleure ligne, et $0{,}11$ sur le socle
 bien plus lâche de la configuration d'origine ; même à budget triple, où il
 cesse d'être inerte, son maximum vaut $4{,}95$ (§\ref{sec:cglp}).
-Celui-ci en rapporte $38{,}77$ sur sa meilleure ligne, puis $34{,}63$,
+Celui-ci en rapporte $\gainGeomMax{}$ sur sa meilleure ligne, puis $34{,}63$,
 $17{,}03$, $14{,}85$ et $14{,}52$. Ce n'est pas le même phénomène mesuré
 plus finement, c'est un autre phénomène.
 
@@ -5203,8 +5205,8 @@ tableau~\ref{tab:cglp} -- six cellules, une graine -- confrontée à la même
 graine du tableau~\ref{tab:geom}. Sur ces six cellules, $4$ progressent,
 \textbf{aucune} ne recule, $2$ sont inchangées parce que leur écart valait
 déjà $0$ des deux côtés ; gain médian $+7{,}7$, moyen $+18{,}5$. Les trois
-chiffres que la section d'échelle donnait pour immuables -- $98{,}6$,
-$93{,}9$, $96{,}6$ -- sont devenus $80{,}8$, $78{,}6$ et $96{,}5$.
+chiffres que la section d'échelle donnait pour immuables -- $\ecartVingtOrig{}$,
+$\ecartTrenteOrig{}$, $\ecartQuaranteOrig{}$ -- sont devenus $\ecartVingt{}$, $\ecartTrente{}$ et $\ecartQuarante{}$.
 
 \begin{remark}[cette grille avait cinq cellules et parlait de douze lignes]
 Elle omettait $20/0{,}5$ sans le dire, portait $82{,}6$ pour un
@@ -5231,7 +5233,7 @@ des gains de $17$ à $39$.
 
 \paragraph{Une limite honnête, et la question qu'elle ouvre.} À $n=40$,
 $\text{corr}=0$, graine~$1$, l'écart ne bouge que de $0{,}06$ point --
-$96{,}6$ contre $96{,}5$ -- alors même que le statut « convergée » certifie
+$\ecartQuaranteOrig{}$ contre $\ecartQuarante{}$ -- alors même que le statut « convergée » certifie
 que la borne annoncée \emph{est} $\max_{\Rcal}f$. Si le majorant ne peut
 plus descendre, ce qui reste tient à l'autre terme de l'écart :
 $q_{\text{lb}}$. Or la section~\ref{sec:couverture} a précisément établi, là
@@ -5390,7 +5392,7 @@ et la mesure le confirme sur $102$ points au total. C'est la contrepartie de
 notre coût par point.
 
 \paragraph{L'archive est creuse mais bien placée.}
-Médiane : $34{,}7\,\%$ des points de $Z(E)$, et $91{,}5\,\%$ de son
+Médiane : $\cardMed{}\,\%$ des points de $Z(E)$, et $\hvMed{}\,\%$ de son
 hypervolume. Le rapport est constant dans le sens de l'inégalité sur les
 huit lignes -- $HV\,\%$ dépasse card\,\% partout, d'un facteur $1{,}2$ à
 $8{,}6$, et d'autant plus que le front est épais. Ce n'est pas un hasard : la recherche est pilotée par $f$ et un point
@@ -5471,8 +5473,8 @@ retirer la ligne.
 \begin{enumerate}
 \item La méthode rend un sous-ensemble de $E$ \emph{certifié} -- pureté $1$
   sur $8/8$, vérifiée et non postulée.
-\item Ce sous-ensemble est creux en cardinalité (médiane $34{,}7\,\%$) et
-  riche en hypervolume (médiane $91{,}5\,\%$) : il tient la partie du front
+\item Ce sous-ensemble est creux en cardinalité (médiane $\cardMed{}\,\%$) et
+  riche en hypervolume (médiane $\hvMed{}\,\%$) : il tient la partie du front
   que $f$ désigne, qui est celle que le sujet demande.
 \item Il contient toujours la solution du problème d'optimisation.
 \item Il s'enrichit quand le budget croît, sur $7$ lignes sur $8$.
@@ -5551,7 +5553,7 @@ même :
 
 \noindent
 Le troisième régime n'est pas rare chez nous : à $n\ge 20$ et critères
-indépendants, l'écart garanti vaut encore $81$, $79$ et $96{,}5\ \%$ dans la
+indépendants, l'écart garanti vaut encore $81$, $79$ et $\ecartQuarante{}\ \%$ dans la
 configuration courante (§\ref{sec:echellehonnete}). Nous ne le présentons pas
 comme un service rendu au décideur, mais comme un aveu utilisable : la
 méthode y dit qu'elle ne garantit rien, plutôt que de laisser croire le
@@ -5585,8 +5587,8 @@ souvent un \emph{proxy} de sa préférence, construit avant de voir les
 solutions ; l'usage courant en aide multicritère à la décision est de
 proposer un petit ensemble de compromis efficaces et de laisser l'arbitrage
 final se faire devant eux~\cite{roy1985}. L'archive est cet ensemble, et la
-section~\ref{sec:livrable} en donne la mesure : médiane de $34{,}7\ \%$ des
-points du front pour $91{,}5\ \%$ de son hypervolume, et $x_{\text{best}}$
+section~\ref{sec:livrable} en donne la mesure : médiane de $\cardMed{}\ \%$ des
+points du front pour $\hvMed{}\ \%$ de son hypervolume, et $x_{\text{best}}$
 toujours dedans. Autrement dit, si le décideur récuse $x_{\text{best}}$ parce
 que $f$ le représentait mal, il ne repart pas de rien : les alternatives
 qu'on lui remet couvrent l'essentiel du volume du front, et chacune est
@@ -6158,10 +6160,10 @@ qu'elles délimitent exactement ce que ce travail établit.
       formulation antérieure de cette limite -- « aucun effet au-delà de
       $n\ge 20$, écarts $98{,}3$, $97{,}1$ et $92{,}6\ \%$ inchangés » -- est
       \textbf{retirée} : sous la configuration courante et à plafond
-      déterministe, l'écart passe de $98{,}6$ à $80{,}8\ \%$ à $n=20$ et de
-      $93{,}9$ à $78{,}6\ \%$ à $n=30$ (§\ref{sec:seuil}). Ce qui subsiste
+      déterministe, l'écart passe de $\ecartVingtOrig{}$ à $\ecartVingt{}\ \%$ à $n=20$ et de
+      $\ecartTrenteOrig{}$ à $\ecartTrente{}\ \%$ à $n=30$ (§\ref{sec:seuil}). Ce qui subsiste
       est plus étroit. D'une part $n=40$, $\text{corr}=0$ ne bouge pas --
-      $96{,}6$ contre $96{,}5$ -- et le statut « convergée » y certifie que
+      $\ecartQuaranteOrig{}$ contre $\ecartQuarante{}$ -- et le statut « convergée » y certifie que
       le majorant \emph{est} $\max_{\Rcal}f$ : le verrou y est passé du côté
       de $q_{\text{lb}}$. D'autre part un écart de $79\ \%$ reste sans usage
       décisionnel (§\ref{sec:aide}) : la méthode ne conclut toujours pas à
@@ -6185,13 +6187,13 @@ qu'elles délimitent exactement ce que ce travail établit.
       budget d'appels égal il n'en gagne aucune (\S\ref{sec:determ}) : c'est
       un gain de coût, non de capacité.
 \item \textbf{L'archive n'approche pas $\Ecal$ entier.} Elle en rend une
-      médiane de $34{,}7\ \%$ des points -- et $7{,}8\ \%$ sur l'instance
+      médiane de $\cardMed{}\ \%$ des points -- et $7{,}8\ \%$ sur l'instance
       où $|Z(\Ecal)|=218$ --, avec un $\varepsilon^+$ qui monte alors à
       $0{,}503$ (§\ref{sec:livrable}). Ce n'est pas une défaillance de
       l'implémentation mais une conséquence de la conception : la recherche
       est pilotée par $f$ et \emph{aucun opérateur ne vise la diversité du
       front pour elle-même}. Ce que nous rendons est la partie du front que
-      $f$ désigne, et l'hypervolume ($91{,}5\ \%$ en médiane) dit qu'elle
+      $f$ désigne, et l'hypervolume ($\hvMed{}\ \%$ en médiane) dit qu'elle
       en porte l'essentiel du volume ; ce n'est pas la même chose que
       l'approcher tout entier, et nous ne le prétendons pas.
 \end{enumerate}
@@ -6223,7 +6225,7 @@ laquelle le vivier classe ses deux sources (§\ref{sec:vivier}).
 Ce qui reste ouvert, après ces deux corrections, se dit en trois points.
 
 \paragraph{La borne à $n=40$, $\text{corr}=0$.} Elle ne bouge pas --
-$96{,}6\to 96{,}5\ \%$ -- alors que le statut « convergée » certifie qu'elle
+$\ecartQuaranteOrig{}\to \ecartQuarante{}\ \%$ -- alors que le statut « convergée » certifie qu'elle
 \emph{est} $\max_{\Rcal}f$. Ce qui reste tient donc à $q_{\text{lb}}$, et la
 recherche y est effectivement déficiente : en triplant son budget,
 l'incumbent y gagne $49{,}6\ \%$. Mais cela n'achète que $1{,}7$ point
@@ -6281,7 +6283,7 @@ correction : la lancer aussi au premier tour, quand le modèle est petit.
 Elle est valide sans discussion -- toute valeur rendue par cette route est
 une borne supérieure valide, et l'on prend le minimum -- et elle ne coûte
 que trois appels entiers. Elle ne corrige \textbf{rien} : les deux lignes
-fautives restent à $78{,}6\to93{,}0$ et $22{,}8\to23{,}0$, inchangées au
+fautives restent à $\ecartTrente{}\to93{,}0$ et $22{,}8\to23{,}0$, inchangées au
 dixième de point. La raison est celle qu'on vient d'établir, et c'est ce qui
 rend le diagnostic cohérent : le premier tour \emph{lui-même} n'est pas le
 même d'un budget à l'autre. Il n'y a pas d'instant précoce où les deux

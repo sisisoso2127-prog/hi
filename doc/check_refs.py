@@ -33,6 +33,8 @@ Usage :  python check_refs.py [fichier.tex ...]     (defaut : les deux memoires)
 
 from __future__ import annotations
 
+import os
+import pathlib
 import re
 import sys
 from typing import Dict, List, Tuple
@@ -84,6 +86,25 @@ def labels_par_env(src: str) -> Dict[str, str]:
             for lab in re.findall(r"\\label\{([^}]+)\}", bloc):
                 if lab not in math:
                     out.setdefault(lab, env)
+    return out
+
+
+def _defs_latex(txt: str) -> Dict[str, str]:
+    """\\newcommand{\\nom}{corps} -- corps lu en comptant les accolades.
+
+    Une expression reguliere ne suffit pas : le corps contient lui-meme des
+    accolades, comme dans 80{,}8, et s'arrete alors a la premiere fermante.
+    """
+    out: Dict[str, str] = {}
+    for m in re.finditer(r"\\newcommand\{\\(\w+)\}\{", txt):
+        i, prof = m.end(), 1
+        while i < len(txt) and prof:
+            if txt[i] == "{":
+                prof += 1
+            elif txt[i] == "}":
+                prof -= 1
+            i += 1
+        out[m.group(1)] = txt[m.end():i - 1]
     return out
 
 
@@ -157,6 +178,23 @@ def controle(path: str) -> List[str]:
             cites = set(re.findall(r"\\(?:eq|page|auto)?ref\{([^}]+)\}", bloc))
             for lab in sorted(siens & cites):
                 pbs.append(f"renvoi CIRCULAIRE : {lab} se cite lui-meme")
+    # -- 5. valeurs mesurees echappees de valeurs.tex -----------------------
+    # Le memoire et l'article citent les memes chiffres. Une remesure qui
+    # corrige l'un sans l'autre les fait diverger en silence -- c'est
+    # arrive. Les valeurs partagees vivent donc dans valeurs.tex, et toute
+    # occurrence LITTERALE hors tableau est un retour au probleme.
+    val = pathlib.Path(os.path.join(os.path.dirname(path) or ".",
+                                    "valeurs.tex"))
+    if val.exists():
+        defs = _defs_latex(val.read_text(encoding="utf-8"))
+        litteraux = {v: k for k, v in defs.items() if "{,}" in v}
+        for num, ligne in enumerate(sans_comm.split("\n"), 1):
+            if "&" in ligne or "newcommand" in ligne:
+                continue                      # cellule de tableau, ou la def
+            for lit, mac in litteraux.items():
+                if lit in ligne:
+                    pbs.append(f"valeur mesuree en dur ligne {num} : "
+                               f"{lit} -- utiliser \\{mac}")
     return pbs
 
 

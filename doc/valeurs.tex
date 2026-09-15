@@ -1,0 +1,45 @@
+% ============================================================================
+% valeurs.tex -- SOURCE UNIQUE des resultats mesures cites dans le texte
+% ============================================================================
+%
+% Pourquoi ce fichier. Le memoire et l'article citent les memes chiffres. Une
+% remesure corrigeait l'un et oubliait l'autre : la valeur 80,8 a ainsi ete
+% corrigee dans le memoire en gardant 77,2 dans l'article, et il a fallu une
+% relecture externe pour s'en apercevoir. Les macros ci-dessous suppriment la
+% possibilite meme de cette divergence : les deux documents lisent le meme
+% fichier, et une remesure ne se met a jour qu'ICI.
+%
+% PORTEE. Ces macros couvrent les valeurs CITEES DANS LE TEXTE, pas les
+% cellules des tableaux : un tableau est un releve, il se regenere en entier
+% depuis son journal quand le banc est rejoue. C'est le texte qui se perime
+% sans qu'on le voie, parce que rien ne le relie a la mesure.
+%
+% REGLE. N'ajouter ici que ce qui est cite dans les DEUX documents, ou qui a
+% deja bouge une fois. Le reste alourdirait sans proteger.
+% ============================================================================
+
+% -- ecarts garantis de reference, configuration courante, plafond 300 ------
+\newcommand{\ecartVingt}{80{,}8}      % n=20, corr=0, graine 1
+\newcommand{\ecartTrente}{78{,}6}     % n=30, corr=0, graine 1
+\newcommand{\ecartQuarante}{96{,}5}   % n=40, corr=0, graine 1
+
+% -- les memes lignes dans la configuration d'origine -----------------------
+\newcommand{\ecartVingtOrig}{98{,}6}
+\newcommand{\ecartTrenteOrig}{93{,}9}
+\newcommand{\ecartQuaranteOrig}{96{,}6}
+
+% -- archive comme livrable : medianes sur huit instances -------------------
+\newcommand{\cardMed}{34{,}7}         % cardinalite, % de Z(E)
+\newcommand{\hvMed}{91{,}5}           % hypervolume, % de Z(E)
+\newcommand{\epsMed}{0{,}137}         % epsilon+ normalise
+\newcommand{\puretePts}{102}          % points sur lesquels la purete vaut 1
+
+% -- seconde route et forme unifiee ----------------------------------------
+\newcommand{\gainGeomMax}{38{,}77}    % meilleur gain, seconde route
+\newcommand{\gainUnifMax}{88{,}11}    % resserrement max, route a un tour
+
+% -- sensibilite : ligne de production sur la strate B ---------------------
+\newcommand{\ecartProd}{12{,}14}
+
+% -- encadrements verifies -------------------------------------------------
+\newcommand{\nbEncadrements}{608}     % 320 au lot cible + 288 au lot fige
