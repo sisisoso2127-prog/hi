@@ -146,8 +146,11 @@ incomparable à la première, dont on prend le minimum -- effet rare et
 cumulés contre $-0{,}19$ de pertes. Et le vivier de coupes, qui classait ses
 deux sources sur une seule échelle, \textbf{affamait l'archive} jusqu'à zéro
 coupe d'archive sur deux lignes sur six, alors qu'elle est la seule à
-pouvoir vider le relâché ; les classer dans chaque source puis
-\emph{alterner} rétablit la monotonie en budget, $4/6$ à $\mathbf{6/6}$.
+pouvoir vider le relâché. Deux corrections ont été nécessaires -- classer
+dans chaque source puis \emph{alterner}, et ranger le vivier dans un ordre
+\emph{stable par préfixe} -- et elles portent ensemble la monotonie en
+budget de $\mathbf{1/6}$ à $\mathbf{6/6}$, aucune des deux n'y suffisant
+seule (remarque~\ref{rem:croise}).
 
 Les mesures sont rapportées par \textbf{paires} -- même instance, même
 graine, les deux variantes -- et jamais en comparant deux médianes
@@ -317,9 +320,11 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
       \emph{seule échelle} affame l'archive -- jusqu'à zéro coupe d'archive
       sur deux lignes sur six -- alors qu'elle est la seule source capable
       de \emph{vider} le relâché. On classe donc à l'intérieur de chaque
-      source, puis on alterne, sans paramètre nouveau. La monotonie en
-      budget passe de $4/6$ à $\mathbf{6/6}$, et une ligne de $46{,}2\ \%$ d'écart
-      garanti à $\mathbf{0{,}0\ \%}$.
+      source, puis on alterne, sans paramètre nouveau. Jointe à un ordre
+      de vivier stable par préfixe -- les deux sont nécessaires et aucune
+      ne suffit seule --, la monotonie en budget passe de $\mathbf{1/6}$ à
+      $\mathbf{6/6}$, et une ligne de $46{,}2\ \%$ d'écart garanti à
+      $\mathbf{0{,}0\ \%}$.
       \emph{Nous avions annoncé ici qu'une mise en \oe uvre à budgets
       séparés perdait $28$ preuves sur $90$. Ce chiffre est retiré}
       (\S\ref{sec:vivier}) : remesuré sous plafond déterministe il ne
@@ -1322,16 +1327,53 @@ C'est précisément
 ce qu'une coupe de dominance ne peut pas produire -- vider le relâché -- et
 il a suffi que l'archive cesse d'être affamée.
 
-\begin{remark}[il a fallu deux corrections, pas une]
+\begin{remark}[il a fallu deux corrections, pas une, et le plan croisé le dit]
+\label{rem:croise}
 Ce tableau a longtemps porté « deux lignes sur six reculent encore, et nous
 ne savons pas nommer l'autre cause ». L'affamement de l'archive était une
 cause réelle de la non-monotonie, et ce n'était pas la seule : la seconde
 est que le vivier n'était pas \emph{stable par préfixe} en budget, de sorte
-que le relâché n'y était pas emboîté (§\ref{sec:histo}). Les deux corrigées,
-la monotonie est complète -- $6/6$ -- et plus aucune ligne ne recule. Nous
-laissons la trace de l'état intermédiaire parce qu'il aura tenu plusieurs
-versions de ce mémoire, et qu'une cause « non nommée » qui finit par l'être
-mérite d'être racontée dans cet ordre.
+que le relâché n'y était pas emboîté (§\ref{sec:histo}).
+
+Deux tableaux de ce mémoire annoncent chacun « $4/6\to 6/6$ » : celui-ci
+pour l'alternance, le tableau~\ref{tab:vivierstable} pour l'ordre
+d'insertion. Les deux sont exacts et les deux sont partiels, car chacun
+mesure sa correction \emph{depuis une base qui porte déjà l'autre}. Le
+plan croisé des deux leviers, mesuré en une seule exécution sur les six
+lignes du diagnostic, lève l'ambiguïté :
+
+\begin{center}\small
+\begin{tabular}{lcc}
+\toprule
+& ordre par substitut & ordre d'insertion\\
+\midrule
+vivier commun   & $\mathbf{1/6}$ \emph{(configuration d'origine)} & $4/6$\\
+vivier alterné  & $4/6$ & $\mathbf{6/6}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+La configuration publiée était donc à $\mathbf{1/6}$, non à $4/6$ : cinq
+lignes sur six y reculaient quand on triplait le plafond. Chaque levier
+seul en rétablit trois, aucun ne suffit, et il faut les deux pour atteindre
+$6/6$. L'effet réel est ainsi $\mathbf{1/6\to 6/6}$, bien plus grand que ce
+qu'aucun des deux tableaux ne montre, et il n'est attribuable ni à l'un ni
+à l'autre pris seul. Toute phrase qui porte « $4/6\to 6/6$ » au crédit
+d'une seule des deux corrections est donc à lire comme la dernière marche,
+pas comme l'escalier.
+
+Les trois cellules déjà publiées ailleurs se retrouvent à l'identique dans
+ce plan -- la ligne \textsf{commun/insertion} reproduit cellule par cellule
+la colonne « commun » de ce tableau, et la ligne
+\textsf{alterné/substitut} reproduit les trois valeurs
+$78{,}6\to93{,}0$, $22{,}8\to23{,}0$ et $43{,}9\to0{,}0$ du
+tableau~\ref{tab:vivierstable} --, ce qui vérifie au passage que les trois
+bancs mesuraient bien la même chose.
+
+Nous laissons la trace de l'état intermédiaire parce qu'il aura tenu
+plusieurs versions de ce mémoire, et qu'une cause « non nommée » qui finit
+par l'être mérite d'être racontée dans cet ordre.
 \end{remark}
 
 % ============================================================================
@@ -4424,9 +4466,9 @@ appariée, plafond $300$.\ \conf{1}{1}{1}}
 tours accordés & lignes \textsf{limit} & resserrement moyen & maximum
  & mieux/pire & plus lâche\\
 \midrule
-$1$  & $13/18$ & $\mathbf{+15{,}02\ \%}$ & $\mathbf{+89{,}47\ \%}$
+$1$  & $13/18$ & $\mathbf{+14{,}94\ \%}$ & $\mathbf{+88{,}11\ \%}$
  & $5/0$ & $0$\\
-$2$  & $6/18$  & $+3{,}50\ \%$ & $+38{,}61\ \%$ & $3/0$ & $0$\\
+$2$  & $7/18$  & $+6{,}84\ \%$ & $+60{,}21\ \%$ & $4/0$ & $0$\\
 $3$  & $1/18$  & $+0{,}00\ \%$ & $+0{,}08\ \%$ & $1/0$ & $0$\\
 $12$ \emph{(production)} & $0/18$ & $+0{,}00\ \%$ & $+0{,}00\ \%$
  & $0/0$ & $0$\\
@@ -4456,8 +4498,8 @@ Ce n'est pas un artifice -- c'est exactement la situation qu'analyse
 le~\S\ref{sec:histo}, celle d'une route affamée par le plafond -- et cela
 paramètre proprement la distance à la convergence. Le
 tableau~\ref{tab:unifiecoupe} donne le résultat, et il est net :
-\textbf{jusqu'à $+89{,}5\ \%$} de resserrement, $+15\ \%$ en moyenne quand
-la route n'a qu'un tour, pour \textbf{un} appel entier de plus. Le gradient
+\textbf{jusqu'à $+88{,}1\ \%$} de resserrement, $+14{,}9\ \%$ en moyenne
+quand la route n'a qu'un tour, pour \textbf{un} appel entier de plus. Le gradient
 est sans ambiguïté -- plus la route est coupée tôt, plus la forme unifiée
 rapporte -- et il se referme exactement quand la convergence redevient
 possible.
@@ -4466,7 +4508,7 @@ possible.
 Le $+0{,}00$ du tableau~\ref{tab:unifie} ne mesurait pas l'inutilité de la
 forme unifiée, il mesurait l'\emph{absence du régime où elle agit}. La
 distinction n'est pas rhétorique : publier le premier chiffre seul aurait
-enterré un gain de $89\ \%$, et publier le second seul aurait fait passer
+enterré un gain de $88\ \%$, et publier le second seul aurait fait passer
 pour un gain de production ce qui n'apparaît que sous une route affamée.
 Les deux tableaux se lisent donc ensemble.
 
