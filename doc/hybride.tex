@@ -98,13 +98,93 @@
            {ô}{{\^o}}1 {î}{{\^i}}1 {ç}{{\c c}}1 {É}{{\'E}}1
 }
 
-\title{\bfseries La coupe d'efficacité\\[2pt]
-\large Une hybridation exacte--heuristique pour l'optimisation d'une fonction
-linéaire fractionnaire sur l'ensemble efficace d'un MOILFP}
+% ============================================================================
+% CHAMPS DE LA PAGE DE GARDE -- A REMPLIR PAR L'AUTEUR
+% Tant qu'un champ vaut \aRemplir, il s'imprime en rouge et en italique :
+% aucune de ces valeurs n'est inventee ici, et aucune ne doit partir au
+% depot telle quelle.
+% ============================================================================
+\newcommand{\aRemplir}[1]{\textcolor{red}{\itshape[#1]}}
+\newcommand{\Auteur}{\aRemplir{nom et prénom de l'auteur}}
+\newcommand{\Universite}{\aRemplir{université}}
+\newcommand{\Faculte}{\aRemplir{faculté}}
+\newcommand{\Departement}{\aRemplir{département}}
+\newcommand{\Diplome}{\aRemplir{intitulé du diplôme}}
+\newcommand{\Specialite}{\aRemplir{spécialité}}
+\newcommand{\Encadrant}{\aRemplir{nom du directeur de thèse}}
+\newcommand{\GradeEncadrant}{\aRemplir{grade}}
+\newcommand{\JuryPresident}{\aRemplir{président du jury}}
+\newcommand{\JuryExamA}{\aRemplir{examinateur}}
+\newcommand{\JuryExamB}{\aRemplir{examinateur}}
+\newcommand{\DateSoutenance}{\aRemplir{date de soutenance}}
+\newcommand{\LeTitre}{La coupe d'efficacité}
+\newcommand{\LeSousTitre}{Une hybridation exacte--heuristique pour
+l'optimisation d'une fonction linéaire fractionnaire sur l'ensemble
+efficace d'un MOILFP}
+
+\hypersetup{pdftitle={\LeTitre},
+            pdfsubject={Optimisation sur l'ensemble efficace d'un MOILFP},
+            pdfkeywords={MOILFP; ensemble efficace; coupe d'efficacité;
+                         programmation disjonctive; Dinkelbach;
+                         matheuristique; borne de certification}}
+
+\title{\bfseries \LeTitre\\[2pt]
+\large \LeSousTitre}
 \author{}
 \date{}
 
 \begin{document}
+
+% ---------------------------------------------------------------- garde ---
+\begin{titlepage}
+\centering
+\vspace*{0.4cm}
+{\large\scshape \Universite\par}
+\vspace{2mm}
+{\large \Faculte\par}
+{\large \Departement\par}
+\vspace{1.6cm}
+{\large Mémoire présenté en vue de l'obtention du diplôme de\par}
+\vspace{2mm}
+{\Large\bfseries \Diplome\par}
+\vspace{2mm}
+{\large Spécialité : \Specialite\par}
+\vspace{1.4cm}
+\rule{\linewidth}{0.5pt}\par\vspace{5mm}
+{\LARGE\bfseries \LeTitre\par}\vspace{4mm}
+{\large \LeSousTitre\par}
+\vspace{5mm}\rule{\linewidth}{0.5pt}
+\vspace{1.4cm}
+{\large Présenté par\par}\vspace{2mm}
+{\Large\bfseries \Auteur\par}
+\vspace{1.4cm}
+{\large Sous la direction de\par}\vspace{2mm}
+{\large \GradeEncadrant~\Encadrant\par}
+\vfill
+{\large Soutenu le \DateSoutenance\ devant le jury composé de :\par}
+\vspace{4mm}
+\begin{tabular}{ll}
+Président    & \JuryPresident\\
+Directeur    & \Encadrant\\
+Examinateur  & \JuryExamA\\
+Examinateur  & \JuryExamB\\
+\end{tabular}
+\vfill
+\end{titlepage}
+
+% ------------------------------------------------------- dédicace, merci ---
+\thispagestyle{empty}
+\vspace*{3cm}
+\begin{flushright}\itshape
+\aRemplir{dédicace -- facultative}
+\end{flushright}
+\clearpage
+
+\thispagestyle{empty}
+\section*{Remerciements}
+\aRemplir{remerciements -- à rédiger par l'auteur}
+\clearpage
+
 \maketitle
 \vspace{-1.6\baselineskip}
 
@@ -2894,7 +2974,9 @@ hasard mais posé proportionnellement à la somme de sa ligne. C'est ce qui
 rend $|\Scal|$ pilotable à $(n,m)$ fixés, donc ce qui permet de comparer
 deux tailles à difficulté comparable plutôt qu'à formule comparable. Les
 bornes sur les variables s'en déduisent :
-$\overline{x}_j=\min_{i\,:\,A_{ij}>0}\lfloor b_i/A_{ij}\rfloor$, valide car
+$\text{ub}_j=\min_{i\,:\,A_{ij}>0}\lfloor b_i/A_{ij}\rfloor$ -- la notation
+de la proposition~\ref{prop:hyp}, $\bar x$ étant déjà pris pour le centre
+de coupe --, valide car
 $A\ge 0$ et $x\ge 0$. Une colonne nulle de $A$ rendrait le domaine non
 borné ; le générateur la corrige en y plaçant un coefficient tiré dans
 $\{1,\dots,9\}$, ce qui établit~(A2). Et $\beta_k\ge 1$ avec $d_k\ge 0$
@@ -3728,8 +3810,9 @@ prise à $n=30$ même à front épais, et l'a perdue à $n=50$.
 \label{rem:pasdevt}
 À ces tailles l'énumération est hors de portée : il n'y a \textbf{pas de
 vérité terrain}. Le contrôle $q_{\text{lb}}\le\qs\le q_{\text{ub}}$, qui
-couvre $288$ exécutions sur $288$ aux deux lots précédents
-(§\ref{sec:cibledeterm} et~§\ref{sec:lotdeterm}), est donc indisponible ici.
+couvre $608$ exécutions sur $608$ aux deux lots précédents -- $320$ au
+premier (§\ref{sec:cibledeterm}) et $288$ au second
+(§\ref{sec:lotdeterm}) --, est donc indisponible ici.
 Le seul contrôle possible est la cohérence interne
 $q_{\text{lb}}\le q_{\text{ub}}$, vérifiée $18/18$ aux deux plafonds. Ce
 tableau repose sur un niveau de preuve inférieur à celui des deux autres, et
@@ -4310,24 +4393,24 @@ retranchée par les coupes \emph{posées}, à distinguer de $U_{\text{coupes}}$
 qui est une borne.\ \conf{1}{1}{1}}
 \label{tab:couverture}
 \setlength{\tabcolsep}{3.5pt}\small
-\begin{tabular}{rcrrrcccrrr}
+\begin{tabular}{rcrrrcccrrrr}
 \toprule
 $n$ & $\kappa$ & $|\Scal|$ & $|Z(\Ecal)|$ & $|Z(\Acal)|$
  & $\text{cov}_{\Ecal}$ & $\text{cov}_{\Acal}$ & $\text{cov}_{\text{coupes}}$
- & $\qs$ & $q_{\text{ub}}$ & $U_{\text{coupes}}$\\
+ & $\qs$ & $q_{\text{lb}}$ & $q_{\text{ub}}$ & $U_{\text{coupes}}$\\
 \midrule
-\multicolumn{11}{l}{\emph{Échelle A -- $\kappa$ fixé}}\\
-$6$  & $1{,}0$ & $250$    & $28$  & $16$ & $100\%$ & $100\%$ & $100\%$ & $5{,}07$ & $5{,}07$ & $5{,}07$\\
-$8$  & $1{,}0$ & $2\,387$ & $46$  & $15$ & $100\%$ & $100\%$ & $0\%$ & $3{,}17$ & $3{,}17$ & $9{,}00$\\
-$10$ & $1{,}0$ & $24\,152$& $70$  & $13$ & $100\%$ & $100\%$ & $0\%$ & $37{,}67$& $37{,}67$& $39{,}33$\\
-$12$ & $1{,}0$ & $304\,497$&$202$ & $25$ & $100\%$ & $100\%$ & $\mathbf{99{,}6\%}$ & $4{,}35$ & $\mathbf{23{,}57}$ & $\mathbf{6{,}63}$\\
+\multicolumn{12}{l}{\emph{Échelle A -- $\kappa$ fixé}}\\
+$6$  & $1{,}0$ & $250$    & $28$  & $16$ & $100\%$ & $100\%$ & $100\%$ & $5{,}07$ & $5{,}07$ & $5{,}07$ & $5{,}07$\\
+$8$  & $1{,}0$ & $2\,387$ & $46$  & $15$ & $100\%$ & $100\%$ & $0\%$ & $3{,}17$ & $3{,}17$ & $3{,}17$ & $9{,}00$\\
+$10$ & $1{,}0$ & $24\,152$& $70$  & $13$ & $100\%$ & $100\%$ & $0\%$ & $37{,}67$& $37{,}67$ & $37{,}67$& $39{,}33$\\
+$12$ & $1{,}0$ & $304\,497$&$202$ & $25$ & $100\%$ & $100\%$ & $\mathbf{99{,}6\%}$ & $4{,}35$ & $\mathbf{3{,}10}$ & $\mathbf{23{,}57}$ & $\mathbf{6{,}63}$\\
 \midrule
-\multicolumn{11}{l}{\emph{Échelle B -- $\kappa$ décroissant}}\\
-$12$ & $0{,}65$& $10\,486$& $78$  & $28$ & $100\%$ & $100\%$ & $0\%$ & $4{,}15$ & $4{,}15$ & $23{,}67$\\
-$14$ & $0{,}55$& $15\,411$& $127$ & $25$ & $100\%$ & $100\%$ & $0\%$ & $5{,}00$ & $5{,}00$ & $5{,}75$\\
-$16$ & $0{,}48$& $30\,861$& $94$  & $16$ & $100\%$ & $100\%$ & $0\%$ & $11{,}50$& $11{,}50$& $28{,}50$\\
-$18$ & $0{,}42$& $48\,703$& $139$ & $17$ & $100\%$ & $100\%$ & $0\%$ & $14{,}20$& $14{,}20$& $17{,}60$\\
-$20$ & $0{,}38$& $64\,268$& $136$ & $22$ & $100\%$ & $100\%$ & $0\%$ & $8{,}13$ & $8{,}13$ & $96{,}00$\\
+\multicolumn{12}{l}{\emph{Échelle B -- $\kappa$ décroissant}}\\
+$12$ & $0{,}65$& $10\,486$& $78$  & $28$ & $100\%$ & $100\%$ & $0\%$ & $4{,}15$ & $4{,}15$ & $4{,}15$ & $23{,}67$\\
+$14$ & $0{,}55$& $15\,411$& $127$ & $25$ & $100\%$ & $100\%$ & $0\%$ & $5{,}00$ & $5{,}00$ & $5{,}00$ & $5{,}75$\\
+$16$ & $0{,}48$& $30\,861$& $94$  & $16$ & $100\%$ & $100\%$ & $0\%$ & $11{,}50$& $11{,}50$& $11{,}50$& $28{,}50$\\
+$18$ & $0{,}42$& $48\,703$& $139$ & $17$ & $100\%$ & $100\%$ & $0\%$ & $14{,}20$& $14{,}20$& $14{,}20$& $17{,}60$\\
+$20$ & $0{,}38$& $64\,268$& $136$ & $22$ & $100\%$ & $100\%$ & $0\%$ & $8{,}13$ & $8{,}13$& $8{,}13$ & $96{,}00$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -4396,7 +4479,11 @@ même ensemble est riche pour couper et pauvre pour rendre.
 $26$ lignes -- $n=12$, $\kappa=1$ -- l'incumbent n'atteint pas $\qs$. Aucun
 banc antérieur ne pouvait le voir : sans vérité terrain, un écart garanti de
 $90\ \%$ ne dit pas s'il vient d'une borne trop haute ou d'un minorant trop
-bas. Ici on lit les deux : $\qs=4{,}35$ et $q_{\text{lb}}=3{,}10$. Une
+bas. Ici on lit les deux, et la colonne $q_{\text{lb}}$ les donne côte à
+côte : $\qs=4{,}35$ contre $q_{\text{lb}}=3{,}10$. C'est la \emph{seule}
+ligne du lot où les deux diffèrent -- partout ailleurs la recherche atteint
+$\qs$ et la colonne le montre --, ce qui isole la perte à cet endroit
+précis. Une
 partie de l'écart affiché n'est donc pas un défaut de certification du tout.
 Et ce n'est pas un hasard si c'est cette ligne-là : \emph{la seule où le
 minorant décroche est aussi la seule où la borne ne ferme pas}. Les deux
@@ -5226,8 +5313,11 @@ Trois objets, et non un :
       est la seule que la méthode n'a pas le droit de perdre, et tout le
       dispositif est organisé pour la préserver sous interruption ;
 \item \textbf{un intervalle} $q_{\text{lb}}\le\qs\le q_{\text{ub}}$, valide
-      quel que soit l'instant d'arrêt. L'encadrement a été vérifié sur
-      \textbf{80 exécutions sur 80} (\S\ref{sec:res}) ;
+      quel que soit l'instant d'arrêt, et le théorème~\ref{th:global}
+      l'établit pour les quatre sorties de la boucle. Il a en outre été
+      vérifié sur \textbf{608 exécutions sur 608} -- $320$ au lot cible
+      (tableau~\ref{tab:cibledeterm}, quatre colonnes de $80$) et $288$
+      au lot figé (tableau~\ref{tab:lotdeterm}, deux colonnes de $144$) ;
 \item \textbf{un ensemble d'alternatives}, l'archive $\Acal\subseteq\Ecal$,
       toutes certifiées efficaces et contenant $x_{\text{best}}$
       (\S\ref{sec:livrable}).
