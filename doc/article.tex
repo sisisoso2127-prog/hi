@@ -1158,7 +1158,9 @@ seule ce résultat.
 \paragraph{Un vivier, deux sources.} Les deux coupes ont la même forme et
 donc le même coût, $p$ binaires chacune. La mesure du plafond
 (section~\ref{sec:negatif}) établit qu'au-delà d'une quarantaine de coupes
-chacune coûte plus qu'elle ne rapporte ; nous en avions conclu que leur
+chacune ne rapporte plus rien -- saturation, non dégradation : le balayage
+donne $\beta=80$ et $\beta=160$ identiques à $\beta=40$ ; nous en avions
+conclu que leur
 allouer des \emph{budgets séparés} serait fautif, et nous appuyions cette
 règle sur une mesure : poser $40$ coupes d'archive en plus des $40$ de
 dominance aurait fait tomber l'optimalité prouvée de $84$ à $56$ sur les
@@ -1477,7 +1479,7 @@ $[0,12,2,10,15,0]$ à $[40,40,40,40,35,36]$ au plafond haut.
 
 \textbf{Le résultat négatif ne tombe qu'en partie.} Sous la configuration
 courante et à plafond déterministe, deux des trois points bougent nettement
--- $98{,}6\to 77{,}2\ \%$ à $n=20$ et $93{,}9\to 78{,}6\ \%$ à $n=30$ --,
+-- $98{,}6\to 80{,}8\ \%$ à $n=20$ et $93{,}9\to 78{,}6\ \%$ à $n=30$ --,
 et l'affirmation « la méthode est sans effet au-delà de $n\ge 20$ » est
 \textbf{retirée}. Ce qui subsiste est plus étroit : à $n=40$,
 $\text{corr}=0$, l'écart ne bouge pas ($96{,}6$ contre $96{,}5$), et ce n'est
@@ -3123,7 +3125,7 @@ attaquent le même écart par deux côtés ; les annoncer séparément sans cett
 réserve reviendrait à compter deux fois. L'effet cumulé, de la configuration
 d'origine à la courante, se lit ainsi sur les trois régimes que la
 section~\ref{sec:echelle} donnait pour immuables :
-$98{,}6\to\mathbf{77{,}2}$, $93{,}9\to\mathbf{78{,}6}$,
+$98{,}6\to\mathbf{80{,}8}$, $93{,}9\to\mathbf{78{,}6}$,
 $96{,}6\to 96{,}5\ \%$, et $78{,}9\to\mathbf{1{,}2}$ à $\text{corr}=0{,}5$.
 \end{remark}
 
@@ -3484,7 +3486,7 @@ réfutés : le coût en binaires, puis la couverture de l'archive
 le \emph{seuil} auquel la borne est évaluée, et l'\emph{échelle} sur
 laquelle le vivier classe ses deux sources (§\ref{sec:defauts}). Les corriger
 fait passer les trois régimes que le tableau~\ref{tab:echelle} donnait pour
-immuables de $98{,}6$, $93{,}9$ et $96{,}6\ \%$ à $77{,}2$, $78{,}6$ et
+immuables de $98{,}6$, $93{,}9$ et $96{,}6\ \%$ à $80{,}8$, $78{,}6$ et
 $96{,}5\ \%$, et une instance à $\text{corr}=0{,}5$ de $78{,}9$ à
 $1{,}2\ \%$.
 
@@ -3653,7 +3655,7 @@ $84\to 56$ preuves à budgets séparés
 « aucune coupe d'efficacité n'est posée »
   & $35$ à $40$ posées par ligne & \S\ref{sec:resultats}\\
 « sans effet au-delà de $n\ge 20$ »
-  & $98{,}6\to 77{,}2$ et $93{,}9\to 78{,}6$ & \S\ref{sec:defauts}\\
+  & $98{,}6\to 80{,}8$ et $93{,}9\to 78{,}6$ & \S\ref{sec:defauts}\\
 $p=0{,}031$ pour la seconde route
   & $p=0{,}109$ puis $\mathbf{0{,}021}$ aux signes & \S\ref{sec:defauts}\\
 mouvement C : $3$ contre $3$ (deux graines)

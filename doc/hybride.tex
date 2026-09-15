@@ -1120,9 +1120,14 @@ clôture (corollaires~\ref{cor:dom} et~\ref{cor:eff}). Elles ont donc la même
 disjonction~\eqref{eq:disj} et le même coût, $p$ binaires chacune. Leur allouer des
 budgets séparés serait doublement fautif.
 
-Un plafond existe : au-delà d'une quarantaine de coupes, chaque coupe
-supplémentaire alourdit le programme entier plus qu'elle ne resserre le
-relâché, et l'oracle n'a plus le temps de conclure. Nous en avions conclu
+Un plafond existe, et il faut l'énoncer pour ce qu'il est : au-delà d'une
+quarantaine de coupes, chaque coupe supplémentaire ne resserre plus le
+relâché. C'est une \emph{saturation}, mesurée par le
+tableau~\ref{tab:sensib} -- $\beta=80$ et $\beta=160$ y rendent exactement
+l'écart de $\beta=40$ -- et non une dégradation : nous avons longtemps
+écrit que chaque coupe de trop « alourdit le programme entier plus qu'elle
+ne resserre le relâché », ce qu'aucune de nos mesures ne montre. Nous en
+avions conclu
 qu'il fallait \textbf{un seul plafond pour les deux sources}, et nous
 appuyions cette règle sur une mesure : donner à chacune son propre plafond
 de $40$ coupes ferait tomber l'optimalité prouvée de $84$ à $56$ sur $90$
@@ -2624,7 +2629,7 @@ propres instances) et n'y débordent pas.
 
 Restait le cas où l'hétérogénéité pouvait compter : la
 section~\ref{sec:cglp} raisonnait sur un écart de $98{,}6\ \%$ là où la
-configuration courante en donne $77{,}2$ sur la même instance. Elle a été
+configuration courante en donne $80{,}8$ sur la même instance. Elle a été
 remesurée, et sa conclusion tient : sur la base améliorée et à
 dix-huit lignes, le gain de la coupe générée est nul en médiane, avec
 $+0{,}45$ point au mieux et $-0{,}19$ au pire, contre $+0{,}11$ sur le socle
@@ -2972,10 +2977,15 @@ dans le bruit que la remarque~\ref{rem:medianeartefact} vient de
 caractériser -- sans jamais changer le nombre de preuves. Leur valeur n'a
 pas besoin d'être \emph{justifiée}, elle a besoin d'être \emph{dite}, ce que
 ce mémoire ne faisait pas. On notera tout de même que $k_{\text{hasard}}=4$
-n'est battu par aucune des quatre autres valeurs testées sur la strate~B,
-et que la supprimer ($k_{\text{hasard}}=0$) coûte $1{,}98$ point : la part
-aléatoire des bases sert à quelque chose, même si sa taille exacte importe
-peu.
+n'est battu par aucune des quatre autres valeurs \emph{à la lecture
+appariée} : $k_{\text{hasard}}=16$ abaisse l'écart médian de $0{,}19$ point
+mais sur une instance contre deux, ce qui est le profil que la
+remarque~\ref{rem:medianeartefact} apprend à ne pas lire comme un gain. Sur
+la colonne médiane elle-même, il \emph{est} donc devant, et c'était une
+omission de l'écrire autrement. Supprimer la part aléatoire
+($k_{\text{hasard}}=0$) coûte en revanche $1{,}98$ point sans aucune
+instance améliorée, $0$ contre $4$ : elle sert à quelque chose, même si sa
+taille exacte importe peu.
 
 \paragraph{Une piste que nous ne refermons pas.} Sur la strate~A, deux
 configurations indépendantes montent à $\mathbf{17/24}$ preuves contre
@@ -3630,8 +3640,25 @@ mécanisme, bien plus que sa moyenne.\ \conf{0}{0}{0}}
 Le minimum vaut $+0{,}0\ \%$ : à budget d'appels égal, la diversification
 n'a dégradé la valeur rendue sur \emph{aucune} des $24$ paires. Les six
 gains vont de $+2{,}7$ à $+80{,}6\ \%$ et se répartissent sur $n=20$, $30$
-et $40$ ainsi que sur les deux corrélations. Test des signes : $6$ contre
-$0$, soit $p=0{,}016$.
+et $40$ ainsi que sur les deux corrélations. Test des signes : $6$ contre $0$, soit $p=0{,}031$.
+
+\begin{remark}[la convention des tests, dite une fois pour toutes]
+\label{rem:bilateral}
+Tous les $p$ de ce mémoire sont \textbf{bilatéraux}, et calculés
+exactement : $p=2\sum_{i\ge k}\binom{n}{i}/2^{n}$ pour le test des signes
+sur $n$ paires non nulles, et la distribution exacte pour le test des rangs
+signés de Wilcoxon. Aucune approximation normale n'est employée, les
+effectifs étant trop petits pour la justifier.
+
+Ce paragraphe a longtemps porté $p=0{,}016$, qui est la valeur
+\emph{unilatérale} de $6$ contre $0$. C'était le seul endroit du mémoire à
+suivre cette convention, tous les autres étant bilatéraux -- $0{,}73$ au
+tableau~\ref{tab:mouvementc}, $0{,}109$ et $0{,}021$ au
+§\ref{sec:seuil} --, de sorte que deux chiffres du même document n'étaient
+pas comparables entre eux. La valeur bilatérale, $0{,}031$, conclut
+d'ailleurs tout aussi bien au seuil usuel : il n'y avait rien à gagner à
+prendre l'autre, et la comparabilité à y perdre.
+\end{remark}
 
 Deux réserves, sans lesquelles ce tableau serait mal lu. D'abord il mesure
 le \emph{mécanisme} et non son déclencheur : le réglage de production ne
@@ -3695,7 +3722,7 @@ phrase « aucune coupe d'efficacité n'est posée » ne décrit plus la méthode
 
 \textbf{Le résultat négatif, lui, ne tombe qu'en partie.} Sous la
 configuration courante et à plafond déterministe, deux des trois points
-bougent nettement : $98{,}6\to 77{,}2$ à $n=20$ et $93{,}9\to 78{,}6$ à
+bougent nettement : $98{,}6\to 80{,}8$ à $n=20$ et $93{,}9\to 78{,}6$ à
 $n=30$ (§\ref{sec:seuil}). L'affirmation « la méthode est sans effet
 au-delà de $n\ge 20$ » est donc \textbf{retirée}. Ce qui subsiste est plus
 étroit et plus intéressant :
@@ -4166,22 +4193,35 @@ et elle est seule : la remesure rapportée par la remarque~\ref{rem:couvremes}
 a fait fermer la seconde. À $n=12$, $\kappa=1$, la borne annoncée vaut
 $23{,}57$ alors que
 le maximum de $f$ sur la région \emph{réellement survivante} vaut $6{,}63$.
-Les coupes ont fait leur travail -- $\text{cov}_{\text{coupes}}$ vaut
-$99{,}6\ \%$ sur cette ligne, la meilleure couverture de tout le lot -- et
-la borne n'en tient pas compte. L'écart n'est donc ni dans le nombre de
+Les coupes ont fait leur travail -- $\text{cov}_{\text{coupes}}$ y vaut
+$99{,}6\ \%$, contre $0\ \%$ sur vingt-deux des vingt-six lignes -- et la
+borne n'en tient pas compte. L'écart n'est donc ni dans le nombre de
 coupes, ni dans leur placement, ni dans l'archive. Il est dans le passage de
 la région à la borne. C'est là qu'il faut regarder, et c'est l'objet de la
-section suivante.
+section suivante. La remarque~\ref{rem:unesur4} dit sur combien de lignes
+la question se pose réellement.
 
-\begin{remark}[une ligne, et cela suffit]
+\begin{remark}[une ligne sur quatre, et non une sur vingt-six]
+\label{rem:unesur4}
 On pourrait objecter qu'un défaut visible sur une seule ligne sur $26$ ne
-mérite pas un chapitre. L'objection se retourne : cette ligne est la seule
-où les coupes retranchent vraiment quelque chose ($\text{cov}_{\text{coupes}}
-=99{,}6\ \%$ contre $0\ \%$ sur $22$ lignes), donc la seule où le défaut
-\emph{peut} se manifester. Rapporté aux lignes où la question se pose, il
-n'est pas rare du tout. Les $22$ lignes à $\text{cov}_{\text{coupes}}=0\ \%$
-ne témoignent de rien ici -- elles disent seulement que, sous ce plafond, la
-boucle n'a pas eu le temps de poser une coupe qui morde.
+mérite pas un chapitre. L'objection se retourne, mais il faut la retourner
+avec le bon dénominateur. Les coupes ne retranchent quelque chose que sur
+\textbf{quatre} lignes du lot : $\text{cov}_{\text{coupes}}$ y vaut
+$100\ \%$, $100\ \%$, $100\ \%$ et $99{,}6\ \%$, et $0\ \%$ sur les
+vingt-deux autres. Le défaut ne \emph{peut} donc se manifester que sur ces
+quatre-là, et il s'y manifeste une fois. Une sur quatre, ce n'est pas rare.
+
+Une version antérieure de cette remarque écrivait que la ligne fautive
+était « la seule où les coupes retranchent vraiment quelque chose » et
+portait « la meilleure couverture de tout le lot ». Les deux sont fausses
+et le tableau~\ref{tab:couverture} les dément : trois lignes atteignent
+$100\ \%$, de sorte que $99{,}6\ \%$ est la \emph{plus faible} des quatre
+couvertures non nulles. L'argument tient sans elles ; il n'avait pas besoin
+d'être forcé.
+
+Les vingt-deux lignes à $\text{cov}_{\text{coupes}}=0\ \%$ ne témoignent de
+rien ici -- elles disent seulement que, sous ce plafond, la boucle n'a pas
+eu le temps de poser une coupe qui morde.
 \end{remark}
 
 % ============================================================================
@@ -4588,7 +4628,8 @@ comme un résultat. Le vivier stable le change une dernière fois : $9$
 améliorées contre $1$ dégradée sur $10$ paires non nulles donne
 $\mathbf{p=0{,}021}$, et \textbf{le test des signes conclut}. Le test des
 rangs signés de Wilcoxon, qui pèse les amplitudes, donne $W=2$ et
-$\mathbf{p=0{,}0059}$. Les deux s'accordent.
+$\mathbf{p=0{,}0059}$. Les deux s'accordent. Les deux sont bilatéraux et
+exacts, comme tous les $p$ de ce mémoire (remarque~\ref{rem:bilateral}).
 
 Il faut dire ce que cela retire et ce que cela laisse. Cela retire
 l'argument que nous tirions de leur désaccord -- il n'y a plus de désaccord
@@ -4644,33 +4685,51 @@ configuration d'origine (vivier commun, sans seconde route) à la
 configuration courante :
 %
 \begin{center}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-& $20$/$0$ & $30$/$0$ & $30$/$0{,}5$ & $40$/$0$ & $40$/$0{,}5$\\
+& $20$/$0$ & $20$/$0{,}5$ & $30$/$0$ & $30$/$0{,}5$ & $40$/$0$
+& $40$/$0{,}5$\\
 \midrule
-avant & $98{,}6$ & $93{,}9$ & $78{,}9$ & $96{,}6$ & $82{,}6$\\
-après & $\mathbf{77{,}2}$ & $\mathbf{78{,}6}$ & $\mathbf{1{,}2}$
- & $96{,}5$ & $\mathbf{43{,}9}$\\
+avant & $98{,}6$ & $0{,}0$ & $93{,}9$ & $78{,}9$ & $96{,}6$ & $0{,}0$\\
+après & $\mathbf{80{,}8}$ & $0{,}0$ & $\mathbf{78{,}6}$ & $\mathbf{1{,}2}$
+ & $96{,}5$ & $0{,}0$\\
+gain & $+17{,}8$ & $0{,}0$ & $+15{,}3$ & $\mathbf{+77{,}7}$ & $+0{,}1$
+ & $0{,}0$\\
 \bottomrule
 \end{tabular}
 \end{center}
 %
 \noindent
-Sur les douze lignes, $7$ progressent, $2$ reculent (de $0{,}9$ et $1{,}0$
-point), gain médian $+10{,}4$, moyen $+18{,}7$. Les trois chiffres que la
-section d'échelle donnait pour immuables -- $98{,}6$, $93{,}9$, $96{,}6$ --
-sont devenus $77{,}2$, $78{,}6$ et $96{,}5$.
+La grille est celle de la colonne \conf{0}{0}{0} du
+tableau~\ref{tab:cglp} -- six cellules, une graine -- confrontée à la même
+graine du tableau~\ref{tab:geom}. Sur ces six cellules, $4$ progressent,
+\textbf{aucune} ne recule, $2$ sont inchangées parce que leur écart valait
+déjà $0$ des deux côtés ; gain médian $+7{,}7$, moyen $+18{,}5$. Les trois
+chiffres que la section d'échelle donnait pour immuables -- $98{,}6$,
+$93{,}9$, $96{,}6$ -- sont devenus $80{,}8$, $78{,}6$ et $96{,}5$.
+
+\begin{remark}[cette grille avait cinq cellules et parlait de douze lignes]
+Elle omettait $20/0{,}5$ sans le dire, portait $82{,}6$ pour un
+$40/0{,}5$ dont la colonne \conf{0}{0}{0} donne $0{,}0$, et le texte
+annonçait « sur les douze lignes, $7$ progressent, $2$ reculent » pour un
+tableau qui en montrait cinq. Les trois défauts venaient du même geste :
+la grille avait été recopiée d'un banc à deux graines, puis mise à jour
+par endroits. Elle est ici reconstruite entièrement à partir des deux
+tableaux publiés, cellule par cellule, de sorte que chaque valeur y est
+retrouvable.
+\end{remark}
 
 \paragraph{Elle coûte deux à quatre appels entiers.} C'est la colonne
 « tours », et c'est le chiffre à retenir : un tour de Dinkelbach est un ILP,
 et la route converge en $2$ à $4$ tours. Le reste de l'écart entre $300$ et
 $290$ appels est sa \emph{réserve}, non sa consommation.
 
-\paragraph{Une ligne recule encore.} $-1{,}00$ point, sur une instance dont
-l'écart valait déjà $12{,}7\ \%$ : la première route y fermait convenablement
-et les trois coupes cédées lui manquent. C'est le résidu du même arbitrage,
-réduit d'un facteur deux par la réserve bornée, et il ne disparaît pas
-complètement.
+\paragraph{Une ligne recule encore.} $\mathbf{-0{,}19}$ point, à $n=40$,
+$\text{corr}=0{,}5$, graine~$3$, sur une instance dont l'écart valait déjà
+$16{,}6\ \%$ : la première route y fermait convenablement et les coupes
+cédées à la seconde lui manquent. C'est le résidu du même arbitrage, et il
+ne disparaît pas complètement -- mais il vaut deux dixièmes de point contre
+des gains de $17$ à $39$.
 
 \paragraph{Une limite honnête, et la question qu'elle ouvre.} À $n=40$,
 $\text{corr}=0$, graine~$1$, l'écart ne bouge que de $0{,}06$ point --
@@ -5597,7 +5656,7 @@ qu'elles délimitent exactement ce que ce travail établit.
       formulation antérieure de cette limite -- « aucun effet au-delà de
       $n\ge 20$, écarts $98{,}3$, $97{,}1$ et $92{,}6\ \%$ inchangés » -- est
       \textbf{retirée} : sous la configuration courante et à plafond
-      déterministe, l'écart passe de $98{,}6$ à $77{,}2\ \%$ à $n=20$ et de
+      déterministe, l'écart passe de $98{,}6$ à $80{,}8\ \%$ à $n=20$ et de
       $93{,}9$ à $78{,}6\ \%$ à $n=30$ (§\ref{sec:seuil}). Ce qui subsiste
       est plus étroit. D'une part $n=40$, $\text{corr}=0$ ne bouge pas --
       $96{,}6$ contre $96{,}5$ -- et le statut « convergée » y certifie que
@@ -5965,9 +6024,10 @@ $84\to 56$ preuves à budgets séparés
 « aucune coupe d'efficacité n'est posée »
   & $35$ à $40$ posées par ligne & \S\ref{sec:echellehonnete}\\
 « sans effet au-delà de $n\ge 20$ »
-  & $98{,}6\to 77{,}2$ et $93{,}9\to 78{,}6$ & \S\ref{sec:seuil}\\
+  & $98{,}6\to 80{,}8$ et $93{,}9\to 78{,}6$ & \S\ref{sec:seuil}\\
 $p=0{,}031$ pour la seconde route
-  & $p=0{,}109$ aux signes, $0{,}020$ à Wilcoxon & \S\ref{sec:seuil}\\
+  & $p=\mathbf{0{,}021}$ aux signes, $\mathbf{0{,}0059}$ à Wilcoxon
+    & \S\ref{sec:seuil}\\
 mouvement C : $3$ contre $3$ (deux graines)
   & $3/5$ et $5/3$ (trois graines) & tableau~\ref{tab:mouvementc}\\
 \bottomrule
