@@ -1125,13 +1125,13 @@ clôture (corollaires~\ref{cor:dom} et~\ref{cor:eff}). Elles ont donc la même
 disjonction~\eqref{eq:disj} et le même coût, $p$ binaires chacune. Leur allouer des
 budgets séparés serait doublement fautif.
 
-Un plafond existe, et il faut l'énoncer pour ce qu'il est : au-delà d'une
-quarantaine de coupes, chaque coupe supplémentaire ne resserre plus le
-relâché. C'est une \emph{saturation}, mesurée par le
-tableau~\ref{tab:sensib} -- $\beta=80$ et $\beta=160$ y rendent exactement
-l'écart de $\beta=40$ -- et non une dégradation : nous avons longtemps
-écrit que chaque coupe de trop « alourdit le programme entier plus qu'elle
-ne resserre le relâché », ce qu'aucune de nos mesures ne montre. Nous en
+Un plafond avait été invoqué ici : au-delà d'une quarantaine de coupes,
+chaque coupe supplémentaire « alourdirait le programme entier plus qu'elle
+ne resserre le relâché ». Aucune de nos mesures ne le montre, et le
+tableau~\ref{tab:sensib} montre le contraire : $\beta=80$ et $\beta=160$
+y gagnent $1{,}19$ point d'écart sur quatre instances contre zéro, à
+nombre de preuves inchangé (remarque~\ref{rem:genou}). Il n'y a donc pas
+de plafond mesuré du tout, ni saturation ni dégradation. Nous en
 avions conclu
 qu'il fallait \textbf{un seul plafond pour les deux sources}, et nous
 appuyions cette règle sur une mesure : donner à chacune son propre plafond
@@ -2889,7 +2889,7 @@ cherché où se trouve la marge, et balayé là.
 configuration de production. Strate~A : régime cible, plafond $80$,
 $8$~instances $\times$ $3$ graines d'algorithme -- la production y prouve
 $13/24$, c'est le \emph{nombre de preuves} qui se lit. Strate~B : $n=20$,
-plafond $300$ -- la production y laisse $10{,}94\ \%$ d'écart garanti
+plafond $300$ -- la production y laisse $12{,}14\ \%$ d'écart garanti
 médian. Lecture appariée : même instance, même graine.\ \conf{1}{1}{1}}
 \label{tab:sensib}
 \setlength{\tabcolsep}{4pt}\small
@@ -2898,78 +2898,100 @@ médian. Lecture appariée : même instance, même graine.\ \conf{1}{1}{1}}
 facteur & valeur & A preuves & B écart & B $\Delta$ & B mieux/pire\\
 \midrule
 \multirow{5}{*}{$k_{\text{élite}}$}
- & $2$ & $14/24$ & $10{,}51$ & $-0{,}44$ & $2/2$\\
- & $4$ & $13/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
- & $\mathbf{8}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $16$ & $13/24$ & $11{,}55$ & $+0{,}61$ & $0/3$\\
- & $32$ & $13/24$ & $11{,}55$ & $+0{,}61$ & $0/4$\\
+ & $2$ & $14/24$ & $8{,}11$ & $-4{,}03$ & $1/3$\\
+ & $4$ & $13/24$ & $12{,}99$ & $+0{,}85$ & $0/3$\\
+ & $\mathbf{8}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $16$ & $13/24$ & $12{,}93$ & $+0{,}79$ & $1/2$\\
+ & $32$ & $13/24$ & $12{,}93$ & $+0{,}79$ & $1/3$\\
 \midrule
 \multirow{5}{*}{$k_{\text{hasard}}$}
- & $0$ & $13/24$ & $12{,}93$ & $+1{,}98$ & $0/4$\\
- & $2$ & $13/24$ & $13{,}74$ & $+2{,}80$ & $0/4$\\
- & $\mathbf{4}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $8$ & $13/24$ & $14{,}06$ & $+3{,}11$ & $0/4$\\
- & $16$ & $13/24$ & $10{,}76$ & $-0{,}19$ & $1/2$\\
+ & $0$ & $13/24$ & $12{,}93$ & $+0{,}79$ & $1/3$\\
+ & $2$ & $13/24$ & $12{,}67$ & $+0{,}53$ & $1/3$\\
+ & $\mathbf{4}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $8$ & $13/24$ & $15{,}07$ & $+2{,}93$ & $0/4$\\
+ & $16$ & $13/24$ & $10{,}76$ & $-1{,}38$ & $2/2$\\
 \midrule
 \multirow{5}{*}{menu normal}
- & $\{A,B,C\}$ & $14/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
- & $\mathbf{\{A,A,B,C\}}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $\{A,A,A,B,C\}$ & $14/24$ & $10{,}51$ & $-0{,}44$ & $1/2$\\
- & $\{A,B,B,C\}$ & $14/24$ & $12{,}20$ & $+1{,}25$ & $0/3$\\
- & $\{A,A,B,C,C\}$ & $\mathbf{17/24}$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+ & $\{A,B,C\}$ & $14/24$ & $11{,}25$ & $-0{,}89$ & $1/2$\\
+ & $\mathbf{\{A,A,B,C\}}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $\{A,A,A,B,C\}$ & $14/24$ & $11{,}25$ & $-0{,}89$ & $1/2$\\
+ & $\{A,B,B,C\}$ & $14/24$ & $10{,}51$ & $-1{,}63$ & $1/2$\\
+ & $\{A,A,B,C,C\}$ & $17/24$ & $14{,}82$ & $+2{,}69$ & $0/3$\\
 \midrule
 \multirow{4}{*}{menu divers.}
- & $\{A,B,C\}$ & $13/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
- & $\mathbf{\{B,B,C,A\}}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $\{B,C\}$ & $13/24$ & $7{,}53$ & $-3{,}41$ & $1/2$\\
- & $\{B,B,B,C,A\}$ & $13/24$ & $12{,}71$ & $+1{,}76$ & $0/3$\\
+ & $\{A,B,C\}$ & $13/24$ & $11{,}85$ & $-0{,}29$ & $1/2$\\
+ & $\mathbf{\{B,B,C,A\}}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $\{B,C\}$ & $13/24$ & $5{,}07$ & $-7{,}06$ & $1/2$\\
+ & $\{B,B,B,C,A\}$ & $13/24$ & $12{,}99$ & $+0{,}85$ & $0/3$\\
 \midrule
 \multirow{6}{*}{fraction LNS}
- & $(0{,}2\,;0{,}4)$ & $\mathbf{17/24}$ & $5{,}40$ & $-5{,}55$ & $1/3$\\
- & $(0{,}3\,;0{,}5)$ & $14/24$ & $6{,}64$ & $-4{,}30$ & $1/3$\\
- & $\mathbf{(0{,}4\,;0{,}6)}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $(0{,}5\,;0{,}7)$ & $16/24$ & $15{,}44$ & $+4{,}49$ & $0/4$\\
- & $(0{,}6\,;0{,}8)$ & $15/24$ & $12{,}14$ & $+1{,}19$ & $1/3$\\
- & $(0{,}4\,;0{,}4)$ & $13/24$ & $3{,}38$ & $-7{,}56$ & $1/2$\\
+ & $(0{,}2\,;0{,}4)$ & $17/24$ & $3{,}73$ & $-8{,}41$ & $1/3$\\
+ & $(0{,}3\,;0{,}5)$ & $14/24$ & $6{,}64$ & $-5{,}49$ & $1/3$\\
+ & $\mathbf{(0{,}4\,;0{,}6)}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $(0{,}5\,;0{,}7)$ & $16/24$ & $11{,}25$ & $-0{,}89$ & $1/3$\\
+ & $(0{,}6\,;0{,}8)$ & $15/24$ & $11{,}85$ & $-0{,}29$ & $1/3$\\
+ & $(0{,}4\,;0{,}4)$ & $13/24$ & $0{,}40$ & $-11{,}74$ & $1/2$\\
 \midrule
 \multirow{4}{*}{garde $\varepsilon$}
- & $(0{,}4\,;0{,}2)$ & $12/24$ & $8{,}94$ & $-2{,}00$ & $1/3$\\
- & $\mathbf{(0{,}6\,;0{,}4)}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $(0{,}8\,;0{,}6)$ & $15/24$ & $11{,}25$ & $+0{,}31$ & $0/3$\\
- & $(0{,}6\,;0{,}6)$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/1$\\
+ & $(0{,}4\,;0{,}2)$ & $12/24$ & $8{,}94$ & $-3{,}20$ & $1/2$\\
+ & $\mathbf{(0{,}6\,;0{,}4)}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $(0{,}8\,;0{,}6)$ & $15/24$ & $12{,}14$ & $+0{,}00$ & $1/3$\\
+ & $(0{,}6\,;0{,}6)$ & $13/24$ & $12{,}99$ & $+0{,}85$ & $1/2$\\
 \midrule
 \multirow{5}{*}{\texttt{max\_stall}}
- & $1$ & $13/24$ & $3{,}73$ & $-7{,}21$ & $1/2$\\
- & $2$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $0/1$\\
- & $\mathbf{3}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $5$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $0/0$\\
- & $8$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $0/0$\\
+ & $1$ & $13/24$ & $0{,}00$ & $-12{,}14$ & $1/2$\\
+ & $2$ & $13/24$ & $12{,}14$ & $+0{,}00$ & $0/1$\\
+ & $\mathbf{3}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $5$ & $13/24$ & $12{,}14$ & $+0{,}00$ & $0/0$\\
+ & $8$ & $13/24$ & $12{,}14$ & $+0{,}00$ & $0/0$\\
 \midrule
 \multirow{5}{*}{$\beta$ (lot)}
- & $10$ & $\mathbf{9/24}$ & $31{,}74$ & $\mathbf{+20{,}80}$ & $\mathbf{0/6}$\\
- & $20$ & $13/24$ & $22{,}90$ & $\mathbf{+11{,}95}$ & $\mathbf{0/4}$\\
- & $\mathbf{40}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $80$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
- & $160$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
+ & $10$ & $11/24$ & $25{,}91$ & $+13{,}77$ & $0/4$\\
+ & $20$ & $13/24$ & $18{,}61$ & $+6{,}47$ & $0/4$\\
+ & $\mathbf{40}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $80$ & $13/24$ & $10{,}94$ & $-1{,}19$ & $4/0$\\
+ & $160$ & $13/24$ & $10{,}94$ & $-1{,}19$ & $4/0$\\
 \midrule
 \multirow{4}{*}{$\rho$ (tours)}
- & $1$ & $13/24$ & $20{,}65$ & $\mathbf{+9{,}71}$ & $\mathbf{0/4}$\\
- & $\mathbf{2}$ & $13/24$ & $10{,}94$ & --- & \textbf{production}\\
- & $4$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
- & $6$ & $13/24$ & $10{,}94$ & $+0{,}00$ & $1/0$\\
+ & $1$ & $13/24$ & $16{,}49$ & $+4{,}35$ & $0/4$\\
+ & $\mathbf{2}$ & $13/24$ & $12{,}14$ & --- & \textbf{production}\\
+ & $4$ & $13/24$ & $10{,}94$ & $-1{,}19$ & $4/0$\\
+ & $6$ & $13/24$ & $10{,}94$ & $-1{,}19$ & $4/0$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Deux valeurs sont justifiées, et le banc dit pourquoi.} $\beta=40$
-et $\rho=2$ sont les seuls facteurs dont l'effet est \emph{unanime} : en
-dessous, toutes les lignes comparables se dégradent -- $\beta=10$ perd $6$
-lignes sur $6$ et $4$ preuves, $\beta=20$ en perd $4$ sur $4$, $\rho=1$
-également $4$ sur $4$ -- et au-dessus, rien ne bouge : $\beta=80$ et $160$
-sont identiques à $40$, $\rho=4$ et $6$ identiques à $2$. Les deux valeurs
-de production sont donc exactement au \emph{genou} de la courbe : la plus
-petite qui sature. C'est la seule forme de justification qu'un réglage
-puisse recevoir d'un banc, et ces deux-là l'ont.
+\paragraph{Deux valeurs sont les seules que le banc départage -- et il ne
+les départage pas en leur faveur.} $\beta$ et $\rho$ sont les seuls
+facteurs dont l'effet soit \emph{unanime} dans les deux sens. En dessous,
+toutes les lignes comparables se dégradent : $\beta=10$ en perd $4$ sur
+$4$ et deux preuves, $\beta=20$ en perd $4$ sur $4$, $\rho=1$ également.
+Au-dessus, elles s'\emph{améliorent}, et tout aussi unanimement :
+$\beta=80$ et $\beta=160$ gagnent $1{,}19$ point d'écart sur
+$\mathbf{4}$ instances contre $\mathbf{0}$, $\rho=4$ et $\rho=6$ de même,
+sans perdre une seule preuve -- $13/24$ partout.
+
+\begin{remark}[le genou n'était pas là où nous l'avions mis]
+\label{rem:genou}
+Ce paragraphe affirmait que $\beta=40$ et $\rho=2$ étaient « exactement au
+genou de la courbe : la plus petite valeur qui sature », au motif que
+$\beta=80$ et $160$ rendaient l'écart de $\beta=40$ à l'identique. C'était
+vrai du banc tel qu'il avait été mesuré, et cela a cessé de l'être quand
+l'ordre de vivier stable par préfixe est devenu le défaut : la reprise
+intégrale sous ce défaut dégrade la ligne de production de $10{,}94$ à
+$12{,}14$ et laisse $\beta=80$ à $10{,}94$. Ce qui était une saturation est
+devenu un \emph{gain}, unanime sur les quatre instances qui bougent.
+
+Il faut donc retirer la justification, et ne pas la remplacer par une autre
+du même genre : le banc ne dit plus que $40$ et $2$ sont les bonnes
+valeurs, il dit que $80$ et $4$ sont \emph{meilleures} sur la strate~B à
+nombre de preuves constant. Ce qu'il ne dit pas, c'est ce qu'elles coûtent
+en temps -- le protocole compte les appels entiers, et poser deux fois plus
+de coupes ne s'y voit pas. Les valeurs de production restent donc celles
+d'un compromis que ce banc ne mesure pas, et non celles d'un optimum qu'il
+établirait. C'est une conclusion plus faible que la précédente ; elle a
+l'avantage d'être vraie.
+\end{remark}
 
 \begin{remark}[une médiane qui ment, et comment nous l'avons su]
 \label{rem:medianeartefact}

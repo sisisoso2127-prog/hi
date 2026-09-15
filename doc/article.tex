@@ -1159,8 +1159,8 @@ seule ce résultat.
 donc le même coût, $p$ binaires chacune. La mesure du plafond
 (section~\ref{sec:negatif}) établit qu'au-delà d'une quarantaine de coupes
 chacune ne rapporte plus rien -- saturation, non dégradation : le balayage
-donne $\beta=80$ et $\beta=160$ identiques à $\beta=40$ ; nous en avions
-conclu que leur
+donne $\beta=80$ et $\beta=160$ \emph{meilleurs} que $\beta=40$ ; nous en
+avions conclu que leur
 allouer des \emph{budgets séparés} serait fautif, et nous appuyions cette
 règle sur une mesure : poser $40$ coupes d'archive en plus des $40$ de
 dominance aurait fait tomber l'optimalité prouvée de $84$ à $56$ sur les
@@ -1676,14 +1676,20 @@ configuration de production prouve $24/24$ et \emph{aucune} valeur ne peut
 alors rien montrer, un banc saturé mesurant son propre plafond et non une
 insensibilité. Le balayage porte donc sur deux strates à marge réelle :
 régime cible à plafond $80$ ($13/24$ preuves) et $n=20$ à plafond $300$
-($10{,}94\ \%$ d'écart médian).
+($12{,}14\ \%$ d'écart médian).
 
-Deux valeurs sont justifiées, et seules ces deux-là : $\beta=40$ et
-$\rho=2$ sont les seuls facteurs d'effet \emph{unanime} -- en dessous toutes
-les lignes comparables se dégradent ($\beta=10$ : $0/6$, $+20{,}8$ points et
-$4$ preuves perdues ; $\beta=20$ : $0/4$ ; $\rho=1$ : $0/4$), au-dessus
-rien ne bouge ($\beta=80$ et $160$, $\rho=4$ et $6$ identiques). Les deux
-sont donc au genou de la courbe, la plus petite valeur qui sature. Les
+Deux valeurs sont les seules que le banc départage, et il ne les départage
+pas en leur faveur : $\beta$ et $\rho$ sont les seuls facteurs d'effet
+\emph{unanime} dans les deux sens. En dessous, toutes les lignes
+comparables se dégradent ($\beta=10$ : $0/4$, $+13{,}8$ points et deux
+preuves perdues ; $\beta=20$ : $0/4$ ; $\rho=1$ : $0/4$). Au-dessus, elles
+s'\emph{améliorent} tout aussi unanimement : $\beta=80$ et $160$, $\rho=4$
+et $6$ gagnent $1{,}19$ point sur $4$ instances contre $0$, à preuves
+constantes. Le banc ne dit donc pas que $40$ et $2$ sont les bonnes
+valeurs ; il dit que $80$ et $4$ sont meilleures sur cette strate, sans
+mesurer ce qu'elles coûtent en temps. Les valeurs de production relèvent
+d'un compromis que ce protocole ne mesure pas, non d'un optimum qu'il
+établirait. Les
 autres réglages déplacent l'écart de $2$ à $5$ points sans jamais changer le
 nombre de preuves : leur valeur demande à être \emph{dite}, non justifiée.
 
