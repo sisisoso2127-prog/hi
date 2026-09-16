@@ -123,9 +123,9 @@ tant que les coefficients restent sous $2^{53}$, seuil dont les plus
 grandes instances mesurées ici restent à neuf ordres de grandeur --, et
 fournit gratuitement un certificat de dominance
 réutilisable comme mouvement de recherche. Le théorème~\ref{th:effcut}
-autorise une coupe autour d'un point \emph{quelconque} du domaine -- la
-forme en est connue~\cite{sylva2004,sylva2007}, sa validité pour \emph{borner}
-est ce qui est établi ici : la
+autorise une coupe autour d'un point \emph{quelconque} du domaine -- le
+mécanisme est celui de Jorge~\cite{jorge2009} dans le cas linéaire, son
+transport au fractionnaire est ce qui est établi ici : la
 région retranchée ne contient, parmi les points efficaces, que ceux de même
 vecteur critères. C'est le résultat central, et il est plus général que son
 usage ; la coupe de dominance fractionnaire (th.~\ref{th:cut}), qui
@@ -305,19 +305,18 @@ Les contributions sont :
 \item \textbf{Un test d'efficacité intégral} (th.~\ref{th:eff}), exact sans
       tolérance numérique, coûtant un seul programme en nombres entiers, et
       fournissant gratuitement un certificat de dominance.
-\item \textbf{Une coupe d'exclusion connue, employée à borner}
+\item \textbf{La coupe de Jorge, transportée au fractionnaire}
       (th.~\ref{th:effcut}) : la région retranchée ne contient, parmi les
-      points efficaces, que ceux de \emph{même vecteur critères}. La
-      \emph{forme} de cette coupe est celle de la contrainte d'exclusion de
-      Sylva et Crema~\cite{sylva2004,sylva2007}, employée depuis vingt ans
-      pour \emph{énumérer} l'ensemble non dominé ; ce que nous établissons
-      est qu'elle reste valide pour \emph{borner}
-      $\max_{\Ecal}f$, à la réserve près des solutions alternatives --
-      réserve qui n'existe pas en énumération, où les points de même
-      vecteur critères sont interchangeables, et qui devient centrale ici,
-      où ils ont des valeurs de $f$ différentes. L'énoncé est plus général
-      que cet usage : le centre n'a besoin d'être que réalisable
-      (remarque~\ref{rem:anteriorite}). La coupe
+      points efficaces, que ceux de \emph{même vecteur critères}. Le
+      mécanisme est celui de Jorge~\cite{jorge2009} dans le cas linéaire,
+      lui-même fondé sur la \emph{corner constraint} de Klein et
+      Hannan~\cite{klein1982} ; nous ne le revendiquons pas
+      (remarque~\ref{rem:anteriorite}). Ce que nous établissons est qu'il
+      survit au passage aux critères \emph{et} à l'objectif
+      fractionnaires, ce qui exige que les formes de coupe restent
+      \emph{entières} -- condition dont dépend toute l'exactitude sans
+      tolérance de ce travail. L'énoncé est par ailleurs plus général que
+      cet usage : le centre n'a besoin d'être que réalisable. La coupe
       de
       dominance fractionnaire exacte (th.~\ref{th:cut}), transposition de la
       coupe « $+1$ » du cas linéaire entier avec un big-M renforcé par
@@ -1054,31 +1053,28 @@ point de même vecteur critères l'est aussi et peut être empoché comme
 incumbent. Pour la validité de la coupe, elle est inutile.
 \end{remark}
 
-\begin{remark}[antériorité : ce que cette coupe doit à la littérature]
+\begin{remark}[antériorité : l'antécédent est Jorge, et il est direct]
 \label{rem:anteriorite}
-La \emph{forme} de cette coupe est connue. Sylva et
-Crema~\cite{sylva2004,sylva2007} l'emploient depuis 2004 pour énumérer
-l'ensemble non dominé : après avoir produit un point non dominé, ils
-excluent la région qu'il domine par cette disjonction exactement, au même
-coût de $p$ binaires. Le centre y est déjà un point \emph{efficace}, et
-écrire que couper autour d'un tel point serait nouveau serait faux.
+Cette coupe n'est pas nouvelle dans le cas linéaire.
+Jorge~\cite{jorge2009}, optimisant une fonction linéaire sur l'ensemble
+efficace d'un MOILP, construit à chaque tour le relâché
+$R_l=\max\{v^{\top}x : x\in F\setminus\bigcup_s D_s\}$ avec
+$D_s=\{x : Cx\le C\bar x^{\,s}\}$ et $\bar x^{\,s}$ \textbf{efficace} :
+c'est notre coupe d'efficacité, posée dans un relâché de borne. Sa mise en
+{\oe}uvre est la même disjonction à $p$ binaires et grand~$M$ -- la
+\emph{corner constraint} de Klein et Hannan~\cite{klein1982}. La réserve
+des solutions alternatives y est traitée aussi, par
+$T_l=\max\{v^{\top}x : Cx=C\bar x^{\,l},\ x\in F\}$, et le relâché
+infaisable y conclut déjà à l'optimalité.
 
-Ce qui change est l'\emph{usage}, et il fait apparaître une difficulté que
-l'usage d'origine n'a pas. On énumère en excluant : peu importe que la
-coupe emporte des points de même vecteur critères, ils représentent la même
-solution non dominée. On borne en retranchant : un point efficace retranché
-à tort fausse le majorant, et les solutions alternatives -- même vecteur
-critères, valeur de $f$ différente -- sont précisément ce que la coupe
-emporte. C'est la réserve que lève la condition de clôture, et elle n'a pas
-lieu d'être en énumération.
-
-Restent donc à notre charge, sauf antécédent que nous n'avons pas trouvé :
-la validité pour \emph{borner} sous condition de clôture
-(th.~\ref{th:archbound}), le coût de cette condition -- un programme de
-faisabilité, deux issues utiles --, et la preuve par relâché vidé
-(prop.~\ref{prop:vide}). Les travaux qui optimisent sur l'ensemble efficace
-d'un MOILFP~\cite{zerdani2011,mahdi2015,drici2018,chaiblaine2020} coupent
-tous autour de points dominés.
+Nous retirons donc trois revendications : la coupe autour d'un point
+efficace, sa validité pour borner, et la condition de clôture. Restent le
+transport au cas \textbf{fractionnaire des deux côtés} -- où les formes de
+coupe doivent rester entières, sans quoi l'exactitude sans tolérance
+tombe --, les deux bornes propres au fractionnaire ($D^{+}$ restreint et
+seuil libre, sans objet pour un objectif linéaire), l'encadrement valide à
+\emph{tout instant} là où Jorge conclut ou ne conclut pas, et la clôture
+ramenée d'un optimum à une faisabilité.
 \end{remark}
 
 \begin{remark}[la coupe de dominance en est un corollaire]
@@ -3973,6 +3969,12 @@ M.~E.~A.~Chergui et M.~Moulaï.
   optimization.
 \newblock \emph{Journal of Applied Mathematics and Decision Sciences}, 2008,
   article 760191.
+
+\bibitem{klein1982}
+D.~Klein et E.~Hannan.
+\newblock An algorithm for the multiple objective integer linear programming
+  problem.
+\newblock \emph{European Journal of Operational Research}, 9(4):378--385, 1982.
 
 \bibitem{jorge2009}
 J.~M.~Jorge.

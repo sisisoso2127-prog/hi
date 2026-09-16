@@ -194,15 +194,16 @@ Examinateur  & \JuryExamB\\
 \noindent
 On considère le problème (P) : maximiser une fonction linéaire fractionnaire
 $f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
-fractionnaire multi-objectif en nombres entiers. Les méthodes exactes du
-domaine ne coupent qu'autour de points \emph{dominés} ; nous établissons
-qu'une coupe valide peut être centrée sur \emph{n'importe quel} point
-réalisable, donc sur les points \textbf{efficaces} que produit une
-recherche heuristique. Il en résulte une hybridation où le flux
-d'information s'inverse : la partie heuristique alimente la partie exacte
-en centres de coupe, au lieu d'être certifiée par elle. Une condition de
-clôture, d'un seul programme de faisabilité par point, lève la seule
-réserve. Deux conséquences suivent : si le relâché se \emph{vide},
+fractionnaire multi-objectif en nombres entiers. Couper autour d'un point \textbf{efficace} pour resserrer un relâché de
+borne est connu dans le cas \emph{linéaire} : c'est la \emph{corner
+constraint} de Klein et Hannan~\cite{klein1982}, employée par
+Jorge~\cite{jorge2009} sur l'ensemble efficace d'un MOILP. Nous la
+transportons au cas \textbf{fractionnaire des deux côtés}, ce qui exige que
+les formes de coupe restent \emph{entières} -- sans quoi l'exactitude sans
+tolérance tombe --, et nous en tirons ce que le cas linéaire n'a pas à
+produire : deux bornes propres au fractionnaire, et un \emph{encadrement
+valide à tout instant} plutôt qu'une méthode qui conclut ou ne conclut
+pas. Deux conséquences suivent : si le relâché se \emph{vide},
 l'optimalité est prouvée sans qu'aucune borne n'ait été évaluée ; et la
 borne de certification, évaluée à un \textbf{seuil libre} plutôt qu'à
 l'incumbent, ouvre une seconde route dont la forme unifiée domine les deux.
@@ -556,12 +557,18 @@ sur les deux instances illustratives de ce mémoire la recherche n'en produit
 
 \begin{enumerate}[leftmargin=*,itemsep=3pt]
 \item \textbf{Théorème~\ref{th:effcut} (coupe autour d'un point
-      quelconque).} On peut couper autour de \emph{n'importe quel} point
-      réalisable : la région retranchée ne contient, parmi les points
-      efficaces, que ceux de \emph{même vecteur critères}. La coupe de
-      dominance et la coupe d'efficacité en sont les deux corollaires,
-      selon que cette réserve est automatiquement vide (centre dominé) ou
-      qu'il faut l'établir (centre efficace).
+      quelconque), transporté au fractionnaire.} On peut couper autour de
+      \emph{n'importe quel} point réalisable : la région retranchée ne
+      contient, parmi les points efficaces, que ceux de \emph{même vecteur
+      critères}. La coupe de dominance et la coupe d'efficacité en sont les
+      deux corollaires, selon que cette réserve est automatiquement vide
+      (centre dominé) ou qu'il faut l'établir (centre efficace).
+      \emph{L'énoncé lui-même n'est pas neuf dans le cas linéaire} --
+      Jorge~\cite{jorge2009} coupe déjà autour de points efficaces, avec la
+      même disjonction et la même condition sur les solutions alternatives
+      (remarque~\ref{rem:anteriorite}). Ce qui l'est : que les formes de
+      coupe restent \emph{entières} quand critères et objectif sont
+      fractionnaires, ce dont dépend toute l'exactitude sans tolérance.
 \item \textbf{Théorème~\ref{th:archbound} (borne sur le relâché de
       coupes).} Sous une condition de clôture, la borne resserrée reste
       valide sur ce relâché plus petit. L'énoncé vaut pour un ensemble de
@@ -697,7 +704,12 @@ recherche et à aucune par sa certification.
 énoncé : $\Ecal$ devient un ensemble fini mais sans structure faciale, et
 les algorithmes fondés sur les faces perdent leur prise.
 Jorge~\cite{jorge2009} optimise une fonction linéaire sur l'ensemble
-efficace entier par ajout successif de contraintes de coupe.
+efficace entier par ajout successif de \emph{corner
+constraints}~\cite{klein1982} : à chaque tour il retranche du relâché la
+région dominée par un point efficace déjà trouvé, et traite à part les
+solutions alternatives de même vecteur critères. C'est l'antécédent direct
+de ce mémoire, dont la remarque~\ref{rem:anteriorite} fait le partage
+exact -- le mécanisme y est, le cas fractionnaire n'y est pas.
 Sylva et Crema~\cite{sylva2004} énumèrent les vecteurs non dominés d'un
 programme entier multiobjectif -- travail voisin mais distinct, puisqu'il
 \emph{engendre} $\Ecal$ au lieu d'optimiser dessus. Cette distinction est
@@ -1071,10 +1083,11 @@ contribution.
 \end{remark}
 
 \paragraph{Brique 3 -- coupe de dominance.} C'est l'outil classique de
-l'optimisation sur l'ensemble efficace, sous la forme disjonctive
-qu'emploient Chergui et Moulaï~\cite{chergui2008}, Jorge~\cite{jorge2009}
-et Sylva et Crema~\cite{sylva2004}, et dont les deux méthodes auxquelles
-nous nous comparons~\cite{zerdani2011,drici2018} font leur unique moyen de
+l'optimisation sur l'ensemble efficace, sous la forme disjonctive dite
+\emph{corner constraint}~\cite{klein1982} qu'emploient Chergui et
+Moulaï~\cite{chergui2008}, Jorge~\cite{jorge2009} et Sylva et
+Crema~\cite{sylva2004,sylva2007}, et dont les deux méthodes auxquelles nous
+nous comparons~\cite{zerdani2011,drici2018} font leur unique moyen de
 retranchement. Nous la reprenons sans modification. Si $\bar x$ est
 \emph{dominé}, la région $\{x\in\Scal : Z(x)\le Z(\bar x)\}$ ne contient
 aucun point efficace, et se retranche par la disjonction
@@ -1160,49 +1173,64 @@ L'inclusion s'obtient en appliquant ceci à chaque $a\in A$, pour les $x$
 efficaces dont le vecteur critères diffère de tous ceux de $A$.
 \end{proof}
 
-\begin{remark}[ce que cette coupe doit à la littérature, et ce qu'elle ne
-lui doit pas]
+\begin{remark}[ce que cette coupe doit à Jorge, et ce qui reste]
 \label{rem:anteriorite}
-La \emph{forme} de cette coupe est connue. Sylva et
-Crema~\cite{sylva2004,sylva2007} l'emploient depuis 2004 pour énumérer
-l'ensemble non dominé : après avoir produit un point non dominé, ils
-excluent la région qu'il domine par exactement cette disjonction, au même
-coût de $p$ variables binaires. Le centre y est donc déjà un point
-\emph{efficace}, et il serait faux d'écrire que couper autour d'un tel
-point est nouveau. Une version antérieure de ce mémoire l'écrivait ; nous
-la corrigeons.
+Cette coupe n'est pas nouvelle, et il faut le dire avec précision plutôt
+qu'en gros. Jorge~\cite{jorge2009} optimise une fonction linéaire sur
+l'ensemble efficace d'un MOILP, et son algorithme construit exactement le
+même objet. Son étape~3 résout
+\[
+  R_l=\max\Bigl\{v^{\top}x\ :\ x\in F\setminus\bigcup_{s\le l}D_s\Bigr\},
+  \qquad D_s=\{x\in\mathbb{Z}^n : Cx\le C\bar x^{\,s}\},
+\]
+où les $\bar x^{\,s}$ sont des points \textbf{efficaces}. On retranche donc
+d'un relâché servant à \emph{borner} la région dominée par un point
+efficace : c'est, mot pour mot, ce que nous appelons coupe d'efficacité.
+La mise en {\oe}uvre coïncide aussi -- Jorge écrit la disjonction sous
+forme \emph{corner constraint}, $Cx\ge\operatorname{diag}(C\bar x^{\,s}+e)
+y^s+\operatorname{diag}(M)(e-y^s)$ avec $e^{\top}y^s\ge 1$ et
+$y^s\in\{0,1\}^k$, soit le même grand~$M$ et les mêmes $p$ binaires que
+notre~\eqref{eq:disj}. Ces contraintes portent un nom dans la littérature
+et remontent à Klein et Hannan~\cite{klein1982}.
 
-Ce qui change ici est l'\textbf{usage}, et il entraîne une difficulté que
-l'usage d'origine n'a pas. On énumère en excluant : la coupe sert à forcer
-la résolution suivante à rendre \emph{autre chose}, et peu importe qu'elle
-retranche au passage des points de même vecteur critères, puisqu'ils
-représentent la même solution non dominée. On borne en retranchant : la
-coupe sert à rétrécir un relâché dont on tire un \emph{majorant} de
-$\max_{\Ecal}f$, et un point efficace retranché à tort fausse ce majorant.
-Or les solutions alternatives -- même vecteur critères, valeur de $f$
-différente -- sont précisément ce que la coupe emporte. C'est la réserve
-que la condition de clôture lève, et elle n'a pas de raison d'exister dans
-un contexte d'énumération.
+La réserve des solutions alternatives y est traitée également. L'étape~2
+de Jorge résout $T_l=\max\{v^{\top}x : Cx=C\bar x^{\,l},\ x\in F\}$,
+« \emph{since many efficient solutions may have the same outcome} » : c'est
+notre condition de clôture. Le même article établit par ailleurs que si
+$R_l$ est infaisable, l'énumération est close et l'optimum atteint : c'est
+notre proposition~\ref{prop:vide}.
 
-Nous revendiquons donc trois choses et pas une quatrième. La quatrième,
-qui ne nous revient pas : la coupe elle-même. Les trois qui nous
-reviennent, sauf antécédent que nous n'avons pas trouvé : que cette coupe
-soit \emph{valide pour borner} sous condition de clôture
-(théorème~\ref{th:archbound}) ; que la condition se vérifie en un seul
-programme de faisabilité, dont les deux issues sont utiles
-(§\ref{sec:cloture}) ; et qu'un relâché \emph{vidé} par ces coupes prouve
-l'optimalité sans qu'aucune borne ait été évaluée
-(proposition~\ref{prop:vide}), ce que la coupe de dominance ne peut pas
-produire.
+\paragraph{Ce que nous avions revendiqué à tort.} Trois choses, et nous les
+retirons : que couper autour d'un point efficace soit nouveau ; que la
+validité de cette coupe pour \emph{borner} le soit ; et que la condition de
+clôture le soit. Les trois sont dans un article de $2009$ que ce mémoire
+citait déjà. Nous l'avions cité sans l'avoir lu de près, ce qui est la
+faute, et nous la corrigeons ici plutôt que de la laisser à un rapporteur.
 
-\begin{quote}\small
-Cette revendication porte sur ce que nous avons lu. Les travaux qui
-optimisent \emph{sur} l'ensemble efficace d'un MOILFP
--- \cite{zerdani2011,mahdi2015,drici2018,chaiblaine2020} -- coupent tous
-autour de points dominés ; aucun, à notre lecture, n'emploie l'archive des
-points efficaces comme source de coupes pour la borne. Un antécédent nous
-ôterait le point sans rien retirer aux mesures.
-\end{quote}
+\paragraph{Ce qui reste, et pourquoi ce n'est pas rien.} Quatre choses,
+sauf antécédent que nous n'avons pas trouvé.
+\begin{enumerate}[label=(\alph*),leftmargin=2.2em]
+\item \textbf{Le cas fractionnaire des deux côtés.} Jorge travaille en
+  MOILP : critères linéaires, objectif linéaire $v^{\top}x$. Le passage aux
+  critères \emph{et} à l'objectif fractionnaires n'est pas une
+  transcription : il faut que $e^a_k$ reste \emph{entière} -- d'où la
+  multiplication croisée de la brique~1 -- faute de quoi l'équivalence
+  « $e_k>0\iff e_k\ge 1$ » tombe et avec elle l'exactitude sans tolérance.
+\item \textbf{Les deux bornes fractionnaires.} Le dénominateur restreint
+  $D^{+}$ (théorème~\ref{th:archbound}) et le seuil libre
+  (théorème~\ref{th:seuil}) n'ont pas d'équivalent chez Jorge, dont
+  l'objectif linéaire ne demande aucune borne de cette nature.
+\item \textbf{L'encadrement à tout instant.} Jorge est une méthode exacte :
+  elle conclut ou elle ne conclut pas. Nous rendons un encadrement valide à
+  chaque interruption, avec une solution certifiée efficace, ce
+  qu'établit le théorème~\ref{th:global}.
+\item \textbf{La clôture comme faisabilité.} Là où $T_l$ est un
+  \emph{optimum}, nous n'avons besoin que d'une \emph{faisabilité}, ce qui
+  est moins cher et dont les deux issues servent.
+\end{enumerate}
+La contribution se déplace donc : elle n'est pas dans la coupe, elle est
+dans son transport au fractionnaire et dans ce qu'on en tire à budget
+borné.
 \end{remark}
 
 \begin{remark}[où l'efficacité de $a$ intervient, et où elle
@@ -6901,6 +6929,12 @@ M.~E.~A.~Chergui et M.~Moulaï.
   optimization.
 \newblock \emph{Journal of Applied Mathematics and Decision Sciences}, 2008,
   article 760191.
+
+\bibitem{klein1982}
+D.~Klein et E.~Hannan.
+\newblock An algorithm for the multiple objective integer linear programming
+  problem.
+\newblock \emph{European Journal of Operational Research}, 9(4):378--385, 1982.
 
 \bibitem{jorge2009}
 J.~M.~Jorge.
