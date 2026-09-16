@@ -324,12 +324,18 @@ $f$ sur l'ensemble $\Ecal$ des solutions efficaces d'un programme linéaire
 fractionnaire multi-objectif en nombres entiers. Ce mémoire est organisé
 autour d'\emph{un} résultat, qu'il traite complètement, et rapporte les
 corrections que la mesure lui a imposées en chemin. Le résultat est une
-\textbf{coupe d'efficacité} qui permet de retrancher du relâché servant à borner $\qs$ la
-région dominée par un point \textbf{efficace}, alors que la coupe classique
-ne l'autorise qu'autour d'un point \emph{dominé}. Le théorème qui l'établit
-se révèle plus général que ce résultat lui-même : le centre de coupe
-n'a besoin d'être que \emph{réalisable}, et la coupe classique en devient un
-corollaire.
+\textbf{coupe d'efficacité} : retrancher du relâché servant à borner $\qs$
+la région dominée par un point \textbf{efficace} déjà trouvé. La forme de
+cette coupe n'est pas neuve -- c'est la contrainte d'exclusion de Sylva et
+Crema~\cite{sylva2004,sylva2007}, à $p$ binaires, employée depuis vingt ans
+pour \emph{énumérer} l'ensemble non dominé. Ce que nous établissons est
+qu'elle sert aussi à \emph{borner} : posée dans le relâché d'un problème
+d'optimisation \emph{sur} l'ensemble efficace, elle reste valide à la
+réserve près des solutions alternatives, et cette réserve se lève par une
+condition de clôture qui coûte un seul programme de faisabilité. Le
+théorème qui l'établit est par ailleurs plus général que cet usage : le
+centre de coupe n'a besoin d'être que \emph{réalisable}, et la coupe de
+dominance en devient un corollaire (remarque~\ref{rem:anteriorite}).
 
 L'intérêt est une hybridation au sens fort. La recherche heuristique produit
 une archive de points efficaces certifiés -- sous-produit pour la borne,
@@ -1078,7 +1084,8 @@ aucun point efficace, et se retranche par la disjonction
   e^{\bar x}_k(x)\ge 1-M_k(1-u_k)\ \ \forall k,\quad
   \textstyle\sum_k u_k\ge 1,\quad u\in\{0,1\}^p .
 \end{equation}
-C'est la seule opération de resserrement disponible avant ce mémoire. Son
+C'est l'opération de resserrement que les méthodes d'optimisation \emph{sur}
+l'ensemble efficace emploient, et la seule qu'elles emploient. Son
 coût est de $p$ variables binaires par coupe -- il faut le garder en tête,
 car c'est ce coût, et non un rendement décroissant, qui limite le nombre de
 coupes qu'on peut poser. Nous avions écrit qu'il « impose un plafond » ;
@@ -1152,6 +1159,51 @@ $\Zk(x)>\Zk(a)$, c'est-à-dire $e^a_k(x)\ge 1$ par~\eqref{eq:eint}.
 L'inclusion s'obtient en appliquant ceci à chaque $a\in A$, pour les $x$
 efficaces dont le vecteur critères diffère de tous ceux de $A$.
 \end{proof}
+
+\begin{remark}[ce que cette coupe doit à la littérature, et ce qu'elle ne
+lui doit pas]
+\label{rem:anteriorite}
+La \emph{forme} de cette coupe est connue. Sylva et
+Crema~\cite{sylva2004,sylva2007} l'emploient depuis 2004 pour énumérer
+l'ensemble non dominé : après avoir produit un point non dominé, ils
+excluent la région qu'il domine par exactement cette disjonction, au même
+coût de $p$ variables binaires. Le centre y est donc déjà un point
+\emph{efficace}, et il serait faux d'écrire que couper autour d'un tel
+point est nouveau. Une version antérieure de ce mémoire l'écrivait ; nous
+la corrigeons.
+
+Ce qui change ici est l'\textbf{usage}, et il entraîne une difficulté que
+l'usage d'origine n'a pas. On énumère en excluant : la coupe sert à forcer
+la résolution suivante à rendre \emph{autre chose}, et peu importe qu'elle
+retranche au passage des points de même vecteur critères, puisqu'ils
+représentent la même solution non dominée. On borne en retranchant : la
+coupe sert à rétrécir un relâché dont on tire un \emph{majorant} de
+$\max_{\Ecal}f$, et un point efficace retranché à tort fausse ce majorant.
+Or les solutions alternatives -- même vecteur critères, valeur de $f$
+différente -- sont précisément ce que la coupe emporte. C'est la réserve
+que la condition de clôture lève, et elle n'a pas de raison d'exister dans
+un contexte d'énumération.
+
+Nous revendiquons donc trois choses et pas une quatrième. La quatrième,
+qui ne nous revient pas : la coupe elle-même. Les trois qui nous
+reviennent, sauf antécédent que nous n'avons pas trouvé : que cette coupe
+soit \emph{valide pour borner} sous condition de clôture
+(théorème~\ref{th:archbound}) ; que la condition se vérifie en un seul
+programme de faisabilité, dont les deux issues sont utiles
+(§\ref{sec:cloture}) ; et qu'un relâché \emph{vidé} par ces coupes prouve
+l'optimalité sans qu'aucune borne ait été évaluée
+(proposition~\ref{prop:vide}), ce que la coupe de dominance ne peut pas
+produire.
+
+\begin{quote}\small
+Cette revendication porte sur ce que nous avons lu. Les travaux qui
+optimisent \emph{sur} l'ensemble efficace d'un MOILFP
+-- \cite{zerdani2011,mahdi2015,drici2018,chaiblaine2020} -- coupent tous
+autour de points dominés ; aucun, à notre lecture, n'emploie l'archive des
+points efficaces comme source de coupes pour la borne. Un antécédent nous
+ôterait le point sans rien retirer aux mesures.
+\end{quote}
+\end{remark}
 
 \begin{remark}[où l'efficacité de $a$ intervient, et où elle
 n'intervient pas]\label{rem:aeff}
@@ -5658,6 +5710,9 @@ raccourcis dont chacun d'eux dispose.
 \midrule
 Zerdani \& Moulaï~\cite{zerdani2011} & \textbf{fractionnaires} & linéaire\\
 Drici, Ouail \& Moulaï~\cite{drici2018} & linéaires & \textbf{fractionnaire}\\
+Mahdi \& Chaabane~\cite{mahdi2015} & linéaires & \textbf{fractionnaire}\\
+Chaiblaine \emph{et al.}~\cite{chaiblaine2020}
+ & \textbf{fractionnaires} & \textbf{deux} fractionnaires\\
 \midrule
 \textbf{notre problème (P)} & \textbf{fractionnaires} & \textbf{fractionnaire}\\
 \bottomrule
@@ -5665,8 +5720,14 @@ Drici, Ouail \& Moulaï~\cite{drici2018} & linéaires & \textbf{fractionnaire}\\
 \end{table}
 
 \noindent
-Notre problème est la \emph{réunion} des deux généralisations : fractionnaire
-des deux côtés. Aucune des deux méthodes ne le couvre. Il en découle une
+Notre problème est la \emph{réunion} des deux généralisations :
+fractionnaire des deux côtés. Chaiblaine \emph{et
+al.}~\cite{chaiblaine2020} traitent bien ce cas, mais pour \emph{deux}
+fonctions d'utilité à optimiser simultanément, par un branchement avec
+coupes ; leur objet est l'arbitrage entre deux décideurs, non
+l'encadrement à budget borné d'une valeur unique. Ni eux ni les deux
+méthodes auxquelles nous nous comparons n'exploitent les points efficaces
+déjà trouvés comme source de coupes. Il en découle une
 contrainte méthodologique dont ce mémoire tire parti plutôt que de la
 subir : \textbf{la comparaison ne peut se faire que sur le terrain de
 chacun}. On restreint donc notre méthode à leur classe -- $f$ linéaire pour
@@ -6846,6 +6907,19 @@ J.~M.~Jorge.
 \newblock An algorithm for optimizing a linear function over an integer
   efficient set.
 \newblock \emph{European Journal of Operational Research}, 195:98--103, 2009.
+
+\bibitem{sylva2007}
+J.~Sylva et A.~Crema.
+\newblock A method for finding well-dispersed subsets of non-dominated vectors
+  for multiple objective mixed integer linear programs.
+\newblock \emph{European Journal of Operational Research},
+  180(3):1011--1027, 2007.
+
+\bibitem{chaiblaine2020}
+Y.~Chaiblaine, M.~Moulaï et al.
+\newblock An exact method for optimizing two linear fractional functions over
+  the efficient set of a multiobjective integer linear fractional program.
+\newblock \emph{arXiv:2003.05364}, 2020.
 
 \bibitem{sylva2004}
 J.~Sylva et A.~Crema.
