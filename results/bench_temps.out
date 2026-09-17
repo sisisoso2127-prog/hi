@@ -1,0 +1,53 @@
+========================================================================================================
+COUT EN TEMPS DES REGLAGES QUE LA SENSIBILITE DIT MEILLEURS
+  cut_batch 40 -> 80,  cert_rounds 2 -> 4,  et les deux ensemble
+  temps de paroi en secondes, plafond d'appels entiers INCHANGE
+========================================================================================================
+
+========================================================================================================
+STRATE A  --  8 instances x 2 graines, plafond 80 appels entiers
+========================================================================================================
+instance                   gr       b40 r2       temoin       b80 r2       b40 r4       b80 r4
+--------------------------------------------------------------------------------------------------------
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+n=7 m=4 p=4 s=3 c=0.00      0         1.04         1.09         1.18         1.09         1.10
+n=7 m=4 p=4 s=3 c=0.00      1         1.09         1.16         1.12         1.08         1.00
+n=7 m=4 p=4 s=3 c=0.25      0         0.96         1.16         1.04         1.20         1.16
+n=7 m=4 p=4 s=3 c=0.25      1         1.25         1.24         1.28         1.19         1.04
+n=6 m=4 p=4 s=3 c=0.00      0         0.80         0.85         0.83         0.79         1.01
+n=6 m=4 p=4 s=3 c=0.00      1         0.70         0.69         0.79         0.76         0.64
+n=7 m=4 p=3 s=1 c=0.25      0         0.88         1.00         0.92         0.99         0.86
+n=7 m=4 p=3 s=1 c=0.25      1         0.75         0.90         0.89         0.89         0.88
+n=5 m=3 p=4 s=2 c=0.00      0         0.71         0.73         0.75         0.74         0.71
+n=5 m=3 p=4 s=2 c=0.00      1         0.62         0.61         0.63         0.64         0.63
+n=8 m=5 p=3 s=1 c=0.00      0         0.66         0.68         0.70         0.68         0.70
+n=8 m=5 p=3 s=1 c=0.00      1         0.89         0.91         0.88         0.86         0.86
+n=7 m=4 p=4 s=3 c=0.50      0         1.17         1.06         1.08         1.16         1.17
+n=7 m=4 p=4 s=3 c=0.50      1         0.55         0.55         0.52         0.44         0.44
+n=6 m=4 p=2 s=1 c=0.25      0         0.30         0.30         0.30         0.35         0.30
+n=6 m=4 p=2 s=1 c=0.25      1         0.28         0.28         0.28         0.28         0.28
+
+  LECTURE APPARIEE -- strate A
+    configuration             rapport med      min      max   appels med   ecart med  preuves
+    production  b=40 r=2            1.000    1.000    1.000         80.0        0.00     9/16 
+    temoin      b=40 r=2            1.021    0.903    1.206         80.0        0.00     9/16 
+    lot double  b=80 r=2            1.033    0.917    1.188         80.0        0.00     9/16 
+    tours x2    b=40 r=4            1.027    0.797    1.254         80.0        0.00     9/16 
+    les deux    b=80 r=4            0.997    0.798    1.259         80.0        0.00     9/16 
+
+    BRUIT DU BANC (temoin, ecart maximal a 1) : 20.6 %
+
+========================================================================================================
+STRATE B  --  4 instances x 2 graines, plafond 300 appels entiers
+========================================================================================================
+instance                   gr       b40 r2       temoin       b80 r2       b40 r4       b80 r4
+--------------------------------------------------------------------------------------------------------
