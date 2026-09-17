@@ -83,7 +83,16 @@ def une(inst, cap: int, graine: int, **surcharge) -> Dict:
                           seed=graine, ilp_budget=cap, **cfg)
     vivier = sum(_TAILLES)
     posees = r.cert.get("n_cuts", 0) if r.cert else 0
-    return dict(viviers=list(_TAILLES), vivier=vivier, posees=posees,
+    return dict(viviers=list(_TAILLES), vivier=vivier,
+                # le plus gros vivier PRIS SEUL : c'est lui que `cap_tour`
+                # affronte, un tour puisant dans UN vivier. La somme, elle,
+                # dit combien de candidats l'execution a vus en tout. Une
+                # premiere version n'affichait que la somme et laissait la
+                # prediction 1 se lire comme une contradiction du tableau
+                # juste au-dessus -- « aucun vivier n'atteint 160 » sous une
+                # colonne qui affiche 245.
+                vmax=max(_TAILLES) if _TAILLES else 0,
+                posees=posees, ilp=r.ilp_calls,
                 tours=r.cert.get("rounds", 0) if r.cert else 0,
                 vide=posees >= vivier,
                 ecart=(r.gap * 100) if r.gap is not None else float("nan"),
@@ -110,14 +119,19 @@ def main() -> int:
         res[nom] = lectures
         v = [d["vivier"] for d in lectures]
         p = [d["posees"] for d in lectures]
+        vm = [d["vmax"] for d in lectures]
         print(f"\n{nom}")
-        print(f"    vivier   min {min(v):>4}  med {statistics.median(v):>6.1f}"
-              f"  max {max(v):>4}")
+        print(f"    vivier (somme)  min {min(v):>4}  "
+              f"med {statistics.median(v):>6.1f}  max {max(v):>4}")
+        print(f"    vivier (le plus gros pris seul)   "
+              f"med {statistics.median(vm):>6.1f}  max {max(vm):>4}")
         print(f"    posees   min {min(p):>4}  med {statistics.median(p):>6.1f}"
               f"  max {max(p):>4}")
         print(f"    tours    med {statistics.median([d['tours'] for d in lectures]):>4.1f}"
               f"      vivier VIDE : {sum(d['vide'] for d in lectures)}"
               f"/{len(lectures)}")
+        print(f"    appels entiers  med "
+              f"{statistics.median([d['ilp'] for d in lectures]):>6.1f}")
         print(f"    ecart med {statistics.median([d['ecart'] for d in lectures if d['ecart'] == d['ecart']]):>7.2f}"
               f"   preuves {sum(d['prouve'] for d in lectures)}/{len(lectures)}",
               flush=True)
@@ -128,11 +142,11 @@ def main() -> int:
 
     prod, b80, b160, r4 = (res[n] for n, _ in CONFIGS)
 
-    jamais = all(max(d["viviers"] or [0]) < 160 for d in prod)
-    print(f"\n 1. « beta = 160 ne mord jamais » -- aucun vivier n'atteint "
-          f"160 candidats : {'OUI' if jamais else 'NON'}")
+    jamais = all(d["vmax"] < 160 for d in prod)
+    print(f"\n 1. « beta = 160 ne mord jamais » -- aucun vivier PRIS SEUL "
+          f"n'atteint 160 candidats : {'OUI' if jamais else 'NON'}")
     if not jamais:
-        gros = max(max(d['viviers'] or [0]) for d in prod)
+        gros = max(d['vmax'] for d in prod)
         print(f"    (le plus gros vivier vu compte {gros} candidats)")
 
     memes = sum(1 for a, b in zip(b80, b160)
@@ -146,12 +160,19 @@ def main() -> int:
 
     memes_r4 = sum(1 for a, b in zip(b80, r4) if a["posees"] == b["posees"])
     tours_r4 = sum(1 for a, b in zip(b80, r4) if a["tours"] == b["tours"])
-    print(f"\n 4. CONTRE-EPREUVE. beta = 40, rho = 4 pose autant de coupes "
-          f"que beta = 80 sur {memes_r4}/{len(r4)} executions,")
-    print(f"    mais en autant de tours sur {tours_r4}/{len(r4)} seulement. "
-          f"Si le premier compte est eleve et le second bas,")
-    print("    alors le jeu de coupes n'explique pas tout, et c'est le "
-          "NOMBRE DE RESOLUTIONS qui porte le reste.")
+    cm_r4 = statistics.median([d["posees"] for d in r4])
+    cm_80 = statistics.median([d["posees"] for d in b80])
+    print(f"\n 4. CONTRE-EPREUVE. beta = 40, rho = 4 pose un MEDIAN de "
+          f"{cm_r4:.1f} coupes contre {cm_80:.1f} pour beta = 80,")
+    print(f"    donc autant ou plus, et pourtant il fait moins bien. Le "
+          f"jeu de coupes ne peut donc pas etre la cause :")
+    print(f"    il pose les memes coupes que beta = 80 sur "
+          f"{memes_r4}/{len(r4)} executions et joue autant de tours sur "
+          f"{tours_r4}/{len(r4)}.")
+    print("    Ce qui reste est le PRIX DES TOURS : sous un plafond "
+          "d'appels entiers fixe, chaque tour paie une resolution")
+    print("    de plus, et ce qu'elle coute est autant de retire au reste. "
+          "Peu de gros lots battent beaucoup de petits.")
     return 0
 
 

@@ -1,0 +1,42 @@
+====================================================================================================
+TAILLE DU VIVIER, COUPES POSEES, TOURS JOUES
+  lot elargi : 8 instances (n = 20 et 30) x 3 graines, plafond 300
+====================================================================================================
+
+b=40  r=2   (production)
+    vivier   min   31  med  164.5  max  245
+    posees   min   31  med   82.0  max   96
+    tours    med  2.0      vivier VIDE : 3/24
+    ecart med   19.88   preuves 9/24
+
+b=80  r=2
+    vivier   min   31  med  162.5  max  243
+    posees   min   31  med   88.5  max  139
+    tours    med  2.0      vivier VIDE : 6/24
+    ecart med   16.27   preuves 11/24
+
+b=160 r=2
+    vivier   min   31  med  162.5  max  243
+    posees   min   31  med   88.5  max  139
+    tours    med  2.0      vivier VIDE : 6/24
+    ecart med   16.27   preuves 11/24
+
+b=40  r=4
+    vivier   min   31  med  164.5  max  245
+    posees   min   31  med   97.5  max  143
+    tours    med  4.0      vivier VIDE : 3/24
+    ecart med   18.77   preuves 9/24
+
+====================================================================================================
+TROIS PREDICTIONS, CONFRONTEES
+====================================================================================================
+
+ 1. « beta = 160 ne mord jamais » -- aucun vivier n'atteint 160 candidats : OUI
+
+ 2. « beta = 80 et beta = 160 posent le meme jeu de coupes en autant de tours » : 23/24 executions
+
+ 3. « la production ne VIDE pas le vivier » -- elle laisse des candidats non poses sur 21/24 executions
+
+ 4. CONTRE-EPREUVE. beta = 40, rho = 4 pose autant de coupes que beta = 80 sur 4/24 executions,
+    mais en autant de tours sur 8/24 seulement. Si le premier compte est eleve et le second bas,
+    alors le jeu de coupes n'explique pas tout, et c'est le NOMBRE DE RESOLUTIONS qui porte le reste.
