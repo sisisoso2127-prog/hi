@@ -33,7 +33,23 @@ donc une source de faux negatifs de plus. Les etiquettes sont tout de meme
 rapprochees, en ne gardant que leurs chiffres et leurs lettres, et un
 desaccord est signale sans etre fatal.
 
+TEST PAR MUTATION. Un fascheur qu'on n'abime pas volontairement est un
+fascheur dont on ignore s'il regarde. `mutation_sensib.py` fabrique un
+journal qui concorde avec le tableau, verifie que ce fascheur se taise,
+puis abime le tableau d'une cellule a la fois : ecart, preuves, delta,
+compte apparie, etiquette, signe, cellule en gras, ligne de production
+devenue ordinaire, ligne supprimee, et deux lignes echangees. Les douze
+sont attrapees, l'echange comptant pour quatre divergences puisque
+l'appariement est positionnel et ne se recale pas en silence.
+
+Le meme programme joue aussi les deux mutations que ce fascheur NE PEUT
+PAS voir, et verifie qu'il ne les voit effectivement pas : le renommage
+d'un facteur, et la meme faute commise des deux cotes. Un test par
+mutation qui ne montre que ses reussites laisse croire a une couverture
+qu'il n'a pas.
+
 Usage :  python check_sensib.py [journal] [document]
+         python mutation_sensib.py      (depuis doc/)
 """
 
 from __future__ import annotations
