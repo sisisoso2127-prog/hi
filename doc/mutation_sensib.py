@@ -67,6 +67,27 @@ if code != 0:
     print(sortie)
     raise SystemExit("le temoin echoue : le fascheur ou le generateur est faux")
 
+# TEMOIN A COLONNE DEBORDANTE. Le premier harnais fabriquait ses etiquettes
+# depuis le TABLEAU (« {A,A,A,B,C} », onze caracteres) et ne debordait
+# jamais du champ de vingt-deux. Le banc, lui, ecrit le repr Python
+# (« ('A', 'A', 'A', 'B', 'C') », vingt-cinq), qui decale toute la fin de
+# ligne. Le fascheur laissait alors tomber ces lignes EN SILENCE. Un
+# generateur plus poli que la realite ne teste rien : celui-ci deborde.
+def repr_python(val: str) -> str:
+    lettres = [c for c in val if c.isalpha()]
+    return str(tuple(lettres)) if len(lettres) > 1 else val
+
+
+larges = [(f, repr_python(v), p, e, d, m, pr) for f, v, p, e, d, m, pr in rangs]
+jl = journal_depuis(larges)
+lues = len(cs.lire_journal(str(jl)))
+code, sortie = lance(jl, DOC)
+print(f"TEMOIN A COLONNE DEBORDANTE : {lues}/{len(rangs)} lignes lues,",
+      "OK" if (code == 0 and lues == len(rangs)) else "ECHEC")
+if code != 0 or lues != len(rangs):
+    print(sortie)
+    raise SystemExit("le fascheur perd des lignes quand une valeur deborde")
+
 MUTATIONS = [
     ("ecart_B",     r" & $2$ & $14/24$ & $8{,}11$",
                     r" & $2$ & $14/24$ & $8{,}12$"),
@@ -120,7 +141,7 @@ for nom, vieux, neuf in MUTATIONS:
     detail = ""
     if ok:
         m = re.search(r"TOTAL : (\d+)", sortie)
-        n = re.search(r"nombre de lignes different", sortie)
+        n = re.search(r"PLUS de lignes|EXAMEN PARTIEL", sortie)
         detail = ("lignes" if n else f"{m.group(1)} divergence(s)"
                   if m else "")
     print(f"  {nom:<20}{'ATTRAPEE' if ok else 'MANQUEE ':<10}{detail}")

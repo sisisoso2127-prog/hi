@@ -40,7 +40,9 @@ puis abime le tableau d'une cellule a la fois : ecart, preuves, delta,
 compte apparie, etiquette, signe, cellule en gras, ligne de production
 devenue ordinaire, ligne supprimee, et deux lignes echangees. Les douze
 sont attrapees, l'echange comptant pour quatre divergences puisque
-l'appariement est positionnel et ne se recale pas en silence.
+l'appariement est positionnel et ne se recale pas en silence. Un treizieme
+temoin fait deborder la colonne des valeurs, parce que c'est par la que ce
+fascheur a d'abord failli : voir le commentaire de `RE_LIGNE`.
 
 Le meme programme joue aussi les deux mutations que ce fascheur NE PEUT
 PAS voir, et verifie qu'il ne les voit effectivement pas : le renommage
@@ -70,8 +72,16 @@ Ligne = Tuple[str, str, Optional[int], Optional[float], Optional[float],
 # le journal
 # ---------------------------------------------------------------------------
 
-RE_QUEUE = re.compile(
-    r"^\s*(\d+)/(\d+)"                 # preuves A / n
+# On ANCRE sur la queue numerique au lieu de decouper a des colonnes
+# fixes. Le banc ecrit la valeur en « {:>22} », qui ne tronque pas : un
+# menu comme ('A', 'A', 'A', 'B', 'C') fait vingt-cinq caracteres et
+# decale tout le reste de trois crans. Une premiere version de ce fichier
+# decoupait a la colonne 52 ; elle laissait tomber EN SILENCE les trois
+# lignes trop larges, et l'examen qui suivait comparait le tableau a un
+# journal desaligne -- quatorze fausses divergences, dont pas une vraie.
+RE_LIGNE = re.compile(
+    r"^(.*?)"                          # facteur (30 car.) puis valeur
+    r"\s+(\d+)/(\d+)"                  # preuves A / n
     r"\s+(-?[\d.]+|nan)"               # ecart A
     r"\s+(-?[\d.]+|nan)"               # ecart B
     r"\s+([+-][\d.]+|[+-]?nan)"        # delta B
@@ -84,22 +94,25 @@ def lire_journal(chemin: str) -> List[Ligne]:
     facteur = ""
     for brut in open(chemin, encoding="utf-8", errors="replace"):
         ligne = brut.rstrip("\n")
-        if len(ligne) < 55 or ligne.startswith(("=", "-", "facteur")):
+        if not ligne or ligne[0] in "=-" or ligne.startswith("facteur"):
             continue
-        nom, valeur, queue = ligne[:30].strip(), ligne[30:52].strip(), ligne[52:]
-        m = RE_QUEUE.match(queue)
+        m = RE_LIGNE.match(ligne)
         if not m:
+            continue
+        tete = m.group(1)
+        nom, valeur = tete[:30].strip(), tete[30:].strip()
+        if not valeur:          # une ligne de resume, pas une mesure
             continue
         if nom:
             facteur = nom
-        # groupes : 1 preuves, 2 n, 3 ecart A, 4 ecart B, 5 delta B,
-        # 6 mieux/pire, 7 la marque « <- production ». Les colonnes A et B
+        # groupes : 1 tete, 2 preuves, 3 n, 4 ecart A, 5 ecart B,
+        # 6 delta B, 7 mieux/pire, 8 la marque. Les colonnes A et B
         # se ressemblent assez pour qu'un decalage d'un cran passe
         # inapercu : il avait fait lire l'ecart de la strate A comme celui
         # de la strate B.
-        prod = "production" in m.group(7)
-        out.append((facteur, valeur, int(m.group(1)),
-                    _f(m.group(4)), _f(m.group(5)), m.group(6), prod))
+        prod = "production" in m.group(8)
+        out.append((facteur, valeur, int(m.group(2)),
+                    _f(m.group(5)), _f(m.group(6)), m.group(7), prod))
     return out
 
 
@@ -179,10 +192,22 @@ def main() -> int:
     print(f"  journal : {len(j)} lignes     tableau : {len(t)} lignes")
     print("=" * 78)
 
-    if len(j) != len(t):
-        print(f"\n!! nombre de lignes different : {len(j)} contre {len(t)}.")
+    # Un balayage complet dure des heures. Refuser de repondre tant qu'il
+    # n'est pas fini rendrait ce programme inutilisable pendant tout le
+    # temps ou il servirait le plus. On compare donc le PREFIXE commun,
+    # sous un code de retour distinct : un examen partiel n'est pas un
+    # verdict, et rien ne doit pouvoir le lire comme tel.
+    partiel = len(j) < len(t)
+    if len(j) > len(t):
+        print(f"\n!! le journal a PLUS de lignes que le tableau : "
+              f"{len(j)} contre {len(t)}.")
         print("   Le banc a-t-il ete joue avec le meme jeu de facteurs ?")
         return 1
+    if partiel:
+        print(f"\n** EXAMEN PARTIEL : le journal s'arrete a la ligne "
+              f"{len(j)} sur {len(t)}.")
+        print("   Ce n'est pas un verdict, c'est une lecture anticipee.")
+        t = t[:len(j)]
 
     ecarts = 0
     for k, (a, b) in enumerate(zip(j, t), 1):
@@ -211,9 +236,14 @@ def main() -> int:
 
     print(f"\nTOTAL : {ecarts} divergence(s) sur "
           f"{len(j)} lignes comparees")
-    if not ecarts:
-        print("Le tableau imprime est bien le journal archive.")
-    return 1 if ecarts else 0
+    if ecarts:
+        return 1
+    if partiel:
+        print("Aucune divergence sur les lignes deja jouees. Il en reste "
+              f"{len(lire_tableau(document, 'tab:sensib')) - len(j)}.")
+        return 2
+    print("Le tableau imprime est bien le journal archive.")
+    return 0
 
 
 def _proche(a: Optional[float], b: Optional[float]) -> bool:
