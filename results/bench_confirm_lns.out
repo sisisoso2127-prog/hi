@@ -1,0 +1,14 @@
+================================================================================================
+CONFIRMATION -- lot elargi : 8 instances (n = 20 et 30) x 3 graines, plafond 300
+================================================================================================
+
+configuration                                   ecart med    moyen  delta med  mieux/pire  preuves
+------------------------------------------------------------------------------------------------
+production        lns=(0,4 ; 0,6)  max_stall=3      19.88    28.49      +0.00         0/0   9/24  
+lns constante     lns=(0,4 ; 0,4)                   14.68    28.16      -5.20         2/2   9/24  
+lns basse         lns=(0,2 ; 0,4)                    8.52    28.06     -11.36         8/7  10/24  
+arret immediat    max_stall=1                       13.19    27.83      -6.69         3/2  10/24  
+------------------------------------------------------------------------------------------------
+Lecture : une mediane et un compte apparie qui disent la meme chose
+tranchent ; s'ils se contredisent encore sur 24 executions, le
+facteur reste non tranche et le defaut ne bouge pas.

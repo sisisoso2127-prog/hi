@@ -1,0 +1,17 @@
+========================================================================================================
+CONFIRMATION DE beta ET rho -- lot elargi : 8 instances (n = 20 et 30) x 3 graines, plafond 300
+========================================================================================================
+
+configuration                   ecart med    moyen  delta med  mieux/pire   signe p   preuves
+--------------------------------------------------------------------------------------------------------
+production        b=40  r=2         19.88    28.49      +0.00         0/0     1.000    9/24  
+lot double        b=80  r=2         16.27    26.78      -3.61        12/0     0.000   11/24  
+lot quadruple     b=160 r=2         16.27    26.78      -3.61        12/0     0.000   11/24  
+tours doubles     b=40  r=4         18.77    27.92      -1.11         7/0     0.016    9/24  
+les deux          b=80  r=4         16.27    26.78      -3.61        12/0     0.000   11/24  
+--------------------------------------------------------------------------------------------------------
+Lecture. Le defaut ne change que si TROIS choses concordent : la
+mediane baisse, le compte apparie penche du meme cote, et le test
+du signe ecarte le hasard -- sans qu'aucune preuve soit perdue.
+Deux sur trois ne suffisent pas ; c'est la lecon de la remarque
+sur la mediane bimodale.

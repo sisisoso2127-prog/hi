@@ -1597,8 +1597,12 @@ chaque coupe supplémentaire « alourdirait le programme entier plus qu'elle
 ne resserre le relâché ». Aucune de nos mesures ne le montre, et le
 tableau~\ref{tab:sensib} montre le contraire : $\beta=80$ et $\beta=160$
 y gagnent $1{,}19$ point d'écart sur quatre instances contre zéro, à
-nombre de preuves inchangé (remarque~\ref{rem:genou}). Il n'y a donc pas
-de plafond mesuré du tout, ni saturation ni dégradation. Nous en
+nombre de preuves inchangé (remarque~\ref{rem:genou}). Le lot élargi le
+confirme et va plus loin -- $\beta=80$ y gagne $3{,}61$ points sur douze
+lignes contre zéro, et \emph{deux preuves}
+(remarque~\ref{rem:betaquatrevingts}). Il n'y a donc pas
+de plafond de rendement à $40$, ni saturation ni dégradation ; il y en a un
+à $80$, où $\beta=160$ ne rend plus rien de plus. Nous en
 avions conclu
 qu'il fallait \textbf{un seul plafond pour les deux sources}, et nous
 appuyions cette règle sur une mesure : donner à chacune son propre plafond
@@ -3532,7 +3536,7 @@ conclusion plus faible que la précédente ; elle a l'avantage d'être vraie.
 \begin{remark}[une médiane qui ment, et comment nous l'avons su]
 \label{rem:medianeartefact}
 Deux facteurs semblaient dire le contraire de la production : une fraction
-LNS constante à $0{,}4$ améliorait l'écart médian de $11{,}74$ points, et
+LNS constante à $0{,}4$ améliorait l'écart médian de $\gainMediane{}$ points, et
 \texttt{max\_stall}$=1$ de $\ecartProd{}$. Le compte apparié disait déjà l'inverse
 -- plus de lignes dégradées qu'améliorées -- et une médiane qui baisse
 pendant que la majorité des lignes monte n'est pas un résultat, c'est un
@@ -3548,19 +3552,20 @@ verdict est net et il va contre la lecture flatteuse :
 \toprule
 configuration & médiane & \textbf{moyenne} & preuves & mieux/pire\\
 \midrule
-production & $14{,}63$ & $27{,}41$ & $11/24$ & ---\\
-LNS constante $(0{,}4\,;0{,}4)$ & $7{,}06$ & $27{,}50$ & $11/24$ & $2/2$\\
-LNS basse $(0{,}2\,;0{,}4)$ & $8{,}50$ & $27{,}80$ & $11/24$ & $7/7$\\
-\texttt{max\_stall}$=1$ & $5{,}64$ & $27{,}19$ & $11/24$ & $2/2$\\
+production & $19{,}88$ & $28{,}49$ & $9/24$ & ---\\
+LNS constante $(0{,}4\,;0{,}4)$ & $14{,}68$ & $28{,}16$ & $9/24$ & $2/2$\\
+LNS basse $(0{,}2\,;0{,}4)$ & $8{,}52$ & $28{,}06$ & $10/24$ & $8/7$\\
+\texttt{max\_stall}$=1$ & $13{,}19$ & $27{,}83$ & $10/24$ & $3/2$\\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent
-Les quatre configurations prouvent \emph{exactement} le même nombre de
-lignes, leurs moyennes tiennent dans $0{,}6$ point, et tous les comptes
-appariés sont \emph{symétriques} -- $0/0$, $2/2$, $7/7$, $2/2$. Seule la
-médiane bouge, de $6$ à $9$ points. La cause est la forme de la
+Les quatre configurations prouvent le même nombre de lignes à une unité
+près -- $9$, $9$, $10$, $10$ sur $24$ -- leurs moyennes tiennent dans
+$0{,}66$ point, et tous les comptes appariés sont \emph{quasi symétriques}
+-- $0/0$, $2/2$, $8/7$, $3/2$. Seule la médiane bouge, de $5$ à $11$
+points. La cause est la forme de la
 distribution : les écarts garantis sont \emph{bimodaux} -- des lignes à
 $0\ \%$ et des lignes au-dessus de $80\ \%$, presque rien entre les deux --
 si bien qu'une seule ligne traversant le milieu déplace la médiane
@@ -3598,8 +3603,9 @@ fraction $(0{,}2\,;0{,}4)$ -- des voisinages LNS plus petits. Un
 \emph{nombre de preuves} n'est pas une médiane : il n'a pas le défaut que la
 remarque précédente décrit. Les deux pointent dans la même direction, un LNS
 plus fréquent et plus étroit sur les petites instances. Le lot élargi ne le
-confirme pas à $n=20$ et $30$ ($11/24$ partout), ce qui suggère un effet
-propre au petit régime. Nous le signalons comme une piste ouverte plutôt que
+confirme pas à $n=20$ et $30$ -- la fraction $(0{,}2\,;0{,}4)$ n'y gagne
+qu'une seule ligne, $10/24$ contre $9/24$ -- ce qui suggère un effet propre
+au petit régime. Nous le signalons comme une piste ouverte plutôt que
 de la faire passer pour un réglage acquis : quatre preuves de plus sur $24$,
 sur une seule strate, ne justifient pas de changer une configuration de
 production.
@@ -3672,8 +3678,73 @@ lue sur huit exécutions n'est pas un juge -- appliquer ce standard à la
 fraction LNS et pas à $\beta$ serait le choisir après coup. Le compte
 apparié, lui, est $4$ contre $0$ ; mais sur les quatre seules lignes qui
 bougent, et le test du signe exact bilatéral y donne $p=0{,}125$, ce qui
-n'écarte pas le hasard. Nous rejouons donc $\beta$ et $\rho$ sur le lot
+n'écarte pas le hasard. Nous avons donc rejoué $\beta$ et $\rho$ sur le lot
 élargi avant de toucher à quoi que ce soit.
+
+\begin{table}[H]
+\centering
+\caption{$\beta$ et $\rho$ sur le lot élargi : $8$~instances à $n=20$ et
+$n=30$, trois graines, $24$ exécutions par configuration, plafond $300$.
+Même lot et même protocole que la remarque~\ref{rem:medianeartefact}, pour
+que les deux épisodes soient jugés au même standard. La colonne $p$ est le
+test du signe exact \emph{bilatéral} sur le compte apparié : un
+« $4$ contre $0$ » et un « $12$ contre $0$ » ne sont pas le même
+événement.\ \conf{1}{1}{1}}
+\label{tab:confirmbeta}
+\setlength{\tabcolsep}{5pt}\small
+\begin{tabular}{lrrrcrc}
+\toprule
+configuration & médiane & moyenne & $\Delta$ méd. & mieux/pire & $p$ & preuves\\
+\midrule
+production $\beta=40$, $\rho=2$ & $19{,}88$ & $28{,}49$ & --- & --- & --- & $9/24$\\
+$\mathbf{\beta=80}$ & $\mathbf{16{,}27}$ & $26{,}78$ & $\mathbf{-3{,}61}$ & $\mathbf{12/0}$ & $\mathbf{0{,}000}$ & $\mathbf{11/24}$\\
+$\beta=160$ & $16{,}27$ & $26{,}78$ & $-3{,}61$ & $12/0$ & $0{,}000$ & $11/24$\\
+$\rho=4$ & $18{,}77$ & $27{,}92$ & $-1{,}11$ & $7/0$ & $0{,}016$ & $9/24$\\
+$\beta=80$, $\rho=4$ & $16{,}27$ & $26{,}78$ & $-3{,}61$ & $12/0$ & $0{,}000$ & $11/24$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le lot élargi n'a pas dissous l'effet : il l'a amplifié. Sur $\beta=80$ les
+trois lectures concordent -- la médiane baisse de $\mathbf{3{,}61}$ points,
+le compte apparié est $\mathbf{12}$ contre $\mathbf{0}$, le test du signe y
+donne $p=0{,}0005$ -- et la grandeur qu'on n'a pas le droit de dégrader,
+elle, \emph{s'améliore} : $11/24$ preuves contre $9/24$. C'est l'inverse
+exact de ce qui était arrivé à la fraction LNS, dont le lot élargi avait
+ramené l'avantage à une quasi-égalité.
+
+Deux lignes de ce tableau disent plus que le verdict. D'abord $\beta=160$
+rend \emph{exactement} les mêmes six colonnes que $\beta=80$ : il y a bien
+un genou, et il est à $80$ -- le paragraphe retiré avait la bonne forme
+d'argument et le mauvais point. Ensuite $\rho=4$, seul, gagne $1{,}11$ point
+sur $7$ lignes contre $0$ ($p=0{,}016$), ce qui est réel ; mais combiné à
+$\beta=80$ il ne rend plus rien du tout, la dernière ligne étant identique à
+la deuxième. Ce que $\rho$ apportait, $\beta$ l'apporte déjà. La conclusion
+n'est donc pas « $\beta=80$ et $\rho=4$ », comme le balayage à un facteur le
+suggérait : c'est $\beta=80$ \emph{seul}, $\rho$ restant à $2$, puisque le
+doubler coûterait du temps sans rien rendre.
+
+\begin{remark}[ce que ce résultat oblige à faire, et ce qu'il coûte]
+\label{rem:betaquatrevingts}
+Un réglage de production mesuré meilleur ne se garde pas au motif qu'en
+changer est coûteux. Mais il faut dire ce que cela coûte, parce que le
+chiffre est la raison pour laquelle ce mémoire décrit ici une décision
+plutôt qu'il ne la présente comme acquise : $\beta$ n'est pas passé en
+argument par $25$ des $31$ bancs de ce dépôt, qui lisent le défaut de
+\texttt{matheuristic\_P}. Le porter à $80$ périme donc, en une ligne, la
+quasi-totalité des tableaux de ce document -- non pas leur \emph{sens}, que
+$\beta=80$ ne peut qu'améliorer, mais leurs \emph{nombres}, qui devraient
+tous être remesurés pour rester des relevés.
+
+C'est exactement la situation qui a produit les valeurs périmées que ce
+mémoire a dû corriger deux fois : un défaut changé, des campagnes non
+rejouées, et des tableaux qui continuent d'afficher l'ancien régime. Nous ne
+la recréons pas volontairement. Le tableau~\ref{tab:confirmbeta} est donc
+publié comme ce qu'il est -- la mesure qui établit que $\beta=80$ est le bon
+réglage -- et le changement de défaut est traité comme ce qu'il est aussi :
+une remesure générale, qui se fait en entier ou pas du tout.
+\end{remark}
 
 \medskip\noindent
 Deux jeux d'instances, générés sous (A1)--(A2), gelés avant toute mesure :

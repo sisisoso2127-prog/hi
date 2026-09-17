@@ -1806,20 +1806,27 @@ entiers, et poser deux fois plus de coupes ne s'y voit pas -- et nous
 l'avons mesuré à part, en lecture appariée et \emph{entrelacée}, avec pour
 témoin la production rejouée à l'identique : le rapport médian est
 $\coutTemps$ contre $\coutTemoin$ pour le témoin, donc sous le bruit de
-$\bruitTempsB\ \%$ du banc, à nombre d'appels inchangé. Ce qui retient la
-production n'est pas son coût, c'est que le gain est lu sur \emph{huit}
-exécutions : le compte apparié $4$ contre $0$ ne porte que sur les quatre
-lignes qui bougent, et le test du signe exact bilatéral y donne
-$p=0{,}125$. Les
+$\bruitTempsB\ \%$ du banc, à nombre d'appels inchangé. Restait que le gain
+était lu sur \emph{huit} exécutions, où le compte $4$ contre $0$ ne porte
+que sur les quatre lignes qui bougent et où le test du signe exact bilatéral
+donne $p=0{,}125$. Le lot élargi ($8$ instances à $n=20$ et $30$, trois
+graines) ne dissout pas cet effet, il l'amplifie : $\beta=80$ y gagne
+$3{,}61$ points sur $\mathbf{12}$ lignes contre $\mathbf{0}$
+($p=0{,}0005$) \emph{et} deux preuves, $11/24$ contre $9/24$. Deux lignes du
+même banc précisent le réglage : $\beta=160$ rend exactement les mêmes
+colonnes que $\beta=80$ -- le genou existe, il est à $80$ -- et $\rho=4$,
+réel seul ($7$ contre $0$, $p=0{,}016$), ne rend plus rien une fois
+$\beta=80$ posé. Le réglage mesuré est donc $\beta=80$ \emph{seul}. Les
 autres réglages déplacent l'écart de $2$ à $5$ points sans jamais changer le
 nombre de preuves : leur valeur demande à être \emph{dite}, non justifiée.
 
 \begin{remark}[une médiane bimodale n'est pas un juge]
-Deux facteurs semblaient battre la production de $7$ à $9$ points d'écart
-médian. Rejoués sur un lot élargi ($8$ instances à $n=20$ et $30$, trois
-graines), ils prouvent \emph{exactement} le même nombre de lignes
-($11/24$ partout), leurs moyennes tiennent dans $0{,}6$ point et leurs
-comptes appariés sont symétriques ($2/2$, $7/7$, $2/2$). Les écarts garantis
+Deux facteurs semblaient battre la production de près de $12$ points
+d'écart médian -- $\gainMediane{}$ pour une fraction LNS constante à
+$0{,}4$, $\ecartProd{}$ pour \texttt{max\_stall}$=1$. Rejoués sur un lot élargi ($8$ instances à $n=20$ et $30$, trois
+graines), ils prouvent le même nombre de lignes à une unité près -- $9$,
+$9$, $10$, $10$ sur $24$ -- leurs moyennes tiennent dans $0{,}66$ point et
+leurs comptes appariés sont quasi symétriques ($2/2$, $8/7$, $3/2$). Les écarts garantis
 sont bimodaux -- des lignes à $0\ \%$, des lignes au-dessus de $80\ \%$,
 presque rien entre -- si bien qu'une seule ligne traversant le milieu
 déplace la médiane sans rien changer au fond. Les défauts ne bougent pas.
