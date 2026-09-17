@@ -1210,12 +1210,21 @@ faute, et nous la corrigeons ici plutôt que de la laisser à un rapporteur.
 \paragraph{Ce qui reste, et pourquoi ce n'est pas rien.} Quatre choses,
 sauf antécédent que nous n'avons pas trouvé.
 \begin{enumerate}[label=(\alph*),leftmargin=2.2em]
-\item \textbf{Le cas fractionnaire des deux côtés.} Jorge travaille en
-  MOILP : critères linéaires, objectif linéaire $v^{\top}x$. Le passage aux
-  critères \emph{et} à l'objectif fractionnaires n'est pas une
-  transcription : il faut que $e^a_k$ reste \emph{entière} -- d'où la
+\item \textbf{La coupe disjonctive transportée au fractionnaire, et
+  gardée entière.} Jorge travaille en MOILP : critères linéaires, objectif
+  linéaire $v^{\top}x$. Le fractionnaire des deux côtés, lui, est traité --
+  Chaiblaine \emph{et al.}~\cite{chaiblaine2020} y travaillent -- mais avec
+  une \emph{autre famille} de coupe : la leur, héritée de Chergui et
+  Moulaï~\cite{chergui2008}, s'écrit $\sum_{j\in\mathcal{H}}x_j\ge 1$ sur
+  les indices hors base, à partir des gradients réduits du tableau du
+  simplexe. Ce n'est pas la disjonction à $p$ binaires. Ce que nous
+  transportons est donc la coupe \emph{de Jorge}, et le transport a une
+  contrainte propre : il faut que $e^a_k$ reste \emph{entière} -- d'où la
   multiplication croisée de la brique~1 -- faute de quoi l'équivalence
   « $e_k>0\iff e_k\ge 1$ » tombe et avec elle l'exactitude sans tolérance.
+  Le test d'efficacité fractionnaire de~\cite{chaiblaine2020} porte
+  d'ailleurs des coefficients \emph{rationnels}, là où le nôtre est entier
+  par construction.
 \item \textbf{Les deux bornes fractionnaires.} Le dénominateur restreint
   $D^{+}$ (théorème~\ref{th:archbound}) et le seuil libre
   (théorème~\ref{th:seuil}) n'ont pas d'équivalent chez Jorge, dont
@@ -5750,12 +5759,16 @@ Chaiblaine \emph{et al.}~\cite{chaiblaine2020}
 \noindent
 Notre problème est la \emph{réunion} des deux généralisations :
 fractionnaire des deux côtés. Chaiblaine \emph{et
-al.}~\cite{chaiblaine2020} traitent bien ce cas, mais pour \emph{deux}
-fonctions d'utilité à optimiser simultanément, par un branchement avec
-coupes ; leur objet est l'arbitrage entre deux décideurs, non
-l'encadrement à budget borné d'une valeur unique. Ni eux ni les deux
-méthodes auxquelles nous nous comparons n'exploitent les points efficaces
-déjà trouvés comme source de coupes. Il en découle une
+al.}~\cite{chaiblaine2020} travaillent dans ce cadre, mais sur un objet
+différent : ils cherchent l'ensemble des solutions efficaces d'un problème
+\emph{biobjectif} posé sur $\Ecal$ -- l'arbitrage entre deux décideurs --
+et non le maximum d'une fonction scalaire. Leur coupe est aussi d'une autre
+famille que la nôtre : issue de Chergui et Moulaï~\cite{chergui2008}, elle
+s'écrit $\sum_j x_j\ge 1$ sur les indices hors base à partir des gradients
+réduits, non comme une disjonction à $p$ binaires
+(remarque~\ref{rem:anteriorite}). Liu et Ergoth~\cite{liu2018} abordent la
+même famille de problèmes par des algorithmes primal et dual. Aucun de ces
+travaux ne rend d'encadrement valide avant terminaison. Il en découle une
 contrainte méthodologique dont ce mémoire tire parti plutôt que de la
 subir : \textbf{la comparaison ne peut se faire que sur le terrain de
 chacun}. On restreint donc notre méthode à leur classe -- $f$ linéaire pour
@@ -6948,6 +6961,11 @@ J.~Sylva et A.~Crema.
   for multiple objective mixed integer linear programs.
 \newblock \emph{European Journal of Operational Research},
   180(3):1011--1027, 2007.
+
+\bibitem{liu2018}
+Z.~Liu et M.~Ergoth.
+\newblock Primal and dual algorithms for optimization over the efficient set.
+\newblock \emph{Optimization}, 67(10):1661--1686, 2018.
 
 \bibitem{chaiblaine2020}
 Y.~Chaiblaine, M.~Moulaï et al.

@@ -1069,12 +1069,15 @@ infaisable y conclut déjà à l'optimalité.
 
 Nous retirons donc trois revendications : la coupe autour d'un point
 efficace, sa validité pour borner, et la condition de clôture. Restent le
-transport au cas \textbf{fractionnaire des deux côtés} -- où les formes de
-coupe doivent rester entières, sans quoi l'exactitude sans tolérance
-tombe --, les deux bornes propres au fractionnaire ($D^{+}$ restreint et
-seuil libre, sans objet pour un objectif linéaire), l'encadrement valide à
-\emph{tout instant} là où Jorge conclut ou ne conclut pas, et la clôture
-ramenée d'un optimum à une faisabilité.
+transport de \emph{cette} coupe au cas fractionnaire, en la gardant
+\textbf{entière} -- le fractionnaire des deux côtés est traité par
+Chaiblaine \emph{et al.}~\cite{chaiblaine2020}, mais avec la coupe par
+gradients réduits de Chergui et Moulaï~\cite{chergui2008}, d'une autre
+famille, et un test d'efficacité à coefficients rationnels là où le nôtre
+est entier --, les deux bornes propres au fractionnaire ($D^{+}$ restreint
+et seuil libre, sans objet pour un objectif linéaire), l'encadrement valide
+à \emph{tout instant} là où ces méthodes concluent ou ne concluent pas, et
+la clôture ramenée d'un optimum à une faisabilité.
 \end{remark}
 
 \begin{remark}[la coupe de dominance en est un corollaire]
@@ -4009,6 +4012,11 @@ J.~Sylva et A.~Crema.
   for multiple objective mixed integer linear programs.
 \newblock \emph{European Journal of Operational Research},
   180(3):1011--1027, 2007.
+
+\bibitem{liu2018}
+Z.~Liu et M.~Ergoth.
+\newblock Primal and dual algorithms for optimization over the efficient set.
+\newblock \emph{Optimization}, 67(10):1661--1686, 2018.
 
 \bibitem{chaiblaine2020}
 Y.~Chaiblaine, M.~Moulaï et al.
