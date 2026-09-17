@@ -3522,10 +3522,11 @@ du même genre : le banc ne dit plus que $40$ et $2$ sont les bonnes
 valeurs, il dit que $80$ et $4$ sont \emph{meilleures} sur la strate~B à
 nombre de preuves constant. Ce qu'il ne dit pas, c'est ce qu'elles coûtent
 en temps -- le protocole compte les appels entiers, et poser deux fois plus
-de coupes ne s'y voit pas. Les valeurs de production restent donc celles
-d'un compromis que ce banc ne mesure pas, et non celles d'un optimum qu'il
-établirait. C'est une conclusion plus faible que la précédente ; elle a
-l'avantage d'être vraie.
+de coupes ne s'y voit pas. Nous avons mesuré ce coût à part, et il se révèle
+plus petit que le bruit du banc qui le mesure
+(tableau~\ref{tab:temps}) : ce qui retient la production n'est donc plus son
+coût, c'est la taille de l'échantillon sur lequel le gain est lu. C'est une
+conclusion plus faible que la précédente ; elle a l'avantage d'être vraie.
 \end{remark}
 
 \begin{remark}[une médiane qui ment, et comment nous l'avons su]
@@ -3602,6 +3603,77 @@ propre au petit régime. Nous le signalons comme une piste ouverte plutôt que
 de la faire passer pour un réglage acquis : quatre preuves de plus sur $24$,
 sur une seule strate, ne justifient pas de changer une configuration de
 production.
+
+\paragraph{Ce qu'ils coûtent en temps, et pourquoi il fallait le mesurer à
+part.} Le protocole compte les appels au solveur entier, et c'est ce qui le
+rend reproductible d'une machine à l'autre. Mais un lot de coupes deux fois
+plus gros alourdit \emph{chaque} programme entier sans en créer un seul de
+plus : le plafond est respecté à l'identique et le surcoût est invisible.
+Nous l'avons donc mesuré à part (tableau~\ref{tab:temps}), sous deux
+précautions. D'abord la lecture est \emph{entrelacée} : toutes les
+configurations d'une même ligne sont jouées à la suite, sous la même charge
+machine, faute de quoi une dérive lente se lirait comme un effet. Ensuite un
+\emph{témoin} : la production rejouée à l'identique. La méthode étant
+déterministe à graine fixée, les deux exécutions font exactement le même
+travail, et l'écart entre leurs temps ne mesure rien d'autre que le bruit du
+banc -- tout rapport plus proche de $1$ que ce bruit est illisible, et nous
+ne le lisons pas.
+
+Ce bruit vaut $\bruitTempsA\ \%$ sur la strate~A et $\bruitTempsB\ \%$ sur
+la strate~B. Sur la strate~A, où une exécution dure environ une seconde et
+où les frais fixes dominent, aucun rapport ne sort de
+$[0{,}997\,;1{,}033]$. Sur la strate~B, où la certification domine, $\beta=80$
+et $\rho=4$ ensemble coûtent $\coutTemps$ contre $\coutTemoin$ pour le
+témoin : un surcoût net de l'ordre de deux points et demi, sous le bruit de
+$\bruitTempsB\ \%$ du banc qui le mesure. Le nombre d'appels entiers, lui, ne
+bouge pratiquement pas -- $255{,}0$ contre $255{,}5$ -- ce qui confirme que
+ce surcoût est \emph{par appel}, des programmes plus lourds, et non du
+travail supplémentaire qui aurait débordé le plafond.
+
+\begin{table}[H]
+\centering
+\caption{Coût en temps des réglages que la sensibilité préfère, à plafond
+d'appels entiers inchangé. Strate~A : $8$~instances $\times$ $2$ graines,
+plafond $80$ ; strate~B : $4$~instances $\times$ $2$ graines, plafond $300$.
+Lecture appariée et \emph{entrelacée} ; on publie le rapport au temps de la
+production, non les secondes, qui ne se transportent pas. La deuxième ligne
+de chaque strate est un \emph{témoin} -- la production rejouée à
+l'identique, donc le même travail exactement : son écart à $1$ est le bruit
+du banc.\ \conf{1}{1}{1}}
+\label{tab:temps}
+\setlength{\tabcolsep}{5pt}\small
+\begin{tabular}{llrrrrrc}
+\toprule
+strate & configuration & rapport & min & max & appels & écart & preuves\\
+\midrule
+\multirow{5}{*}{A ($80$)}
+ & production $\beta=40$, $\rho=2$ & $1{,}000$ & --- & --- & $80{,}0$ & $0{,}00$ & $9/16$\\
+ & \emph{témoin} (production) & $1{,}021$ & $0{,}903$ & $1{,}206$ & $80{,}0$ & $0{,}00$ & $9/16$\\
+ & $\beta=80$ & $1{,}033$ & $0{,}917$ & $1{,}188$ & $80{,}0$ & $0{,}00$ & $9/16$\\
+ & $\rho=4$ & $1{,}027$ & $0{,}797$ & $1{,}254$ & $80{,}0$ & $0{,}00$ & $9/16$\\
+ & $\beta=80$, $\rho=4$ & $0{,}997$ & $0{,}798$ & $1{,}259$ & $80{,}0$ & $0{,}00$ & $9/16$\\
+\midrule
+\multirow{5}{*}{B ($300$)}
+ & production $\beta=40$, $\rho=2$ & $1{,}000$ & --- & --- & $255{,}0$ & $12{,}14$ & $4/8$\\
+ & \emph{témoin} (production) & $1{,}018$ & $0{,}920$ & $1{,}039$ & $255{,}0$ & $12{,}14$ & $4/8$\\
+ & $\beta=80$ & $1{,}033$ & $0{,}917$ & $1{,}128$ & $255{,}5$ & $10{,}94$ & $4/8$\\
+ & $\rho=4$ & $1{,}007$ & $0{,}953$ & $1{,}218$ & $255{,}0$ & $10{,}94$ & $4/8$\\
+ & $\beta=80$, $\rho=4$ & $1{,}043$ & $0{,}949$ & $1{,}214$ & $255{,}5$ & $10{,}94$ & $4/8$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+L'argument qui retenait la production tombe donc : le coût existe, il est
+plus petit que le bruit du banc qui le mesure. Mais il ne restait pas qu'un
+argument. Le gain de $1{,}19$ point est lu sur \emph{huit} exécutions, et ce
+mémoire a déjà publié (remarque~\ref{rem:medianeartefact}) qu'une médiane
+lue sur huit exécutions n'est pas un juge -- appliquer ce standard à la
+fraction LNS et pas à $\beta$ serait le choisir après coup. Le compte
+apparié, lui, est $4$ contre $0$ ; mais sur les quatre seules lignes qui
+bougent, et le test du signe exact bilatéral y donne $p=0{,}125$, ce qui
+n'écarte pas le hasard. Nous rejouons donc $\beta$ et $\rho$ sur le lot
+élargi avant de toucher à quoi que ce soit.
 
 \medskip\noindent
 Deux jeux d'instances, générés sous (A1)--(A2), gelés avant toute mesure :

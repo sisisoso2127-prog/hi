@@ -1800,10 +1800,17 @@ preuves perdues ; $\beta=20$ : $0/4$ ; $\rho=1$ : $0/4$). Au-dessus, elles
 s'\emph{améliorent} tout aussi unanimement : $\beta=80$ et $160$, $\rho=4$
 et $6$ gagnent $1{,}19$ point sur $4$ instances contre $0$, à preuves
 constantes. Le banc ne dit donc pas que $40$ et $2$ sont les bonnes
-valeurs ; il dit que $80$ et $4$ sont meilleures sur cette strate, sans
-mesurer ce qu'elles coûtent en temps. Les valeurs de production relèvent
-d'un compromis que ce protocole ne mesure pas, non d'un optimum qu'il
-établirait. Les
+valeurs ; il dit que $80$ et $4$ sont meilleures sur cette strate. Ce
+qu'elles coûtent en temps, il ne le voit pas -- il compte les appels
+entiers, et poser deux fois plus de coupes ne s'y voit pas -- et nous
+l'avons mesuré à part, en lecture appariée et \emph{entrelacée}, avec pour
+témoin la production rejouée à l'identique : le rapport médian est
+$\coutTemps$ contre $\coutTemoin$ pour le témoin, donc sous le bruit de
+$\bruitTempsB\ \%$ du banc, à nombre d'appels inchangé. Ce qui retient la
+production n'est pas son coût, c'est que le gain est lu sur \emph{huit}
+exécutions : le compte apparié $4$ contre $0$ ne porte que sur les quatre
+lignes qui bougent, et le test du signe exact bilatéral y donne
+$p=0{,}125$. Les
 autres réglages déplacent l'écart de $2$ à $5$ points sans jamais changer le
 nombre de preuves : leur valeur demande à être \emph{dite}, non justifiée.
 

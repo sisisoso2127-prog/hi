@@ -51,3 +51,30 @@ STRATE B  --  4 instances x 2 graines, plafond 300 appels entiers
 ========================================================================================================
 instance                   gr       b40 r2       temoin       b80 r2       b40 r4       b80 r4
 --------------------------------------------------------------------------------------------------------
+n=20 m=11 p=3 s=1 c=0.00    0        60.19        55.92        63.56        58.80        58.60
+n=20 m=11 p=3 s=1 c=0.00    1        71.74        72.85        77.63        78.85        78.27
+n=20 m=11 p=3 s=2 c=0.00    0        27.84        28.40        26.07        27.88        26.42
+n=20 m=11 p=3 s=2 c=0.00    1        22.48        23.37        24.13        23.44        23.48
+n=20 m=11 p=3 s=1 c=0.50    0         1.96         1.80         1.79         1.87         1.88
+n=20 m=11 p=3 s=1 c=0.50    1         1.74         1.79         1.75         1.76         1.82
+n=20 m=11 p=3 s=2 c=0.50    0         2.98         3.07         3.01         2.88         3.11
+n=20 m=11 p=3 s=2 c=0.50    1         3.65         3.51         4.11         4.44         4.43
+
+  LECTURE APPARIEE -- strate B
+    configuration             rapport med      min      max   appels med   ecart med  preuves
+    production  b=40 r=2            1.000    1.000    1.000        255.0       12.14     4/8  
+    temoin      b=40 r=2            1.018    0.920    1.039        255.0       12.14     4/8  
+    lot double  b=80 r=2            1.033    0.917    1.128        255.5       10.94     4/8  
+    tours x2    b=40 r=4            1.007    0.953    1.218        255.0       10.94     4/8  
+    les deux    b=80 r=4            1.043    0.949    1.214        255.5       10.94     4/8  
+
+    BRUIT DU BANC (temoin, ecart maximal a 1) : 8.0 %
+
+========================================================================================================
+CE QUE CE BANC ETABLIT. Le surcout en temps des valeurs que la
+sensibilite prefere, a plafond d'appels entiers identique. Un
+rapport superieur au bruit du temoin est un cout reel ; un
+rapport dans le bruit ne se lit pas, et nous ne le lisons pas.
+CE QU'IL N'ETABLIT PAS. Un rapport mesure sur cette machine,
+avec ce solveur. Il ne se transporte pas tel quel ; ce qui se
+transporte, c'est l'ordre de grandeur et le signe.
