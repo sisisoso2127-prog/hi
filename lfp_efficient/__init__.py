@@ -1,0 +1,49 @@
+"""Optimizing a linear fractional function over an integer efficient set.
+
+Reference implementation of the exact algorithm of
+
+    Leila Younsi-Abbaci, *Optimizing a linear fractional function over an
+    integer efficient set*, Reliability: Theory & Applications, No 4 (40),
+    Volume 11, March 2025.
+
+Quick start::
+
+    from lfp_efficient import Model, MOILP, FractionalObjective, LE
+    from lfp_efficient import optimize_over_efficient_set
+
+    D = Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21).add([-2, 4], LE, 6)
+    problem = MOILP(D, criteria=[[1, -2], [-1, 4]])
+    phi = FractionalObjective(U=[1, 1], V=[5, 1], alpha=-1, beta=-1)
+
+    solution = optimize_over_efficient_set(problem, phi, verbose=True)
+    print(solution.x, solution.value)       # (3, 3)  5/17
+
+The package is pure Python with no third-party dependency and computes in
+exact rational arithmetic.
+"""
+
+from .algorithm import IterationLog, Solution, optimize_over_efficient_set
+from .edges import (alternative_optima_columns, explore_edges, max_step,
+                    reduced_gradient, walk_edge)
+from .efficiency import (EfficiencyTest, add_sylva_crema_cut,
+                         best_with_same_criterion, lower_bounds, test_efficiency)
+from .enumeration import Enumeration, enumerate_efficient_set
+from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
+                   solve_milp, solve_relaxation)
+from .model import EQ, GE, LE, Constraint, FractionalObjective, MOILP, Model
+from .rational import F, fmt
+
+__all__ = [
+    "Model", "MOILP", "FractionalObjective", "Constraint", "LE", "GE", "EQ",
+    "optimize_over_efficient_set", "Solution", "IterationLog",
+    "test_efficiency", "EfficiencyTest", "lower_bounds",
+    "add_sylva_crema_cut", "best_with_same_criterion",
+    "reduced_gradient", "alternative_optima_columns", "max_step", "walk_edge",
+    "explore_edges",
+    "solve_milp", "solve_linear_milp", "solve_fractional_milp",
+    "solve_relaxation", "MilpResult",
+    "enumerate_efficient_set", "Enumeration",
+    "F", "fmt",
+]
+
+__version__ = "1.0.0"
