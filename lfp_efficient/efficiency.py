@@ -120,7 +120,8 @@ def add_sylva_crema_cut(region: Model, problem: MOILP, x_hat: Sequence[Fraction]
 
 
 def best_with_same_criterion(region: Model, problem: MOILP,
-                             x_tilde: Sequence[Fraction], phi) -> MilpResult:
+                             x_tilde: Sequence[Fraction], phi,
+                             cutoff=None) -> MilpResult:
     """Sub-problem ``Q(x~) = max { Phi(x) : x in region, C x = C x~ }``.
 
     All the points of this set share the non-dominated criterion vector
@@ -134,7 +135,7 @@ def best_with_same_criterion(region: Model, problem: MOILP,
     for i, row in enumerate(problem.criteria):
         coeffs = list(row) + [ZERO] * (sub.n - len(row))
         sub.add(coeffs, EQ, cx[i])
-    res = solve_fractional_milp(sub, phi)
+    res = solve_fractional_milp(sub, phi, cutoff=cutoff)
     if res.feasible:
         res.x = res.x[:problem.n]
     return res

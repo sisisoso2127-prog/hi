@@ -13,8 +13,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lfp_efficient import (FractionalObjective, LE, MOILP, Model,
                            add_sylva_crema_cut, alternative_optima_columns,
+                           best_over_efficient_set_by_scan,
                            best_with_same_criterion, enumerate_efficient_set,
-                           lower_bounds, optimize_over_efficient_set,
+                           enumerate_nondominated, lower_bounds,
+                           maximize_by_full_enumeration,
+                           optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
                            solve_relaxation, test_efficiency)
 from lfp_efficient.rational import F, fmt
@@ -193,7 +196,62 @@ def test_random_instances_against_exhaustive_enumeration(trials=60, seed=2025091
         assert phi(sol.x) == sol.value
         checked += 1
     assert checked >= 40, f"only {checked} usable instances"
-    return checked
+    return f"{checked} instances vs exhaustive enumeration"
+
+
+def test_the_three_reference_methods_agree_on_the_paper_example():
+    """Box enumeration, non-dominated enumeration and the Phi-ordered scan."""
+    problem, phi = paper_problem()
+    _, by_box = enumerate_efficient_set(problem, bounds=[5, 5]).best(phi)
+    _, by_nd, enumeration = maximize_by_full_enumeration(problem, phi)
+    _, by_scan, _, _ = best_over_efficient_set_by_scan(problem, phi, [5, 5])
+    assert by_box == by_nd == by_scan == Fraction(5, 17)
+    assert len(enumeration) == 7            # seven non-dominated vectors
+
+
+def larger_random_instance(rng):
+    """n in 4..6, p = 3, x_j in 0..3 -- hundreds of feasible points."""
+    n = rng.randint(4, 6)
+    ub = 3
+    model = Model(n)
+    for j in range(n):
+        unit = [0] * n
+        unit[j] = 1
+        model.add(unit, LE, ub)
+    for _ in range(3):
+        model.add([rng.randint(1, 4) for _ in range(n)], LE, rng.randint(8, 16))
+    criteria = [[rng.randint(-3, 5) for _ in range(n)] for _ in range(3)]
+    phi = FractionalObjective([rng.randint(-4, 6) for _ in range(n)],
+                              [rng.randint(1, 3) for _ in range(n)],
+                              rng.randint(-3, 6), rng.randint(2, 6))
+    return MOILP(model, criteria), phi, [ub] * n
+
+
+def test_larger_random_instances_against_the_scan(trials=12, seed=4242):
+    """Hundreds of feasible points per instance, checked by the Phi-ordered scan.
+
+    The scan shares no code with the algorithm -- no simplex, no cut, no
+    efficiency LP -- so the agreement is an independent check, and it stays
+    affordable where enumerating E(P_D) would not.
+    """
+    rng = random.Random(seed)
+    sizes = []
+    for _ in range(trials):
+        problem, phi, bounds = larger_random_instance(rng)
+        ref_x, ref_value, n_feasible, _ = best_over_efficient_set_by_scan(
+            problem, phi, bounds)
+        if ref_x is None:
+            continue
+        sol = optimize_over_efficient_set(problem, phi)
+        assert sol.value == ref_value, (
+            f"mismatch on a {n_feasible}-point instance: "
+            f"{fmt(sol.value)} vs {fmt(ref_value)}")
+        assert phi(sol.x) == sol.value
+        assert problem.model.is_feasible(sol.x)
+        sizes.append(n_feasible)
+    assert sizes, "no usable instance"
+    return (f"{len(sizes)} instances, up to {max(sizes)} feasible points "
+            f"({sum(sizes) // len(sizes)} on average)")
 
 
 # --------------------------------------------------------------------------
@@ -207,7 +265,7 @@ def main():
     for fn in tests:
         try:
             extra = fn()
-            suffix = f" ({extra} instances)" if isinstance(extra, int) else ""
+            suffix = f"  [{extra}]" if isinstance(extra, str) else ""
             print(f"  PASS  {fn.__name__}{suffix}")
         except AssertionError as exc:
             failures += 1

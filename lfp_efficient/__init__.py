@@ -27,7 +27,10 @@ from .edges import (alternative_optima_columns, explore_edges, max_step,
                     reduced_gradient, walk_edge)
 from .efficiency import (EfficiencyTest, add_sylva_crema_cut,
                          best_with_same_criterion, lower_bounds, test_efficiency)
-from .enumeration import Enumeration, enumerate_efficient_set
+from .enumeration import (Enumeration, FullEnumeration,
+                          enumerate_efficient_set, enumerate_nondominated,
+                          maximize_by_full_enumeration,
+                          best_over_efficient_set_by_scan)
 from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
                    solve_milp, solve_relaxation)
 from .model import EQ, GE, LE, Constraint, FractionalObjective, MOILP, Model
@@ -43,6 +46,8 @@ __all__ = [
     "solve_milp", "solve_linear_milp", "solve_fractional_milp",
     "solve_relaxation", "MilpResult",
     "enumerate_efficient_set", "Enumeration",
+    "enumerate_nondominated", "maximize_by_full_enumeration", "FullEnumeration",
+    "best_over_efficient_set_by_scan",
     "F", "fmt",
 ]
 

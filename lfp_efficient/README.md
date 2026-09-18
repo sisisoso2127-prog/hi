@@ -59,8 +59,53 @@ print(solution.x, solution.value)        # [3, 3]  5/17
 
 ```
 python3 examples/paper_example.py        # reproduces section 4 of the paper
-python3 tests/test_lfp_efficient.py      # 12 tests, incl. 60 random instances
+python3 examples/large_example.py        # larger instances, up to |D| = 31833
+python3 tests/test_lfp_efficient.py      # 14 tests, incl. 72 random instances
 ```
+
+## Larger instances
+
+The paper's illustration has 11 feasible points, small enough that any method
+works. `examples/large_example.py` runs the algorithm on instances up to
+`n = 10` variables and `p = 3` criteria, every answer cross-checked against an
+independent exact reference:
+
+| instance | \|D\| | `Phi_opt` | iter | generated | algorithm | check |
+|---|---:|---:|---:|---:|---:|---:|
+| medium `n=4` | 106 | 15/7 | 8 | 8 of 31 efficient (26%) | 8.1 s | 0.01 s |
+| medium `n=5` | 250 | 15/7 | 9 | 9 of 54 efficient (17%) | 12.1 s | 0.03 s |
+| medium `n=6` | 629 | 2 | 11 | 11 of 71 efficient (15%) | 49.7 s | 0.07 s |
+| large `n=10` | 31833 | 43/11 | 1 | 1 | 0.02 s | 6.40 s |
+| hard `n=10` | 4994 | 30/11 | 3 | 3 | 3.46 s | 1.27 s |
+
+The two `n = 10` rows show the spread in difficulty. In the *large* one the
+maximiser of `Phi` over `D` happens to be efficient, so the first efficiency
+test settles the problem — 31833 feasible points solved in 0.02 s, three
+hundred times faster than merely scanning them. In the *hard* one the criteria
+reward large `x` while `Phi` rewards small `x`, so the maximiser of `Phi` is
+dominated and the algorithm has to cut its way through several non-dominated
+vectors. That is the regime the method is written for, and the one where the
+cost sits: each Sylva–Crema cut adds `p` binaries and `2p+1` rows, so the
+sub-problems grow with the iteration count.
+
+The middle rows are where the paper's claim is visible: the optimum is reached
+after generating 15–26 % of `E(P_D)`.
+
+## Three independent references
+
+Trusting a single implementation to check itself proves nothing, so the package
+carries three reference methods that share no code path with the algorithm:
+
+| function | how it works | cost |
+|---|---|---|
+| `enumerate_efficient_set` | enumerate the box, filter by Definition 1 | `O(\|D\|^2)` pairwise dominance |
+| `maximize_by_full_enumeration` | generate *every* non-dominated vector by repeated cuts, maximise `Phi` on each slice | this is the naive method the paper avoids |
+| `best_over_efficient_set_by_scan` | sort `D` by decreasing `Phi`, return the first point surviving a dominance test | a handful of tests in practice |
+
+The third one is the practical verifier: the first efficient point in
+`Phi`-decreasing order *is* the optimum of `(P_E)`, so the efficient set never
+has to be built. On the paper's example it answers after 3 dominance tests; on
+the 31833-point instance, after 1.
 
 ## Design notes
 
@@ -99,10 +144,25 @@ candidate is re-validated against `D` and re-tested for efficiency before use,
 and the early stop it triggers is conditioned on the value actually matching the
 upper bound.
 
+**Performance.** The method is MILP-bound: every iteration solves a fractional
+MILP over a region carrying `p` extra binaries and `2p+1` extra rows per cut
+already made. Four things keep that affordable in pure Python with exact
+arithmetic — reduced costs *maintained* through the pivots (`O(n)` per pivot
+instead of `O(mn)`), sparse pivot updates, a crash basis that skips phase I
+whenever the `≤`-slacks already form a feasible basis, and an **objective
+cutoff** in the branch & bound. The cutoff is the important one: the algorithm
+never needs the exact maximum over the truncated region, only whether it beats
+the incumbent, so handing the incumbent over as a cutoff prunes most of the
+tree in precisely the late iterations where the accumulated binaries would
+otherwise bite. Together these are worth roughly two orders of magnitude
+(the `n = 4` instance went from 351 s to 4.6 s).
+
 **Validation.** `tests/` checks the paper's numbers step by step (`M = (−3,−3)`,
 `x_1 = (0,0)` with `Phi = 1`, `psi* = 2`, `X_opt = (3,3)`, `Phi_opt = 5/17`,
-`|D| = 11`, `|E(P_D)| = 7`) and cross-checks 60 random bi-/tri-objective
-instances against exhaustive enumeration of the efficient set.
+`|D| = 11`, `|E(P_D)| = 7`), verifies that the three reference methods agree,
+and cross-checks 60 random bi-/tri-objective instances against exhaustive
+enumeration plus 12 larger ones (up to 404 feasible points) against the
+`Phi`-ordered scan.
 
 ## Modules
 
@@ -115,4 +175,4 @@ instances against exhaustive enumeration of the efficient set.
 | `efficiency.py` | Theorem 1 test, lower bounds `M_i`, Sylva–Crema cut, `Q(x~)` |
 | `edges.py` | reduced gradient, `Gamma_l`, `theta0`, edge walk |
 | `algorithm.py` | the main loop, with a full iteration trace |
-| `enumeration.py` | brute-force reference used by the tests |
+| `enumeration.py` | the three independent reference methods used by the tests |

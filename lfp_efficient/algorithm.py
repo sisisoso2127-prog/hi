@@ -58,7 +58,7 @@ from typing import Callable, List, Optional, Sequence
 from .edges import EdgeCandidate, explore_edges
 from .efficiency import (add_sylva_crema_cut, best_with_same_criterion,
                          lower_bounds, test_efficiency)
-from .milp import solve_fractional_milp
+from .milp import CUTOFF, solve_fractional_milp
 from .model import FractionalObjective, MOILP, Model
 from .rational import F, fmt
 from .simplex import OPTIMAL
@@ -183,7 +183,16 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
         logs.append(log)
 
         # ---- step 1: upper bound on the truncated region ------------------
-        relaxed = solve_fractional_milp(region, phi)
+        # the incumbent is handed over as a cutoff: the only thing that matters
+        # is whether the region still holds something better than Phi_opt
+        relaxed = solve_fractional_milp(region, phi, cutoff=phi_opt)
+        if relaxed.status == CUTOFF:
+            log.note = (f"the maximum of Phi over the truncated region is "
+                        f"<= Phi_opt = {fmt(phi_opt)}: no remaining efficient "
+                        "point can improve the incumbent. Stop.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL)
         if not relaxed.feasible:
             log.note = ("P^l_RF is infeasible: the region is exhausted, every "
                         "non-dominated vector has been generated. Stop.")
@@ -226,7 +235,7 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
         log.criterion_vector = problem.C(x_tilde)
 
         # ---- step 3: Q(x~) -- best Phi on the slice about to be cut -------
-        q = best_with_same_criterion(region, problem, x_tilde, phi)
+        q = best_with_same_criterion(region, problem, x_tilde, phi, cutoff=phi_opt)
         if q.feasible:
             log.best_same_criterion, log.phi_same_criterion = q.x, q.objective
             # C q.x = C x~ is non-dominated, so q.x is efficient as well
