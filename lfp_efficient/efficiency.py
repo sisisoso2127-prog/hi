@@ -95,9 +95,39 @@ def add_sylva_crema_cut(region: Model, problem: MOILP, x_hat: Sequence[Fraction]
         D_new = D_old \\ { x : C x <= C x^s } .
 
     The ``+1`` is what makes the cut valid for *integer* criteria, and it is
-    also what makes the truncation strict: ``x^s`` itself is cut away, which is
-    why the best point sharing its criterion vector must have been harvested
-    beforehand (sub-problem ``Q``).
+    also what makes the truncation strict: ``x^s`` itself is cut away.
+
+    What the centre has to be, and what it does not
+    -----------------------------------------------
+    The validity of the cut needs only that its centre ``x^s`` is **feasible**.
+    Nothing above appeals to its efficiency: what the block asserts is that any
+    remaining point improves some criterion over ``C x^s``, and the efficiency
+    of ``x^s`` plays no part in that.
+
+    Efficiency of the centre decides something else -- whether the slice the cut
+    destroys had anything worth keeping. There are two regimes:
+
+    * a **dominated** centre closes by itself. No efficient point can share its
+      criterion vector, since whatever dominates the centre would dominate that
+      point too, so the removed set holds nothing efficient and nothing has to
+      be harvested first.
+    * an **efficient** centre does not. Every point of the slice
+      ``{x : C x = C x^s}`` is efficient as well and is about to be removed, so
+      the caller must first establish that none of them beats the incumbent --
+      which is precisely what :func:`best_with_same_criterion` (the paper's
+      ``Q``) is for.
+
+    This implementation always cuts on the efficient point ``x~`` handed over by
+    the efficiency test, so it is always in the second regime and ``Q`` is a
+    requirement rather than a refinement. Cutting on the dominated maximiser
+    instead would drop ``Q`` -- and was measured at over 300x slower, because
+    ``C x~ >= C x_l`` makes the efficient centre's cut strictly the larger one
+    and the dominated one has to grind the non-efficient band away point by
+    point.
+
+    (The two-regime reading is due to the ``claude/lnatawruh-8gyw92`` branch,
+    which states it for the fractional generalisation of this cut; the 300x
+    figure is measured here.)
     """
     region = region.copy()
     y = region.add_variables(problem.p, integer=True)
@@ -142,6 +172,10 @@ def best_with_same_criterion(region: Model, problem: MOILP,
     Sylva-Crema cut is about to delete that whole slice of the region, so the
     best value of ``Phi`` on it has to be collected first -- this is the step
     the paper writes as ``solve Q(x~_l)``.
+
+    This is the closure condition that a cut centred on an *efficient* point
+    owes, and not an optimisation: see :func:`add_sylva_crema_cut` for why the
+    obligation exists only in that regime.
     """
     # The slice { x : C x = C x~ } is never touched by the cuts already made,
     # so it is the same set in the truncated region and in D itself:
