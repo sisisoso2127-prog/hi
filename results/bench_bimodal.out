@@ -1,0 +1,72 @@
+==================================================================================================
+CE QUI SEPARE LES DEUX MODES DE L'ECART GARANTI
+  16 instances x 3 graines, plafond 300
+==================================================================================================
+
+  n  p  corr  gr   ecart %    statut  tours   ilp        q_lb        q_ub  pr
+--------------------------------------------------------------------------------------------------
+ 20  3  0.00   0     58.25   optimal      3     3     3.73171      8.9375   .
+ 20  3  0.00   1     65.52   optimal      3     3     3.14894     9.13333   .
+ 20  3  0.00   2     70.57   optimal      4     4     2.71154     9.21429   .
+ 20  3  0.00   0     24.27   optimal      2     2        12.4      16.375   .
+ 20  3  0.00   1     25.97   optimal      2     2        12.4       16.75   .
+ 20  3  0.00   2     41.30   optimal      2     2        12.4      21.125   .
+ 20  3  0.50   0      0.00      None      0     0     2.15686     2.15686   o
+ 20  3  0.50   1      0.00      None      0     0     2.15686     2.15686   o
+ 20  3  0.50   2      0.00      None      0     0     2.15686     2.15686   o
+ 20  3  0.50   0      0.00      None      0     0          17          17   o
+ 20  3  0.50   1      0.00      None      0     0          17          17   o
+ 20  3  0.50   2      0.00      None      0     0          17          17   o
+ 20  4  0.00   0      0.39   optimal      2     2     15.5385        15.6   .
+ 20  4  0.00   1      2.88   optimal      2     2     15.5385          16   .
+ 20  4  0.00   2      2.88   optimal      2     2     15.5385          16   .
+ 20  4  0.00   0      0.00      None      0     0       30.25       30.25   o
+ 20  4  0.00   1      0.00      None      0     0       30.25       30.25   o
+ 20  4  0.00   2      0.00      None      0     0       30.25       30.25   o
+ 20  4  0.50   0      0.00   optimal      1     1      2.6087      2.6087   o
+ 20  4  0.50   1      0.00   optimal      1     1      2.6087      2.6087   o
+ 20  4  0.50   2      0.00   optimal      1     1      2.6087      2.6087   o
+ 20  4  0.50   0      0.00      None      0     0       30.25       30.25   o
+ 20  4  0.50   1      0.00      None      0     0       30.25       30.25   o
+ 20  4  0.50   2      0.00      None      0     0       30.25       30.25   o
+ 30  3  0.00   0     80.55   optimal      4     4        2.38     12.2381   .
+ 30  3  0.00   1     61.29   optimal      3     3      4.3871     11.3333   .
+ 30  3  0.00   2     74.34   optimal      3     3     3.21348     12.5238   .
+ 30  3  0.00   0     63.65   optimal      3     3     15.5385       42.75   .
+ 30  3  0.00   1     59.55   optimal      2     2          18        44.5   .
+ 30  3  0.00   2     24.12   optimal      2     2       32.25        42.5   .
+ 30  3  0.50   0      0.00      None      0     0     3.16129     3.16129   o
+ 30  3  0.50   1      0.00      None      0     0     3.16129     3.16129   o
+ 30  3  0.50   2      0.00      None      0     0     3.16129     3.16129   o
+ 30  3  0.50   0     13.71   optimal      2     2       37.75       43.75   .
+ 30  3  0.50   1      5.03   optimal      2     2       37.75       39.75   .
+ 30  3  0.50   2     15.64   optimal      2     2       37.75       44.75   .
+ 30  4  0.00   0     47.05   optimal      2     2     7.94286          15   .
+ 30  4  0.00   1     66.37   optimal      3     3     4.92727       14.65   .
+ 30  4  0.00   2     44.21   optimal      2     2     7.94286     14.2381   .
+ 30  4  0.00   0     94.76   optimal      3     3     2.17808     41.5714   .
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+ 30  4  0.00   1     95.25   optimal      3     3     2.09677     44.1429   .
+ 30  4  0.00   2     90.22   optimal      3     3      4.0641     41.5714   .
+ 30  4  0.50   0     70.88   optimal      3     3        4.92     16.8947   .
+ 30  4  0.50   1     62.02   optimal      2     2     6.02326     15.8571   .
+ 30  4  0.50   2     70.88   optimal      3     3        4.92     16.8947   .
+ 30  4  0.50   0     12.64   optimal      2     2     43.4286     49.7143   .
+ 30  4  0.50   1      0.00      None      0     0     43.4286     43.4286   o
+ 30  4  0.50   2     40.05   optimal      2     2     26.6364     44.4286   .
+
+==================================================================================================
+DEUX MODES  --  fermes (<= 1 %) : 20    ouverts (>= 50 %) : 15    entre les deux : 13
+==================================================================================================
+
+groupe        lignes   convergees   non conv.  sans statut  tours med   ilp med
+fermes            20            4           0           16        0.0       0.0
+milieu            13           13           0            0        2.0       2.0
+ouverts           15           15           0            0        3.0       3.0
+
+VERDICT. Sur les 15 lignes du mode OUVERT, 15 ont une borne CONVERGEE.
+La borne y vaut donc max_R f EXACTEMENT : elle n'est pas
+perfectible, et l'ecart restant mesure ce que le relache
+contient encore en plus de E. C'est un probleme de
+COUPES, pas de budget -- payer plus ne fermerait rien.
