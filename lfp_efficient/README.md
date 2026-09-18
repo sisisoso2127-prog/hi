@@ -116,8 +116,8 @@ rest.
 
 **`n` is not what decides the cost.** The same `n = 16` is solved in 8 seconds
 on a tight feasible region and is still running after a minute on a loose one —
-while `n = 25` is proved optimal in 5.2 s and `n = 30` within 30 s. What drives
-the cost is
+while `n = 25` is proved optimal in 5.5 s and `n = 30` in 16.5 s, both in three
+cut iterations. What drives the cost is
 the number of cut iterations — one per non-dominated vector generated, each
 adding `p` binaries and `p+1` rows to every later sub-problem — and how hard
 `max Phi` over the *truncated* region is as an integer program.
