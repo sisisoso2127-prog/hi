@@ -140,8 +140,16 @@ def main() -> int:
     ce = [_m([d["cert"] for d in res[n]]) for n in serie]
     po = [_m([d["posees"] for d in res[n]]) for n in serie]
 
-    croit = all(b >= a - 1e-9 for a, b in zip(ce, ce[1:]))
-    degrade = all(b >= a - 1e-9 for a, b in zip(ec, ec[1:]))
+    # « non decroissant » n'est PAS « croissant » : une suite plate le
+    # verifie, et ce verdict-la avait affiche CROISSANT sur 65 -> 65 -> 65
+    # -> 65,5, c'est-a-dire sur la refutation meme de l'hypothese qu'il
+    # etait cense juger. Un test qui accepte l'egalite ne peut pas servir a
+    # etablir une croissance.
+    ecart_cert = max(ce) - min(ce)
+    croit = ecart_cert > 0.05 * min(ce) and all(
+        b >= a - 1e-9 for a, b in zip(ce, ce[1:]))
+    degrade = (max(ec) - min(ec) > 0.05 * min(ec)
+               and all(b >= a - 1e-9 for a, b in zip(ec, ec[1:])))
     stable = max(po) - min(po)
 
     print("\nCE QUE LA SERIE A PRODUIT CONSTANT MONTRE")
@@ -150,10 +158,15 @@ def main() -> int:
           + f"      amplitude {stable:.1f}")
     print(f"  appels en certification       : "
           + " -> ".join(f"{x:.1f}" for x in ce)
-          + f"      {'CROISSANT' if croit else 'non monotone'}")
+          + f"      {'CROISSANT' if croit else 'PLAT ou non monotone'}"
+          + f"   (amplitude {ecart_cert:.1f})")
     print(f"  ecart garanti median          : "
           + " -> ".join(f"{x:.2f}" for x in ec)
-          + f"      {'DEGRADE' if degrade else 'non monotone'}")
+          + f"      {'DEGRADE' if degrade else 'PLAT ou non monotone'}")
+    print(f"\n  VERDICT : l'hypothese du prix des tours demande que la "
+          f"certification consomme PLUS d'appels")
+    print(f"  quand les tours se multiplient. Elle est "
+          f"{'SOUTENUE' if croit else 'REFUTEE'} par la ligne ci-dessus.")
     print("\nLecture. L'hypothese demande DEUX choses a la fois : que le")
     print("nombre de coupes reste a peu pres constant le long de la serie")
     print("-- sinon la repartition n'est pas seule a varier -- et que")

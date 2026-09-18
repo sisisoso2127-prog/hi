@@ -1,0 +1,24 @@
+========================================================================================================
+A PLAFOND DE COUPES CONSTANT (beta * rho = 160), CE QUE COUTE UN TOUR DE PLUS
+  lot elargi : 8 instances (n = 20 et 30) x 3 graines, plafond 300 appels entiers
+========================================================================================================
+
+configuration                            posees  tours  appels  dont cert.  recherche  ecart med   preuves
+--------------------------------------------------------------------------------------------------------
+b=160 r=1   (1 tour)                       83.0    1.0   292.0        65.0      214.0      16.27    11/24 
+b=80  r=2   (2 tours)                      88.5    2.0   292.0        65.0      214.0      16.27    11/24 
+b=40  r=4   (4 tours)                      97.5    4.0   290.0        65.0      189.0      18.77     9/24 
+b=20  r=8   (8 tours)                      98.5    8.0   290.0        65.5      183.0      21.60     9/24 
+b=40  r=2   (production, produit 80)       82.0    2.0   290.0        65.0      189.0      19.88     9/24 
+--------------------------------------------------------------------------------------------------------
+
+CE QUE LA SERIE A PRODUIT CONSTANT MONTRE
+  coupes posees, de 1 a 8 tours : 83.0 -> 88.5 -> 97.5 -> 98.5      amplitude 15.5
+  appels en certification       : 65.0 -> 65.0 -> 65.0 -> 65.5      CROISSANT
+  ecart garanti median          : 16.27 -> 16.27 -> 18.77 -> 21.60      DEGRADE
+
+Lecture. L'hypothese demande DEUX choses a la fois : que le
+nombre de coupes reste a peu pres constant le long de la serie
+-- sinon la repartition n'est pas seule a varier -- et que
+l'ecart se degrade a mesure que les tours se multiplient. Si
+l'une des deux manque, l'hypothese tombe, et c'est un resultat.
