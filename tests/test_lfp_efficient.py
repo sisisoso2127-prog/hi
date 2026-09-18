@@ -199,6 +199,62 @@ def test_random_instances_against_exhaustive_enumeration(trials=60, seed=2025091
     return f"{checked} instances vs exhaustive enumeration"
 
 
+def test_certified_gap_closes_exactly_when_optimality_is_proved():
+    """With no budget the run proves optimality, so the gap must be exactly 0."""
+    problem, phi = paper_problem()
+    solution = optimize_over_efficient_set(problem, phi)
+    assert solution.proved_optimal
+    assert solution.upper_bound == solution.value == Fraction(5, 17)
+    assert solution.gap == 0
+    assert solution.gap_closed == 1.0
+
+
+def test_the_bound_never_cuts_off_the_optimum_at_any_budget(seed=8191):
+    """The heart of the anytime claim, checked against the true optimum.
+
+    For every instance and every budget: the reported bound must stay at or
+    above the true optimum (or the answer could be wrong without saying so),
+    the reported solution must be a genuine efficient point at or below it,
+    and spending more time must never make the gap worse.
+    """
+    rng = random.Random(seed)
+    checked = 0
+    for _ in range(6):
+        problem, phi, bounds = larger_random_instance(rng)
+        _, true_opt, _, _ = best_over_efficient_set_by_scan(problem, phi, bounds)
+        if true_opt is None:
+            continue
+        previous = None
+        for budget in (0.05, 0.3, 2.0):
+            sol = optimize_over_efficient_set(problem, phi, time_budget=budget)
+            if sol.upper_bound is not None:
+                assert sol.upper_bound >= true_opt, (
+                    f"bound {fmt(sol.upper_bound)} cuts off the optimum "
+                    f"{fmt(true_opt)}")
+            if sol.value is not None:
+                assert sol.value <= true_opt
+                assert test_efficiency(problem, sol.x).efficient, \
+                    "the anytime answer is not an efficient point"
+            if sol.proved_optimal:
+                assert sol.value == true_opt and sol.gap == 0
+            if sol.gap is not None:
+                if previous is not None:
+                    assert sol.gap <= previous, "more time made the gap worse"
+                previous = sol.gap
+        checked += 1
+    assert checked >= 3
+    return f"{checked} instances across 3 budgets"
+
+
+def test_a_budget_does_not_change_a_run_that_fits_inside_it():
+    """A budget large enough to finish must give the same answer as no budget."""
+    problem, phi = paper_problem()
+    unbounded = optimize_over_efficient_set(problem, phi)
+    generous = optimize_over_efficient_set(problem, phi, time_budget=120)
+    assert generous.value == unbounded.value
+    assert generous.proved_optimal and generous.gap == 0
+
+
 def test_certificate_proves_the_optimum_and_rejects_impostors():
     """``certify_optimum`` must accept the answer and reject anything else.
 

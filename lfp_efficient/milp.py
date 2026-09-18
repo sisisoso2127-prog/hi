@@ -14,6 +14,7 @@ Cambini-Martein simplex returns the true continuous optimum of the ratio
 from dataclasses import dataclass, field
 from fractions import Fraction
 from math import ceil, floor
+from time import monotonic
 from typing import List, Optional, Sequence
 
 from .model import EQ, GE, LE, Model
@@ -22,6 +23,11 @@ from .rational import dot
 from .simplex import (FractionalPricing, INFEASIBLE, LinearPricing, OPTIMAL,
                       STALLED, SimplexResult, Tableau, UNBOUNDED,
                       add_bound_row, restore_feasibility, solve_standard_form)
+
+#: returned when a time budget expired before the search finished.  The result
+#: then carries no proven optimum, but its ``bound`` is still a valid upper
+#: bound on one -- which is all an anytime caller needs.
+INTERRUPTED = "interrupted"
 
 #: returned when a *cutoff* was supplied and nothing beats it.  It means
 #: "the region is not empty, but its optimum is <= cutoff" -- which is all the
@@ -42,6 +48,10 @@ class MilpResult:
     tableau: Optional[Tableau] = None
     n_structural: int = 0
     nodes: int = 0
+    #: a valid upper bound on the true optimum.  Equal to ``objective`` when the
+    #: search ran to completion; on an interrupted search it is the largest
+    #: relaxation value still open, which no feasible point can exceed.
+    bound: Optional[Fraction] = None
 
     @property
     def feasible(self) -> bool:
@@ -124,7 +134,8 @@ def _child(model: Model, objective, parent: _Node, j: int, bound: int, upper: bo
 
 
 def solve_milp(model: Model, objective, max_nodes: int = 200_000,
-               cutoff: Optional[Fraction] = None) -> MilpResult:
+               cutoff: Optional[Fraction] = None,
+               deadline: Optional[float] = None) -> MilpResult:
     """Depth-first branch & bound, warm started from the parent basis.
 
     *objective* is either a list of coefficients (linear) or a
@@ -146,6 +157,13 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
     incumbent, so passing the incumbent as a cutoff prunes most of the tree in
     the late iterations -- exactly where the accumulated Sylva-Crema binaries
     would otherwise make each sub-problem expensive.
+
+    *deadline* is a ``time.monotonic()`` instant past which the search stops and
+    reports ``INTERRUPTED``.  Stopping early does not throw the work away: every
+    feasible point either was found -- so it is at most the incumbent -- or lies
+    under a node still on the stack, so it is at most that node's relaxation
+    value.  The maximum of those, together with any cutoff, is a valid upper
+    bound on the optimum and is returned in ``bound``.
     """
     root = solve_relaxation(model, objective)
     if root.status == INFEASIBLE:
@@ -162,6 +180,14 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
     while stack:
         if nodes >= max_nodes:
             raise RuntimeError("branch & bound node limit reached: is the region bounded?")
+        if deadline is not None and monotonic() > deadline:
+            open_bounds = [n.value for n in stack]
+            if best.feasible:
+                open_bounds.append(best.objective)
+            if cutoff is not None:
+                open_bounds.append(cutoff)
+            return MilpResult(INTERRUPTED, best.x, best.objective, nodes=nodes,
+                              bound=max(open_bounds) if open_bounds else None)
         node = stack.pop()
         nodes += 1
 
@@ -184,7 +210,8 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
         if frac is None:                                          # integral -> incumbent
             if not best.feasible or node.value > best.objective:
                 best = MilpResult(OPTIMAL, node.x, node.value,
-                                  node.tableau, model.n, nodes)
+                                  node.tableau, model.n, nodes,
+                                  bound=node.value)
             continue
 
         value = node.x[frac]
@@ -198,7 +225,7 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
 
     best.nodes = nodes
     if not best.feasible and cutoff is not None and any_feasible:
-        return MilpResult(CUTOFF, nodes=nodes)
+        return MilpResult(CUTOFF, nodes=nodes, bound=cutoff)
     return best
 
 
@@ -252,7 +279,8 @@ def denominator_stays_positive(model: Model, phi) -> bool:
 
 def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
                           cutoff: Optional[Fraction] = None,
-                          denominator_positive: bool = False) -> MilpResult:
+                          denominator_positive: bool = False,
+                          deadline: Optional[float] = None) -> MilpResult:
     """``max (U'x+alpha)/(V'x+beta)`` over the integer points of *model*.
 
     Linear fractional programming always assumes ``V'x + beta > 0`` on the
@@ -281,8 +309,9 @@ def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
     """
     phi = phi.lift(model.n)
     if denominator_positive:
-        res = solve_milp(model, phi, max_nodes=max_nodes, cutoff=cutoff)
-        if res.feasible:
+        res = solve_milp(model, phi, max_nodes=max_nodes, cutoff=cutoff,
+                         deadline=deadline)
+        if res.x:
             res.x = res.x[:model.n]
         return res
 
@@ -305,8 +334,16 @@ def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
             objective = phi.__class__([-u for u in phi.U], [-v for v in phi.V],
                                       -phi.alpha, -phi.beta)
         best_so_far = best.objective if best.feasible else cutoff
-        res = solve_milp(branch, objective, max_nodes=max_nodes, cutoff=best_so_far)
+        res = solve_milp(branch, objective, max_nodes=max_nodes, cutoff=best_so_far,
+                         deadline=deadline)
         nodes += res.nodes
+        if res.status == INTERRUPTED:
+            # the bound of a branch not finished still bounds the whole problem
+            bounds = [b for b in (res.bound, best.bound) if b is not None]
+            out = MilpResult(INTERRUPTED, res.x[:model.n] if res.x else None,
+                             res.objective, nodes=nodes,
+                             bound=max(bounds) if bounds else None)
+            return out
         if res.status == UNBOUNDED:
             return MilpResult(UNBOUNDED, nodes=nodes)
         if res.status == CUTOFF:

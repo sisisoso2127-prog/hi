@@ -115,8 +115,9 @@ efficiency tests, because the dominance witnesses already in hand absorb the
 rest.
 
 **`n` is not what decides the cost.** The same `n = 16` is solved in 8 seconds
-on a tight feasible region and is still running after a minute on a loose one;
-`n = 25` and `n = 30` are out of reach in this family. What drives the cost is
+on a tight feasible region and is still running after a minute on a loose one —
+while `n = 25` is proved optimal in 5.5 s and `n = 30` in 16.5 s, both in three
+cut iterations. What drives the cost is
 the number of cut iterations — one per non-dominated vector generated, each
 adding `p` binaries and `p+1` rows to every later sub-problem — and how hard
 `max Phi` over the *truncated* region is as an integer program.
@@ -129,6 +130,68 @@ the sub-problem combinatorial. Sharpening the cut's big-M constants against the
 current region was tried there and measured: the bound improved too little to
 pay for its own linear programs (48.7 s → 50.5 s on the `n = 10` suite), so it
 is not in the code.
+
+## Anytime: a certified gap
+
+Step 1 computes the maximum of `Phi` over the truncated region and the loop uses
+it only to decide whether to stop — so a valid **upper bound on the answer is
+produced every round and thrown away**. It is valid because after cutting on
+`x^1..x^l`, every efficient point either lies in a removed set (where it is
+dominated, or on a slice whose best `Phi` the `Q` sub-problem already folded
+into `Phi_opt`) or in the region step 1 searches:
+
+```
+max_E Phi  <=  max( Phi_opt, max{ Phi(x) : x in D_l } )
+```
+
+Reporting it makes the method **anytime**. `time_budget` stops the run and
+returns a real solution (attained at a known efficient point), a bound, and the
+distance between them:
+
+```python
+sol = optimize_over_efficient_set(problem, phi, time_budget=10)
+sol.value          # lower bound, attained at an efficient point
+sol.upper_bound    # certified upper bound
+sol.gap            # absolute remaining uncertainty
+sol.gap_closed     # fraction of the starting gap eliminated
+sol.proved_optimal # True when the two meet
+```
+
+The budget also reaches **inside** step 1: an interrupted branch & bound still
+returns the largest bound left open in its tree, which no feasible point can
+exceed, so the answer stays certified even when no sub-problem finished. Two
+details matter and are enforced by tests:
+
+- **The running minimum, not the latest bound.** A completed step 1 returns the
+  exact maximum over the region; an interrupted one returns a relaxation value
+  that can sit *above* the exact maximum of a larger, earlier region. Keeping
+  the tightest bound seen is what stops a longer run reporting a worse gap than
+  a shorter one.
+- **Absolute gap, never relative to the incumbent.** `(UB - value)/|value|` is a
+  mixed-integer-programming habit that assumes objectives bounded away from
+  zero. `Phi` is a ratio that can be negative: a real gap of 3.56 against an
+  incumbent of −0.099 prints as "3599%" and reads as a broken method. Scale by
+  the starting gap instead.
+
+| instance | 2 s | 10 s | 30 s |
+|---|---|---|---|
+| `n=16` loose | 69% closed | 72% closed | 77% closed |
+| `n=20` loose | 54% closed | 70% closed | 73% closed |
+| `n=25` | 86% closed | **proved** | proved |
+| `n=30` | 88% closed | 88% closed | **proved** |
+
+The shape is the one that justifies an anytime method: most of the uncertainty
+goes in the first seconds, the last tenth is expensive or never arrives. The
+reason is structural — the bound is a maximum over a region that still contains
+non-efficient points, and those sit far above the efficient optimum (on the
+instances above, 6× to 15×), so it has to grind that band away one cut at a
+time. A bound that excludes non-efficient points without enumerating them would
+be the real improvement.
+
+*Credit: the observation that this bound was already being computed and
+discarded comes from the `claude/verify-correctness-wzqzp0` branch, which
+established it on a separate Gurobi-based implementation; it is re-derived and
+re-validated here against `lfp_efficient`.*
 
 ## Three independent references
 
