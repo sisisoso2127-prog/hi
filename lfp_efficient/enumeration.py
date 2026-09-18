@@ -12,8 +12,8 @@ from fractions import Fraction
 from itertools import product
 from typing import List, Optional, Sequence, Tuple
 
-from .model import MOILP
-from .rational import F
+from .model import Constraint, MOILP
+from .rational import F, vec
 
 
 @dataclass
@@ -126,7 +126,8 @@ def maximize_by_full_enumeration(problem: MOILP, phi,
 # --------------------------------------------------------------------------
 # A fast exact verifier for instances too large for the naive methods
 # --------------------------------------------------------------------------
-def _fast_feasible_points(problem: MOILP, bounds: Sequence[int]) -> List[tuple]:
+def _fast_feasible_points(problem: MOILP, bounds: Sequence[int],
+                          extra_le_rows: Sequence = ()) -> List[tuple]:
     """Integer points of ``D`` inside the box, by depth-first search with pruning.
 
     For every constraint ``a'x <= r`` and every position ``k`` one knows the
@@ -135,10 +136,17 @@ def _fast_feasible_points(problem: MOILP, bounds: Sequence[int]) -> List[tuple]:
     already exceeds ``r`` minus that quantity can never be completed into a
     feasible point, and the whole subtree is cut.  Constraints with ``>=`` or
     ``=`` are simply checked at the leaves.
+
+    ``extra_le_rows`` are additional ``(coeffs, rhs)`` pairs meaning
+    ``coeffs'x <= rhs``.  They take part in the pruning exactly like the
+    model's own rows, which is what lets a caller enumerate a *slice* of ``D``
+    without paying for the whole region.
     """
     n = problem.n
     rows, suffix_min, others = [], [], []
-    for con in problem.model.constraints:
+    constraints = list(problem.model.constraints)
+    constraints += [Constraint(vec(c), "<=", F(r)) for c, r in extra_le_rows]
+    for con in constraints:
         if con.sense == "<=":
             a = list(con.coeffs)
             tail = [0] * (n + 1)
@@ -216,3 +224,101 @@ def best_over_efficient_set_by_scan(problem: MOILP, phi, bounds: Sequence[int]):
         if not dominated:
             return [F(v) for v in pt], value, len(raw), tested
     return None, None, len(raw), len(scored)
+
+
+# --------------------------------------------------------------------------
+# Certification: proving an answer right without enumerating E(P_D) or D
+# --------------------------------------------------------------------------
+@dataclass
+class Certificate:
+    """Outcome of :func:`certify_optimum`."""
+
+    valid: bool
+    #: feasible points strictly better than the claimed value -- all dominated
+    challengers: int = 0
+    #: how many of them needed an exact efficiency test (the rest were settled
+    #: by a dominance witness already in hand)
+    tests: int = 0
+    reason: str = ""
+
+    def __str__(self) -> str:
+        if not self.valid:
+            return f"NOT PROVED: {self.reason}"
+        return (f"proved: the point is efficient and each of the {self.challengers} "
+                f"feasible points with a strictly greater Phi is dominated "
+                f"({self.tests} efficiency test(s) needed)")
+
+
+def certify_optimum(problem: MOILP, phi, x_opt: Sequence[Fraction],
+                    value: Fraction, bounds: Sequence[int]) -> Certificate:
+    """Prove that *x_opt* solves ``(P_E)`` -- without building ``D`` or ``E(P_D)``.
+
+    Two things make an answer to ``(P_E)`` correct:
+
+    1. ``x_opt`` is feasible and **efficient**, so it is admissible;
+    2. every feasible point with ``Phi(x) > value`` is **dominated**, so none of
+       them is admissible.
+
+    Both are checked here directly. The second one only has to look at
+    ``{ x in D : Phi(x) > value }``, which the depth-first search prunes down to
+    a small set -- the full feasible region is never enumerated, and neither is
+    the efficient set. A challenger is discarded as soon as some efficient point
+    already in hand dominates it; only the survivors pay an exact efficiency
+    test (Theorem 1), and each test that comes back negative hands over a new
+    efficient point that helps settle the following ones.
+
+    This shares no logic with the algorithm -- no cut, no bound, no reduced
+    gradient -- so it is an independent proof, and it is the only one of the
+    reference methods that stays affordable once ``|D|`` runs into the hundreds
+    of thousands.
+    """
+    from .efficiency import test_efficiency
+
+    x_opt = list(x_opt)
+    if not problem.model.is_feasible(x_opt):
+        return Certificate(False, reason="the claimed point is not feasible")
+    if phi(x_opt) != value:
+        return Certificate(False, reason="the claimed point does not realise the value")
+    if not test_efficiency(problem, x_opt).efficient:
+        return Certificate(False, reason="the claimed point is not efficient")
+
+    # "Phi(x) > value" is a *linear* condition whenever the denominator is
+    # positive:  (U'x + alpha) / (V'x + beta) > v  <=>  (U - vV)'x + (alpha -
+    # v*beta) > 0.  Handing it to the search as one more row prunes the tree
+    # down to the challengers themselves, so the certificate never walks the
+    # whole feasible region.  When the denominator can change sign the
+    # equivalence breaks and the row is simply left out -- slower, still exact,
+    # since every point is re-tested with Phi below anyway.
+    from .milp import denominator_stays_positive
+
+    extra = ()
+    if denominator_stays_positive(problem.model, phi):
+        lifted = phi.lift(problem.n)
+        w = [u - value * v for u, v in zip(lifted.U, lifted.V)]
+        rhs = lifted.alpha - value * lifted.beta
+        extra = ([[-c for c in w], rhs],)        # -(U - vV)'x <= alpha - v*beta
+
+    witnesses = [problem.C(x_opt)]          # criterion vectors of known efficient points
+    challengers = tests = 0
+
+    for pt in _fast_feasible_points(problem, bounds, extra):
+        x = [F(v) for v in pt]
+        try:
+            if phi(x) <= value:
+                continue
+        except ZeroDivisionError:           # Phi undefined: not a competitor
+            continue
+        challengers += 1
+
+        cx = problem.C(x)
+        if any(all(a >= b for a, b in zip(w, cx)) and w != cx for w in witnesses):
+            continue                        # dominated by something already known
+
+        tests += 1
+        outcome = test_efficiency(problem, x)
+        if outcome.efficient:
+            return Certificate(False, challengers, tests,
+                               reason=f"the efficient point {pt} has Phi > {value}")
+        witnesses.append(problem.C(outcome.witness))
+
+    return Certificate(True, challengers, tests)

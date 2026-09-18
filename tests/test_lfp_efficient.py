@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lfp_efficient import (FractionalObjective, LE, MOILP, Model,
                            add_sylva_crema_cut, alternative_optima_columns,
-                           best_over_efficient_set_by_scan,
+                           best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
                            maximize_by_full_enumeration,
@@ -197,6 +197,52 @@ def test_random_instances_against_exhaustive_enumeration(trials=60, seed=2025091
         checked += 1
     assert checked >= 40, f"only {checked} usable instances"
     return f"{checked} instances vs exhaustive enumeration"
+
+
+def test_certificate_proves_the_optimum_and_rejects_impostors():
+    """``certify_optimum`` must accept the answer and reject anything else.
+
+    The certificate is the only check that survives past the point where the
+    feasible region can be enumerated, so it has to be sharp in both
+    directions: it proves the real optimum, and it refuses a point that is
+    merely efficient, one that is merely good, and one that is not feasible.
+    """
+    problem, phi = paper_problem()
+    solution = optimize_over_efficient_set(problem, phi)
+
+    proof = certify_optimum(problem, phi, solution.x, solution.value, [5, 5])
+    assert proof.valid, proof.reason
+    assert proof.challengers >= 1                    # (0,0) beats it on Phi
+
+    # efficient, but not optimal: (2,1) has Phi = 1/5 < 5/17
+    impostor = [F(2), F(1)]
+    assert test_efficiency(problem, impostor).efficient
+    rejected = certify_optimum(problem, phi, impostor, phi(impostor), [5, 5])
+    assert not rejected.valid
+
+    # feasible and best on Phi, but dominated -- so not admissible at all
+    origin = [F(0), F(0)]
+    assert not test_efficiency(problem, origin).efficient
+    assert not certify_optimum(problem, phi, origin, phi(origin), [5, 5]).valid
+
+    # not even feasible
+    assert not certify_optimum(problem, phi, [F(9), F(9)], F(1), [5, 5]).valid
+
+
+def test_certificate_agrees_with_the_scan_on_random_instances(trials=10, seed=606):
+    """On every instance the scan solves, the certificate must prove that answer."""
+    rng = random.Random(seed)
+    proved = 0
+    for _ in range(trials):
+        problem, phi, bounds = larger_random_instance(rng)
+        ref_x, ref_value, _, _ = best_over_efficient_set_by_scan(problem, phi, bounds)
+        if ref_x is None:
+            continue
+        proof = certify_optimum(problem, phi, ref_x, ref_value, bounds)
+        assert proof.valid, proof.reason
+        proved += 1
+    assert proved >= 5
+    return f"{proved} instances proved"
 
 
 def test_warm_started_branch_and_bound_matches_a_cold_one():

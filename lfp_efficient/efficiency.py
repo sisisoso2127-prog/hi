@@ -160,3 +160,4 @@ def best_with_same_criterion(region: Model, problem: MOILP,
     if res.feasible:
         res.x = res.x[:problem.n]
     return res
+

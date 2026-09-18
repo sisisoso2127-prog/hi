@@ -59,8 +59,9 @@ print(solution.x, solution.value)        # [3, 3]  5/17
 
 ```
 python3 examples/paper_example.py        # reproduces section 4 of the paper
-python3 examples/large_example.py        # larger instances, up to |D| = 31833
-python3 tests/test_lfp_efficient.py      # 15 tests, incl. 72 random instances
+python3 examples/large_example.py        # larger instances, up to |D| = 34635
+python3 examples/scaling.py              # the scaling study, up to n = 20
+python3 tests/test_lfp_efficient.py      # 17 tests, incl. 82 random instances
 ```
 
 ## Larger instances
@@ -92,6 +93,35 @@ so the sub-problems grow with the iteration count.
 The middle rows are where the paper's claim is visible: the optimum is reached
 after generating 9–16 % of `E(P_D)`.
 
+## How far it goes
+
+`examples/scaling.py` walks the same family up to `n = 20`:
+
+| instance | `Phi_opt` | iterations | solve | certificate |
+|---|---:|---:|---:|---|
+| `n=10 ub=3` | 29/19 | 4 | 0.80 s | proved, 1.4 s (3288 challengers, 3 tests) |
+| `n=12 ub=3` | 5/17 | 9 | 18.2 s | proved, 7.9 s (16158 challengers, 7 tests) |
+| `n=12 ub=3` | 3/23 | 5 | 3.5 s | proved, 17.0 s (46366 challengers, 4 tests) |
+| `n=14 ub=3` | 4/37 | 4 | 8.0 s | — |
+| `n=16 ub=3` | 7/8 | 5 | 8.4 s | — |
+| `n=20 ub=2` | 1/6 | 6 | 10.9 s | — |
+
+**`n` is not what decides the cost.** The same `n = 16` is solved in 8 seconds
+on a tight feasible region and is still running after a minute on a loose one;
+`n = 25` and `n = 30` are out of reach in this family. What drives the cost is
+the number of cut iterations — one per non-dominated vector generated, each
+adding `p` binaries and `p+1` rows to every later sub-problem — and how hard
+`max Phi` over the *truncated* region is as an integer program.
+
+Worth noting where the difficulty is **not**: `max Phi` over `D` with no cut
+yet is settled in a single branch & bound node at every size tested, `n = 30`
+included. The whole cost sits in the late iterations, where the disjunction
+"improve at least one criterion beyond every vector found so far" is what makes
+the sub-problem combinatorial. Sharpening the cut's big-M constants against the
+current region was tried there and measured: the bound improved too little to
+pay for its own linear programs (48.7 s → 50.5 s on the `n = 10` suite), so it
+is not in the code.
+
 ## Three independent references
 
 Trusting a single implementation to check itself proves nothing, so the package
@@ -102,11 +132,23 @@ carries three reference methods that share no code path with the algorithm:
 | `enumerate_efficient_set` | enumerate the box, filter by Definition 1 | `O(\|D\|^2)` pairwise dominance |
 | `maximize_by_full_enumeration` | generate *every* non-dominated vector by repeated cuts, maximise `Phi` on each slice | this is the naive method the paper avoids |
 | `best_over_efficient_set_by_scan` | sort `D` by decreasing `Phi`, return the first point surviving a dominance test | a handful of tests in practice |
+| `certify_optimum` | prove the answer is efficient **and** that every feasible point with a greater `Phi` is dominated | never builds `D` or `E(P_D)` |
 
 The third one is the practical verifier: the first efficient point in
 `Phi`-decreasing order *is* the optimum of `(P_E)`, so the efficient set never
 has to be built. On the paper's example it answers after 3 dominance tests; on
 the 31833-point instance, after 1.
+
+The fourth is what remains once even `D` is too large to enumerate. An answer
+to `(P_E)` is correct exactly when the returned point is efficient *and* no
+feasible point with a strictly greater `Phi` is admissible. Both are checked
+directly. The second part only concerns `{ x in D : Phi(x) > value }`, and with
+a positive denominator that set is carved out by **one extra linear row**
+(`Phi(x) > v` is `(U - vV)'x + (alpha - v*beta) > 0`), which the search prunes
+on like any other constraint. Almost every challenger is then discarded by a
+dominance witness already in hand, so tens of thousands of them cost a handful
+of exact efficiency tests: 46366 challengers settled with 4 tests on one
+`n = 12` instance.
 
 ## Design notes
 
@@ -189,7 +231,9 @@ solving anything at all.
 and cross-checks 60 random bi-/tri-objective instances against exhaustive
 enumeration plus 12 larger ones (up to 404 feasible points) against the
 `Phi`-ordered scan. Eight `n = 10` instances with up to 34635 feasible points
-are verified against the scan in `examples/large_example.py`.
+are verified against the scan in `examples/large_example.py`, and the
+certificate is checked to prove the real optimum while rejecting a merely
+efficient point, a merely good one and an infeasible one.
 
 ## Modules
 

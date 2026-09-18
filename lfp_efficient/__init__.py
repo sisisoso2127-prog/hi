@@ -30,7 +30,8 @@ from .efficiency import (EfficiencyTest, add_sylva_crema_cut,
 from .enumeration import (Enumeration, FullEnumeration,
                           enumerate_efficient_set, enumerate_nondominated,
                           maximize_by_full_enumeration,
-                          best_over_efficient_set_by_scan)
+                          best_over_efficient_set_by_scan,
+                          Certificate, certify_optimum)
 from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
                    solve_milp, solve_relaxation)
 from .model import EQ, GE, LE, Constraint, FractionalObjective, MOILP, Model
@@ -47,7 +48,7 @@ __all__ = [
     "solve_relaxation", "MilpResult",
     "enumerate_efficient_set", "Enumeration",
     "enumerate_nondominated", "maximize_by_full_enumeration", "FullEnumeration",
-    "best_over_efficient_set_by_scan",
+    "best_over_efficient_set_by_scan", "certify_optimum", "Certificate",
     "F", "fmt",
 ]
 
