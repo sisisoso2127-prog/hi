@@ -5229,7 +5229,66 @@ exactement et le dénominateur n'y joue aucun rôle. La réponse est le
 tableau~\ref{tab:unifie}, et elle est \emph{zéro}. Les bornes publiées avant
 cette rectification
 restent \textbf{valides} -- elles majoraient $\qs$, et une borne trop lâche
-ne ment pas -- mais elles étaient inutilement lâches.
+ne ment pas -- mais elles étaient inutilement lâches. La
+remarque~\ref{rem:routeporteuse} mesure jusqu'où : dans le régime des
+campagnes, le seuil à l'incumbent ne produit \emph{jamais} la borne
+publiée.
+\end{remark}
+
+
+\begin{remark}[qui produit la borne publiée, mesuré plutôt que supposé]
+\label{rem:routeporteuse}
+Le théorème~\ref{th:seuil} contient les deux formes, et la mise en {\oe}uvre
+les calcule toutes les deux : l'instanciation au seuil de l'incumbent,
+$t=q$, qui est la borne~\eqref{eq:borne}, et l'itération à seuil libre de la
+seconde route. Elle en retient le minimum, ce qui est licite -- le minimum
+de deux bornes valides est une borne valide. Nous n'avions jamais mesuré
+\emph{laquelle des deux} produit le nombre finalement publié, et ce n'est
+pas la même question que celle du gain : un gain médian de quelques points
+est compatible avec « elle resserre un peu » comme avec « elle fait tout le
+travail ».
+
+Sur $48$ exécutions -- $16$ instances à $n=20$ et $30$, $p=3$ et $4$, trois
+graines, plafond $300$ -- il faut d'abord mettre à part les $19$ lignes
+\emph{prouvées}. La borne y descend jusqu'à l'incumbent et le code pose
+$q_{\text{ub}}=q$ : la valeur publiée n'est plus celle d'une route, c'est
+l'optimum, et la question ne se pose pas. Restent $29$ lignes où une borne
+doit réellement être produite :
+
+\begin{center}\small
+\begin{tabular}{lr}
+\toprule
+route qui égale la borne publiée & lignes\\
+\midrule
+seconde route (seuil libre) & $\mathbf{27/29}$\\
+les deux, à égalité & $2/29$\\
+seuil à l'incumbent, $t=q$ & $\mathbf{0/29}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Le seuil à l'incumbent ne porte donc \emph{jamais} la borne dans ce régime.
+Quand les deux valeurs existent, leur rapport a pour médiane $1{,}3$ et pour
+maximum $20$ : sur les premières lignes du lot, $t=q$ rend $122$, $178$ et
+$185$ là où le seuil libre rend $8{,}9$, $9{,}1$ et $9{,}2$.
+
+Deux conséquences, et elles ne vont pas dans le même sens. La première est
+que le passage au seuil libre n'est pas un raffinement de la borne : dans ce
+régime, il \emph{est} la borne. Le théorème~\ref{th:seuil} n'améliore pas
+la borne~\eqref{eq:borne} à la marge, il la remplace. La seconde est que les
+coupes ne sont pas en cause, et il faut le dire tout de suite pour que la
+première ne soit pas lue plus loin qu'elle ne va : la seconde route calcule
+son seuil \emph{sur le modèle coupé}, c'est-à-dire sur le relâché que les
+coupes d'efficacité ont resserré. Ce sont les coupes qui portent ; c'est la
+manière d'en tirer un nombre au seuil $t=q$ qui ne porte pas -- exactement
+le défaut que l'ouverture de cette section annonçait, et dont nous mesurons
+ici l'ampleur réelle.
+
+Nous gardons le calcul à $t=q$. Il ne coûte rien de plus -- il se lit sur le
+relâché déjà construit -- et une borne valide de plus dans un minimum ne
+peut pas nuire. Mais il ne faut plus le présenter comme ce qui produit les
+résultats de ce mémoire, parce que ce n'est pas le cas.
 \end{remark}
 
 \subsection{Ce que la forme unifiée achète : rien ici, et pourquoi}
