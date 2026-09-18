@@ -1,0 +1,68 @@
+================================================================================================
+QUELLE ROUTE PORTE LA BORNE PUBLIEE ?
+  16 instances x 3 graines, plafond 300
+================================================================================================
+
+  n  p  corr  gr          Th5      seconde      publiee            porteuse    ecart  pr
+------------------------------------------------------------------------------------------------
+ 20  3  0.00   0       122.39       8.9375       8.9375       seconde route    58.25   .
+ 20  3  0.00   1      178.106      9.13333      9.13333       seconde route    65.52   .
+ 20  3  0.00   2      184.731      9.21429      9.21429       seconde route    70.57   .
+ 20  3  0.00   0       18.875       16.375       16.375       seconde route    24.27   .
+ 20  3  0.00   1       22.625        16.75        16.75       seconde route    25.97   .
+ 20  3  0.00   2       21.375       21.125       21.125       seconde route    41.30   .
+ 20  3  0.50   0           --           --      2.15686 ni l'une ni l'autre     0.00   o
+ 20  3  0.50   1           --           --      2.15686 ni l'une ni l'autre     0.00   o
+ 20  3  0.50   2           --           --      2.15686 ni l'une ni l'autre     0.00   o
+ 20  3  0.50   0           --           --           17 ni l'une ni l'autre     0.00   o
+ 20  3  0.50   1           --           --           17 ni l'une ni l'autre     0.00   o
+ 20  3  0.50   2           17           --           17         theoreme 5'     0.00   o
+ 20  4  0.00   0      15.6923         15.6         15.6       seconde route     0.39   .
+ 20  4  0.00   1      19.7692           16           16       seconde route     2.88   .
+ 20  4  0.00   2           20           16           16       seconde route     2.88   .
+ 20  4  0.00   0           --           --        30.25 ni l'une ni l'autre     0.00   o
+ 20  4  0.00   1           --           --        30.25 ni l'une ni l'autre     0.00   o
+ 20  4  0.00   2           --           --        30.25 ni l'une ni l'autre     0.00   o
+ 20  4  0.50   0       5.6087       2.6087       2.6087       seconde route     0.00   o
+ 20  4  0.50   1      10.4348       2.6087       2.6087       seconde route     0.00   o
+ 20  4  0.50   2      8.91304       2.6087       2.6087       seconde route     0.00   o
+ 20  4  0.50   0           --           --        30.25 ni l'une ni l'autre     0.00   o
+ 20  4  0.50   1        30.25           --        30.25         theoreme 5'     0.00   o
+ 20  4  0.50   2           --           --        30.25 ni l'une ni l'autre     0.00   o
+ 30  3  0.00   0        66.79      12.2381      12.2381       seconde route    80.55   .
+ 30  3  0.00   1      65.7984      11.3333      11.3333       seconde route    61.29   .
+ 30  3  0.00   2      66.0983      12.5238      12.5238       seconde route    74.34   .
+ 30  3  0.00   0      47.7308        42.75        42.75       seconde route    63.65   .
+ 30  3  0.00   1           46         44.5         44.5       seconde route    59.55   .
+ 30  3  0.00   2        42.75         42.5         42.5       seconde route    24.12   .
+ 30  3  0.50   0           --           --      3.16129 ni l'une ni l'autre     0.00   o
+ 30  3  0.50   1           --           --      3.16129 ni l'une ni l'autre     0.00   o
+ 30  3  0.50   2           --           --      3.16129 ni l'une ni l'autre     0.00   o
+ 30  3  0.50   0        44.25        43.75        43.75       seconde route    13.71   .
+ 30  3  0.50   1        39.75        39.75        39.75   les deux (egales)     5.03   .
+ 30  3  0.50   2        44.75        44.75        44.75   les deux (egales)    15.64   .
+ 30  4  0.00   0      58.1029           15           15       seconde route    47.05   .
+ 30  4  0.00   1      67.9455        14.65        14.65       seconde route    66.37   .
+ 30  4  0.00   2      53.5714      14.2381      14.2381       seconde route    44.21   .
+ 30  4  0.00   0      48.1918      41.5714      41.5714       seconde route    94.76   .
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+ 30  4  0.00   1      50.1982      44.1429      44.1429       seconde route    95.25   .
+ 30  4  0.00   2      43.2857      41.5714      41.5714       seconde route    90.22   .
+ 30  4  0.50   0       58.272      16.8947      16.8947       seconde route    70.88   .
+ 30  4  0.50   1      61.7674      15.8571      15.8571       seconde route    62.02   .
+ 30  4  0.50   2        64.16      16.8947      16.8947       seconde route    70.88   .
+ 30  4  0.50   0      53.8571      49.7143      49.7143       seconde route    12.64   .
+ 30  4  0.50   1      43.4286           --      43.4286         theoreme 5'     0.00   o
+ 30  4  0.50   2      44.8571      44.4286      44.4286       seconde route    40.05   .
+
+================================================================================================
+  seconde route           30/48
+  theoreme 5'              3/48
+  les deux (egales)        2/48
+  ni l'une ni l'autre     13/48
+
+  le theoreme 5' n'a produit AUCUNE borne sur 13/48 executions
+  quand les deux existent (32 lignes), Th5 / seconde route : mediane 1.3, max 20
+  Un rapport tres superieur a 1 dit que la borne du theoreme 5' est, sur ces lignes,
+  sans effet sur le resultat publie.

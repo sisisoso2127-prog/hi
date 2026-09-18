@@ -70,10 +70,20 @@ def une(inst, cap: int, graine: int) -> Dict:
 
 
 def qui(d: Dict) -> str:
-    """Quelle route egale la borne publiee."""
+    """Quelle route egale la borne publiee.
+
+    Les lignes PROUVEES sont mises a part, et ce n'est pas un detail de
+    presentation. Quand la borne descend jusqu'a l'incumbent, le code pose
+    best_ub = q : la valeur publiee n'est alors plus celle d'une route,
+    c'est l'optimum. Les compter avec les autres avait produit une
+    categorie « ni l'une ni l'autre » de treize lignes qui ressemblait a
+    une anomalie et n'etait que le cas ou la question ne se pose pas.
+    """
     ub, th5, geom = d["ub"], d["th5"], d["geom"]
     if ub is None:
         return "aucune borne"
+    if d["prouve"]:
+        return "ligne prouvee (borne = q)"
     a = th5 is not None and abs(th5 - ub) <= TOL * max(1.0, abs(ub))
     b = geom is not None and abs(geom - ub) <= TOL * max(1.0, abs(ub))
     if a and b:
@@ -111,11 +121,16 @@ def main() -> int:
 
     print("\n" + "=" * 96)
     n = len(lect)
+    ouv = [d for d in lect if not d["prouve"]]
+    print(f"  LA OU UNE BORNE DOIT ETRE PRODUITE ({len(ouv)} lignes non "
+          f"prouvees sur {n}) :")
     for etiq in ("seconde route", "theoreme 5'", "les deux (egales)",
                  "aucune borne", "ni l'une ni l'autre"):
-        c = sum(1 for d in lect if d["qui"] == etiq)
+        c = sum(1 for d in ouv if d["qui"] == etiq)
         if c:
-            print(f"  {etiq:<22}{c:>4}/{n}")
+            print(f"    {etiq:<26}{c:>4}/{len(ouv)}")
+    print(f"\n  lignes prouvees (la borne vaut q, la question ne se pose "
+          f"pas) : {n - len(ouv)}/{n}")
     sans = sum(1 for d in lect if d["th5"] is None)
     print(f"\n  le theoreme 5' n'a produit AUCUNE borne sur {sans}/{n} "
           f"executions")
