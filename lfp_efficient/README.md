@@ -97,14 +97,22 @@ after generating 9–16 % of `E(P_D)`.
 
 `examples/scaling.py` walks the same family up to `n = 20`:
 
+Every answer is **proved optimal**, none of them by enumerating the region:
+
 | instance | `Phi_opt` | iterations | solve | certificate |
 |---|---:|---:|---:|---|
 | `n=10 ub=3` | 29/19 | 4 | 0.80 s | proved, 1.4 s (3288 challengers, 3 tests) |
 | `n=12 ub=3` | 5/17 | 9 | 18.2 s | proved, 7.9 s (16158 challengers, 7 tests) |
 | `n=12 ub=3` | 3/23 | 5 | 3.5 s | proved, 17.0 s (46366 challengers, 4 tests) |
-| `n=14 ub=3` | 4/37 | 4 | 8.0 s | — |
-| `n=16 ub=3` | 7/8 | 5 | 8.4 s | — |
-| `n=20 ub=2` | 1/6 | 6 | 10.9 s | — |
+| `n=14 ub=3` | 4/37 | 4 | 8.0 s | proved, 158 s (362293 challengers, 3 tests) |
+| `n=16 ub=3` | 7/8 | 5 | 8.6 s | proved, 2.7 s (3064 challengers, 1 test) |
+| `n=20 ub=2` | 1/6 | 6 | 11.2 s | proved, 22.0 s (22905 challengers, 6 tests) |
+
+What a proof costs depends on where the optimum sits, not on `n`: the `n = 16`
+row is settled in 2.7 s because `Phi_opt = 7/8` leaves only 3064 points above
+it, while `n = 14` needs 158 s for 362293 challengers — and still only 3
+efficiency tests, because the dominance witnesses already in hand absorb the
+rest.
 
 **`n` is not what decides the cost.** The same `n = 16` is solved in 8 seconds
 on a tight feasible region and is still running after a minute on a loose one;

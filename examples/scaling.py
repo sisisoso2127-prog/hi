@@ -29,7 +29,12 @@ that the returned point is efficient and that **every** feasible point with a
 strictly greater ``Phi`` is dominated.  The set it has to inspect is carved out
 by one extra linear row, and almost all of its members are settled by a
 dominance witness already in hand -- a handful of exact efficiency tests is
-usually enough for tens of thousands of challengers.
+usually enough for hundreds of thousands of challengers.
+
+Every row below is proved this way.  How much that costs depends on where the
+optimum sits, not on ``n``: the ``n = 16`` row is proved in 2.7 s because
+``Phi_opt = 7/8`` leaves only 3064 points above it, while the ``n = 14`` row
+needs 158 s for 362293 challengers -- and still only 3 efficiency tests.
 """
 
 import sys
@@ -83,9 +88,9 @@ STUDY = [
     ("n=10  ub=3", 0, 10, 3, 0.25, True),
     ("n=12  ub=3", 0, 12, 3, 0.25, True),
     ("n=12  ub=3", 1, 12, 3, 0.25, True),
-    ("n=14  ub=3", 1, 14, 3, 0.25, False),
-    ("n=16  ub=3", 0, 16, 3, 0.15, False),
-    ("n=20  ub=2", 0, 20, 2, 0.15, False),
+    ("n=14  ub=3", 1, 14, 3, 0.25, True),
+    ("n=16  ub=3", 0, 16, 3, 0.15, True),
+    ("n=20  ub=2", 0, 20, 2, 0.15, True),
 ]
 
 
@@ -112,7 +117,7 @@ def main():
             line += (f"   proved in {t_proof:6.2f}s "
                      f"({proof.challengers} challengers, {proof.tests} tests)")
         else:
-            line += "   not certified (the challenger set is too large to walk)"
+            line += "   not certified"
         print(line, flush=True)
 
     print("-" * 88)
