@@ -2,43 +2,45 @@
 """
 bench_bimodal.py
 ================
-LA BIMODALITE COMME QUESTION, ET NON PLUS COMME EXCUSE.
+LA BIMODALITE COMME QUESTION -- SECONDE VERSION, LA PREMIERE MESURAIT LA
+MAUVAISE BORNE.
 
 Ce memoire se sert de la bimodalite des ecarts garantis -- des lignes a
-0 %, des lignes au-dessus de 80 %, presque rien entre les deux -- pour
-expliquer pourquoi une mediane est un mauvais juge. C'est correct, et
-c'est un usage DEFENSIF : la forme de la distribution y sert a ecarter une
-lecture, jamais a produire une connaissance. Nous ne lui avons jamais pose
-la question evidente : QU'EST-CE QUI SEPARE LES DEUX MODES ?
+0 %, des lignes au-dessus de 80 %, presque rien entre -- pour expliquer
+qu'une mediane est un mauvais juge. C'est un usage DEFENSIF : la forme de
+la distribution y sert a ecarter une lecture, jamais a produire une
+connaissance. La question evidente n'a jamais ete posee : qu'est-ce qui
+SEPARE les deux modes ?
 
-Il se trouve que la methode enregistre deja de quoi repondre. La borne du
-theoreme 5' s'ecrit
+CE QUE LA PREMIERE VERSION FAISAIT DE FAUX. Elle decomposait la borne du
+theoreme 5' -- q_ref + U/(Q D) -- lue dans la trace de `certify`. Or cette
+borne n'est presque jamais celle qui est publiee : sur 29 executions ou une
+borne doit etre produite, le seuil a l'incumbent l'egale ZERO fois, contre
+27 pour le seuil libre (remarque « route porteuse »). Le banc decomposait
+donc une quantite sans rapport avec le resultat : il affichait un terme de
+7,8 puis 24,2 sur des lignes dont l'ecart valait 0,00. Il a ete arrete.
 
-        q_ub  =  q_ref  +  U / (Q * D)
+CE QUE CELLE-CI MESURE. La borne publiee vient de la seconde route, et
+cette route porte en elle sa propre reponse. A la convergence -- statut
+`optimal`, c'est-a-dire max_R G_t <= 0 -- la borne vaut EXACTEMENT max_R f.
+L'ecart qui reste ne vient alors plus de la borne du tout : il vient de ce
+que le relache R contient encore autre chose que E. C'est un probleme de
+COUPES. Quand la route n'a pas converge -- statut `limit` -- la borne est
+lache pour son propre compte, et c'est un probleme de BUDGET.
 
-et `certify` en garde la trace par tour : q_ref, Q, U et D separement --
-precisement pour qu'une borne qui recule soit diagnosticable. L'ecart
-garanti n'est donc pas une grandeur opaque : c'est U / (Q * D) rapporte a
-q_ub, et il a TROIS causes possibles, qu'on peut departager au lieu de les
-deviner.
+La question « qu'est-ce qui separe les deux modes ? » devient donc
+verifiable sans instrument nouveau :
 
-  U        ce que le relache laisse encore sur la table. Grand U = coupes
-           insuffisantes, ou region encore trop lache.
-  D        le denominateur garanti (D+ quand la seconde route le repare).
-           Petit D = la division explose, et la borne avec elle.
-  Q        le facteur d'echelle du substitut.
+    le mode ouvert est-il peuple de lignes CONVERGEES, auquel cas il faut
+    couper davantage -- ou de lignes NON CONVERGEES, auquel cas il faut
+    payer davantage ?
 
-L'hypothese que nous testons est celle que la theorie designe : les lignes
-qui ne ferment pas seraient celles ou D est PETIT, pas celles ou U est
-grand -- autrement dit un defaut de la BORNE, pas de la recherche. Si
-c'est U qui separe les modes, la conclusion est inverse et vise les
-coupes. Les deux sont publiables ; ce qui ne l'est pas, c'est de ne pas
-avoir regarde.
+Les deux reponses envoient vers des travaux opposes, et c'est ce qui rend
+la mesure utile.
 
-CE QUE CE BANC NE FAIT PAS. Il ne prouve aucune causalite : il decompose
-une identite. Que D soit petit sur les lignes ouvertes ne dit pas que
-reparer D les fermerait -- U pourrait grandir d'autant. Il dit ou regarder
-ensuite, et c'est tout ce qu'une decomposition peut dire.
+CE QU'IL NE FAIT PAS. Prouver une causalite. Il classe des lignes selon un
+statut que la methode enregistre deja. Que le mode ouvert soit convergé ne
+dit pas que couper davantage le fermerait ; cela dit ou porter l'effort.
 
 Usage :  python bench_bimodal.py [graines] [plafond]
 """
@@ -54,8 +56,6 @@ from molfp_instance import generate
 from molfp_hybride import matheuristic_P
 from bench_sensibilite import PROD
 
-# Un lot plus large que d'habitude : departager deux modes demande des
-# effectifs dans CHACUN, et non une mediane globale.
 LOT = [dict(n=n, m=max(3, n // 2 + 1), p=p, seed=s, rhs_scale=1.0, corr=c)
        for n in (20, 30) for p in (3, 4) for c in (0.00, 0.50)
        for s in (1, 2)]
@@ -63,102 +63,112 @@ LOT = [dict(n=n, m=max(3, n // 2 + 1), p=p, seed=s, rhs_scale=1.0, corr=c)
 FERME = 1.0        # « ferme » : ecart garanti sous 1 %
 OUVERT = 50.0      # « ouvert » : ecart garanti au-dessus de 50 %
 
+# `optimal` : max_R G_t <= 0, la borne vaut max_R f exactement.
+# `empty`   : R est vide, meme conclusion en plus fort.
+CONVERGE = ("optimal", "empty")
+
 
 def une(inst, cap: int, graine: int) -> Dict:
     reset_oracle_counter()
     r = matheuristic_P(inst, time_budget=1e6, bound_budget=1e6,
                        seed=graine, ilp_budget=cap, **PROD)
-    trace = (r.cert or {}).get("trace") or []
-    # le dernier tour est celui qui a produit la borne publiee
-    d = trace[-1] if trace else {}
+    info = r.cert or {}
     return dict(ecart=(r.gap * 100) if r.gap is not None else float("nan"),
                 prouve=bool(r.proved_optimal),
-                q_ref=d.get("q_ref"), Q=d.get("Q"), U=d.get("U"),
-                denom=d.get("denom"), q_ub=r.q_ub, cuts=d.get("cuts"))
+                statut=info.get("geom"), geom=info.get("geom_ub"),
+                tours=info.get("geom_tours"), ilp=info.get("geom_ilp"),
+                q_lb=float(r.q_lb) if r.q_lb is not None else None,
+                q_ub=r.q_ub)
 
 
-def _med(v: List[float]) -> Optional[float]:
+def _m(v) -> Optional[float]:
     v = [x for x in v if x is not None and x == x]
     return statistics.median(v) if v else None
-
-
-def _aff(nom: str, v: List[Optional[float]]) -> str:
-    m = _med(v)
-    return f"{nom} {m:>12.4g}" if m is not None else f"{nom} {'--':>12}"
 
 
 def main() -> int:
     graines = list(range(int(sys.argv[1]) if len(sys.argv) > 1 else 3))
     cap = int(sys.argv[2]) if len(sys.argv) > 2 else 300
 
-    print("=" * 100)
-    print("DECOMPOSITION DE L'ECART GARANTI :  q_ub = q_ref + U / (Q * D)")
+    print("=" * 98)
+    print("CE QUI SEPARE LES DEUX MODES DE L'ECART GARANTI")
     print(f"  {len(LOT)} instances x {len(graines)} graines, plafond {cap}")
-    print("=" * 100)
+    print("=" * 98)
     print(f"\n{'n':>3}{'p':>3}{'corr':>6}{'gr':>4}{'ecart %':>10}"
-          f"{'q_ref':>12}{'U':>12}{'Q':>8}{'D':>12}{'U/(QD)':>12}{'pr':>4}")
-    print("-" * 100)
+          f"{'statut':>10}{'tours':>7}{'ilp':>6}"
+          f"{'q_lb':>12}{'q_ub':>12}{'pr':>4}")
+    print("-" * 98)
 
     lect: List[Dict] = []
     for spec in LOT:
         inst = generate(**spec)
         for g in graines:
             d = une(inst, cap, g)
-            d.update(spec=spec, graine=g)
             lect.append(d)
-            terme = (d["U"] / (d["Q"] * d["denom"])
-                     if None not in (d["U"], d["Q"], d["denom"])
-                     and d["Q"] and d["denom"] else None)
-            d["terme"] = terme
             print(f"{spec['n']:>3}{spec['p']:>3}{spec['corr']:>6.2f}{g:>4}"
-                  f"{d['ecart']:>10.2f}"
-                  f"{_x(d['q_ref']):>12}{_x(d['U']):>12}{_x(d['Q']):>8}"
-                  f"{_x(d['denom']):>12}{_x(terme):>12}"
+                  f"{d['ecart']:>10.2f}{str(d['statut']):>10}"
+                  f"{_x(d['tours']):>7}{_x(d['ilp']):>6}"
+                  f"{_x(d['q_lb']):>12}{_x(d['q_ub']):>12}"
                   f"{'o' if d['prouve'] else '.':>4}", flush=True)
 
-    fermes = [d for d in lect if d["ecart"] == d["ecart"] and d["ecart"] <= FERME]
-    ouverts = [d for d in lect if d["ecart"] == d["ecart"] and d["ecart"] >= OUVERT]
-    milieu = [d for d in lect if d["ecart"] == d["ecart"]
-              and FERME < d["ecart"] < OUVERT]
+    fin = [d for d in lect if d["ecart"] == d["ecart"]]
+    fermes = [d for d in fin if d["ecart"] <= FERME]
+    ouverts = [d for d in fin if d["ecart"] >= OUVERT]
+    milieu = [d for d in fin if FERME < d["ecart"] < OUVERT]
 
-    print("\n" + "=" * 100)
+    print("\n" + "=" * 98)
     print(f"DEUX MODES  --  fermes (<= {FERME:g} %) : {len(fermes)}    "
           f"ouverts (>= {OUVERT:g} %) : {len(ouverts)}    "
           f"entre les deux : {len(milieu)}")
-    print("=" * 100)
+    print("=" * 98)
     if len(milieu) > max(len(fermes), len(ouverts)):
         print("\n!! Le « milieu » est le mode le plus peuple : sur ce lot la")
         print("   distribution n'est PAS bimodale, et la suite ne veut rien")
         print("   dire. C'est un resultat, pas un echec du banc.")
 
-    for nom, grp in (("fermes ", fermes), ("ouverts", ouverts)):
+    print(f"\n{'groupe':<12}{'lignes':>8}{'convergees':>13}"
+          f"{'non conv.':>12}{'sans statut':>13}{'tours med':>11}"
+          f"{'ilp med':>10}")
+    for nom, grp in (("fermes", fermes), ("milieu", milieu),
+                     ("ouverts", ouverts)):
         if not grp:
             continue
-        print(f"\n  {nom} (medianes) : "
-              + "   ".join([_aff("q_ref", [d["q_ref"] for d in grp]),
-                            _aff("U", [d["U"] for d in grp]),
-                            _aff("Q", [d["Q"] for d in grp]),
-                            _aff("D", [d["denom"] for d in grp]),
-                            _aff("U/(QD)", [d["terme"] for d in grp])]))
+        cv = sum(1 for d in grp if d["statut"] in CONVERGE)
+        nc = sum(1 for d in grp if d["statut"] is not None
+                 and d["statut"] not in CONVERGE)
+        ss = sum(1 for d in grp if d["statut"] is None)
+        print(f"{nom:<12}{len(grp):>8}{cv:>13}{nc:>12}{ss:>13}"
+              f"{_f(_m([d['tours'] for d in grp])):>11}"
+              f"{_f(_m([d['ilp'] for d in grp])):>10}")
 
     if fermes and ouverts:
-        print("\n  RAPPORT ouverts / fermes, terme par terme :")
-        for cle, lib in (("U", "U      "), ("Q", "Q      "),
-                         ("denom", "D      "), ("terme", "U/(QD) ")):
-            a, b = _med([d[cle] for d in ouverts]), _med([d[cle] for d in fermes])
-            if a is None or b is None or b == 0:
-                print(f"    {lib} --")
-            else:
-                print(f"    {lib} {a / b:>10.3f}")
-        print("\n  Lecture. Un rapport proche de 1 sur un terme dit que ce")
-        print("  terme ne separe pas les modes. Le terme dont le rapport")
-        print("  s'ecarte le plus est celui qui porte la bimodalite -- et")
-        print("  c'est lui, non la mediane globale, qu'il faudra attaquer.")
+        co = sum(1 for d in ouverts if d["statut"] in CONVERGE)
+        print(f"\nVERDICT. Sur les {len(ouverts)} lignes du mode OUVERT, "
+              f"{co} ont une borne CONVERGEE.")
+        if co > len(ouverts) / 2:
+            print("La borne y vaut donc max_R f EXACTEMENT : elle n'est pas")
+            print("perfectible, et l'ecart restant mesure ce que le relache")
+            print("contient encore en plus de E. C'est un probleme de")
+            print("COUPES, pas de budget -- payer plus ne fermerait rien.")
+        elif co < len(ouverts) / 2:
+            print("La borne n'y a donc PAS converge : elle est lache pour")
+            print("son propre compte, et c'est un probleme de BUDGET --")
+            print("couper davantage ne servirait a rien tant que la route")
+            print("n'a pas le temps d'aller au bout.")
+        else:
+            print("Le mode ouvert est coupe en deux parts egales : le statut")
+            print("de convergence ne le separe pas, et il faut chercher")
+            print("ailleurs. C'est un resultat negatif, et il compte.")
     return 0
 
 
 def _x(v) -> str:
-    return "--" if v is None else f"{v:.4g}"
+    return "--" if v is None else (f"{v:.6g}" if isinstance(v, float)
+                                   else str(v))
+
+
+def _f(v) -> str:
+    return "--" if v is None else f"{v:.1f}"
 
 
 if __name__ == "__main__":
