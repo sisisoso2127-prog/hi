@@ -1600,9 +1600,10 @@ y gagnent $1{,}19$ point d'écart sur quatre instances contre zéro, à
 nombre de preuves inchangé (remarque~\ref{rem:genou}). Le lot élargi le
 confirme et va plus loin -- $\beta=80$ y gagne $3{,}61$ points sur douze
 lignes contre zéro, et \emph{deux preuves}
-(remarque~\ref{rem:betaquatrevingts}). Il n'y a donc pas
-de plafond de rendement à $40$, ni saturation ni dégradation ; il y en a un
-à $80$, où $\beta=160$ ne rend plus rien de plus. Nous en
+(remarque~\ref{rem:betaquatrevingts}). Il n'y a donc \emph{aucun} plafond
+de rendement mesuré, ni à $40$ ni ailleurs : le tableau~\ref{tab:vivier}
+montre que la production ne vide même pas le vivier qu'elle construit, et
+qu'au-delà de $80$ le plafond cesse simplement de mordre. Nous en
 avions conclu
 qu'il fallait \textbf{un seul plafond pour les deux sources}, et nous
 appuyions cette règle sur une mesure : donner à chacune son propre plafond
@@ -3531,6 +3532,15 @@ plus petit que le bruit du banc qui le mesure
 (tableau~\ref{tab:temps}) : ce qui retient la production n'est donc plus son
 coût, c'est la taille de l'échantillon sur lequel le gain est lu. C'est une
 conclusion plus faible que la précédente ; elle a l'avantage d'être vraie.
+
+Il faudra la corriger une fois de plus. Ce paragraphe cherchait un genou,
+et le tableau~\ref{tab:vivier} établit qu'il n'y en a pas : au-delà de $80$
+le plafond ne borne plus rien parce que le vivier est plus petit que lui.
+Nous laissons la trace de la recherche, parce que c'est elle qui a fini par
+poser la bonne question -- non pas « où sature le rendement ? », mais
+« combien de candidats y a-t-il à poser, et combien en posons-nous ? ». La
+remarque~\ref{rem:prixdestours} dit ce qu'il reste à mesurer pour achever
+d'y répondre.
 \end{remark}
 
 \begin{remark}[une médiane qui ment, et comment nous l'avons su]
@@ -3714,16 +3724,95 @@ elle, \emph{s'améliore} : $11/24$ preuves contre $9/24$. C'est l'inverse
 exact de ce qui était arrivé à la fraction LNS, dont le lot élargi avait
 ramené l'avantage à une quasi-égalité.
 
-Deux lignes de ce tableau disent plus que le verdict. D'abord $\beta=160$
-rend \emph{exactement} les mêmes six colonnes que $\beta=80$ : il y a bien
-un genou, et il est à $80$ -- le paragraphe retiré avait la bonne forme
-d'argument et le mauvais point. Ensuite $\rho=4$, seul, gagne $1{,}11$ point
+Deux lignes de ce tableau disent plus que le verdict, et la première nous a
+d'abord trompés. $\beta=160$ rend \emph{exactement} les mêmes six colonnes
+que $\beta=80$, et nous en avions conclu qu'il y avait là un genou, situé à
+$80$ au lieu de $40$. Le paragraphe suivant montre que c'est faux : il n'y a
+pas de genou du tout. Ensuite $\rho=4$, seul, gagne $1{,}11$ point
 sur $7$ lignes contre $0$ ($p=0{,}016$), ce qui est réel ; mais combiné à
 $\beta=80$ il ne rend plus rien du tout, la dernière ligne étant identique à
 la deuxième. Ce que $\rho$ apportait, $\beta$ l'apporte déjà. La conclusion
 n'est donc pas « $\beta=80$ et $\rho=4$ », comme le balayage à un facteur le
-suggérait : c'est $\beta=80$ \emph{seul}, $\rho$ restant à $2$, puisque le
-doubler coûterait du temps sans rien rendre.
+suggérait : c'est $\beta=80$ \emph{seul}, $\rho$ restant à $2$.
+
+\paragraph{Il n'y a pas de genou : il y a un vivier qu'on ne vide pas.}
+Un plafond $\beta$ ne borne pas le nombre de coupes \emph{utiles}. Il borne
+le nombre de coupes posées \emph{par tour}, et le tour les puise dans un
+vivier fini qu'il consomme à mesure -- une coupe posée sort du vivier, et le
+tour suivant reprend là où le précédent s'est arrêté. Si le vivier compte
+moins de $\beta$ candidats, $\beta$ ne borne rien du tout, et deux valeurs
+de $\beta$ qui le dépassent toutes deux posent le \emph{même} jeu de coupes.
+Une égalité à six chiffres cesse alors d'être une coïncidence : elle devient
+une tautologie. Nous avons donc mesuré le vivier lui-même.
+
+\begin{table}[H]
+\centering
+\caption{Ce que les configurations font réellement du vivier. Lot élargi,
+$8$~instances à $n=20$ et $n=30$, trois graines, plafond $300$ -- les mêmes
+$24$ exécutions que le tableau~\ref{tab:confirmbeta}, dont les deux
+dernières colonnes sont reproduites pour la lecture. « vivier » est le
+nombre de candidats \emph{vus} par une exécution, toutes constructions
+cumulées ; « posées » celles qui ont effectivement été mises dans le
+programme entier.\ \conf{1}{1}{1}}
+\label{tab:vivier}
+\setlength{\tabcolsep}{5pt}\small
+\begin{tabular}{lrrrrc}
+\toprule
+configuration & vivier méd. & posées méd. & vidé & écart méd. & preuves\\
+\midrule
+production $\beta=40$, $\rho=2$ & $164{,}5$ & $82{,}0$ & $3/24$ & $19{,}88$ & $9/24$\\
+$\beta=80$, $\rho=2$ & $162{,}5$ & $88{,}5$ & $6/24$ & $16{,}27$ & $11/24$\\
+$\beta=160$, $\rho=2$ & $162{,}5$ & $88{,}5$ & $6/24$ & $16{,}27$ & $11/24$\\
+$\beta=40$, $\rho=4$ & $164{,}5$ & $\mathbf{97{,}5}$ & $3/24$ & $18{,}77$ & $9/24$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Trois lectures, dont la dernière défait l'explication que nous venions de
+construire.
+
+\emph{Premièrement}, aucun vivier pris seul n'atteint $160$ candidats sur
+les $24$ exécutions. $\beta=160$ ne borne donc jamais rien : il rend ce que
+rend $\beta=80$ parce qu'il ne \emph{mord} pas, et non parce qu'un rendement
+saturerait. Il n'y a de genou ni à $40$ ni à $80$ ; il n'y a, dans ce
+régime, aucun rendement décroissant mesuré, et la phrase que nous avions
+écrite décrivait un phénomène qui n'existe pas.
+
+\emph{Deuxièmement}, la production ne vide le vivier que sur $3$ exécutions
+sur $24$. Elle laisse donc, dans les $21$ autres, des candidats certifiés
+qu'elle a construits et qu'elle ne pose pas -- la moitié du vivier en
+médiane. Ce n'est pas le point d'équilibre d'un compromis, c'est une
+famine, et elle explique le gain de $\beta=80$ sans rien invoquer d'autre.
+
+\emph{Troisièmement}, et c'est la ligne qui oblige à s'arrêter : $\beta=40$
+avec $\rho=4$ pose une médiane de $\mathbf{97{,}5}$ coupes contre
+$\mathbf{88{,}5}$ pour $\beta=80$ -- donc \emph{davantage} -- et fait
+pourtant moins bien sur les deux colonnes, $18{,}77$ contre $16{,}27$ et
+$9/24$ preuves contre $11/24$. Poser plus de coupes n'est donc pas ce qui
+compte. L'explication par le vivier rend compte du premier point et du
+deuxième ; elle échoue sur le troisième, et nous le publions plutôt que de
+la sauver.
+
+\begin{remark}[ce qui reste à mesurer, et pourquoi nous ne l'écrivons pas
+comme un résultat]
+\label{rem:prixdestours}
+Il reste une hypothèse, et une seule qui survive aux trois lectures : sous
+un plafond d'appels entiers \emph{fixe}, chaque tour de certification paie
+une résolution de plus, et ce qu'elle consomme est autant de retiré au
+reste. Peu de gros lots battraient alors beaucoup de petits lots, non par
+la qualité des coupes mais par le prix des tours. Elle explique que
+$\rho=4$ perde en posant davantage, et que $\rho=4$ n'ajoute rien une fois
+$\beta=80$ posé.
+
+Nous ne l'écrivons pas comme un résultat parce qu'elle n'est pas mesurée :
+il faudrait relever le nombre d'appels entiers consommés par la
+certification, configuration par configuration, et le banc ne le relevait
+pas. L'instrument a été corrigé ; la mesure reste à faire. Une hypothèse
+qui explique trois faits n'est pas pour autant établie, et ce mémoire a
+assez souffert de justifications construites après coup pour ne pas en
+ajouter une de plus.
+\end{remark}
 
 \begin{remark}[ce que ce résultat oblige à faire, et ce qu'il coûte]
 \label{rem:betaquatrevingts}
