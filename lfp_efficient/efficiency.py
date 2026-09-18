@@ -103,15 +103,27 @@ def add_sylva_crema_cut(region: Model, problem: MOILP, x_hat: Sequence[Fraction]
     y = region.add_variables(problem.p, integer=True)
     cx = problem.C(x_hat)
     for i, row in enumerate(problem.criteria):
-        # C_i x - (C_i x^s + 1 - M_i) y_i >= M_i
-        coeffs = list(row) + [ZERO] * (region.n - len(row))
-        coeffs[y[i]] = -(cx[i] + F(1) - M[i])
-        region.add(coeffs, GE, M[i])
-        # y_i <= 1  (with integrality and x >= 0 this makes y_i binary)
-        ub = [ZERO] * region.n
-        ub[y[i]] = F(1)
-        region.add(ub, LE, F(1))
+        # -C_i x + (C_i x^s + 1 - M_i) y_i <= -M_i
+        #
+        # This is the paper's row written with the opposite sign.  The "<="
+        # form matters for speed, not for the mathematics: its slack column is
+        # a +1 unit vector whenever -M_i >= 0, so the crash basis of the
+        # simplex covers the row and no phase-I artificial is needed for it.
+        # With p criteria and one cut per iteration that removes p artificial
+        # variables per iteration from every single node of the branch & bound.
+        coeffs = [-v for v in row] + [ZERO] * (region.n - len(row))
+        coeffs[y[i]] = cx[i] + F(1) - M[i]
+        region.add(coeffs, LE, -M[i])
     # sum_i y_i >= 1
+    #
+    # The explicit "y_i <= 1" rows of equation (5) are redundant and are left
+    # out.  Writing K_i = C_i x^s + 1 - M_i >= 1, a point is feasible for the
+    # block iff some y_i >= 1, and then C_i x >= K_i y_i + M_i >= K_i + M_i =
+    # C_i x^s + 1.  Values y_i >= 2 only impose a *stronger* requirement, so
+    # the union over the integer y is unchanged -- while the region loses p
+    # rows per iteration.  The relaxation is not weakened either: the linear
+    # program satisfies "sum y_i >= 1" as cheaply as it can and never raises a
+    # y_i above 1 on its own.
     pick = [ZERO] * region.n
     for j in y:
         pick[j] = F(1)
@@ -121,7 +133,8 @@ def add_sylva_crema_cut(region: Model, problem: MOILP, x_hat: Sequence[Fraction]
 
 def best_with_same_criterion(region: Model, problem: MOILP,
                              x_tilde: Sequence[Fraction], phi,
-                             cutoff=None) -> MilpResult:
+                             cutoff=None,
+                             denominator_positive: bool = False) -> MilpResult:
     """Sub-problem ``Q(x~) = max { Phi(x) : x in region, C x = C x~ }``.
 
     All the points of this set share the non-dominated criterion vector
@@ -130,12 +143,20 @@ def best_with_same_criterion(region: Model, problem: MOILP,
     best value of ``Phi`` on it has to be collected first -- this is the step
     the paper writes as ``solve Q(x~_l)``.
     """
-    sub = region.copy()
+    # The slice { x : C x = C x~ } is never touched by the cuts already made,
+    # so it is the same set in the truncated region and in D itself:
+    # a previous cut would exclude it only if C x~ <= C x^s for some stored
+    # efficient x^s, which forces C x~ = C x^s (both are non-dominated) and
+    # would mean x~ had already been cut away -- impossible, since x~ dominates
+    # a point of the current region.  Solving over D keeps the p binaries and
+    # the 2p+1 rows of every accumulated cut out of this sub-problem.
+    sub = problem.model.copy()
     cx = problem.C(x_tilde)
     for i, row in enumerate(problem.criteria):
         coeffs = list(row) + [ZERO] * (sub.n - len(row))
         sub.add(coeffs, EQ, cx[i])
-    res = solve_fractional_milp(sub, phi, cutoff=cutoff)
+    res = solve_fractional_milp(sub, phi, cutoff=cutoff,
+                                denominator_positive=denominator_positive)
     if res.feasible:
         res.x = res.x[:problem.n]
     return res

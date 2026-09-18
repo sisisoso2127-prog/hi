@@ -91,12 +91,28 @@ def instance_hard():
         alpha=39, beta=6)
 
 
+def instance_hardest():
+    """The heaviest of the family: 11 cut iterations before the bound closes."""
+    return boxed(
+        10, 3,
+        [([3, 2, 4, 1, 1, 1, 3, 1, 2, 1], 19),
+         ([4, 4, 1, 2, 1, 4, 1, 1, 2, 1], 24),
+         ([1, 2, 1, 2, 3, 4, 2, 1, 3, 2], 19),
+         ([2, 3, 1, 1, 1, 2, 4, 4, 3, 4], 25)],
+        [[3, 3, 2, 2, 2, 1, 5, 3, 5, 4],
+         [3, 4, 3, 5, 1, 1, 5, 4, 2, 3],
+         [2, 4, 4, 1, 1, 5, 5, 3, 3, 3]],
+        U=[-5, -4, -5, -4, -1, -1, -3, -4, -1, -1], V=[3, 3, 2, 3, 3, 3, 2, 2, 3, 2],
+        alpha=31, beta=4)
+
+
 CASES = [
     ("medium  n=4", lambda: instance_medium(4), True),
     ("medium  n=5", lambda: instance_medium(5), True),
     ("medium  n=6", lambda: instance_medium(6), True),
     ("large   n=10 (easy Phi)", instance_large, False),
     ("hard    n=10 (dominated Phi optimum)", instance_hard, False),
+    ("hardest n=10 (11 cut iterations)", instance_hardest, False),
 ]
 
 

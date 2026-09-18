@@ -18,8 +18,10 @@ from typing import List, Optional, Sequence
 
 from .model import EQ, GE, LE, Model
 from .rational import F, ZERO, fmt, is_integral
+from .rational import dot
 from .simplex import (FractionalPricing, INFEASIBLE, LinearPricing, OPTIMAL,
-                      SimplexResult, Tableau, UNBOUNDED, solve_standard_form)
+                      STALLED, SimplexResult, Tableau, UNBOUNDED,
+                      add_bound_row, restore_feasibility, solve_standard_form)
 
 #: returned when a *cutoff* was supplied and nothing beats it.  It means
 #: "the region is not empty, but its optimum is <= cutoff" -- which is all the
@@ -70,14 +72,71 @@ def solve_relaxation(model: Model, objective) -> SimplexResult:
     return solve_standard_form(A, b, _pricing_for(objective, n_cols), n_struct)
 
 
+def _node_bound_model(model: Model, branches) -> Model:
+    """Rebuild a node as a plain model -- the fallback when a warm start stalls."""
+    node = model.copy()
+    for j, bound, upper in branches:
+        row = [F(1) if k == j else ZERO for k in range(model.n)]
+        node.add(row, LE if upper else GE, bound)
+    return node
+
+
+class _Node:
+    """A branch & bound node: its solved tableau and how it was reached."""
+
+    __slots__ = ("tableau", "pricing", "value", "x", "branches", "z1", "z2")
+
+    def __init__(self, tableau, pricing, value, x, branches):
+        self.tableau, self.pricing = tableau, pricing
+        self.value, self.x, self.branches = value, x, branches
+        # Z_1, Z_2 at this (feasible) vertex, frozen for the children's
+        # restoration ratio test
+        if isinstance(pricing, FractionalPricing):
+            full = tableau.solution()
+            self.z1 = dot(pricing.U, full) + pricing.alpha
+            self.z2 = dot(pricing.V, full) + pricing.beta
+        else:
+            self.z1 = self.z2 = ZERO
+
+
+def _child(model: Model, objective, parent: _Node, j: int, bound: int, upper: bool):
+    """Solve the child obtained by adding one bound row, warm from the parent."""
+    branches = parent.branches + [(j, bound, upper)]
+    tab = parent.tableau.clone()
+    pricing = add_bound_row(tab, parent.pricing, j, F(bound), upper)
+
+    status = restore_feasibility(tab, pricing, parent.z1, parent.z2)
+    if status == INFEASIBLE:
+        return None, branches
+    if status == STALLED:                       # give up warm, solve from scratch
+        cold = solve_relaxation(_node_bound_model(model, branches), objective)
+        if cold.status == INFEASIBLE:
+            return None, branches
+        if cold.status == UNBOUNDED:
+            return UNBOUNDED, branches
+        return _Node(cold.tableau, cold.pricing, cold.objective,
+                     cold.x[:model.n], branches), branches
+
+    if tab.run(pricing) == UNBOUNDED:
+        return UNBOUNDED, branches
+    full = tab.solution()
+    return _Node(tab, pricing, pricing.value(full), full[:model.n], branches), branches
+
+
 def solve_milp(model: Model, objective, max_nodes: int = 200_000,
                cutoff: Optional[Fraction] = None) -> MilpResult:
-    """Depth-first branch & bound with incumbent pruning.
+    """Depth-first branch & bound, warm started from the parent basis.
 
     *objective* is either a list of coefficients (linear) or a
     :class:`~lfp_efficient.model.FractionalObjective`.  Branching is done on
     the most fractional integer-constrained variable, using the usual dichotomy
     ``x_j <= floor(v)`` / ``x_j >= ceil(v)``.
+
+    Each child is obtained from its parent's optimal tableau by appending the
+    branch row and re-optimising (see
+    :func:`~lfp_efficient.simplex.restore_feasibility`), so only the root pays
+    a phase I.  A child whose restoration stalls is solved from scratch
+    instead, which keeps the result independent of the warm start.
 
     *cutoff* turns the run into the question "is there a feasible point with an
     objective **strictly greater** than this value, and if so which is best?".
@@ -88,53 +147,54 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
     the late iterations -- exactly where the accumulated Sylva-Crema binaries
     would otherwise make each sub-problem expensive.
     """
+    root = solve_relaxation(model, objective)
+    if root.status == INFEASIBLE:
+        return MilpResult(INFEASIBLE, nodes=1)
+    if root.status == UNBOUNDED:
+        return MilpResult(UNBOUNDED, nodes=1)
+
     best = MilpResult(INFEASIBLE)
     nodes = 0
-    any_feasible = False
-    stack: List[Model] = [model]
+    any_feasible = True
+    stack: List[_Node] = [_Node(root.tableau, root.pricing, root.objective,
+                                root.x[:model.n], [])]
 
     while stack:
         if nodes >= max_nodes:
             raise RuntimeError("branch & bound node limit reached: is the region bounded?")
         node = stack.pop()
         nodes += 1
-        relax = solve_relaxation(node, objective)
-
-        if relax.status == INFEASIBLE:
-            continue
-        if relax.status == UNBOUNDED:
-            return MilpResult(UNBOUNDED, nodes=nodes)
-        any_feasible = True
 
         # bound: the relaxation cannot beat the incumbent (or the cutoff) -> prune
-        if best.feasible and relax.objective <= best.objective:
+        if best.feasible and node.value <= best.objective:
             continue
-        if cutoff is not None and not best.feasible and relax.objective <= cutoff:
+        if cutoff is not None and not best.feasible and node.value <= cutoff:
             continue
 
-        x = relax.x[:node.n]
         # most-fractional branching: it splits the region more evenly than
         # taking the first fractional variable, and cuts the node count
         frac, worst = None, None
-        for j in range(node.n):
-            if node.integrality[j] and not is_integral(x[j]):
-                gap = x[j] - floor(x[j])
+        for j in range(model.n):
+            if model.integrality[j] and not is_integral(node.x[j]):
+                gap = node.x[j] - floor(node.x[j])
                 score = min(gap, 1 - gap)
                 if worst is None or score > worst:
                     frac, worst = j, score
 
         if frac is None:                                          # integral -> incumbent
-            if not best.feasible or relax.objective > best.objective:
-                best = MilpResult(OPTIMAL, x, relax.objective,
-                                  relax.tableau, relax.n_structural, nodes)
+            if not best.feasible or node.value > best.objective:
+                best = MilpResult(OPTIMAL, node.x, node.value,
+                                  node.tableau, model.n, nodes)
             continue
 
-        value = x[frac]
-        down = node.copy()
-        down.add([F(1) if j == frac else ZERO for j in range(node.n)], LE, floor(value))
-        up = node.copy()
-        up.add([F(1) if j == frac else ZERO for j in range(node.n)], GE, ceil(value))
-        stack.extend((down, up))                                  # DFS, "up" explored first
+        value = node.x[frac]
+        for bound, upper in ((ceil(value), False), (floor(value), True)):
+            child, _ = _child(model, objective, node, frac, bound, upper)
+            if child is None:
+                continue
+            if child is UNBOUNDED:
+                return MilpResult(UNBOUNDED, nodes=nodes)
+            stack.append(child)                   # DFS, "down" explored first
 
     best.nodes = nodes
     if not best.feasible and cutoff is not None and any_feasible:
@@ -172,8 +232,27 @@ def _gcd(a: int, b: int) -> int:
     return a
 
 
+def denominator_stays_positive(model: Model, phi) -> bool:
+    """Is ``V'x + beta > 0`` on the whole *continuous* relaxation of *model*?
+
+    The question is asked about the relaxation, not about the integer points:
+    the simplex walks the vertices of the relaxation, so it is there that the
+    ratio has to stay well defined.  When the answer is yes -- the usual case,
+    and the case of every instance whose denominator has non-negative
+    coefficients and a positive constant -- the sign split of
+    :func:`solve_fractional_milp` is pure waste and gets skipped, which halves
+    the work of every fractional sub-problem the algorithm solves.
+    """
+    phi = phi.lift(model.n)
+    res = solve_relaxation(model, [-v for v in phi.V])
+    if res.status != OPTIMAL:
+        return False                      # empty or unbounded: stay on the safe side
+    return -res.objective + phi.beta > 0
+
+
 def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
-                          cutoff: Optional[Fraction] = None) -> MilpResult:
+                          cutoff: Optional[Fraction] = None,
+                          denominator_positive: bool = False) -> MilpResult:
     """``max (U'x+alpha)/(V'x+beta)`` over the integer points of *model*.
 
     Linear fractional programming always assumes ``V'x + beta > 0`` on the
@@ -193,8 +272,20 @@ def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
     feasible point except those with a vanishing denominator (where ``Phi`` is
     undefined and which are therefore -- deliberately -- discarded).
     The answer is the better of the two branches.
+
+    *denominator_positive* records that the caller has already established
+    ``V'x + beta > 0`` on the relaxation (see
+    :func:`denominator_stays_positive`).  The split is then skipped entirely
+    and the sign row is not even added, which removes one row and one whole
+    branch & bound run from every call.
     """
     phi = phi.lift(model.n)
+    if denominator_positive:
+        res = solve_milp(model, phi, max_nodes=max_nodes, cutoff=cutoff)
+        if res.feasible:
+            res.x = res.x[:model.n]
+        return res
+
     s = _integer_scale(list(phi.V) + [phi.beta])
     den_row = [s * v for v in phi.V]
     den_const = s * phi.beta

@@ -255,6 +255,9 @@ class Tableau:
         raise RuntimeError("simplex did not converge (possible cycling)")
 
 
+STALLED = "stalled"
+
+
 @dataclass
 class SimplexResult:
     status: str
@@ -263,6 +266,9 @@ class SimplexResult:
     tableau: Optional[Tableau] = None
     #: original column indices kept after the redundant rows/artificials clean-up
     n_structural: int = 0
+    #: the pricing object owning ``tableau.cost_rows``; carrying it around lets
+    #: a child node reuse those rows instead of rebuilding them
+    pricing: object = None
 
 
 def solve_standard_form(A, b, pricing, n_structural: Optional[int] = None) -> SimplexResult:
@@ -333,9 +339,10 @@ def solve_standard_form(A, b, pricing, n_structural: Optional[int] = None) -> Si
     # ---- phase II --------------------------------------------------------
     status = tab.run(pricing)
     if status == UNBOUNDED:
-        return SimplexResult(UNBOUNDED, tableau=tab, n_structural=n_structural)
+        return SimplexResult(UNBOUNDED, tableau=tab, n_structural=n_structural,
+                             pricing=pricing)
     x = tab.solution()
-    return SimplexResult(OPTIMAL, x, pricing.value(x), tab, n_structural)
+    return SimplexResult(OPTIMAL, x, pricing.value(x), tab, n_structural, pricing)
 
 
 def _unit_columns(A, m: int, n: int) -> dict:
@@ -365,3 +372,113 @@ def _unit_columns(A, m: int, n: int) -> dict:
 
 
 ONE = Fraction(1)
+
+
+# --------------------------------------------------------------------------
+# Warm start: re-optimising a tableau after one extra bound row
+# --------------------------------------------------------------------------
+# Branch & bound differs from its parent by a single bound row, yet solving
+# each node from scratch pays a full phase I to rebuild a basis the parent
+# already had.  Measured on a hard instance that was 20.6 phase-I pivots per
+# node against 4.1 phase-II ones: five sixths of the work thrown away.
+#
+# The parent basis stays a basis of the child once the new row's slack joins
+# it; only the new row can be primal infeasible.  A dual-simplex-style
+# restoration fixes that in a pivot or two, after which the ordinary primal
+# loop finishes the job.
+
+def extend_pricing(pricing, extra: int):
+    """The same objective seen in a space with *extra* new (zero-cost) columns."""
+    zeros = [ZERO] * extra
+    if isinstance(pricing, LinearPricing):
+        return LinearPricing(pricing.c + zeros)
+    return FractionalPricing(pricing.U + zeros, pricing.alpha,
+                             pricing.V + zeros, pricing.beta)
+
+
+def add_bound_row(tab: Tableau, pricing, j: int, bound: Fraction, upper: bool):
+    """Append ``x_j <= bound`` (or ``x_j >= bound``) to *tab*, keeping the basis.
+
+    The row is written with its own slack, then the basic variables occurring
+    in it are eliminated so that the slack can be made basic.  Its value comes
+    out as ``bound - x_j`` (resp. ``x_j - bound``): negative exactly when the
+    branch cuts off the parent's solution, which is the only reason the child
+    is not immediately feasible.  Returns the extended pricing object.
+    """
+    for row in tab.T:
+        row.append(ZERO)
+    for row in tab.cost_rows:
+        row.append(ZERO)          # a basic, zero-cost variable prices at 0
+    new_pricing = extend_pricing(pricing, 1)
+    tab._cost_owner = new_pricing
+    c_new = tab.n - 1
+
+    row = [ZERO] * tab.n
+    row[j] = ONE if upper else -ONE
+    row[c_new] = ONE
+    rhs = F(bound) if upper else -F(bound)
+
+    for i, basic in enumerate(tab.basis):
+        if basic == j and row[j] != 0:
+            factor = row[j]
+            row = [a - factor * t for a, t in zip(row, tab.T[i])]
+            rhs = rhs - factor * tab.xb[i]
+            break
+
+    tab.T.append(row)
+    tab.xb.append(rhs)
+    tab.basis.append(c_new)
+    return new_pricing
+
+
+def _reference_prices(tab: Tableau, pricing, z1: Fraction, z2: Fraction) -> List[Fraction]:
+    """Prices used to steer the restoration, frozen at the parent's vertex.
+
+    During the restoration the point is primal infeasible, so the fractional
+    objective's own ``Z_1``/``Z_2`` are meaningless there (``Z_2`` may even be
+    negative, where ``Phi`` is not defined).  Freezing them at the parent's --
+    feasible -- vertex keeps the ratio test well defined.  It only steers the
+    choice of the entering column: optimality is established afterwards by the
+    ordinary primal loop, so no correctness rests on it.
+    """
+    if len(tab.cost_rows) == 1:
+        return tab.cost_rows[0]
+    rU, rV = tab.cost_rows
+    return [z2 * rU[k] - z1 * rV[k] for k in range(tab.n)]
+
+
+def restore_feasibility(tab: Tableau, pricing, z1: Fraction, z2: Fraction,
+                        max_iter: int = 200) -> str:
+    """Dual-simplex pivots until ``xb >= 0``.
+
+    Returns ``OPTIMAL`` once the basis is primal feasible, ``INFEASIBLE`` when a
+    row proves the child empty, or ``STALLED`` when the iteration cap is hit --
+    in which case the caller falls back to a solve from scratch, so a
+    restoration that fails costs time and never correctness.
+
+    The infeasibility certificate needs no assumption on the prices: a row
+    ``x_B(r) + sum_j y_rj x_j = xb_r`` with ``xb_r < 0`` and every non-basic
+    ``y_rj >= 0`` cannot be satisfied by any ``x >= 0``.
+    """
+    for _ in range(max_iter):
+        r, worst = None, ZERO
+        for i in range(tab.m):
+            if tab.xb[i] < worst:
+                r, worst = i, tab.xb[i]
+        if r is None:
+            return OPTIMAL
+
+        prices = _reference_prices(tab, pricing, z1, z2)
+        inb = set(tab.basis)
+        best, best_ratio = None, None
+        row = tab.T[r]
+        for k in range(tab.n):
+            if k in inb or row[k] >= 0:
+                continue
+            ratio = prices[k] / row[k]            # prices <= 0 and row < 0
+            if best_ratio is None or ratio < best_ratio:
+                best, best_ratio = k, ratio
+        if best is None:
+            return INFEASIBLE
+        tab.pivot(r, best)
+    return STALLED

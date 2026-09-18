@@ -199,6 +199,39 @@ def test_random_instances_against_exhaustive_enumeration(trials=60, seed=2025091
     return f"{checked} instances vs exhaustive enumeration"
 
 
+def test_warm_started_branch_and_bound_matches_a_cold_one():
+    """The warm start must not change a single answer, only the time taken.
+
+    Every child node is normally re-optimised from its parent's basis.  Here
+    the restoration is forced to report ``STALLED`` on every call, which sends
+    the branch & bound down its cold fallback -- rebuilding each node as a
+    plain model and solving it from scratch.  The two paths must agree on
+    every instance, otherwise the warm start is not a pure optimisation.
+    """
+    import lfp_efficient.milp as milp
+    import lfp_efficient.simplex as simplex
+
+    rng = random.Random(97531)
+    warm_results, cold_results = [], []
+    instances = [paper_problem()] + [random_instance(rng)[:2] for _ in range(8)]
+
+    for problem, phi in instances:
+        warm_results.append(optimize_over_efficient_set(problem, phi).value)
+
+    original = milp.restore_feasibility
+    milp.restore_feasibility = lambda *a, **k: simplex.STALLED
+    try:
+        for problem, phi in instances:
+            cold_results.append(optimize_over_efficient_set(problem, phi).value)
+    finally:
+        milp.restore_feasibility = original
+
+    assert warm_results == cold_results, (
+        f"warm {[fmt(v) for v in warm_results]} != "
+        f"cold {[fmt(v) for v in cold_results]}")
+    return f"{len(instances)} instances, warm == cold"
+
+
 def test_the_three_reference_methods_agree_on_the_paper_example():
     """Box enumeration, non-dominated enumeration and the Phi-ordered scan."""
     problem, phi = paper_problem()

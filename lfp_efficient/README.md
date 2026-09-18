@@ -60,7 +60,7 @@ print(solution.x, solution.value)        # [3, 3]  5/17
 ```
 python3 examples/paper_example.py        # reproduces section 4 of the paper
 python3 examples/large_example.py        # larger instances, up to |D| = 31833
-python3 tests/test_lfp_efficient.py      # 14 tests, incl. 72 random instances
+python3 tests/test_lfp_efficient.py      # 15 tests, incl. 72 random instances
 ```
 
 ## Larger instances
@@ -72,24 +72,25 @@ independent exact reference:
 
 | instance | \|D\| | `Phi_opt` | iter | generated | algorithm | check |
 |---|---:|---:|---:|---:|---:|---:|
-| medium `n=4` | 106 | 15/7 | 8 | 8 of 31 efficient (26%) | 8.1 s | 0.01 s |
-| medium `n=5` | 250 | 15/7 | 9 | 9 of 54 efficient (17%) | 12.1 s | 0.03 s |
-| medium `n=6` | 629 | 2 | 11 | 11 of 71 efficient (15%) | 49.7 s | 0.07 s |
-| large `n=10` | 31833 | 43/11 | 1 | 1 | 0.02 s | 6.40 s |
-| hard `n=10` | 4994 | 30/11 | 3 | 3 | 3.46 s | 1.27 s |
+| medium `n=4` | 106 | 15/7 | 5 | 5 of 31 efficient (16%) | 0.41 s | 0.01 s |
+| medium `n=5` | 250 | 15/7 | 5 | 5 of 54 efficient (9%) | 0.33 s | 0.03 s |
+| medium `n=6` | 629 | 2 | 8 | 8 of 71 efficient (11%) | 1.46 s | 0.07 s |
+| large `n=10` | 31833 | 43/11 | 1 | 1 | 0.01 s | 6.42 s |
+| hard `n=10` | 4994 | 30/11 | 3 | 3 | 0.38 s | 1.28 s |
+| hardest `n=10` | 34635 | 13/23 | 11 | 11 | 26.8 s | 7.62 s |
 
-The two `n = 10` rows show the spread in difficulty. In the *large* one the
+The three `n = 10` rows show the spread in difficulty. In the *large* one the
 maximiser of `Phi` over `D` happens to be efficient, so the first efficiency
-test settles the problem — 31833 feasible points solved in 0.02 s, three
-hundred times faster than merely scanning them. In the *hard* one the criteria
-reward large `x` while `Phi` rewards small `x`, so the maximiser of `Phi` is
-dominated and the algorithm has to cut its way through several non-dominated
-vectors. That is the regime the method is written for, and the one where the
-cost sits: each Sylva–Crema cut adds `p` binaries and `2p+1` rows, so the
-sub-problems grow with the iteration count.
+test settles the problem — 31833 feasible points solved in 0.01 s, six hundred
+times faster than merely scanning them. In the *hard* and *hardest* ones the
+criteria reward large `x` while `Phi` rewards small `x`, so the maximiser of
+`Phi` is dominated and the algorithm has to cut its way through several
+non-dominated vectors. That is the regime the method is written for, and the
+one where the cost sits: each Sylva–Crema cut adds `p` binaries and `p+1` rows,
+so the sub-problems grow with the iteration count.
 
 The middle rows are where the paper's claim is visible: the optimum is reached
-after generating 15–26 % of `E(P_D)`.
+after generating 9–16 % of `E(P_D)`.
 
 ## Three independent references
 
@@ -144,33 +145,59 @@ candidate is re-validated against `D` and re-tested for efficiency before use,
 and the early stop it triggers is conditioned on the value actually matching the
 upper bound.
 
-**Performance.** The method is MILP-bound: every iteration solves a fractional
-MILP over a region carrying `p` extra binaries and `2p+1` extra rows per cut
-already made. Four things keep that affordable in pure Python with exact
-arithmetic — reduced costs *maintained* through the pivots (`O(n)` per pivot
-instead of `O(mn)`), sparse pivot updates, a crash basis that skips phase I
-whenever the `≤`-slacks already form a feasible basis, and an **objective
-cutoff** in the branch & bound. The cutoff is the important one: the algorithm
-never needs the exact maximum over the truncated region, only whether it beats
-the incumbent, so handing the incumbent over as a cutoff prunes most of the
-tree in precisely the late iterations where the accumulated binaries would
-otherwise bite. Together these are worth roughly two orders of magnitude
-(the `n = 4` instance went from 351 s to 4.6 s).
+**Performance.** The method is MILP-bound: every iteration maximises `Phi` over
+a region carrying `p` extra binaries and `p+1` extra rows per cut already made,
+and that one sub-problem is 94 % of the run time. Profiling drove every choice
+below; on the `n = 4` instance they compound to **351 s → 0.41 s**.
+
+*Making each linear program cheaper.* Reduced costs are **maintained** through
+the pivots rather than recomputed from `c_B' B^-1 A` — `O(n)` per pivot instead
+of `O(mn)`, which with exact rationals dominated everything. Pivot updates skip
+the zeros of the pivot row. A **crash basis** puts the `≤`-slacks straight into
+the initial basis, so phase I is skipped whenever they already cover every row.
+
+*Making the sub-problems smaller.* The Sylva–Crema rows are emitted in `≤` form
+so their slacks feed that crash basis, and the `y_i <= 1` rows of equation (5)
+are dropped — they are redundant, since `y_i >= 2` only imposes a stronger
+requirement and leaves the union over the integer `y` unchanged. `Q(x~)` is
+solved over `D` rather than over the truncated region (the criterion slice is
+provably untouched by the cuts), which keeps every accumulated binary out of
+it. And when `V'x + beta > 0` holds on the whole relaxation, the sign split is
+skipped, halving every fractional sub-problem.
+
+*Searching less.* The branch & bound takes an **objective cutoff**: the
+algorithm never needs the exact maximum over the truncated region, only whether
+it beats the incumbent, so handing the incumbent over prunes most of the tree
+in precisely the late iterations where the accumulated binaries would bite.
+
+*Not re-solving what the parent already solved.* This was the big one. A child
+node differs from its parent by a single bound row, yet solving it from scratch
+paid a full phase I — measured at **20.6 phase-I pivots per node against 4.1
+phase-II ones**, five sixths of the work thrown away. Children are now warm
+started: the branch row is appended to the parent's optimal tableau and a
+dual-simplex restoration repairs the one infeasible row, in **2.8 pivots on
+average**. A child whose restoration stalls falls back to a cold solve, so the
+warm start can cost time but never correctness — and a test forces every
+restoration to stall and checks that warm and cold agree on every instance. On
+a hard `n = 10` instance: 2996 children, zero stalls, 21 cold solves in total,
+and 657 children proved empty by the dual infeasibility certificate without
+solving anything at all.
 
 **Validation.** `tests/` checks the paper's numbers step by step (`M = (−3,−3)`,
 `x_1 = (0,0)` with `Phi = 1`, `psi* = 2`, `X_opt = (3,3)`, `Phi_opt = 5/17`,
 `|D| = 11`, `|E(P_D)| = 7`), verifies that the three reference methods agree,
 and cross-checks 60 random bi-/tri-objective instances against exhaustive
 enumeration plus 12 larger ones (up to 404 feasible points) against the
-`Phi`-ordered scan.
+`Phi`-ordered scan. Eight `n = 10` instances with up to 34635 feasible points
+are verified against the scan in `examples/large_example.py`.
 
 ## Modules
 
 | File | Contents |
 |------|----------|
 | `rational.py` | exact arithmetic helpers |
-| `simplex.py` | tableau simplex, linear and linear-fractional pricing |
-| `milp.py` | branch & bound; sign-split fractional MILP |
+| `simplex.py` | tableau simplex, linear and linear-fractional pricing, warm start |
+| `milp.py` | warm-started branch & bound; sign-split fractional MILP |
 | `model.py` | `Model`, `MOILP`, `FractionalObjective` |
 | `efficiency.py` | Theorem 1 test, lower bounds `M_i`, Sylva–Crema cut, `Q(x~)` |
 | `edges.py` | reduced gradient, `Gamma_l`, `theta0`, edge walk |
