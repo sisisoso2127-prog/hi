@@ -52,13 +52,15 @@ efficient point can either, so the search is over.
 """
 
 from dataclasses import dataclass, field
+from time import monotonic
 from fractions import Fraction
 from typing import Callable, List, Optional, Sequence
 
 from .edges import EdgeCandidate, explore_edges
 from .efficiency import (add_sylva_crema_cut, best_with_same_criterion,
                          lower_bounds, test_efficiency)
-from .milp import CUTOFF, denominator_stays_positive, solve_fractional_milp
+from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
+                   solve_fractional_milp)
 from .model import FractionalObjective, MOILP, Model
 from .rational import F, fmt
 from .simplex import OPTIMAL
@@ -111,7 +113,14 @@ class IterationLog:
 
 @dataclass
 class Solution:
-    """Global optimum of ``(P_E)`` plus the audit trail of the run."""
+    """Answer to ``(P_E)``, with a certified gap and the audit trail of the run.
+
+    ``value`` is a **lower** bound attained at a known efficient point -- a real
+    solution, not an estimate -- and ``upper_bound`` bounds the optimum from
+    above.  When ``proved_optimal`` they coincide; when the run stopped on its
+    time budget they do not, and ``gap`` says by how much the answer could
+    still be wrong.
+    """
 
     status: str
     x: Optional[List[Fraction]] = None
@@ -120,6 +129,36 @@ class Solution:
     explored: List[List[Fraction]] = field(default_factory=list)
     iterations: List[IterationLog] = field(default_factory=list)
     lower_bounds: List[Fraction] = field(default_factory=list)
+    #: certified upper bound on the optimum of (P_E)
+    upper_bound: Optional[Fraction] = None
+    #: the gap at the first round, used to scale the progress made
+    initial_gap: Optional[Fraction] = None
+    proved_optimal: bool = False
+
+    @property
+    def gap(self) -> Optional[Fraction]:
+        """``upper_bound - value``: the **absolute** remaining uncertainty.
+
+        Deliberately not ``(UB - value) / |value|``.  A relative-to-incumbent
+        gap is a habit from mixed integer programming, where objectives are
+        usually bounded away from zero; ``Phi`` is a ratio that can be negative
+        or near zero, and the relative form then reports a tiny real gap as a
+        four-digit percentage and reads as a broken method.  Scale by
+        :attr:`initial_gap` instead -- see :attr:`gap_closed`.
+        """
+        if self.upper_bound is None or self.value is None:
+            return None
+        return self.upper_bound - self.value
+
+    @property
+    def gap_closed(self) -> Optional[float]:
+        """Fraction of the starting uncertainty eliminated, in ``[0, 1]``."""
+        gap = self.gap
+        if gap is None or self.initial_gap is None:
+            return None
+        if self.initial_gap == 0:
+            return 1.0
+        return float(1 - gap / self.initial_gap)
 
     def report(self, include_iterations: bool = True) -> str:
         out = [str(it) for it in self.iterations] if include_iterations else []
@@ -129,6 +168,14 @@ class Solution:
         else:
             pt = "(" + ", ".join(fmt(v) for v in self.x) + ")"
             out.append(f"X_opt = {pt}    Phi_opt = {fmt(self.value)}")
+            if self.proved_optimal:
+                out.append("proved optimal (the bound meets the solution)")
+            else:
+                closed = self.gap_closed
+                out.append(f"NOT proved optimal: Phi_opt <= {fmt(self.upper_bound)}"
+                           f"   gap = {fmt(self.gap)}"
+                           + (f"   ({100 * closed:.1f}% of the initial gap closed)"
+                              if closed is not None else ""))
             out.append("efficient points generated: " + ", ".join(
                 "(" + ", ".join(fmt(v) for v in p) + ")" for p in self.explored))
         return "\n".join(out)
@@ -137,6 +184,7 @@ class Solution:
 def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                                 use_edge_exploration: bool = True,
                                 max_iterations: int = 1000,
+                                time_budget: Optional[float] = None,
                                 verbose: bool = False) -> Solution:
     """Solve ``max { Phi(x) : x efficient for (P_D) }`` exactly.
 
@@ -151,9 +199,40 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
         Walk the zero-reduced-gradient edges (Definition 2) before cutting.
         Switching it off changes nothing to the returned optimum, only to the
         number of iterations.
+    time_budget
+        Seconds after which to stop and return the best answer found **with a
+        certified gap** instead of running to optimality.  Without it the
+        method runs to proven optimality as before.
     verbose
         Print the trace of each iteration as it is produced.
+
+    The certified gap, and where it comes from
+    ------------------------------------------
+    Step 1 already computes the maximum of ``Phi`` over the truncated region,
+    and the loop uses it only to decide whether to stop -- so a valid upper
+    bound on the answer is produced every round and thrown away.  It is valid
+    because after cutting on ``x^1..x^l`` every efficient point either
+
+    * lies in a removed set ``{x : C x <= C x^s}``, where it is dominated, or
+      sits on the slice ``{C x = C x^s}`` whose best ``Phi`` sub-problem ``Q``
+      has already folded into ``Phi_opt``; or
+    * lies in the region that step 1 searches,
+
+    so ``max_E Phi <= max(Phi_opt, max{Phi(x) : x in D_l})``, the second term
+    being exactly what step 1 returns.  It descends as cuts accumulate, and
+    when the region empties it equals ``Phi_opt`` and optimality is proved.
+
+    That makes the method **anytime**: stop whenever and report a real solution
+    (attained at a known efficient point), a bound, and the distance between
+    them.  With a *time_budget* the branch & bound of step 1 is stopped too,
+    and its own best open bound is used -- so the answer stays certified even
+    when no sub-problem ran to completion.
+
+    Interrupting inside step 1 is the only place the budget can be honoured
+    mid-iteration; the efficiency test and ``Q`` are left to finish, since a
+    truncated efficiency test yields no usable efficient point.
     """
+    deadline = None if time_budget is None else monotonic() + time_budget
     M = lower_bounds(problem)
     # Established once on D: every truncated region is a subset of it, so the
     # verdict carries over to all the sub-problems of the run.
@@ -173,10 +252,31 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
             cache[key] = test_efficiency(problem, list(x)).efficient
         return cache[key]
 
-    def finish(status: str) -> Solution:
+    upper_bound: Optional[Fraction] = None
+    initial_gap: Optional[Fraction] = None
+
+    def keep_best_bound(current: Optional[Fraction],
+                        candidate: Fraction) -> Fraction:
+        """Keep the tightest upper bound seen so far.
+
+        Every bound recorded here is valid on its own, so the smallest of them
+        is valid too -- and it is the one worth reporting.  Taking the running
+        minimum rather than the latest value matters because the two sources
+        are not equally sharp: a completed step 1 returns the exact maximum
+        over the region, while an interrupted one returns the largest bound
+        still open in its search tree, which is a relaxation value and can sit
+        *above* the exact maximum of a larger, earlier region.  Overwriting
+        would then let a longer run report a worse bound than a shorter one.
+        """
+        return candidate if current is None else min(current, candidate)
+
+    def finish(status: str, proved: bool) -> Solution:
         # the iteration logs have already been streamed when verbose, so the
         # closing report only carries the summary
-        sol = Solution(status, x_opt, phi_opt, explored, logs, M)
+        ub = phi_opt if proved else upper_bound
+        sol = Solution(status, x_opt, phi_opt, explored, logs, M,
+                       upper_bound=ub, initial_gap=initial_gap,
+                       proved_optimal=proved)
         if verbose:
             print(sol.report(include_iterations=False))
         return sol
@@ -188,24 +288,47 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
         # ---- step 1: upper bound on the truncated region ------------------
         # the incumbent is handed over as a cutoff: the only thing that matters
         # is whether the region still holds something better than Phi_opt
+        if deadline is not None and monotonic() > deadline:
+            log.note = ("time budget spent: returning the incumbent with its "
+                        "certified gap.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL if x_opt is not None else "infeasible", False)
+
         relaxed = solve_fractional_milp(region, phi, cutoff=phi_opt,
-                                        denominator_positive=positive_denominator)
+                                        denominator_positive=positive_denominator,
+                                        deadline=deadline)
+        if relaxed.status == INTERRUPTED:
+            # step 1 did not finish, but its best open bound still bounds the
+            # answer from above -- so the result stays certified
+            if relaxed.bound is not None:
+                candidate = (relaxed.bound if phi_opt is None
+                             else max(phi_opt, relaxed.bound))
+                upper_bound = keep_best_bound(upper_bound, candidate)
+            log.upper_bound = upper_bound
+            log.note = ("time budget spent inside P^l_RF: stopping with the "
+                        "bound its unexplored nodes still guarantee.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL if x_opt is not None else "infeasible", False)
         if relaxed.status == CUTOFF:
             log.note = (f"the maximum of Phi over the truncated region is "
                         f"<= Phi_opt = {fmt(phi_opt)}: no remaining efficient "
                         "point can improve the incumbent. Stop.")
             if verbose:
                 print(log)
-            return finish(OPTIMAL)
+            return finish(OPTIMAL, True)
         if not relaxed.feasible:
             log.note = ("P^l_RF is infeasible: the region is exhausted, every "
                         "non-dominated vector has been generated. Stop.")
             if verbose:
                 print(log)
-            return finish(OPTIMAL if x_opt is not None else "infeasible")
+            return finish(OPTIMAL if x_opt is not None else "infeasible",
+                          x_opt is not None)
 
         x_l = relaxed.x[:problem.n]
         log.relaxed_point, log.upper_bound = x_l, relaxed.objective
+        upper_bound = keep_best_bound(upper_bound, relaxed.objective)
 
         if phi_opt is not None and relaxed.objective <= phi_opt:
             log.note = (f"upper bound {fmt(relaxed.objective)} <= Phi_opt "
@@ -213,7 +336,7 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                         "improve the incumbent. Stop.")
             if verbose:
                 print(log)
-            return finish(OPTIMAL)
+            return finish(OPTIMAL, True)
 
         # ---- step 2: efficiency test (Theorem 1) --------------------------
         test = test_efficiency(problem, x_l)
@@ -230,7 +353,7 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                         "it is the global optimum of (P_E). Stop.")
             if verbose:
                 print(log)
-            return finish(OPTIMAL)
+            return finish(OPTIMAL, True)
 
         x_tilde = test.witness
         cache[tuple(x_tilde)] = True
@@ -249,6 +372,8 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                 explored.append(q.x)
             if phi_opt is None or q.objective > phi_opt:
                 x_opt, phi_opt = q.x, q.objective
+        if initial_gap is None and phi_opt is not None and upper_bound is not None:
+            initial_gap = upper_bound - phi_opt
         log.incumbent, log.incumbent_value = x_opt, phi_opt
 
         # ---- step 4: edges of Gamma_l (alternative optima) ----------------
@@ -272,7 +397,7 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                                 "an edge of Gamma_l: it is the global optimum. Stop.")
                     if verbose:
                         print(log)
-                    return finish(OPTIMAL)
+                    return finish(OPTIMAL, True)
 
         # ---- step 5: Sylva-Crema truncation -------------------------------
         region = add_sylva_crema_cut(region, problem, x_tilde, M)
