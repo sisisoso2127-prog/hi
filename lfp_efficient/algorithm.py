@@ -1,0 +1,284 @@
+"""The algorithm of L. Younsi-Abbaci, *Optimizing a linear fractional function
+over an integer efficient set* (RT&A, No 4 (40), Vol. 11, March 2025).
+
+Problem solved
+--------------
+::
+
+    (P_E)   max  Phi(x) = (U'x + alpha) / (V'x + beta)
+            s.t. x in E(P_D)
+
+where ``E(P_D)`` is the set of efficient (Pareto optimal) points of the
+multi-objective integer linear program
+
+    (P_D)   "max" { C x : x in D },   D = { x in Z^n_+ : A x <~ b } .
+
+``E(P_D)`` is a union of faces of ``D``: it is non-convex and has no explicit
+description, which is what makes ``(P_E)`` a global optimisation problem.  The
+whole point of the method is to reach the global optimum *without enumerating*
+``E(P_D)``.
+
+Skeleton of one iteration
+-------------------------
+1. ``P^l_RF``: maximise ``Phi`` over the current truncated region ``D_l``.
+   Its value is an **upper bound** on ``Phi`` over every efficient point still
+   available, since ``D_l`` contains them all.
+2. Test the efficiency of the optimum ``x_l`` (Theorem 1).
+   *Efficient* -> the upper bound is attained by an efficient point: stop.
+   *Not efficient* -> the test hands over an efficient point ``x~_l``
+   dominating it (Ecker & Kouada).
+3. ``Q(x~_l)``: best value of ``Phi`` among the points sharing the
+   non-dominated vector ``C x~_l`` -- they are all efficient, and the cut of
+   step 5 is about to erase them, so their contribution is banked now.
+4. Edge exploration: if an edge of ``Gamma_l`` (zero reduced gradient, i.e.
+   alternative optima of step 1) carries an efficient integer point, that point
+   attains the upper bound -> stop.
+5. Sylva-Crema cut: delete ``{ x : C x <= C x~_l }`` from the region and loop.
+
+Termination (Proposition 3): each iteration strictly shrinks the region by at
+least one non-dominated criterion vector, and the non-dominated set of a
+bounded integer program is finite.
+
+Deviations from the printed pseudo-code
+---------------------------------------
+The pseudo-code of "Algorithm 2: part 2" is internally inconsistent -- it
+stores ``X_opt = x_l`` (the point that was just found *not* to be efficient)
+while setting ``Phi_opt = Phi(x~_l)``, and it re-solves ``P_l`` inside the
+branch it has just solved.  The implementation below keeps the mathematics of
+the paper (upper bound / efficiency test / ``Q`` / cut / edges) but stores the
+*efficient* point that realises ``Phi_opt``, and adds one sound early stop:
+if the upper bound of step 1 does not beat the incumbent, no remaining
+efficient point can either, so the search is over.
+"""
+
+from dataclasses import dataclass, field
+from fractions import Fraction
+from typing import Callable, List, Optional, Sequence
+
+from .edges import EdgeCandidate, explore_edges
+from .efficiency import (add_sylva_crema_cut, best_with_same_criterion,
+                         lower_bounds, test_efficiency)
+from .milp import CUTOFF, denominator_stays_positive, solve_fractional_milp
+from .model import FractionalObjective, MOILP, Model
+from .rational import F, fmt
+from .simplex import OPTIMAL
+
+
+@dataclass
+class IterationLog:
+    """Everything that happened during one pass of the main loop."""
+
+    l: int
+    relaxed_point: Optional[List[Fraction]] = None
+    upper_bound: Optional[Fraction] = None
+    psi: Optional[Fraction] = None
+    efficient_point: Optional[List[Fraction]] = None      # x~_l
+    criterion_vector: Optional[List[Fraction]] = None     # C x~_l
+    best_same_criterion: Optional[List[Fraction]] = None  # argmax of Q(x~_l)
+    phi_same_criterion: Optional[Fraction] = None
+    edge_candidate: Optional[EdgeCandidate] = None
+    incumbent: Optional[List[Fraction]] = None
+    incumbent_value: Optional[Fraction] = None
+    note: str = ""
+
+    def __str__(self) -> str:
+        def pt(v):
+            return "(" + ", ".join(fmt(c) for c in v) + ")" if v else "-"
+        lines = [f"--- iteration {self.l} " + "-" * 40]
+        if self.relaxed_point is not None:
+            lines.append(f"  P^{self.l}_RF : x_{self.l} = {pt(self.relaxed_point)}"
+                         f"   Phi = {fmt(self.upper_bound)}   (upper bound)")
+        if self.psi is not None:
+            verdict = "efficient" if self.psi == 0 else f"NOT efficient (psi* = {fmt(self.psi)})"
+            lines.append(f"  efficiency test : {verdict}")
+        if self.efficient_point is not None:
+            lines.append(f"  efficient point x~_{self.l} = {pt(self.efficient_point)}"
+                         f"   C x~ = {pt(self.criterion_vector)}")
+        if self.best_same_criterion is not None:
+            lines.append(f"  Q(x~_{self.l}) : {pt(self.best_same_criterion)}"
+                         f"   Phi = {fmt(self.phi_same_criterion)}")
+        if self.edge_candidate is not None:
+            c = self.edge_candidate
+            lines.append(f"  edge exploration : efficient point {pt(c.x)} on the edge "
+                         f"of column {c.j} at theta = {c.theta}, Phi = {fmt(c.phi)}")
+        if self.incumbent is not None:
+            lines.append(f"  incumbent : X_opt = {pt(self.incumbent)}"
+                         f"   Phi_opt = {fmt(self.incumbent_value)}")
+        if self.note:
+            lines.append(f"  >> {self.note}")
+        return "\n".join(lines)
+
+
+@dataclass
+class Solution:
+    """Global optimum of ``(P_E)`` plus the audit trail of the run."""
+
+    status: str
+    x: Optional[List[Fraction]] = None
+    value: Optional[Fraction] = None
+    #: the efficient points actually generated -- a strict subset of E(P_D)
+    explored: List[List[Fraction]] = field(default_factory=list)
+    iterations: List[IterationLog] = field(default_factory=list)
+    lower_bounds: List[Fraction] = field(default_factory=list)
+
+    def report(self, include_iterations: bool = True) -> str:
+        out = [str(it) for it in self.iterations] if include_iterations else []
+        out.append("=" * 54)
+        if self.x is None:
+            out.append(f"no optimal solution ({self.status})")
+        else:
+            pt = "(" + ", ".join(fmt(v) for v in self.x) + ")"
+            out.append(f"X_opt = {pt}    Phi_opt = {fmt(self.value)}")
+            out.append("efficient points generated: " + ", ".join(
+                "(" + ", ".join(fmt(v) for v in p) + ")" for p in self.explored))
+        return "\n".join(out)
+
+
+def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
+                                use_edge_exploration: bool = True,
+                                max_iterations: int = 1000,
+                                verbose: bool = False) -> Solution:
+    """Solve ``max { Phi(x) : x efficient for (P_D) }`` exactly.
+
+    Parameters
+    ----------
+    problem
+        The multi-objective integer program ``(P_D)``; ``D`` must be non-empty
+        and bounded.
+    phi
+        The decision maker's linear fractional criterion.
+    use_edge_exploration
+        Walk the zero-reduced-gradient edges (Definition 2) before cutting.
+        Switching it off changes nothing to the returned optimum, only to the
+        number of iterations.
+    verbose
+        Print the trace of each iteration as it is produced.
+    """
+    M = lower_bounds(problem)
+    # Established once on D: every truncated region is a subset of it, so the
+    # verdict carries over to all the sub-problems of the run.
+    positive_denominator = denominator_stays_positive(problem.model, phi)
+    region = problem.model.copy()
+    phi_opt: Optional[Fraction] = None
+    x_opt: Optional[List[Fraction]] = None
+    explored: List[List[Fraction]] = []
+    logs: List[IterationLog] = []
+
+    # cache: efficiency is a property of D, so it is tested once per point
+    cache = {}
+
+    def is_efficient(x: Sequence[Fraction]) -> bool:
+        key = tuple(x)
+        if key not in cache:
+            cache[key] = test_efficiency(problem, list(x)).efficient
+        return cache[key]
+
+    def finish(status: str) -> Solution:
+        # the iteration logs have already been streamed when verbose, so the
+        # closing report only carries the summary
+        sol = Solution(status, x_opt, phi_opt, explored, logs, M)
+        if verbose:
+            print(sol.report(include_iterations=False))
+        return sol
+
+    for l in range(1, max_iterations + 1):
+        log = IterationLog(l)
+        logs.append(log)
+
+        # ---- step 1: upper bound on the truncated region ------------------
+        # the incumbent is handed over as a cutoff: the only thing that matters
+        # is whether the region still holds something better than Phi_opt
+        relaxed = solve_fractional_milp(region, phi, cutoff=phi_opt,
+                                        denominator_positive=positive_denominator)
+        if relaxed.status == CUTOFF:
+            log.note = (f"the maximum of Phi over the truncated region is "
+                        f"<= Phi_opt = {fmt(phi_opt)}: no remaining efficient "
+                        "point can improve the incumbent. Stop.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL)
+        if not relaxed.feasible:
+            log.note = ("P^l_RF is infeasible: the region is exhausted, every "
+                        "non-dominated vector has been generated. Stop.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL if x_opt is not None else "infeasible")
+
+        x_l = relaxed.x[:problem.n]
+        log.relaxed_point, log.upper_bound = x_l, relaxed.objective
+
+        if phi_opt is not None and relaxed.objective <= phi_opt:
+            log.note = (f"upper bound {fmt(relaxed.objective)} <= Phi_opt "
+                        f"{fmt(phi_opt)}: no remaining efficient point can "
+                        "improve the incumbent. Stop.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL)
+
+        # ---- step 2: efficiency test (Theorem 1) --------------------------
+        test = test_efficiency(problem, x_l)
+        log.psi = test.psi
+        if test.efficient:
+            cache[tuple(x_l)] = True
+            if phi_opt is None or relaxed.objective > phi_opt:
+                x_opt, phi_opt = x_l, relaxed.objective
+            explored.append(x_l)
+            log.efficient_point = x_l
+            log.criterion_vector = problem.C(x_l)
+            log.incumbent, log.incumbent_value = x_opt, phi_opt
+            log.note = ("the maximiser of the upper bound is itself efficient: "
+                        "it is the global optimum of (P_E). Stop.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL)
+
+        x_tilde = test.witness
+        cache[tuple(x_tilde)] = True
+        explored.append(x_tilde)
+        log.efficient_point = x_tilde
+        log.criterion_vector = problem.C(x_tilde)
+
+        # ---- step 3: Q(x~) -- best Phi on the slice about to be cut -------
+        q = best_with_same_criterion(region, problem, x_tilde, phi, cutoff=phi_opt,
+                                     denominator_positive=positive_denominator)
+        if q.feasible:
+            log.best_same_criterion, log.phi_same_criterion = q.x, q.objective
+            # C q.x = C x~ is non-dominated, so q.x is efficient as well
+            cache[tuple(q.x)] = True
+            if q.x not in explored:
+                explored.append(q.x)
+            if phi_opt is None or q.objective > phi_opt:
+                x_opt, phi_opt = q.x, q.objective
+        log.incumbent, log.incumbent_value = x_opt, phi_opt
+
+        # ---- step 4: edges of Gamma_l (alternative optima) ----------------
+        if use_edge_exploration and relaxed.tableau is not None:
+            candidate = explore_edges(relaxed.tableau, problem, phi, is_efficient,
+                                      n_model=problem.n)
+            if candidate is not None:
+                log.edge_candidate = candidate
+                if candidate.x not in explored:
+                    explored.append(candidate.x)
+                if phi_opt is None or candidate.phi > phi_opt:
+                    x_opt, phi_opt = candidate.x, candidate.phi
+                log.incumbent, log.incumbent_value = x_opt, phi_opt
+                # Phi is constant along an edge of Gamma_l, so the candidate is
+                # expected to reach the upper bound exactly.  The stop is
+                # nevertheless conditioned on that equality being *verified*:
+                # should the walk ever return a lesser point, it is kept as a
+                # plain incumbent and the normal cutting loop carries on.
+                if candidate.phi == relaxed.objective:
+                    log.note = ("an efficient point attains the upper bound along "
+                                "an edge of Gamma_l: it is the global optimum. Stop.")
+                    if verbose:
+                        print(log)
+                    return finish(OPTIMAL)
+
+        # ---- step 5: Sylva-Crema truncation -------------------------------
+        region = add_sylva_crema_cut(region, problem, x_tilde, M)
+        log.note = (f"cut off every x with C x <= C x~_{l}; "
+                    f"go to iteration {l + 1}")
+        if verbose:
+            print(log)
+
+    raise RuntimeError("iteration limit reached")

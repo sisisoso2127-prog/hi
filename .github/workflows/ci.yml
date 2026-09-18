@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  # Only the default branch on push: a branch with an open pull request would
+  # otherwise run the whole workflow twice for a single commit, once for the
+  # push and once for the pull_request event.
+  push:
+    branches: [claude/hybrid-validation-pareto-z6ieck]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_scaling_study:
+        description: "Also run the certified scaling study (slow, several minutes)"
+        type: boolean
+        default: false
+
+# A new push to the same branch makes the previous run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests (python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # lfp_efficient has no third-party dependency: nothing is installed here
+      # on purpose, so a run that passes proves the package really is
+      # self-contained on a bare interpreter.
+      - name: Check the package imports on a bare interpreter
+        run: python -c "import lfp_efficient; print(lfp_efficient.__version__)"
+
+      - name: Byte-compile the package
+        run: python -m compileall -q lfp_efficient examples tests
+
+      - name: Run the test suite
+        run: python tests/test_lfp_efficient.py
+
+  examples:
+    name: examples
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Reproduces section 4 of the paper and asserts X_opt = (3,3),
+      # Phi_opt = 5/17 against exhaustive enumeration.
+      - name: Paper example
+        run: python examples/paper_example.py
+
+      # Instances up to |D| = 34635, each cross-checked against the
+      # independent scan reference; the script exits non-zero on a mismatch.
+      - name: Larger instances
+        run: python examples/large_example.py
+
+  scaling:
+    name: scaling study (manual)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Several minutes of exact rational arithmetic -- too slow for every push,
+    # so it is opt-in from the Actions tab.
+    if: github.event_name == 'workflow_dispatch' && inputs.run_scaling_study
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Certified scaling study up to n = 20
+        run: python examples/scaling.py
