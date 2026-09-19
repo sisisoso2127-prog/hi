@@ -23,7 +23,8 @@ exact rational arithmetic.
 """
 
 from .algorithm import IterationLog, Solution, optimize_over_efficient_set
-from .edges import (alternative_optima_columns, explore_edges, max_step,
+from .edges import (alternative_optima_columns, clean_tableau_at,
+                    edge_direction, explore_edges, max_step, max_step_in,
                     reduced_gradient, walk_edge)
 from .efficiency import (EfficiencyTest, add_dominance_cut, add_sylva_crema_cut,
                          best_with_same_criterion, lower_bounds,
@@ -46,8 +47,8 @@ __all__ = [
     "test_efficiency", "EfficiencyTest", "lower_bounds",
     "add_sylva_crema_cut", "add_dominance_cut", "best_with_same_criterion",
     "repair_to_efficient",
-    "reduced_gradient", "alternative_optima_columns", "max_step", "walk_edge",
-    "explore_edges",
+    "reduced_gradient", "alternative_optima_columns", "max_step", "max_step_in",
+    "edge_direction", "walk_edge", "explore_edges", "clean_tableau_at",
     "solve_milp", "solve_linear_milp", "solve_fractional_milp",
     "solve_relaxation", "MilpResult",
     "enumerate_efficient_set", "Enumeration",

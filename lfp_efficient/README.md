@@ -318,6 +318,45 @@ candidate is re-validated against `D` and re-tested for efficiency before use,
 and the early stop it triggers is conditioned on the value actually matching the
 upper bound.
 
+**The edge step of Definition 2, and what it is actually worth.** Step 4 walks
+the edges `E_j` of `Gamma_l = { j in N_l : gamma_j = 0 }` looking for an
+efficient integer point that attains the round's upper bound. Two things had to
+be repaired before it did anything at all, and the measurement afterwards is
+still sobering.
+
+*It was reading the wrong tableau.* The basis of Definition 2 belongs to the
+truncated region `D_l`; branch and bound leaves behind the tableau of the *node*
+that produced `x_l`, carrying that node's bound rows. Those rows pin variables,
+so their slacks sit basic at zero and the ratio test collapses — measured, 93 %
+of the edges had `theta0 = 0` and never started. `clean_tableau_at` now rebuilds
+a basis of `D_l` at `x_l` from scratch (`simplex.tableau_at`), with no bound rows
+in it. It returns `None` when `x_l` is not a vertex of `D_l` — an integer optimum
+need not be one, and that happens on 38 of 170 rounds.
+
+*The step was measured in the wrong region.* `theta0` read off the tableau is
+bounded by every row of `D_l`, cut rows included, and those stop the walk long
+before `x` itself would leave `D`: 149 of the 154 edges with any room at all had
+a minimum ratio below 1, so the integer step floored to zero. `max_step_in`
+bounds the walk by `D` instead. Nothing is lost by that: the step's claim is
+that an *efficient* point scores the upper bound, which rests on `gamma_j = 0`
+holding `Phi` constant along the whole edge, on the point being validated
+against `D`, and on its efficiency being tested — never on it satisfying the
+current cuts.
+
+*What it is worth.* Of 174 zero-gradient columns over 80 random instances, only
+**8** move `x` at all: once cuts accumulate, most of `Gamma_l` is the cut
+machinery itself — a column that leaves every model variable fixed has
+`rU_j = rV_j = 0` and so `gamma_j = 0` automatically. Those are now skipped
+outright (`edge_direction` returns the zero vector), which is where the step's
+cost went. It then fires on about **one instance in eighty**, and saves one
+iteration when it does. `tests/` pins the case that fires.
+
+*A limit left standing.* At a degenerate vertex one basis exposes only some of
+the incident edges, and the completion rule here (positive variables first, then
+slacks by descending index) picks one arbitrarily. Enumerating the bases of a
+degenerate vertex would expose the rest; given the payoff measured above, it is
+not worth the work.
+
 **Performance.** The method is MILP-bound: every iteration maximises `Phi` over
 a region carrying `p` extra binaries and `p+1` extra rows per cut already made,
 and that one sub-problem is 94 % of the run time. Profiling drove every choice
