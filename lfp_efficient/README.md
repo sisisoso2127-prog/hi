@@ -420,6 +420,64 @@ unless asked for. It needs linear criteria and says so rather than silently
 doing nothing: `w'Z` is a sum of ratios in the fractional case, not a linear
 objective.
 
+## A second method: searching criterion space
+
+`criterion_space.optimize_in_criterion_space` answers the same question and
+agrees with the method above everywhere. It differs in **where it keeps track
+of what is left to search**, and that turns out to decide the cost.
+
+One Sylva–Crema cut says: delete `{ x : Z(x) <= Z(x~) }`. In criterion space
+that is one box subtraction. Written in **decision** space it is a disjunction
+— *some* criterion strictly improves — and a disjunction needs `p` binaries and
+`p+1` big-M rows. That is the entire source of the model growth: eleven cuts on
+the heaviest instance leave 33 binaries and 44 rows on top of `D`, which is why
+the late sub-problems cost so much more than the early ones.
+
+Keep the remainder as a **list of boxes** instead, and every sub-problem is `D`
+plus a handful of ordinary linear rows — no binary anywhere, and **the model
+never grows**.
+
+| instance | decision space | criterion space | |
+|---|---:|---:|---:|
+| `hardest n=10` | 11 iters, 23.47 s | 49 boxes, **2.61 s** | **9.01×** |
+| `n=8 s5` | 7 iters, 2.97 s | 19 boxes, **0.45 s** | 6.56× |
+| `n=8 s3` | 4 iters, 0.93 s | 16 boxes, **0.20 s** | 4.66× |
+| `medium n=6` | 8 iters, 1.24 s | 46 boxes, **0.52 s** | 2.38× |
+| `hard n=10` | 3 iters, **0.36 s** | 13 boxes, 0.41 s | 0.86× |
+
+Over 35 instances: **40.65 s → 8.06 s, 5.05×, faster on 34 of them**, the same
+optimum everywhere and both proved optimal. The margin *widens with difficulty*
+— which is the signature of a structural change rather than a lucky instance.
+The one regression is the case the decision-space method settles in three
+iterations, where paying 13 boxes is a net loss.
+
+**How a box is written, and why not with numbers.** Not as numeric bounds on
+`Z_k`: those are rationals in the fractional case and the exact `+1` the split
+needs would be lost. A box is a list of rows in the linear form of Theorem 4,
+`e_k(x ; a) = D_k(a) · D_k(x) · (Z_k(x) − Z_k(a))`, which is linear in `x` and
+**integer-valued**, so `Z_k(x) > Z_k(a)` is exactly `e_k(x) >= 1`. Linear and
+fractional criteria therefore go through the same code, and MOILFP is supported
+from the start rather than bolted on.
+
+**The split.** Removing `{ Z <= Z(a) }` leaves `p` **disjoint** children: child
+`k` takes `e_k(· ; a) >= 1` together with `e_j(· ; a) <= 0` for every `j < k`.
+A point outside the removed set has a smallest index where it beats `Z(a)`, and
+that index picks its child. `tests/` checks this directly rather than through
+the answer: for every centre and every feasible point, the point is either
+removed by the cut and in **no** child, or kept and in **exactly one** — 121
+pairs. A partition that silently lost efficient points would still agree with
+the optimum on lucky instances.
+
+**Bounds and the anytime gap.** Boxes are settled best-first on a bound
+inherited from the parent, and a box whose bound cannot beat the incumbent is
+dropped whole without ever being split. The open list is therefore a certified
+upper bound on everything still unfound, so `time_budget` and the gap work
+exactly as they do for the paper's method.
+
+**Why both methods stay.** The value of this package is that it is a reference
+implementation of the paper, and this search is not in the paper. It is offered
+beside it, not in place of it.
+
 **Performance.** The method is MILP-bound: every iteration maximises `Phi` over
 a region carrying `p` extra binaries and `p+1` extra rows per cut already made,
 and that one sub-problem is 94 % of the run time. Profiling drove every choice

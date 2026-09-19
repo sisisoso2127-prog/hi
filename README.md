@@ -65,7 +65,7 @@ efficient point, a bound, and the absolute gap between them.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 34 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 39 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -102,11 +102,30 @@ implementation departs from the printed text. The short version:
   repaired and kept — but the README says plainly that it does not make the
   method faster.
 
-There is also one addition the paper does not have: `batch_cuts_after` cuts on
-several cheaply generated efficient points at once, which takes the heaviest
-instance from 11 step-1 solves to 8 (27.1 s → 15.7 s). It is **off by default**,
-because on instances that were never hard it only grows the model — the same
-notes carry the losses alongside the win.
+## Two additions the paper does not have
+
+**A criterion-space search** (`optimize_in_criterion_space`). The paper cuts in
+decision space, where "delete `{x : Z(x) <= Z(x~)}`" is a disjunction needing
+`p` binaries and `p+1` big-M rows per cut — so the region grows every round and
+the late sub-problems dominate the cost. Keeping the remainder as a list of
+boxes in criterion space instead makes every sub-problem `D` plus a few
+ordinary linear rows, and the model never grows:
+
+| | decision space | criterion space | |
+|---|---:|---:|---:|
+| 35 instances, total | 40.65 s | **8.06 s** | **5.05×** |
+| heaviest `n=10` | 23.47 s | **2.61 s** | **9.01×** |
+
+Same optimum everywhere, both proved optimal, faster on 34 of 35 — and the
+margin widens with difficulty. It supports fractional criteria too, and keeps
+the certified gap and `time_budget`. Both methods stay: this package is a
+reference implementation of the paper, and this search is not in the paper.
+
+**Batch cutting** (`batch_cuts_after`) cuts on several cheaply generated
+efficient points at once, taking the heaviest instance from 11 step-1 solves to
+8 (27.1 s → 15.7 s). It is **off by default**, because on instances that were
+never hard it only grows the model — the notes carry the losses alongside the
+win.
 
 ## Layout
 
