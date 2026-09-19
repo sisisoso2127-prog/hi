@@ -59,7 +59,8 @@ def clean_tableau_at(model: Model, x: Sequence[Fraction]) -> Optional[Tableau]:
     if not A:
         return None
     n = len(A[0])
-    values = list(x[:n_structural]) + [ZERO] * (n - n_structural)
+    values = list(x[:n_structural])
+    values += [ZERO] * (n - len(values))
     for i, row in enumerate(A):
         residual = b[i] - dot(row[:n_structural], values[:n_structural])
         slack = next((j for j in range(n_structural, n) if row[j] != 0), None)
@@ -151,9 +152,11 @@ def max_step_in(model: Model, x: Sequence[Fraction], d: Sequence[Fraction],
     *efficient* point scores the round's upper bound, and that rests on three
     facts checked elsewhere: ``gamma_j = 0`` holds ``Phi`` constant along the
     whole edge, the point is validated against ``D``, and its efficiency is
-    tested.  Whether it also satisfies the current cuts is irrelevant to that
-    argument -- and in fact it must, since an efficient point inside a cut slice
-    has already been banked by ``Q``.
+    tested.  Whether it also satisfies the current cuts plays no part in that
+    argument.  Nor can the wider walk smuggle in a stale answer: a point inside
+    a cut slice is either dominated, or shares its criterion vector with the
+    centre of the cut and was therefore already banked by ``Q``, so it cannot
+    score above the incumbent -- let alone reach the upper bound.
     """
     limits = []
     for j, dj in enumerate(d):
