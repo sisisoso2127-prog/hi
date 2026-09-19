@@ -3,9 +3,8 @@
 Neither search dominates the other, and the measurements say exactly where the
 line falls.
 
-* The paper's method settles an easy instance in two or three iterations, and
-  on those it is the faster of the two -- the region has barely grown, and the
-  criterion-space search pays for boxes it did not need.
+* When the maximiser of ``Phi`` over ``D`` happens to be efficient, the paper's
+  method settles everything in **one** iteration, and no box search beats that.
 * Past that point the region carries `p` binaries and `p+1` rows for every cut
   made, the sub-problems grow, and the box search wins by a margin that widens
   with the difficulty and with the number of criteria (measured, up to 103x at
@@ -13,6 +12,27 @@ line falls.
 
 So: run the paper's loop, and if it has not closed after *switch_after*
 iterations, hand the unfinished work to the box search.
+
+What this is and is not worth
+-----------------------------
+Measured, because it decides how the option should be read.  On 24 instances,
+against the better of the two pure methods on each:
+
+    switch_after = 3     13.14s   within 15% of the better on  4 of 24
+    switch_after = 1      8.47s   within 15% of the better on 23 of 24
+    pure box search       8.11s
+    the paper's method  268.61s
+
+Choosing 3 without measuring was simply wrong: it pays three expensive
+iterations where one suffices.  At 1 the hybrid **ties** the pure box search --
+8.47s against 8.11s here, and 1.47s against 1.54s on a family built so that
+``Phi`` is easy and the paper's method closes in one iteration.  Two
+differences of about 4%, pointing opposite ways: noise.
+
+So the honest reading is that the criterion-space search is what matters, and
+the hybrid at ``switch_after = 1`` neither helps nor hurts beside it.  It earns
+its place as insurance for the one-iteration case, not as a third method that
+beats both.  The paper's method alone is 33x slower over the same set.
 
 What "hand over" means, and why it is not a restart
 ---------------------------------------------------
@@ -52,7 +72,7 @@ from .model import FractionalObjective, MOILFP
 
 
 def optimize_hybrid(problem: MOILFP, phi: FractionalObjective,
-                    switch_after: int = 3,
+                    switch_after: int = 1,
                     time_budget: Optional[float] = None,
                     verbose: bool = False) -> Solution:
     """Solve ``max { Phi(x) : x efficient for (P_D) }``, switching once.
@@ -62,7 +82,11 @@ def optimize_hybrid(problem: MOILFP, phi: FractionalObjective,
     switch_after
         Iterations of the paper's method to run before handing over.  ``0``
         makes this the pure box search, and a number past the longest run makes
-        it the pure paper method, so the two are the ends of one dial.
+        it the pure paper method, so the two are the ends of one dial.  The
+        default is **1**, measured: one iteration wins the case where the
+        maximiser of ``Phi`` is already efficient, and its cut and incumbent
+        are inherited by the second phase rather than wasted.  Three was the
+        first default and is measurably worse -- see the module docstring.
     time_budget
         Shared across both phases; whatever is left when the first ends is what
         the second gets.  The answer stays certified either way.

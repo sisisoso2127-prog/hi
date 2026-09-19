@@ -65,7 +65,7 @@ efficient point, a bound, and the absolute gap between them.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 39 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 45 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -102,7 +102,7 @@ implementation departs from the printed text. The short version:
   repaired and kept — but the README says plainly that it does not make the
   method faster.
 
-## Two additions the paper does not have
+## Two additions the paper does not have, and one that did not earn its keep
 
 **A criterion-space search** (`optimize_in_criterion_space`). The paper cuts in
 decision space, where "delete `{x : Z(x) <= Z(x~)}`" is a disjunction needing
@@ -132,6 +132,24 @@ six variables the paper's method took 110.95 s against **0.64 s**.
 It supports fractional criteria too, and keeps the certified gap and
 `time_budget`. Both methods stay: this package is a reference implementation of
 the paper, and this search is not in the paper.
+
+**A hybrid** (`optimize_hybrid`) runs the paper's loop and, if it has not
+closed after `switch_after` iterations, replays its cuts as a box list and
+carries its incumbent over — so nothing proved is proved twice. Measured on 24
+instances against the better of the two pure methods on each:
+
+| | total | within 15% of the better |
+|---|---:|---:|
+| `switch_after = 3` | 13.14 s | 4 of 24 |
+| `switch_after = 1` | 8.47 s | 23 of 24 |
+| pure box search | **8.11 s** | — |
+| the paper's method | 268.61 s | — |
+
+Read that honestly: at `switch_after = 1` the hybrid **ties** the pure box
+search (8.47 s against 8.11 s, and 1.47 s against 1.54 s on a family where the
+paper's method closes in one iteration — two ~4% differences pointing opposite
+ways). It is insurance for the one-iteration case, not a third method that
+beats both. `switch_after = 3`, the first default, was measurably wrong.
 
 **Batch cutting** (`batch_cuts_after`) cuts on several cheaply generated
 efficient points at once, taking the heaviest instance from 11 step-1 solves to
