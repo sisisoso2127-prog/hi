@@ -319,3 +319,60 @@ def best_with_same_criterion(region: Model, problem: MOILFP,
     if res.feasible:
         res.x = res.x[:problem.n]
     return res
+
+
+# --------------------------------------------------------------------------
+# Supported efficient points, cheaply: the weighted-sum scalarisation
+# --------------------------------------------------------------------------
+# For any strictly positive weight vector w, a maximiser of w'Z over D is
+# efficient.  With *linear* criteria that maximisation is one ordinary integer
+# program -- no cut, no binary, no efficiency test -- so each point costs a
+# fraction of what step 1 of the algorithm costs.  Only *supported* efficient
+# points are reachable this way, which loses nothing here: whatever comes back
+# is efficient, and that is all a cut centre or a lower bound needs.
+
+def has_linear_criteria(problem: MOILFP) -> bool:
+    """True when every criterion is a ratio with a constant denominator.
+
+    That is the paper's own case, and the only one where ``w'Z(x)`` is linear
+    in ``x`` and the scalarisation below is an integer *linear* program.
+    """
+    return all(not any(z.V) for z in problem.criteria)
+
+
+def weighted_sum_efficient(problem: MOILFP,
+                           w: Sequence[Fraction]) -> Optional[List[Fraction]]:
+    """An efficient point of ``D``: ``argmax { w'Z(x) : x in D }``, ``w > 0``.
+
+    The weights must be strictly positive -- with a zero weight the maximiser
+    is only *weakly* efficient and the guarantee is lost.  Returns ``None``
+    when the program has no optimum, never a point whose efficiency is in
+    doubt.
+
+    Requires linear criteria (:func:`has_linear_criteria`); a sum of ratios is
+    not a linear objective and this construction does not transfer to it.
+    """
+    if not has_linear_criteria(problem):
+        raise ValueError(
+            "the weighted-sum scalarisation needs linear criteria: with "
+            "fractional ones w'Z is a sum of ratios, not a linear objective")
+    if any(wk <= 0 for wk in w):
+        raise ValueError("the weights must be strictly positive, or the "
+                         "maximiser is only weakly efficient")
+    n = problem.n
+    # Z_k(x) = (U_k'x + alpha_k) / beta_k with beta_k > 0, so the scalarised
+    # objective is sum_k (w_k / beta_k) * U_k'x up to an additive constant.
+    coeffs = [ZERO] * n
+    for k, z in enumerate(problem.criteria):
+        scale = F(w[k]) / z.beta
+        for j in range(n):
+            coeffs[j] += scale * z.U[j]
+    res = solve_linear_milp(problem.model, coeffs)
+    return res.x[:n] if res.status == OPTIMAL else None
+
+
+def spread_weights(p: int, spread: int = 4) -> List[List[int]]:
+    """A small spread of strictly positive weights: all-ones, then one per
+    criterion leaning on it.  ``p + 1`` vectors, so ``p + 1`` programs."""
+    return ([[1] * p]
+            + [[spread if i == k else 1 for i in range(p)] for k in range(p)])

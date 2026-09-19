@@ -372,6 +372,54 @@ slacks by descending index) picks one arbitrarily. Enumerating the bases of a
 degenerate vertex would expose the rest; given the payoff measured above, it is
 not worth the work.
 
+**Batch cutting (`batch_cuts_after`), and why it is off by default.** The run
+time is (number of step 1 solves) × (size of the region), and the region grows
+by `p` binaries and `p+1` rows per cut. Two ways to attack that, one of which
+does not work:
+
+*Handing the method a good incumbent does not reduce the iteration count.*
+Measured by seeding `Phi_opt` with the **true optimum** at iteration 1:
+
+| instance | as it is | seeded with `Phi*` |
+|---|---:|---:|
+| `medium n=6` | 8 iters, 1.23 s | **8** iters, 1.20 s |
+| `hard n=10` | 3 iters, 0.35 s | **3** iters, 0.27 s |
+| `hardest n=10` | 11 iters, 23.5 s | **11** iters, 14.4 s |
+
+Not one iteration saved anywhere. What gets cut is decided by the efficiency
+test on `x_l`, not by the incumbent, so the cut sequence is identical either
+way. An incumbent buys one thing only — a cutoff that prunes the branch & bound
+*inside* step 1, worth 39 % on the heavy instance and nothing on the others.
+That 39 % is a **ceiling**: a real heuristic returns a value `<= Phi*`.
+
+*Batching does reduce it.* For `w > 0` a maximiser of `w'Z` over `D` is
+efficient, and with linear criteria that is one ordinary integer program — no
+cut, no binary, no efficiency test. So once the loop has shown it will be long,
+generate `p+1` such points, bank each one's `Q`, and cut on all of them at once:
+
+| instance | off | `batch_cuts_after=3` |
+|---|---:|---:|
+| `hardest n=10` | 11 solves, 27.1 s | **8** solves, **15.7 s** |
+| `rand n=7 s3` | 6 solves, 1.42 s | **5** solves, **1.07 s** |
+| `medium n=6` | 8 solves, 1.45 s | 8 solves, **2.20 s** |
+
+Over 21 instances the total falls 34.3 s → 23.6 s — and **essentially all of it
+is the one heavy instance**. Elsewhere the extra cuts are a bet that those
+points are ones the loop would have had to cut anyway, and when the bet loses
+the model has grown for nothing: on `medium n=6` the solve count does not move
+at all and the run is half again as long.
+
+Two refinements were tried and reported rather than buried. Filtering out
+generated centres already inside an existing cut changes **nothing** (23.70 s →
+23.59 s): they are genuinely new non-dominated vectors, just not ones on the
+path — which no filter can know in advance. Raising the trigger to 5 removes the
+tax on the cheap instances and gives most of the win back (23.6 s → 26.8 s).
+
+So it is insurance for the heavy tail, not a general speed-up, and it is off
+unless asked for. It needs linear criteria and says so rather than silently
+doing nothing: `w'Z` is a sum of ratios in the fractional case, not a linear
+objective.
+
 **Performance.** The method is MILP-bound: every iteration maximises `Phi` over
 a region carrying `p` extra binaries and `p+1` extra rows per cut already made,
 and that one sub-problem is 94 % of the run time. Profiling drove every choice

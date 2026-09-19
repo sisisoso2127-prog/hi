@@ -102,6 +102,12 @@ implementation departs from the printed text. The short version:
   repaired and kept — but the README says plainly that it does not make the
   method faster.
 
+There is also one addition the paper does not have: `batch_cuts_after` cuts on
+several cheaply generated efficient points at once, which takes the heaviest
+instance from 11 step-1 solves to 8 (27.1 s → 15.7 s). It is **off by default**,
+because on instances that were never hard it only grows the model — the same
+notes carry the losses alongside the win.
+
 ## Layout
 
 | Path | Contents |
