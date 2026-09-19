@@ -8,12 +8,15 @@ Run:  python3 diagnostics.py
 """
 
 import time
+from pathlib import Path
 
 import numpy as np
 
 
 # Load hybrid_validation.py without executing its module-level MAIN block.
-_SRC = open("hybrid_validation.py").read().split("# MAIN - COLAB VERSION")[0]
+# Resolved against this file, so the script runs from any directory.
+_SRC = (Path(__file__).resolve().parent / "hybrid_validation.py").read_text() \
+    .split("# MAIN - COLAB VERSION")[0]
 _HV = {}
 exec(compile(_SRC, "hybrid_validation.py", "exec"), _HV)
 

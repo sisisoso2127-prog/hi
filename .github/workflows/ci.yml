@@ -73,6 +73,47 @@ jobs:
       - name: Fractional criteria (MOILFP)
         run: python examples/fractional_example.py
 
+  package:
+    name: package (build and install)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel and the sdist
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+
+      - name: Check the distribution metadata
+        run: python -m twine check dist/*
+
+      # Installed from the wheel into a clean environment, then exercised from
+      # a directory that holds no source: what runs is the installed package,
+      # not the checkout. This is also where "no third-party dependency" is
+      # enforced -- pip installs the wheel alone, so an accidental import of
+      # anything outside the standard library fails here.
+      - name: Install the wheel and run the paper's example from it
+        run: |
+          python -m venv /tmp/probe
+          /tmp/probe/bin/pip install dist/*.whl
+          cd /tmp
+          /tmp/probe/bin/python -c "
+          from lfp_efficient import Model, MOILP, FractionalObjective, LE
+          from lfp_efficient import optimize_over_efficient_set
+          D = Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21).add([-2, 4], LE, 6)
+          s = optimize_over_efficient_set(MOILP(D, [[1, -2], [-1, 4]]),
+                                          FractionalObjective([1, 1], [5, 1], -1, -1))
+          assert [int(v) for v in s.x] == [3, 3], s.x
+          assert str(s.value) == '5/17', s.value
+          assert s.proved_optimal
+          print('wheel OK:', s.x, s.value)
+          "
+
   scaling:
     name: scaling study (manual)
     runs-on: ubuntu-latest
