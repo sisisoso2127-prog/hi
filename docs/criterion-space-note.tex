@@ -1,0 +1,344 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[margin=2.6cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Z}{Z}
+\newcommand{\Dset}{D}
+\newcommand{\E}{E(P_{\Dset})}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Zint}{\mathbb{Z}}
+
+\title{A criterion-space search for optimizing a linear fractional
+function over the integer efficient set}
+
+% Put your name and affiliation here before sending this anywhere.
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Younsi-Abbaci's method maximizes a linear fractional function $\Phi$ over the
+efficient set of a multi-objective integer program by repeatedly truncating the
+\emph{decision} space with Sylva--Crema cuts. Each cut states a disjunction --
+\emph{some} criterion strictly improves -- and a disjunction costs $p$ binary
+variables and $p+1$ big-$M$ rows, so the sub-problem solved at every iteration
+is strictly larger than the one before it. We keep the unexplored part of the
+problem in \emph{criterion} space instead, as a list of boxes, where the same
+truncation is one box subtraction. Every sub-problem is then the original
+feasible set plus a handful of ordinary linear rows, with no binary variable
+anywhere, and the model never grows. Two obstacles make the transfer
+non-immediate for a \emph{fractional} objective, and both are addressed here.
+On 35 instances the box search is faster on 34, by a factor of $5.05$ overall
+and $9.01$ on the heaviest; the margin widens with the number of criteria,
+reaching $173\times$ at $p=5$ on six variables. Every answer agrees with the
+decision-space method and with an independent reference, and both are proved
+optimal.
+\end{abstract}
+
+\section{Problem}
+
+Let
+\begin{equation}
+  (P_{\Dset}) \qquad \text{``}\max\text{''} \quad
+  \Z_k(x) = \frac{c_k^{\top}x + a_k}{d_k^{\top}x + b_k},
+  \quad k = 1,\dots,p,
+  \qquad x \in \Dset = \{\, x \in \Zint^n_+ : Ax \leqslant b \,\},
+\end{equation}
+with $\Dset$ non-empty and bounded and every denominator
+$D_k(x) = d_k^{\top}x + b_k$ strictly positive on $\Dset$. A point
+$x \in \Dset$ is \emph{efficient} when no $y \in \Dset$ satisfies
+$\Z(y) \geqslant \Z(x)$ with at least one strict inequality; $\E$ denotes the
+set of efficient points. Linear criteria are the degenerate case $d_k = 0$,
+$b_k = 1$.
+
+Given the decision maker's criterion
+$\Phi(x) = (U^{\top}x + \alpha)/(V^{\top}x + \beta)$, the problem is
+\begin{equation}
+  (P_E) \qquad \max \ \Phi(x) \quad \text{s.t.} \quad x \in \E .
+\end{equation}
+$\E$ is a union of faces of $\Dset$: non-convex, with no explicit description.
+The point of any method for $(P_E)$ is to reach the global optimum
+\emph{without enumerating} $\E$.
+
+\section{Where the cost of the decision-space method comes from}
+
+One iteration of the published method maximizes $\Phi$ over a truncated region
+$\Dset_l$, tests the maximizer $x_l$ for efficiency, banks the best $\Phi$ on
+the criterion slice about to be destroyed, and then truncates:
+\begin{equation}\label{eq:cut}
+  \text{delete} \quad \{\, x : \Z(x) \leqslant \Z(\tilde{x}) \,\} .
+\end{equation}
+Keeping the complement means keeping the $x$ for which \emph{some} criterion
+strictly improves on $\tilde{x}$. That is a disjunction, and a disjunction is
+not a system of linear inequalities. It is modelled with one binary per
+criterion,
+\begin{equation}\label{eq:bigM}
+  e_k(x;\tilde{x}) \geqslant 1 \cdot y_k + M_k (1 - y_k), \quad k = 1,\dots,p,
+  \qquad \sum_{k=1}^{p} y_k \geqslant 1 ,
+\end{equation}
+where $M_k$ is a lower bound on $e_k$ over the region, so $y_k = 0$ leaves its
+row vacuous and $y_k = 1$ forces a strict improvement.
+
+\textbf{Every cut therefore adds $p$ binaries and $p+1$ rows.} On the heaviest
+instance we ship, eleven cuts leave $33$ binaries and $44$ rows on top of
+$\Dset$, and the late sub-problems cost far more than the early ones. This is
+the whole of the method's cost profile: the number of iterations is modest, but
+each one is solved on a strictly larger mixed-integer program than the last.
+
+\section{The same truncation in criterion space}
+
+Equation~\eqref{eq:cut} deletes a \emph{box} from $\R^p$. If the unexplored
+part of the problem is carried as a list of boxes rather than as a region of
+$\Zint^n$, the truncation is a rewrite of that list, and each sub-problem is
+\begin{equation}\label{eq:sub}
+  \max \ \Phi(x) \qquad \text{s.t.} \qquad x \in \Dset, \quad \text{the box's rows},
+\end{equation}
+which is $\Dset$ plus at most $2p$ ordinary linear rows. No binary variable
+appears, and \textbf{the model never grows}: a box deep in the search carries a
+few more rows than a shallow one, and that is all.
+
+\subsection{How a box is written, and why not with numbers}
+
+The obvious encoding, $l_k \leqslant \Z_k(x) \leqslant u_k$, fails. In the
+general case $\Z_k$ is a ratio, so its values are rational, and the exact
+``$+1$'' step that the split below needs would be lost.
+
+Write the box with the linear form of the paper's Theorem~4 instead:
+\begin{equation}\label{eq:e}
+  e_k(x;a) \;=\; D_k(a)\, D_k(x) \bigl( \Z_k(x) - \Z_k(a) \bigr)
+  \;=\; \bigl(D_k(a) c_k - N_k(a) d_k\bigr)^{\top} x
+      + \bigl(D_k(a) a_k - N_k(a) b_k\bigr).
+\end{equation}
+Both denominators being positive, $e_k$ carries the sign of
+$\Z_k(x) - \Z_k(a)$ while being \emph{linear in $x$}; with integer data it is
+integer-valued on integer points. Hence, exactly and with no minimal step to
+estimate,
+\begin{equation}\label{eq:exact}
+  \Z_k(x) > \Z_k(a) \iff e_k(x;a) \geqslant 1,
+  \qquad
+  \Z_k(x) \leqslant \Z_k(a) \iff e_k(x;a) \leqslant 0 .
+\end{equation}
+Linear and fractional criteria therefore go through the same code, and on a
+linear criterion $e_k$ collapses to $c_k^{\top}x - c_k^{\top}a$.
+
+\subsection{The split}
+
+\begin{proposition}\label{prop:split}
+Let $B$ be a box and $a \in \Dset$. For $k = 1,\dots,p$ put
+\begin{equation}\label{eq:child}
+  B_k \;=\; B \;\cap\; \{\, x : e_k(x;a) \geqslant 1 \,\}
+            \;\cap\; \bigcap_{j<k} \{\, x : e_j(x;a) \leqslant 0 \,\} .
+\end{equation}
+Then $B_1,\dots,B_p$ are pairwise disjoint and
+$\bigcup_k B_k = B \setminus \{\, x : \Z(x) \leqslant \Z(a) \,\}$.
+\end{proposition}
+
+\begin{proof}
+Let $x \in B$ with $\Z(x) \not\leqslant \Z(a)$. The set of indices at which $x$
+strictly beats $\Z(a)$ is non-empty; let $k$ be its smallest element. By
+\eqref{eq:exact}, $e_k(x;a) \geqslant 1$, and $e_j(x;a) \leqslant 0$ for every
+$j < k$, so $x \in B_k$. Conversely a point of $B_k$ has
+$e_k \geqslant 1$, hence $\Z(x) \not\leqslant \Z(a)$. Disjointness: membership
+of $B_k$ forces $k$ to be exactly that smallest index, and a point has only
+one.
+\end{proof}
+
+\noindent
+Each of the $p$ children is the parent's row list plus at most $k$ further
+rows, all of them ordinary linear inequalities in $x$.
+
+\subsection{Bounding}
+
+The sub-problem~\eqref{eq:sub} maximizes $\Phi$ over a \emph{superset} of the
+efficient points whose criterion vector lies in the box, so its value bounds
+all of them. A box whose bound does not beat the incumbent is therefore
+discarded whole and never split. Children inherit their parent's value as a
+bound, which makes the open list a certified upper bound on everything still
+unfound; the method is \emph{anytime} in the same sense, and for the same
+reason, as the decision-space one.
+
+\section{Two obstacles specific to a fractional objective}
+
+Criterion-space search is a known family for optimizing a \emph{linear}
+function over the efficient set. It does not transfer to $(P_E)$ by
+inspection, for two reasons.
+
+\begin{remark}[$\Phi$ is a function of $x$, not of $\Z(x)$]
+Two feasible points with the same criterion vector may have different values of
+$\Phi$. Enumerating non-dominated vectors and evaluating $\Phi$ on a
+representative of each is therefore wrong. Inside every box a genuine
+fractional integer program must be solved, and before cutting on an efficient
+centre $\tilde{x}$ the sub-problem
+$Q(\tilde{x}) = \max \{\, \Phi(x) : x \in \Dset,\ \Z(x) = \Z(\tilde{x}) \,\}$
+must be solved first, since the whole slice $\{\Z = \Z(\tilde{x})\}$ is
+efficient and is about to be removed.
+\end{remark}
+
+\begin{remark}[Box boundaries must be integer-valued]
+As argued above, numeric bounds on $\Z_k$ are rational in the fractional case.
+Writing the boundaries through $e_k$ restores an exact integral threshold and,
+as a by-product, makes fractional criteria work with no special case.
+\end{remark}
+
+\section{The algorithm}
+
+\begin{algorithm}[h]
+\caption{Criterion-space search for $(P_E)$}
+\begin{algorithmic}[1]
+\State $L \gets \{\, \R^p \,\}$; \quad $\Phi_{\mathrm{opt}} \gets -\infty$;
+       \quad $x_{\mathrm{opt}} \gets \varnothing$
+\While{$L \neq \varnothing$}
+  \State remove from $L$ a box $B$ of largest inherited bound
+  \State solve \eqref{eq:sub} on $B$ with cutoff $\Phi_{\mathrm{opt}}$
+  \If{infeasible, or its value $\leqslant \Phi_{\mathrm{opt}}$}
+     \State \textbf{continue} \Comment{$B$ is discarded whole}
+  \EndIf
+  \State let $x_B$ be its maximizer
+  \If{$x_B$ is efficient}
+     \State $\Phi_{\mathrm{opt}} \gets \Phi(x_B)$; \
+            $x_{\mathrm{opt}} \gets x_B$; \ $a \gets x_B$
+     \Statex \Comment{$x_B$ already maximizes $\Phi$ on its whole slice, so no $Q$ is owed}
+  \Else
+     \State $a \gets$ an efficient point dominating $x_B$
+     \State solve $Q(a)$ and update $(\Phi_{\mathrm{opt}}, x_{\mathrm{opt}})$
+  \EndIf
+  \State add to $L$ the $p$ children of $B$ given by \eqref{eq:child}
+\EndWhile
+\State \Return $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}})$, proved optimal
+\end{algorithmic}
+\end{algorithm}
+
+Termination: every pass removes at least the criterion vector $\Z(a)$, and the
+non-dominated set of a bounded integer program is finite.
+
+\section{Computational results}
+
+All figures come from an exact rational implementation with no floating-point
+arithmetic anywhere, so every comparison below is between two exactly solved
+problems. Both methods were run on the same instances in the same process.
+
+\begin{table}[h]
+\centering
+\caption{Decision space versus criterion space, $p = 3$.}
+\begin{tabular}{lrrr}
+\toprule
+instance & decision space & criterion space & ratio \\
+\midrule
+35 instances, total & $40.65$ s & $8.06$ s & $5.05\times$ \\
+heaviest $n=10$     & $23.47$ s & $2.61$ s & $9.01\times$ \\
+$n=8$, hardest seed & $2.97$ s  & $0.45$ s & $6.56\times$ \\
+$n=10$, easiest seed& $0.36$ s  & $0.41$ s & $0.86\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The box search is faster on 34 of the 35, and the single regression is the
+instance the decision-space method settles in three iterations, where paying 13
+boxes is a net loss. Every answer agrees with the decision-space method and
+with an independent scan, and both are proved optimal everywhere.
+
+\begin{table}[h]
+\centering
+\caption{The margin against the number of criteria, $n = 6$, four instances
+each. All twenty agreed and were proved optimal on both sides.}
+\begin{tabular}{crrr}
+\toprule
+$p$ & decision space & criterion space & ratio \\
+\midrule
+2 & $0.61$ s   & $0.35$ s & $1.74\times$ \\
+3 & $1.02$ s   & $0.34$ s & $2.99\times$ \\
+4 & $4.21$ s   & $0.61$ s & $6.92\times$ \\
+5 & $112.77$ s & $1.09$ s & $103\times$ \\
+6 & $26.15$ s  & $1.08$ s & $24.3\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two forces grow with $p$ and pull against each other: the split produces $p$
+children, so the list branches wider; but the non-dominated set grows too, so
+the decision-space method needs more cuts, and each cut costs it $p$ binaries
+and $p+1$ rows. The measurement settles which dominates. Branching multiplies a
+\emph{count} of cheap, fixed-size models; the binaries multiply the \emph{cost
+of one model}, and they accumulate. The worst case observed for the published
+method was $p = 5$ on six variables: $110.95$ s against $0.64$ s, a factor of
+$173$.
+
+\paragraph{On the magnitudes.} The direction is solid: the per-$p$ median
+ratios are $1.35$, $3.2$, $2.1$, $12.6$, $15.8$, and every instance agreed and
+was proved optimal. The totals are not stable estimates -- four instances per
+$p$ is few, and $110.95$ of the $112.77$ seconds at $p=5$ come from a single
+instance. The tables report what was measured, not expected values.
+
+\section{A hybrid, and what it is not worth}
+
+Since the published method closes in one iteration whenever the maximizer of
+$\Phi$ over $\Dset$ happens to be efficient, a hybrid suggests itself: run its
+loop, and if it has not closed after $s$ iterations, hand the unfinished work
+to the box search. The handover is not a restart. Replaying each cut as a box
+subtraction (Proposition~\ref{prop:split} applied to every box of the current
+list) reproduces the region the first phase reached, and the incumbent, being
+attained at a known efficient point, remains a valid lower bound.
+
+Measured on 24 instances against the better of the two pure methods on each:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+ & total & within 15\% of the better \\
+\midrule
+$s = 3$              & $13.14$ s  & 4 of 24 \\
+$s = 1$              & $8.47$ s   & 23 of 24 \\
+pure box search      & $8.11$ s   & --- \\
+the published method & $268.61$ s & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+We report this as a negative result. At $s = 1$ the hybrid \emph{ties} the pure
+box search -- $8.47$ s against $8.11$ s here, and $1.47$ s against $1.54$ s on
+a family built so that $\Phi$ is easy; two differences of about 4\% pointing
+opposite ways. The criterion-space search is what matters; the hybrid earns its
+place only as insurance for the one-iteration case, not as a third method that
+beats both.
+
+\section{Prior work, and what remains to be checked}
+
+Criterion-space search for optimizing a function over the efficient set of a
+multi-objective integer program is an established family, and the surveys
+report it as currently more effective than decision-space search. Those
+methods are for \emph{linear} objectives. The literature on a linear
+\emph{fractional} objective over an integer efficient set -- including the
+branch-and-cut methods this note compares against, and the extensions to
+fractional criteria and to quadratic objectives -- works in decision space.
+The combination treated here appears not to have been addressed, for the
+reason given in Section~4: $\Phi$ is a function of $x$ and not of $\Z(x)$, so
+the transfer is not immediate.
+
+\textbf{This is a statement about what we did not find, not a claim of
+novelty.} A proper bibliographic review, including the sources behind
+paywalls, remains to be done before any such claim is made.
+
+\section{Reproducibility}
+
+The implementation is pure Python with no third-party dependency, computes in
+exact rational arithmetic throughout, and carries 45 tests. One of them checks
+Proposition~\ref{prop:split} directly rather than through the answer: for every
+centre and every feasible point, the point is either removed by the cut and in
+no child, or kept and in exactly one. A partition that silently lost efficient
+points would still agree with the optimum on favourable instances.
+
+\end{document}
