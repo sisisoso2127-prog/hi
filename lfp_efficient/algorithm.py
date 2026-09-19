@@ -56,7 +56,7 @@ from time import monotonic
 from fractions import Fraction
 from typing import Callable, List, Optional, Sequence
 
-from .edges import EdgeCandidate, explore_edges
+from .edges import EdgeCandidate, clean_tableau_at, explore_edges
 from .efficiency import (add_dominance_cut, best_with_same_criterion,
                          lower_bounds, repair_to_efficient, test_efficiency)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
@@ -383,8 +383,15 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
         log.incumbent, log.incumbent_value = x_opt, phi_opt
 
         # ---- step 4: edges of Gamma_l (alternative optima) ----------------
-        if use_edge_exploration and relaxed.tableau is not None:
-            candidate = explore_edges(relaxed.tableau, problem, phi, is_efficient,
+        # Read at a basis of the truncated region itself, not at the branch &
+        # bound node that produced x_l: that node's bound rows pin variables and
+        # leave the edges no room to step.  ``gamma_j = 0`` keeps Phi constant
+        # along the whole edge whether or not x_l maximises the *relaxation*, so
+        # an integer point found there scores exactly the upper bound.
+        tableau = (clean_tableau_at(region, relaxed.x)
+                   if use_edge_exploration else None)
+        if tableau is not None:
+            candidate = explore_edges(tableau, problem, phi, is_efficient,
                                       n_model=problem.n)
             if candidate is not None:
                 log.edge_candidate = candidate

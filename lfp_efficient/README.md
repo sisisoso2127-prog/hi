@@ -102,20 +102,20 @@ Every answer is **proved optimal**, none of them by enumerating the region:
 
 | instance | `Phi_opt` | iterations | solve | certificate |
 |---|---:|---:|---:|---|
-| `n=10 ub=3` | 29/19 | 4 | 0.80 s | proved, 1.4 s (3288 challengers, 3 tests) |
-| `n=12 ub=3` | 5/17 | 9 | 18.2 s | proved, 7.9 s (16158 challengers, 7 tests) |
-| `n=12 ub=3` | 3/23 | 5 | 3.5 s | proved, 17.0 s (46366 challengers, 4 tests) |
-| `n=14 ub=3` | 4/37 | 4 | 8.0 s | proved, 158 s (362293 challengers, 3 tests) |
-| `n=16 ub=3` | 7/8 | 5 | 8.6 s | proved, 2.7 s (3064 challengers, 1 test) |
-| `n=20 ub=2` | 1/6 | 6 | 11.2 s | proved, 22.0 s (22905 challengers, 6 tests) |
+| `n=10 ub=3` | 29/19 | 4 | 0.76 s | proved, 1.4 s (3288 challengers, 3 tests) |
+| `n=12 ub=3` | 5/17 | 9 | 15.7 s | proved, 7.8 s (16158 challengers, 7 tests) |
+| `n=12 ub=3` | 3/23 | 5 | 3.2 s | proved, 17.6 s (46366 challengers, 4 tests) |
+| `n=14 ub=3` | 4/37 | 4 | 6.9 s | proved, 164 s (362293 challengers, 3 tests) |
+| `n=16 ub=3` | 7/8 | 5 | 7.3 s | proved, 2.6 s (3064 challengers, 1 test) |
+| `n=20 ub=2` | 1/6 | 6 | 9.6 s | proved, 21.4 s (22905 challengers, 6 tests) |
 
 What a proof costs depends on where the optimum sits, not on `n`: the `n = 16`
-row is settled in 2.7 s because `Phi_opt = 7/8` leaves only 3064 points above
-it, while `n = 14` needs 158 s for 362293 challengers — and still only 3
+row is settled in 2.6 s because `Phi_opt = 7/8` leaves only 3064 points above
+it, while `n = 14` needs 164 s for 362293 challengers — and still only 3
 efficiency tests, because the dominance witnesses already in hand absorb the
 rest.
 
-**`n` is not what decides the cost.** The same `n = 16` is solved in 8 seconds
+**`n` is not what decides the cost.** The same `n = 16` is solved in 7 seconds
 on a tight feasible region and is still running after a minute on a loose one —
 while `n = 25` is proved optimal in 5.5 s and `n = 30` in 16.5 s, both in three
 cut iterations. What drives the cost is
@@ -317,6 +317,60 @@ point can, so the search ends there. The edge walk only ever *accelerates*: ever
 candidate is re-validated against `D` and re-tested for efficiency before use,
 and the early stop it triggers is conditioned on the value actually matching the
 upper bound.
+
+**The edge step of Definition 2, and what it is actually worth.** Step 4 walks
+the edges `E_j` of `Gamma_l = { j in N_l : gamma_j = 0 }` looking for an
+efficient integer point that attains the round's upper bound. Two things had to
+be repaired before it did anything at all, and the measurement afterwards is
+still sobering.
+
+*It was reading the wrong tableau.* The basis of Definition 2 belongs to the
+truncated region `D_l`; branch and bound leaves behind the tableau of the *node*
+that produced `x_l`, carrying that node's bound rows. Those rows pin variables,
+so their slacks sit basic at zero and the ratio test collapses — measured, 93 %
+of the edges had `theta0 = 0` and never started. `clean_tableau_at` now rebuilds
+a basis of `D_l` at `x_l` from scratch (`simplex.tableau_at`), with no bound rows
+in it. It returns `None` when `x_l` is not a vertex of `D_l` — an integer optimum
+need not be one, and that happens on 38 of 170 rounds.
+
+*The step was measured in the wrong region.* `theta0` read off the tableau is
+bounded by every row of `D_l`, cut rows included, and those stop the walk long
+before `x` itself would leave `D`: 149 of the 154 edges with any room at all had
+a minimum ratio below 1, so the integer step floored to zero. `max_step_in`
+bounds the walk by `D` instead. Nothing is lost by that: the step's claim is
+that an *efficient* point scores the upper bound, which rests on `gamma_j = 0`
+holding `Phi` constant along the whole edge, on the point being validated
+against `D`, and on its efficiency being tested — never on it satisfying the
+current cuts.
+
+*What it is worth.* Of 174 zero-gradient columns over 80 random instances, only
+**8** move `x` at all: once cuts accumulate, most of `Gamma_l` is the cut
+machinery itself — a column that leaves every model variable fixed has
+`rU_j = rV_j = 0` and so `gamma_j = 0` automatically. Those are now skipped
+outright (`edge_direction` returns the zero vector), which is where the step's
+cost went. It then fires on about **one instance in eighty**, and saves one
+iteration when it does. `tests/` pins the case that fires.
+
+On run time it is close to free and close to worthless. Interleaved, three runs
+each, repaired code against the code before it:
+
+| instance | before | after |
+|---|---:|---:|
+| `medium n=6` | 1.38 s | 1.25 s |
+| `hard n=10` | 0.38 s | 0.36 s |
+| `hardest n=10` | 23.83 s | 24.04 s |
+
+Same optimum and same iteration count everywhere. The only gain outside the
+run-to-run spread is the small one on `medium n=6`; on the instance that
+actually costs something the two are indistinguishable. So the repair is worth
+having because the step is *correct* now rather than decorative — not because
+it makes the method faster.
+
+*A limit left standing.* At a degenerate vertex one basis exposes only some of
+the incident edges, and the completion rule here (positive variables first, then
+slacks by descending index) picks one arbitrarily. Enumerating the bases of a
+degenerate vertex would expose the rest; given the payoff measured above, it is
+not worth the work.
 
 **Performance.** The method is MILP-bound: every iteration maximises `Phi` over
 a region carrying `p` extra binaries and `p+1` extra rows per cut already made,

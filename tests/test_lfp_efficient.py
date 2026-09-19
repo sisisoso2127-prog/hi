@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            add_dominance_cut, alternative_optima_columns,
+                           clean_tableau_at, edge_direction, max_step_in,
                            best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
@@ -141,6 +142,112 @@ def test_edge_exploration_does_not_change_the_optimum():
     a = optimize_over_efficient_set(problem, phi, use_edge_exploration=True)
     b = optimize_over_efficient_set(problem, phi, use_edge_exploration=False)
     assert a.value == b.value
+
+
+def test_clean_tableau_reproduces_the_point_it_was_built_at():
+    """The basis of Definition 2 is read at x_l, in the region -- nowhere else.
+
+    Built on a region that already carries a Sylva-Crema cut, so the tableau
+    has the cut's binaries and slacks in it, and on a point that is a vertex of
+    that region.
+    """
+    problem, phi = paper_problem()
+    region = add_dominance_cut(problem.model.copy(), problem, [F(2), F(1)])
+    relaxed = solve_fractional_milp(region, phi)
+    assert relaxed.feasible
+    tableau = clean_tableau_at(region, relaxed.x)
+    assert tableau is not None
+    assert tableau.solution()[:region.n] == list(relaxed.x)
+    assert len(tableau.basis) == tableau.m == len(set(tableau.basis))
+    assert all(v >= 0 for v in tableau.xb)
+    # a basis of the region, with none of the bound rows branch & bound needed
+    assert tableau.m <= len(region.constraints)
+
+
+def test_a_non_vertex_has_no_basis():
+    """A point in the middle of a face is not a basic solution: no edges there."""
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4).add([1, 1], LE, 4)
+    assert clean_tableau_at(model, [F(1), F(1)]) is None      # strictly interior
+    assert clean_tableau_at(model, [F(0), F(0)]) is not None  # a vertex
+
+
+def test_max_step_in_matches_a_scan_of_the_region():
+    """theta0 read from D, checked against walking the ray one unit at a time."""
+    problem, _ = paper_problem()
+    checked = 0
+    for x in ([F(2), F(0)], [F(3), F(0)], [F(2), F(2)]):
+        for d in ([F(1), F(0)], [F(0), F(1)], [F(1), F(1)], [F(-1), F(1)]):
+            top = max_step_in(problem.model, x, d)
+            scan = 0
+            while problem.model.is_feasible([a + (scan + 1) * b
+                                             for a, b in zip(x, d)]):
+                scan += 1
+            assert top == scan, (x, d, top, scan)
+            checked += 1
+    return f"{checked} (point, direction) pairs"
+
+
+def test_the_edge_step_fires_and_saves_an_iteration():
+    """A recorded instance where an edge of Gamma_l carries the optimum.
+
+    The step is rare -- measured, it fires on about one random instance in
+    eighty -- so the one case that does fire is pinned here: the candidate must
+    be efficient, feasible in D, and score exactly the round's upper bound,
+    which is what licenses stopping on it.
+    """
+    model = Model(5)
+    for j in range(5):
+        row = [0] * 5
+        row[j] = 1
+        model.add(row, LE, 3)
+    model.add([2, 2, 3, 4, 1], LE, 9)
+    model.add([1, 4, 3, 2, 2], LE, 9)
+    model.add([4, 4, 4, 2, 2], LE, 12)
+    problem = MOILP(model, [[2, 5, 4, 1, 1], [2, 5, 1, 3, 1], [3, 4, 5, 4, 4]])
+    phi = FractionalObjective([-4, -5, -4, -2, -3], [1, 1, 1, 2, 1], 28, 7)
+
+    on = optimize_over_efficient_set(problem, phi)
+    off = optimize_over_efficient_set(problem, phi, use_edge_exploration=False)
+    assert on.value == off.value
+    assert len(on.iterations) < len(off.iterations)
+
+    fired = [it for it in on.iterations if it.edge_candidate is not None]
+    assert len(fired) == 1
+    it = fired[0]
+    c = it.edge_candidate
+    assert problem.model.is_feasible(c.x)
+    assert test_efficiency(problem, c.x).efficient
+    assert c.phi == it.upper_bound == on.value
+    return f"saved {len(off.iterations) - len(on.iterations)} iteration(s)"
+
+
+def test_an_edge_of_gamma_keeps_phi_constant():
+    """gamma_j = 0 means the ratio does not move along the edge.
+
+    That is the whole licence for the step: a point found there scores exactly
+    Phi(x_l), which is the round's upper bound, so being efficient makes it
+    globally optimal.
+    """
+    model = Model(2).add([1, 0], LE, 6).add([0, 1], LE, 6).add([1, 1], LE, 4)
+    phi = FractionalObjective([1, 1], [2, 2], 1, 3)     # depends on x1 + x2 only
+    base = [F(4), F(0)]
+    tableau = clean_tableau_at(model, base)
+    assert tableau is not None
+
+    columns = alternative_optima_columns(tableau, phi)
+    assert columns, "the edge along x1 + x2 = 4 has a vanishing reduced gradient"
+    walked = 0
+    for j in columns:
+        d = edge_direction(tableau, j, 2)
+        if not any(d):
+            continue
+        for theta in range(1, max_step_in(model, base, d) + 1):
+            point = [a + theta * b for a, b in zip(base, d)]
+            assert model.is_feasible(point), (j, theta)
+            assert phi(point) == phi(base), (j, theta)
+            walked += 1
+    assert walked == 4, walked        # (3,1), (2,2), (1,3), (0,4)
+    return f"{walked} point(s) along the edge, Phi constant on all of them"
 
 
 def test_minimisation_by_sign_flip():

@@ -482,3 +482,83 @@ def restore_feasibility(tab: Tableau, pricing, z1: Fraction, z2: Fraction,
             return INFEASIBLE
         tab.pivot(r, best)
     return STALLED
+
+
+# --------------------------------------------------------------------------
+# A basis at a *given* point, built from scratch
+# --------------------------------------------------------------------------
+# The edge walk of Definition 2 reads the tableau at the optimum ``x_l`` of the
+# truncated region.  The tableau branch & bound leaves behind is not that one:
+# it belongs to the node that produced the incumbent, and carries that node's
+# branching rows.  Those rows pin variables at their bounds, so their slacks
+# sit basic at zero and every ratio test collapses -- measured, 93% of the
+# zero-gradient edges had ``theta0 = 0`` and the whole step was inert.
+#
+# The cure is to forget the search tree and rebuild a basis of the region
+# itself at ``x_l``.  ``x_l`` is an integer optimum, so it is a feasible point
+# of the region; when it is also a *vertex* of it -- which is what "there is a
+# basis" means -- the construction below produces one.
+
+def tableau_at(A, b, values) -> Optional["Tableau"]:
+    """A tableau of ``{Ax = b, x >= 0}`` whose basic solution is *values*.
+
+    Returns ``None`` when *values* is not a basic feasible solution: either it
+    fails the equations, or it has more than ``m`` positive components, or the
+    columns carrying them are linearly dependent.  In all three cases the point
+    lies strictly inside a face rather than at a vertex, and the edges of
+    Definition 2 -- which emanate from a vertex -- are simply not defined there.
+
+    Variables that are already positive *must* be basic, since a non-basic one
+    is zero by definition; the basis is completed with whatever further columns
+    keep it non-singular, which makes it degenerate but legitimate.  Slack
+    columns are preferred for that completion, so that the structural variables
+    stay non-basic and their edges are available to the walk.
+    """
+    m = len(A)
+    if m == 0:
+        return None
+    n = len(A[0])
+    for i in range(m):
+        if dot(A[i], values) != b[i]:
+            return None
+    positive = [j for j in range(n) if values[j] != 0]
+    if len(positive) > m or any(values[j] < 0 for j in range(n)):
+        return None
+
+    work = [A[i][:] + [b[i]] for i in range(m)]
+    basis_of_row: List[Optional[int]] = [None] * m
+    free_rows = list(range(m))
+    # the positive variables first -- they have no choice -- then the slacks
+    # (highest indices) and finally the structural columns
+    order = positive + [j for j in range(n - 1, -1, -1) if values[j] == 0]
+
+    for c in order:
+        if not free_rows:
+            break
+        r = next((i for i in free_rows if work[i][c] != 0), None)
+        if r is None:
+            if values[c] != 0:
+                return None           # a positive variable cannot be made basic
+            continue
+        piv = work[r][c]
+        if piv != 1:
+            work[r] = [v / piv for v in work[r]]
+        nz = [(k, v) for k, v in enumerate(work[r]) if v]
+        for i in range(m):
+            if i == r:
+                continue
+            factor = work[i][c]
+            if factor == 0:
+                continue
+            row = work[i]
+            for k, v in nz:
+                row[k] -= factor * v
+        basis_of_row[r] = c
+        free_rows.remove(r)
+
+    for i in free_rows:                # rows the elimination left empty
+        if work[i][n] != 0:
+            return None                # 0 = nonzero: the system is inconsistent
+    keep = [i for i in range(m) if basis_of_row[i] is not None]
+    return Tableau([work[i][:n] for i in keep], [work[i][n] for i in keep],
+                   [basis_of_row[i] for i in keep])
