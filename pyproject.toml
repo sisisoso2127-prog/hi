@@ -1,0 +1,60 @@
+[build-system]
+# PEP 639 -- the SPDX ``license`` string and ``license-files`` below -- is
+# only understood from setuptools 77.  Declaring a lower floor builds fine
+# under ``python -m build``, which silently installs the newest setuptools in
+# its isolated environment, and then fails for anyone building with
+# ``--no-isolation`` on an older one.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lfp-efficient"
+description = "Exact optimization of a linear fractional function over the integer efficient set of a multi-objective program"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "sisisoso2127-prog" }]
+keywords = [
+    "multi-objective optimization",
+    "integer programming",
+    "linear fractional programming",
+    "efficient set",
+    "Pareto",
+    "exact arithmetic",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
+]
+# Deliberately empty, and it is a design property rather than an omission: the
+# package computes in exact rational arithmetic with ``fractions.Fraction`` and
+# carries its own simplex, so it has no third-party dependency at all. CI
+# imports it on a bare interpreter to keep that true.
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/sisisoso2127-prog/hi"
+Source = "https://github.com/sisisoso2127-prog/hi"
+Issues = "https://github.com/sisisoso2127-prog/hi/issues"
+
+[tool.setuptools]
+packages = ["lfp_efficient"]
+
+[tool.setuptools.dynamic]
+version = { attr = "lfp_efficient.__version__" }
+
+[tool.setuptools.package-data]
+# The long-form notes on the method, the deviations from the printed paper and
+# the measurements ship with the package rather than living only on GitHub.
+lfp_efficient = ["README.md"]
