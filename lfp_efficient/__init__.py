@@ -23,6 +23,7 @@ exact rational arithmetic.
 """
 
 from .algorithm import IterationLog, Solution, optimize_over_efficient_set
+from .criterion_space import Box, optimize_in_criterion_space
 from .edges import (alternative_optima_columns, clean_tableau_at,
                     edge_direction, explore_edges, max_step, max_step_in,
                     reduced_gradient, walk_edge)
@@ -45,6 +46,7 @@ __all__ = [
     "Model", "MOILP", "MOILFP", "FractionalObjective", "Constraint",
     "LE", "GE", "EQ",
     "optimize_over_efficient_set", "Solution", "IterationLog",
+    "optimize_in_criterion_space", "Box",
     "test_efficiency", "EfficiencyTest", "lower_bounds",
     "add_sylva_crema_cut", "add_dominance_cut", "best_with_same_criterion",
     "repair_to_efficient", "weighted_sum_efficient", "spread_weights",

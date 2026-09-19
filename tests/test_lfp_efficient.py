@@ -19,6 +19,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
                            maximize_by_full_enumeration,
+                           optimize_in_criterion_space,
                            optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
                            solve_relaxation, test_efficiency)
@@ -335,6 +336,92 @@ def test_batching_reaches_the_paper_optimum():
     assert sol.proved_optimal
     # the batch is recorded in the trace, not applied silently
     assert any(it.batched for it in sol.iterations)
+
+
+def test_criterion_space_solves_the_paper_example():
+    problem, phi = paper_problem()
+    sol = optimize_in_criterion_space(problem, phi)
+    assert [int(v) for v in sol.x] == [3, 3]
+    assert sol.value == Fraction(5, 17)
+    assert sol.proved_optimal
+    assert sol.upper_bound == sol.value
+
+
+def test_the_box_split_is_a_disjoint_cover():
+    """Definition of the split: removing { Z <= Z(a) } leaves exactly the p
+    children, each feasible point of the remainder in exactly one of them."""
+    from lfp_efficient.criterion_space import Box, split
+    problem, _ = paper_problem()
+    enum = enumerate_efficient_set(problem, bounds=[5, 5])
+    checked = 0
+    for centre in enum.feasible:
+        children = split(problem, Box(), centre, None)
+        assert len(children) == problem.p
+        models = [c.restricted(problem.model) for c in children]
+        for x in enum.feasible:
+            inside = sum(1 for m in models if m.is_feasible(x))
+            removed = all(a <= b for a, b in zip(problem.Z(x), problem.Z(centre)))
+            # removed by the cut  <=>  in none of the children
+            assert (inside == 0) == removed, (centre, x, inside, removed)
+            if not removed:
+                assert inside == 1, (centre, x, inside)   # and never in two
+            checked += 1
+    return f"{checked} (centre, point) pairs, cover exact and disjoint"
+
+
+def test_criterion_space_agrees_with_the_shipped_method():
+    rng = random.Random(99001)
+    compared = 0
+    for _ in range(18):
+        problem, phi, bounds = random_instance(rng)
+        shipped = optimize_over_efficient_set(problem, phi)
+        boxes = optimize_in_criterion_space(problem, phi)
+        assert boxes.value == shipped.value, (boxes.value, shipped.value)
+        assert boxes.proved_optimal and shipped.proved_optimal
+        # and both against the independent scan
+        scan = best_over_efficient_set_by_scan(problem, phi, bounds)[1]
+        assert boxes.value == scan, (boxes.value, scan)
+        compared += 1
+    return f"{compared} instances, criterion space == decision space == scan"
+
+
+def test_criterion_space_handles_fractional_criteria():
+    """A box is written with the integer-valued e_k rows, so ratios need no
+    special case -- the numeric bounds on Z_k that a naive box would use are
+    rationals and the exact '+1' would be lost."""
+    rng = random.Random(31337)
+    compared = 0
+    for _ in range(10):
+        problem, phi, bounds = random_moilfp(rng)
+        try:
+            shipped = optimize_over_efficient_set(problem, phi)
+        except (ZeroDivisionError, ValueError):
+            continue          # a vanishing denominator: not this test's subject
+        boxes = optimize_in_criterion_space(problem, phi)
+        assert boxes.value == shipped.value, (boxes.value, shipped.value)
+        compared += 1
+    assert compared >= 5, compared
+    return f"{compared} fully fractional instances agree"
+
+
+def test_criterion_space_bound_never_cuts_off_the_optimum():
+    """Stopped early, the answer stays certified: the bound the open boxes
+    guarantee is never below the true optimum."""
+    rng = random.Random(5150)
+    checked = 0
+    for _ in range(6):
+        problem, phi, bounds = random_instance(rng)
+        truth = optimize_over_efficient_set(problem, phi).value
+        for budget in (0.001, 0.02, 0.2):
+            sol = optimize_in_criterion_space(problem, phi, time_budget=budget)
+            if sol.value is not None:
+                assert sol.value <= truth, (sol.value, truth)
+            if sol.upper_bound is not None:
+                assert sol.upper_bound >= truth, (sol.upper_bound, truth)
+            if sol.proved_optimal:
+                assert sol.value == truth
+            checked += 1
+    return f"{checked} runs across 3 budgets, the bound always holds"
 
 
 def test_minimisation_by_sign_flip():
