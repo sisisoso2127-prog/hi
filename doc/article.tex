@@ -1851,9 +1851,29 @@ $0{,}4$, $\ecartProd{}$ pour \texttt{max\_stall}$=1$. Rejoués sur un lot élarg
 graines), ils prouvent le même nombre de lignes à une unité près -- $9$,
 $9$, $10$, $10$ sur $24$ -- leurs moyennes tiennent dans $0{,}66$ point et
 leurs comptes appariés sont quasi symétriques ($2/2$, $8/7$, $3/2$). Les écarts garantis
-sont bimodaux -- des lignes à $0\ \%$, des lignes au-dessus de $80\ \%$,
-presque rien entre -- si bien qu'une seule ligne traversant le milieu
-déplace la médiane sans rien changer au fond. Les défauts ne bougent pas.
+sont bimodaux -- des lignes à $0\ \%$, des lignes très haut, peu de lignes
+au milieu -- si bien qu'une seule ligne traversant le milieu déplace la
+médiane sans rien changer au fond. Les défauts ne bougent pas. Mesurée sur
+un lot plus large ($48$ exécutions), la forme est réelle mais moins
+tranchée que cette phrase : $20$ lignes sous $1\ \%$, $15$ au-dessus de
+$50\ \%$, et \emph{treize} entre les deux. C'est le compte apparié, non la
+forme de la distribution, qui tranche.
+\end{remark}
+
+\begin{remark}[où va l'écart qui reste]
+La seconde route porte la borne (ci-dessus) et porte aussi son propre
+diagnostic. À la convergence -- $\max_{\Rcal}G_t\le 0$ -- la borne vaut
+\emph{exactement} $\max_{\Rcal}f$ : l'écart qui subsiste ne mesure plus une
+borne lâche mais ce que $\Rcal$ contient en plus de $\Ecal$. Sur les mêmes
+$48$ exécutions, \emph{aucune} ligne n'est non convergée, et les $15$ lignes
+d'écart supérieur à $50\ \%$ sont convergées sans exception -- la route y
+atteint son optimum en $2$ à $4$ appels entiers.
+
+Sur ces lignes, la borne n'est donc pas perfectible. Le résultat est
+négatif pour toute une classe de travaux, et nous l'énonçons comme tel :
+plus de tours, plus d'appels, une meilleure répartition du plafond ne
+peuvent rien fermer là où la borne est déjà exacte sur $\Rcal$. Ce qui
+reste à gagner est dans les coupes.
 \end{remark}
 
 \begin{algorithm}[H]

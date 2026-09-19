@@ -3577,7 +3577,9 @@ $0{,}66$ point, et tous les comptes appariés sont \emph{quasi symétriques}
 -- $0/0$, $2/2$, $8/7$, $3/2$. Seule la médiane bouge, de $5$ à $11$
 points. La cause est la forme de la
 distribution : les écarts garantis sont \emph{bimodaux} -- des lignes à
-$0\ \%$ et des lignes au-dessus de $80\ \%$, presque rien entre les deux --
+$0\ \%$ et des lignes très haut, peu de lignes au milieu
+(remarque~\ref{rem:bimodalitemesuree} en donne la mesure, et corrige au
+passage ce que cette phrase avait d'excessif) --
 si bien qu'une seule ligne traversant le milieu déplace la médiane
 énormément sans rien changer au fond. Ces deux réglages ne pilotent donc
 rien, et les défauts ne bougent pas. Nous rapportons l'épisode parce qu'il
@@ -5289,6 +5291,84 @@ Nous gardons le calcul à $t=q$. Il ne coûte rien de plus -- il se lit sur le
 relâché déjà construit -- et une borne valide de plus dans un minimum ne
 peut pas nuire. Mais il ne faut plus le présenter comme ce qui produit les
 résultats de ce mémoire, parce que ce n'est pas le cas.
+\end{remark}
+
+
+\begin{remark}[où va l'écart qui reste : mesuré, et ce n'est pas là où nous
+cherchions]
+\label{rem:bimodalitemesuree}
+La remarque précédente établit que la borne publiée vient de la seconde
+route. Cette route porte alors en elle de quoi répondre à une question que
+ce mémoire n'avait jamais posée. À la convergence -- statut
+\texttt{optimal}, c'est-à-dire $\max_{\Rcal}G_t\le 0$ -- la borne vaut
+\emph{exactement} $\max_{\Rcal}f$. L'écart qui subsiste ne mesure alors plus
+une borne lâche : il mesure ce que $\Rcal$ contient \emph{en plus} de
+$\Ecal$. Les deux diagnostics envoient vers des travaux opposés -- couper
+davantage, ou payer davantage -- et il suffisait de regarder le statut pour
+les départager.
+
+Sur $48$ exécutions ($16$ instances à $n=20$ et $30$, $p=3$ et $4$, trois
+graines, plafond $300$) :
+
+\begin{center}\small
+\begin{tabular}{lrrrr}
+\toprule
+groupe & lignes & convergées & non convergées & sans statut\\
+\midrule
+fermées ($\le 1\ \%$) & $20$ & $4$ & $0$ & $16$\\
+milieu & $13$ & $13$ & $0$ & $0$\\
+ouvertes ($\ge 50\ \%$) & $15$ & $\mathbf{15}$ & $\mathbf{0}$ & $0$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+\emph{Aucune} ligne non convergée sur les $48$, et les $15$ lignes du mode
+ouvert sont convergées sans exception. Sur ces lignes -- jusqu'à
+$95\ \%$ d'écart garanti -- la borne n'est donc pas perfectible : elle vaut
+déjà $\max_{\Rcal}f$. Ce qui reste à gagner est entièrement dans $\Rcal$,
+c'est-à-dire dans les coupes.
+
+C'est un résultat \emph{négatif} pour toute une classe de travaux, et il
+faut l'énoncer comme tel : plus de tours, plus d'appels entiers, une
+meilleure répartition du plafond entre recherche et certification -- aucun
+de ces leviers ne peut fermer une ligne dont la borne est déjà exacte sur
+$\Rcal$. Il explique rétrospectivement plusieurs mesures de ce mémoire qui
+paraissaient isolées : que le coût en tours soit plat
+(remarque~\ref{rem:prixdestours}), qu'aucun rendement décroissant des
+coupes ne se laisse mesurer (tableau~\ref{tab:vivier}), que tripler le
+budget de recherche n'achète que peu d'écart. Toutes disent la même chose
+sous des angles différents.
+
+\medskip\noindent
+\textbf{Deux précisions, dont l'une contre nous.} D'abord, la seconde route
+converge en $2$ à $4$ appels entiers, de médiane $3$ sur les lignes
+ouvertes : cette borne exacte sur $\Rcal$ s'obtient pour presque rien, ce
+qui rend le diagnostic d'autant plus net -- ce n'est pas faute de moyens
+qu'elle ne fait pas mieux, c'est qu'il n'y a plus rien à faire de ce
+côté-là.
+
+Ensuite, la bimodalité est réelle mais nettement moins tranchée que la
+remarque~\ref{rem:medianeartefact} ne l'écrivait. Sur ce lot plus large :
+
+\begin{center}\small
+\begin{tabular}{lrrrrrr}
+\toprule
+écart garanti & $\le 1\ \%$ & $1$--$10$ & $10$--$25$ & $25$--$50$
+& $50$--$80$ & $\ge 80\ \%$\\
+\midrule
+lignes & $20$ & $3$ & $5$ & $5$ & $11$ & $4$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Treize lignes sur $48$ tiennent entre $1$ et $50\ \%$, et le mode ouvert
+s'étale de $24$ à $95\ \%$ au lieu de se masser au-dessus de $80$.
+« Presque rien entre les deux » était donc trop fort. L'argument que cette
+forme servait -- une seule ligne traversant le milieu déplace la médiane --
+en sort affaibli sans être faux : le compte apparié reste le juge, et c'est
+lui, et non la forme de la distribution, qui avait tranché.
 \end{remark}
 
 \subsection{Ce que la forme unifiée achète : rien ici, et pourquoi}
