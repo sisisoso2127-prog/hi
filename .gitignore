@@ -5,3 +5,10 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+
+# LaTeX build artefacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
