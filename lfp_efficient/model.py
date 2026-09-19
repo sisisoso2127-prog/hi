@@ -133,22 +133,38 @@ class FractionalObjective:
 
 
 @dataclass
-class MOILP:
-    """The multi-objective integer linear program ``(P_D)`` of the paper::
+class MOILFP:
+    """Multi-objective integer **linear fractional** program::
 
-        "max"  Z_i = C_i x ,  i = 1..p
+        "max"  Z_k(x) = (c_k'x + a_k) / (d_k'x + b_k) ,  k = 1..p
         s.t.   x in D = { x in Z^n_+ : A x <~ b }
 
-    ``criteria`` is the matrix ``C`` (p rows).  All criteria are maximised; a
-    criterion to be minimised is simply passed with its sign flipped.
+    Each criterion is a ratio.  A *linear* criterion ``C_k x`` is the
+    degenerate case ``d_k = 0``, ``b_k = 1`` -- which is what :class:`MOILP`
+    builds -- so the linear program of the paper is a special case of this one
+    and every formula below reduces to the linear one on it.
+
+    All criteria are maximised; a criterion to be minimised is passed with the
+    sign of its numerator flipped.
+
+    Assumption, checked on construction of the algorithm's sub-problems: each
+    ``D_k(x) = d_k'x + b_k`` stays **strictly positive** on ``D``.  Without it
+    the ratio is not even continuous on the feasible set and the sign argument
+    that the whole method rests on fails.
+
+    The data of every criterion is scaled to integers at construction (a
+    criterion's numerator and denominator are multiplied by the same factor, so
+    the ratio is untouched).  That is what makes ``e_k`` below integer-valued,
+    and with it the exact ``>= 1`` threshold that replaces an estimated minimal
+    step.
     """
 
     model: Model
-    criteria: List[List[Fraction]]
+    criteria: List[FractionalObjective]
 
-    def __init__(self, model: Model, criteria: Sequence[Sequence[Number]]):
+    def __init__(self, model: Model, criteria: Sequence[FractionalObjective]):
         self.model = model
-        self.criteria = mat(criteria)
+        self.criteria = [_scaled_to_integers(z.lift(model.n)) for z in criteria]
 
     @property
     def p(self) -> int:
@@ -158,11 +174,85 @@ class MOILP:
     def n(self) -> int:
         return self.model.n
 
-    def C(self, x: Sequence[Fraction]) -> List[Fraction]:
-        """The criterion vector ``Cx`` of a point."""
-        return [dot(row, x[:len(row)]) for row in self.criteria]
+    def Z(self, x: Sequence[Fraction]) -> List[Fraction]:
+        """The criterion vector ``(Z_1(x), ..., Z_p(x))``."""
+        return [z(x) for z in self.criteria]
+
+    #: kept so that code written for the linear case keeps reading naturally
+    C = Z
+
+    def numerator(self, k: int, x: Sequence[Fraction]) -> Fraction:
+        z = self.criteria[k]
+        return dot(z.U, x[:len(z.U)]) + z.alpha
+
+    def denominator(self, k: int, x: Sequence[Fraction]) -> Fraction:
+        z = self.criteria[k]
+        return dot(z.V, x[:len(z.V)]) + z.beta
+
+    def e_row(self, k: int, x_bar: Sequence[Fraction]):
+        """The linear form ``e_k( . ; x_bar)`` of Theorem 4, as ``(coeffs, const)``.
+
+            e_k(x) = (D_k(x_bar) c_k - N_k(x_bar) d_k)'x
+                     + (D_k(x_bar) a_k - N_k(x_bar) b_k)
+                   = D_k(x_bar) * D_k(x) * ( Z_k(x) - Z_k(x_bar) )
+
+        Both denominators being positive, ``e_k`` carries the **sign** of
+        ``Z_k(x) - Z_k(x_bar)`` while being *linear in x* -- that is the whole
+        trick, and it is what lets an ordinary integer linear solver answer
+        questions about ratios.  With integer data ``e_k`` is integer-valued on
+        integer points, so
+
+            Z_k(x) >  Z_k(x_bar)  <=>  e_k(x) >= 1
+            Z_k(x) == Z_k(x_bar)  <=>  e_k(x) == 0
+
+        exactly, with no minimal step to estimate.  On a linear criterion
+        (``d_k = 0``, ``b_k = 1``) it collapses to ``C_k x - C_k x_bar``.
+        """
+        z = self.criteria[k]
+        n_bar = self.numerator(k, x_bar)
+        d_bar = self.denominator(k, x_bar)
+        coeffs = [d_bar * c - n_bar * d for c, d in zip(z.U, z.V)]
+        const = d_bar * z.alpha - n_bar * z.beta
+        return coeffs, const
 
     def dominates(self, x: Sequence[Fraction], y: Sequence[Fraction]) -> bool:
-        """``Cx >= Cy`` componentwise with at least one strict inequality."""
-        cx, cy = self.C(x), self.C(y)
-        return all(a >= b for a, b in zip(cx, cy)) and any(a > b for a, b in zip(cx, cy))
+        """``Z(x) >= Z(y)`` componentwise with at least one strict inequality."""
+        zx, zy = self.Z(x), self.Z(y)
+        return all(a >= b for a, b in zip(zx, zy)) and any(a > b for a, b in zip(zx, zy))
+
+
+def _scaled_to_integers(z: FractionalObjective) -> FractionalObjective:
+    """Multiply a criterion's numerator *and* denominator by one integer factor.
+
+    The ratio is unchanged; the point is to make ``e_k`` integer-valued.
+    """
+    values = list(z.U) + list(z.V) + [z.alpha, z.beta]
+    scale = 1
+    for v in values:
+        d = v.denominator
+        g = _gcd(scale, d)
+        scale = scale * d // g
+    if scale == 1:
+        return z
+    s = F(scale)
+    return FractionalObjective([s * u for u in z.U], [s * v for v in z.V],
+                               s * z.alpha, s * z.beta)
+
+
+def _gcd(a: int, b: int) -> int:
+    while b:
+        a, b = b, a % b
+    return a
+
+
+def MOILP(model: Model, criteria: Sequence[Sequence[Number]]) -> MOILFP:
+    """The paper's program: ``p`` **linear** criteria ``Z_i = C_i x``.
+
+    A thin constructor over :class:`MOILFP`: each row ``C_i`` becomes the ratio
+    ``(C_i x + 0) / (0'x + 1)``.  Every fractional formula then reduces to the
+    linear one, so the linear case is not a separate code path -- it is the
+    same code with unit denominators.
+    """
+    n = model.n
+    return MOILFP(model, [FractionalObjective(list(row), [0] * n, 0, 1)
+                          for row in criteria])

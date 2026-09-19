@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lfp_efficient import (FractionalObjective, LE, MOILP, Model,
-                           add_sylva_crema_cut, alternative_optima_columns,
+from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
+                           add_dominance_cut, alternative_optima_columns,
                            best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
@@ -83,13 +83,12 @@ def test_origin_is_not_efficient_with_psi_2():
 def test_sylva_crema_cut_removes_exactly_the_dominated_slice():
     """After cutting on x^s, the surviving points are those improving some C_i."""
     problem, _ = paper_problem()
-    M = lower_bounds(problem)
     enum = enumerate_efficient_set(problem, bounds=[5, 5])
     x_s = [F(2), F(1)]
-    region = add_sylva_crema_cut(problem.model, problem, x_s, M)
-    c_s = problem.C(x_s)
+    region = add_dominance_cut(problem.model, problem, x_s)
+    c_s = problem.Z(x_s)
     for x in enum.feasible:
-        survives = any(a > b for a, b in zip(problem.C(x), c_s))
+        survives = any(a > b for a, b in zip(problem.Z(x), c_s))
         # a point survives iff it can be completed with binaries y making it
         # feasible for the cut region
         padded = x + [F(0)] * (region.n - len(x))
@@ -387,6 +386,148 @@ def test_larger_random_instances_against_the_scan(trials=12, seed=4242):
     assert sizes, "no usable instance"
     return (f"{len(sizes)} instances, up to {max(sizes)} feasible points "
             f"({sum(sizes) // len(sizes)} on average)")
+
+
+# --------------------------------------------------------------------------
+# The fractional generalisation: every criterion is a ratio
+# --------------------------------------------------------------------------
+def random_moilfp(rng, n=3, ub=4):
+    """A MOILFP whose criteria are genuine ratios, with positive denominators."""
+    model = Model(n)
+    for j in range(n):
+        unit = [0] * n
+        unit[j] = 1
+        model.add(unit, LE, ub)
+    for _ in range(2):
+        model.add([rng.randint(1, 4) for _ in range(n)], LE, rng.randint(5, 4 * ub))
+    criteria = [FractionalObjective([rng.randint(-3, 5) for _ in range(n)],
+                                    [rng.randint(0, 3) for _ in range(n)],
+                                    rng.randint(0, 4), rng.randint(1, 4))
+                for _ in range(3)]
+    phi = FractionalObjective([rng.randint(-4, 5) for _ in range(n)],
+                              [rng.randint(0, 3) for _ in range(n)],
+                              rng.randint(-2, 5), rng.randint(1, 5))
+    return MOILFP(model, criteria), phi, [ub] * n
+
+
+def _brute_force(problem, bounds):
+    """Feasible points and, by Definition 1 applied to the ratios, efficient ones."""
+    from itertools import product
+    points = []
+    for combo in product(*(range(b + 1) for b in bounds)):
+        x = [F(v) for v in combo]
+        if problem.model.is_feasible(x):
+            points.append(x)
+    efficient = [x for x in points
+                 if not any(problem.dominates(y, x) for y in points)]
+    return points, efficient
+
+
+def test_linear_criteria_are_the_degenerate_fractional_case():
+    """``MOILP`` is ``MOILFP`` with unit denominators, and ``e_k`` reduces."""
+    problem, _ = paper_problem()
+    for z in problem.criteria:
+        assert all(v == 0 for v in z.V) and z.beta == 1      # d_k = 0, b_k = 1
+    x_bar, y = [F(3), F(3)], [F(2), F(1)]
+    for k in range(problem.p):
+        coeffs, const = problem.e_row(k, x_bar)
+        e = sum((a * b for a, b in zip(coeffs, y)), F(0)) + const
+        assert e == problem.Z(y)[k] - problem.Z(x_bar)[k]    # e_k = C_k y - C_k x_bar
+
+
+def test_fractional_efficiency_test_matches_the_definition(trials=12, seed=31337):
+    """``theta = 0`` iff efficient, checked on *every* feasible point."""
+    rng = random.Random(seed)
+    tested = 0
+    for _ in range(trials):
+        problem, _, bounds = random_moilfp(rng)
+        points, efficient = _brute_force(problem, bounds)
+        if not points:
+            continue
+        for x in points:
+            assert test_efficiency(problem, x).efficient == (x in efficient), x
+            tested += 1
+    assert tested > 200
+    return f"{tested} feasible points, every one classified correctly"
+
+
+def test_fractional_end_to_end_against_brute_force(trials=15, seed=1009):
+    """The whole algorithm on ratios, against the definition-level answer."""
+    rng = random.Random(seed)
+    checked = 0
+    for _ in range(trials):
+        problem, phi, bounds = random_moilfp(rng)
+        _, efficient = _brute_force(problem, bounds)
+        if not efficient:
+            continue
+        try:
+            expected = max(phi(x) for x in efficient)
+        except ZeroDivisionError:
+            continue
+        solution = optimize_over_efficient_set(problem, phi)
+        assert solution.value == expected, (
+            f"got {fmt(solution.value)} expected {fmt(expected)}")
+        assert test_efficiency(problem, solution.x).efficient
+        checked += 1
+    assert checked >= 8
+    return f"{checked} fractional instances"
+
+
+def test_ecker_kouada_does_not_transfer_to_ratios(seed=2024):
+    """Why :func:`repair_to_efficient` exists, stated as a measurement.
+
+    With linear criteria the maximiser of the efficiency test is itself
+    efficient, so the dominance chain is always one step. With fractional
+    criteria the k-th term of the test's objective carries a factor ``D_k(x)``
+    that varies from point to point, so the maximiser only *dominates* -- and
+    the chain is measurably longer. Reusing the linear result on ratios would
+    therefore be wrong, silently, on a sizeable share of the points.
+    """
+    from collections import Counter
+
+    def chain_lengths(problem, bounds):
+        points, efficient = _brute_force(problem, bounds)
+        lengths = []
+        for x in points:
+            if x in efficient:
+                continue
+            current, steps = x, 0
+            while True:
+                outcome = test_efficiency(problem, current)
+                if outcome.efficient:
+                    break
+                current, steps = outcome.witness, steps + 1
+            lengths.append(steps)
+        return lengths
+
+    rng = random.Random(seed)
+    linear = []
+    for _ in range(12):
+        model = Model(3)
+        for j in range(3):
+            unit = [0, 0, 0]
+            unit[j] = 1
+            model.add(unit, LE, 4)
+        for _ in range(2):
+            model.add([rng.randint(1, 4) for _ in range(3)], LE, rng.randint(5, 16))
+        linear += chain_lengths(
+            MOILP(model, [[rng.randint(-3, 5) for _ in range(3)] for _ in range(3)]),
+            [4, 4, 4])
+
+    rng = random.Random(seed)
+    fractional = []
+    for _ in range(12):
+        problem, _, bounds = random_moilfp(rng)
+        fractional += chain_lengths(problem, bounds)
+
+    assert linear and set(linear) == {1}, (
+        f"linear chains should all be one step, saw {sorted(Counter(linear))}")
+    assert any(length > 1 for length in fractional), (
+        "no fractional chain exceeded one step -- the sample is too small to "
+        "support the claim that the repair is needed")
+    longer = sum(1 for length in fractional if length > 1)
+    return (f"linear: {len(linear)} chains, all length 1 | "
+            f"fractional: {longer}/{len(fractional)} longer than 1")
 
 
 # --------------------------------------------------------------------------

@@ -12,7 +12,7 @@ from fractions import Fraction
 from itertools import product
 from typing import List, Optional, Sequence, Tuple
 
-from .model import Constraint, MOILP
+from .model import Constraint, MOILFP
 from .rational import F, vec
 
 
@@ -34,7 +34,7 @@ class Enumeration:
         return best_x, best_v
 
 
-def enumerate_efficient_set(problem: MOILP, bounds: Sequence[int]) -> Enumeration:
+def enumerate_efficient_set(problem: MOILFP, bounds: Sequence[int]) -> Enumeration:
     """Enumerate ``D`` inside ``0 <= x_j <= bounds[j]`` and extract ``E(P_D)``.
 
     A point ``x0`` is efficient when no feasible ``x1`` satisfies
@@ -66,7 +66,7 @@ class FullEnumeration:
         return len(self.vectors)
 
 
-def enumerate_nondominated(problem: MOILP, max_points: int = 100_000) -> FullEnumeration:
+def enumerate_nondominated(problem: MOILFP, max_points: int = 100_000) -> FullEnumeration:
     """Generate the whole non-dominated set by repeated Sylva-Crema cuts.
 
     Start from ``D``; pick any feasible point, turn it into an efficient one
@@ -80,15 +80,14 @@ def enumerate_nondominated(problem: MOILP, max_points: int = 100_000) -> FullEnu
     independent exact reference for instances that are too large for the
     box enumeration above, and as the baseline to measure the saving against.
     """
-    from .efficiency import add_sylva_crema_cut, lower_bounds, test_efficiency
+    from .efficiency import add_dominance_cut, repair_to_efficient, test_efficiency
     from .milp import solve_linear_milp
     from .simplex import OPTIMAL
 
-    M = lower_bounds(problem)
     region = problem.model.copy()
     # any linear direction works to pull out a feasible point; the sum of the
-    # criteria tends to land on an efficient one straight away
-    direction = [sum(col, F(0)) for col in zip(*problem.criteria)]
+    # criteria numerators tends to land on an efficient one straight away
+    direction = [sum(col, F(0)) for col in zip(*(z.U for z in problem.criteria))]
 
     result = FullEnumeration()
     for _ in range(max_points):
@@ -96,15 +95,14 @@ def enumerate_nondominated(problem: MOILP, max_points: int = 100_000) -> FullEnu
         if probe.status != OPTIMAL:
             return result
         x = probe.x[:problem.n]
-        test = test_efficiency(problem, x)
-        x_eff = x if test.efficient else test.witness
-        result.vectors.append(problem.C(x_eff))
+        x_eff = repair_to_efficient(problem, x)
+        result.vectors.append(problem.Z(x_eff))
         result.representatives.append(x_eff)
-        region = add_sylva_crema_cut(region, problem, x_eff, M)
+        region = add_dominance_cut(region, problem, x_eff)
     raise RuntimeError("non-dominated set larger than max_points")
 
 
-def maximize_by_full_enumeration(problem: MOILP, phi,
+def maximize_by_full_enumeration(problem: MOILFP, phi,
                                  max_points: int = 100_000):
     """Reference answer to ``(P_E)``: best ``Phi`` over every non-dominated slice.
 
@@ -126,7 +124,7 @@ def maximize_by_full_enumeration(problem: MOILP, phi,
 # --------------------------------------------------------------------------
 # A fast exact verifier for instances too large for the naive methods
 # --------------------------------------------------------------------------
-def _fast_feasible_points(problem: MOILP, bounds: Sequence[int],
+def _fast_feasible_points(problem: MOILFP, bounds: Sequence[int],
                           extra_le_rows: Sequence = ()) -> List[tuple]:
     """Integer points of ``D`` inside the box, by depth-first search with pruning.
 
@@ -185,7 +183,7 @@ def _fast_feasible_points(problem: MOILP, bounds: Sequence[int],
     return points
 
 
-def best_over_efficient_set_by_scan(problem: MOILP, phi, bounds: Sequence[int]):
+def best_over_efficient_set_by_scan(problem: MOILFP, phi, bounds: Sequence[int]):
     """Exact answer to ``(P_E)`` by scanning the feasible points in ``Phi`` order.
 
     The efficient set never has to be built: sort ``D`` by decreasing ``Phi``
@@ -199,8 +197,13 @@ def best_over_efficient_set_by_scan(problem: MOILP, phi, bounds: Sequence[int]):
     Returns ``(x, value, n_feasible, n_tested)``.
     """
     raw = _fast_feasible_points(problem, bounds)
-    criteria = [[int(c) if c.denominator == 1 else c for c in row]
-                for row in problem.criteria]
+
+    # Z_k(x) >= Z_k(y)  <=>  N_k(x) D_k(y) >= N_k(y) D_k(x)  (denominators > 0),
+    # so dominance stays exact integer arithmetic on ratios too.
+    def pairs(pt):
+        x = [F(v) for v in pt]
+        return tuple((problem.numerator(k, x), problem.denominator(k, x))
+                     for k in range(problem.p))
 
     scored = []
     for pt in raw:
@@ -211,14 +214,14 @@ def best_over_efficient_set_by_scan(problem: MOILP, phi, bounds: Sequence[int]):
             continue
     scored.sort(key=lambda t: t[0], reverse=True)
 
-    vectors = [tuple(sum(a * b for a, b in zip(row, pt)) for row in criteria)
-               for pt in raw]
+    vectors = [pairs(pt) for pt in raw]
 
     for tested, (value, pt) in enumerate(scored, start=1):
-        cx = tuple(sum(a * b for a, b in zip(row, pt)) for row in criteria)
+        cx = pairs(pt)
         dominated = False
         for cy in vectors:
-            if cy != cx and all(a >= b for a, b in zip(cy, cx)):
+            if cy != cx and all(ny * dx >= nx * dy
+                                for (nx, dx), (ny, dy) in zip(cx, cy)):
                 dominated = True
                 break
         if not dominated:
@@ -249,7 +252,7 @@ class Certificate:
                 f"({self.tests} efficiency test(s) needed)")
 
 
-def certify_optimum(problem: MOILP, phi, x_opt: Sequence[Fraction],
+def certify_optimum(problem: MOILFP, phi, x_opt: Sequence[Fraction],
                     value: Fraction, bounds: Sequence[int]) -> Certificate:
     """Prove that *x_opt* solves ``(P_E)`` -- without building ``D`` or ``E(P_D)``.
 
@@ -272,7 +275,7 @@ def certify_optimum(problem: MOILP, phi, x_opt: Sequence[Fraction],
     reference methods that stays affordable once ``|D|`` runs into the hundreds
     of thousands.
     """
-    from .efficiency import test_efficiency
+    from .efficiency import repair_to_efficient, test_efficiency
 
     x_opt = list(x_opt)
     if not problem.model.is_feasible(x_opt):
@@ -298,7 +301,7 @@ def certify_optimum(problem: MOILP, phi, x_opt: Sequence[Fraction],
         rhs = lifted.alpha - value * lifted.beta
         extra = ([[-c for c in w], rhs],)        # -(U - vV)'x <= alpha - v*beta
 
-    witnesses = [problem.C(x_opt)]          # criterion vectors of known efficient points
+    witnesses = [problem.Z(x_opt)]          # criterion vectors of known efficient points
     challengers = tests = 0
 
     for pt in _fast_feasible_points(problem, bounds, extra):
@@ -310,7 +313,7 @@ def certify_optimum(problem: MOILP, phi, x_opt: Sequence[Fraction],
             continue
         challengers += 1
 
-        cx = problem.C(x)
+        cx = problem.Z(x)
         if any(all(a >= b for a, b in zip(w, cx)) and w != cx for w in witnesses):
             continue                        # dominated by something already known
 
@@ -319,6 +322,6 @@ def certify_optimum(problem: MOILP, phi, x_opt: Sequence[Fraction],
         if outcome.efficient:
             return Certificate(False, challengers, tests,
                                reason=f"the efficient point {pt} has Phi > {value}")
-        witnesses.append(problem.C(outcome.witness))
+        witnesses.append(problem.Z(repair_to_efficient(problem, outcome.witness)))
 
     return Certificate(True, challengers, tests)

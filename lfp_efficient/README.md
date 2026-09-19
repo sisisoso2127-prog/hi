@@ -61,7 +61,8 @@ print(solution.x, solution.value)        # [3, 3]  5/17
 python3 examples/paper_example.py        # reproduces section 4 of the paper
 python3 examples/large_example.py        # larger instances, up to |D| = 34635
 python3 examples/scaling.py              # the scaling study, up to n = 20
-python3 tests/test_lfp_efficient.py      # 17 tests, incl. 82 random instances
+python3 examples/fractional_example.py   # MOILFP: every criterion a ratio
+python3 tests/test_lfp_efficient.py      # 24 tests, incl. the fractional case
 ```
 
 ## Larger instances
@@ -130,6 +131,65 @@ the sub-problem combinatorial. Sharpening the cut's big-M constants against the
 current region was tried there and measured: the bound improved too little to
 pay for its own linear programs (48.7 s → 50.5 s on the `n = 10` suite), so it
 is not in the code.
+
+## The fractional generalisation (MOILFP)
+
+The paper's criteria are linear. The package solves the general case too, where
+**every criterion is a ratio**:
+
+```
+(MOILFP)  "max"  Z_k(x) = (c_k'x + a_k) / (d_k'x + b_k),  k = 1..p
+          s.t.   x in D
+```
+
+A linear criterion is the degenerate case `d_k = 0`, `b_k = 1`, so `MOILP` is a
+thin constructor over `MOILFP` and the linear case is not a separate code path —
+it is the same code with unit denominators. The paper's 20 tests pass unchanged
+against the generalised code, which is the regression proof of that.
+
+Everything is expressed once, through the linear form
+
+```
+e_k(x ; a) = (D_k(a) c_k - N_k(a) d_k)'x + (D_k(a) a_k - N_k(a) b_k)
+           = D_k(a) * D_k(x) * ( Z_k(x) - Z_k(a) )
+```
+
+which is **linear in `x`** yet carries the **sign** of `Z_k(x) - Z_k(a)`, both
+denominators being positive. With integer data it is integer-valued on integer
+points, so the three questions the method keeps asking are exact integer linear
+conditions — `e_k >= 1` strictly better, `e_k == 0` equal, `e_k >= 0` at least
+as good. The `+1` of the linear cut transposes to ratios with **no minimal step
+to estimate**. On a linear criterion `e_k` collapses to `C_k x - C_k a`.
+
+**One thing genuinely changes.** With linear criteria the maximiser of the
+efficiency test is itself efficient (Ecker & Kouada), because the test's
+objective is then exactly `sum_k (Z_k(x) - Z_k(a))`, monotone in `Z`. With
+ratios the k-th term carries a factor `D_k(x)` that varies from point to point,
+so the maximiser only **dominates** — a dominated point can outscore an
+efficient one. The dominance chain has to be walked (`repair_to_efficient`).
+
+This is measured, not assumed. Over random instances:
+
+| criteria | dominance chains from a non-efficient point |
+|---|---|
+| linear | 180 chains, **all of length 1** |
+| fractional | **7 of 172 longer than 1** |
+
+Reusing the linear result on ratios would therefore be silently wrong on a
+measurable share of points, and `tests/` fails if a sample ever shows otherwise.
+
+Validation of the fractional case: the exact test is checked against Definition
+1 on **every feasible point** of random instances (234 points, all classified
+correctly), and the whole algorithm against brute force on 15 fully fractional
+instances.
+
+```
+python3 examples/fractional_example.py
+```
+
+*(The `e_k` form, and the observation that the same theorem covers both cut
+regimes, are due to the `claude/lnatawruh-8gyw92` branch, which develops MOILFP
+on a separate numpy/scipy base.)*
 
 ## Anytime: a certified gap
 
@@ -313,8 +373,8 @@ efficient point, a merely good one and an infeasible one.
 | `rational.py` | exact arithmetic helpers |
 | `simplex.py` | tableau simplex, linear and linear-fractional pricing, warm start |
 | `milp.py` | warm-started branch & bound; sign-split fractional MILP |
-| `model.py` | `Model`, `MOILP`, `FractionalObjective` |
-| `efficiency.py` | Theorem 1 test, lower bounds `M_i`, Sylva–Crema cut, `Q(x~)` |
+| `model.py` | `Model`, `MOILFP` (and `MOILP` as its linear case), `FractionalObjective`, `e_row` |
+| `efficiency.py` | exact efficiency test, dominance repair, dominance cut, `Q(x~)` |
 | `edges.py` | reduced gradient, `Gamma_l`, `theta0`, edge walk |
 | `algorithm.py` | the main loop, with a full iteration trace |
 | `enumeration.py` | the three independent reference methods used by the tests |

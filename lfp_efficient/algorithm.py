@@ -57,11 +57,11 @@ from fractions import Fraction
 from typing import Callable, List, Optional, Sequence
 
 from .edges import EdgeCandidate, explore_edges
-from .efficiency import (add_sylva_crema_cut, best_with_same_criterion,
-                         lower_bounds, test_efficiency)
+from .efficiency import (add_dominance_cut, best_with_same_criterion,
+                         lower_bounds, repair_to_efficient, test_efficiency)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
                    solve_fractional_milp)
-from .model import FractionalObjective, MOILP, Model
+from .model import FractionalObjective, MOILFP, Model
 from .rational import F, fmt
 from .simplex import OPTIMAL
 
@@ -181,7 +181,7 @@ class Solution:
         return "\n".join(out)
 
 
-def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
+def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
                                 use_edge_exploration: bool = True,
                                 max_iterations: int = 1000,
                                 time_budget: Optional[float] = None,
@@ -355,7 +355,13 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                 print(log)
             return finish(OPTIMAL, True)
 
-        x_tilde = test.witness
+        # The maximiser of the test dominates x_l but, with fractional
+        # criteria, need not be efficient itself: the k-th term of the
+        # objective carries a factor D_k(x) that varies from point to point.
+        # Walking the dominance chain settles it, and costs one confirming
+        # test when the chain is already at its end -- which is always the
+        # case for linear criteria.
+        x_tilde = repair_to_efficient(problem, test.witness)
         cache[tuple(x_tilde)] = True
         explored.append(x_tilde)
         log.efficient_point = x_tilde
@@ -400,7 +406,7 @@ def optimize_over_efficient_set(problem: MOILP, phi: FractionalObjective,
                     return finish(OPTIMAL, True)
 
         # ---- step 5: Sylva-Crema truncation -------------------------------
-        region = add_sylva_crema_cut(region, problem, x_tilde, M)
+        region = add_dominance_cut(region, problem, x_tilde)
         log.note = (f"cut off every x with C x <= C x~_{l}; "
                     f"go to iteration {l + 1}")
         if verbose:

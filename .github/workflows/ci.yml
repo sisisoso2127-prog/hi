@@ -68,6 +68,11 @@ jobs:
       - name: Larger instances
         run: python examples/large_example.py
 
+      # The fractional generalisation: criteria that are ratios, checked
+      # against Definition 1 point by point.
+      - name: Fractional criteria (MOILFP)
+        run: python examples/fractional_example.py
+
   scaling:
     name: scaling study (manual)
     runs-on: ubuntu-latest

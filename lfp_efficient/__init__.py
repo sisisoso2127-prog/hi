@@ -25,8 +25,9 @@ exact rational arithmetic.
 from .algorithm import IterationLog, Solution, optimize_over_efficient_set
 from .edges import (alternative_optima_columns, explore_edges, max_step,
                     reduced_gradient, walk_edge)
-from .efficiency import (EfficiencyTest, add_sylva_crema_cut,
-                         best_with_same_criterion, lower_bounds, test_efficiency)
+from .efficiency import (EfficiencyTest, add_dominance_cut, add_sylva_crema_cut,
+                         best_with_same_criterion, lower_bounds,
+                         repair_to_efficient, test_efficiency)
 from .enumeration import (Enumeration, FullEnumeration,
                           enumerate_efficient_set, enumerate_nondominated,
                           maximize_by_full_enumeration,
@@ -34,14 +35,17 @@ from .enumeration import (Enumeration, FullEnumeration,
                           Certificate, certify_optimum)
 from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
                    solve_milp, solve_relaxation)
-from .model import EQ, GE, LE, Constraint, FractionalObjective, MOILP, Model
+from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
+                    MOILP, Model)
 from .rational import F, fmt
 
 __all__ = [
-    "Model", "MOILP", "FractionalObjective", "Constraint", "LE", "GE", "EQ",
+    "Model", "MOILP", "MOILFP", "FractionalObjective", "Constraint",
+    "LE", "GE", "EQ",
     "optimize_over_efficient_set", "Solution", "IterationLog",
     "test_efficiency", "EfficiencyTest", "lower_bounds",
-    "add_sylva_crema_cut", "best_with_same_criterion",
+    "add_sylva_crema_cut", "add_dominance_cut", "best_with_same_criterion",
+    "repair_to_efficient",
     "reduced_gradient", "alternative_optima_columns", "max_step", "walk_edge",
     "explore_edges",
     "solve_milp", "solve_linear_milp", "solve_fractional_milp",
