@@ -65,7 +65,7 @@ efficient point, a bound, and the absolute gap between them.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 29 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 34 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
