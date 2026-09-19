@@ -351,6 +351,21 @@ outright (`edge_direction` returns the zero vector), which is where the step's
 cost went. It then fires on about **one instance in eighty**, and saves one
 iteration when it does. `tests/` pins the case that fires.
 
+On run time it is close to free and close to worthless. Interleaved, three runs
+each, repaired code against the code before it:
+
+| instance | before | after |
+|---|---:|---:|
+| `medium n=6` | 1.38 s | 1.25 s |
+| `hard n=10` | 0.38 s | 0.36 s |
+| `hardest n=10` | 23.83 s | 24.04 s |
+
+Same optimum and same iteration count everywhere. The only gain outside the
+run-to-run spread is the small one on `medium n=6`; on the instance that
+actually costs something the two are indistinguishable. So the repair is worth
+having because the step is *correct* now rather than decorative — not because
+it makes the method faster.
+
 *A limit left standing.* At a degenerate vertex one basis exposes only some of
 the incident edges, and the completion rule here (positive variables first, then
 slacks by descending index) picks one arbitrarily. Enumerating the bases of a
