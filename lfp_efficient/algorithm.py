@@ -191,6 +191,7 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
                                 use_edge_exploration: bool = True,
                                 batch_cuts_after: Optional[int] = None,
                                 max_iterations: int = 1000,
+                                stop_after: Optional[int] = None,
                                 time_budget: Optional[float] = None,
                                 verbose: bool = False) -> Solution:
     """Solve ``max { Phi(x) : x efficient for (P_D) }`` exactly.
@@ -212,6 +213,13 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
         ``k`` iterations, generate ``p + 1`` efficient points in one go by
         weighted-sum scalarisation and cut on all of them at once, then carry
         on.  Requires linear criteria.
+    stop_after
+        Return after this many iterations even if the search is not finished,
+        with ``proved_optimal`` false and the certified bound in hand.  Unlike
+        *max_iterations*, which guards against a runaway loop and raises, this
+        is a deliberate early exit: it is what
+        :func:`lfp_efficient.optimize_hybrid` uses to hand the unfinished work
+        to the criterion-space search.
     time_budget
         Seconds after which to stop and return the best answer found **with a
         certified gap** instead of running to optimality.  Without it the
@@ -490,5 +498,9 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
                     f"go to iteration {l + 1}")
         if verbose:
             print(log)
+
+        if stop_after is not None and l >= stop_after:
+            log.note += f" -- stopping here as asked after {stop_after}"
+            return finish(OPTIMAL if x_opt is not None else "infeasible", False)
 
     raise RuntimeError("iteration limit reached")
