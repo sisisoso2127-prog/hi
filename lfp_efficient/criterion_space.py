@@ -50,6 +50,20 @@ A point outside ``{ Z <= Z(a) }`` has a smallest index where it beats ``Z(a)``,
 and that index picks its child -- so the children cover the remainder exactly
 once.
 
+One thing that does not help
+----------------------------
+Filtering each box through its own continuous relaxation before paying for the
+integer program looks obvious -- two thirds of the boxes are discarded, and
+without a filter each of them pays a full fractional integer program first.
+Measured, it is a **loss**: 7.95s -> 8.36s over 27 instances, faster on one of
+them, and the box counts come out identical in every single row.
+
+The reason is that the filter already exists.  ``solve_fractional_milp`` is
+given the incumbent as a cutoff, and the first thing its branch & bound does is
+solve the root relaxation -- the very same linear program.  A second copy of it
+drops nothing extra and costs one more LP on every box that survives.  Recorded
+here so the idea is not tried a third time.
+
 What bounds what
 ----------------
 A box's sub-problem maximises ``Phi`` over a superset of the efficient points
