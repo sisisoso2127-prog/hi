@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            add_dominance_cut, alternative_optima_columns,
                            clean_tableau_at, edge_direction, max_step_in,
+                           spread_weights, weighted_sum_efficient,
                            best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
@@ -248,6 +249,92 @@ def test_an_edge_of_gamma_keeps_phi_constant():
             walked += 1
     assert walked == 4, walked        # (3,1), (2,2), (1,3), (0,4)
     return f"{walked} point(s) along the edge, Phi constant on all of them"
+
+
+def test_every_weighted_sum_maximiser_is_efficient():
+    """The theorem the batch option rests on, checked against Definition 1.
+
+    For w > 0 a maximiser of w'Z over D is efficient -- which is why a batch
+    centre needs no efficiency test of its own.
+    """
+    rng = random.Random(20240919)
+    checked = 0
+    for _ in range(12):
+        problem, phi, bounds = random_instance(rng)
+        enum = enumerate_efficient_set(problem, bounds=bounds)
+        if not enum.efficient:
+            continue
+        truth = {tuple(x) for x in enum.efficient}
+        for w in spread_weights(problem.p) + [[rng.randint(1, 6)
+                                               for _ in range(problem.p)]]:
+            point = weighted_sum_efficient(problem, w)
+            if point is None:
+                continue
+            assert tuple(point) in truth, (w, point)
+            checked += 1
+    assert checked > 20, checked
+    return f"{checked} scalarisations, every maximiser efficient"
+
+
+def test_a_zero_weight_is_refused():
+    """With w_k = 0 the maximiser is only weakly efficient: the guarantee is
+    gone, so the function refuses rather than returning a doubtful point."""
+    problem, _ = paper_problem()
+    try:
+        weighted_sum_efficient(problem, [1, 0])
+    except ValueError as exc:
+        assert "strictly positive" in str(exc)
+    else:
+        raise AssertionError("a zero weight was accepted")
+
+
+def test_batching_is_refused_on_fractional_criteria():
+    """A sum of ratios is not a linear objective; the option says so rather
+    than silently doing nothing."""
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4).add([1, 1], LE, 5)
+    problem = MOILFP(model, [FractionalObjective([1, 0], [1, 1], 1, 2),
+                             FractionalObjective([0, 1], [1, 0], 0, 3)])
+    phi = FractionalObjective([1, 1], [1, 2], 0, 3)
+    optimize_over_efficient_set(problem, phi)          # fine without batching
+    try:
+        optimize_over_efficient_set(problem, phi, batch_cuts_after=1)
+    except ValueError as exc:
+        assert "linear criteria" in str(exc)
+    else:
+        raise AssertionError("batching was accepted on fractional criteria")
+
+
+def test_batching_does_not_change_the_optimum():
+    """The extra cuts change how the search gets there, never where it lands.
+
+    Every batch centre is efficient and its slice is banked by Q before the
+    cut, so the upper bound and the proof of optimality are untouched.
+    """
+    rng = random.Random(4242)
+    compared = batched = 0
+    for _ in range(14):
+        problem, phi, bounds = random_instance(rng)
+        plain = optimize_over_efficient_set(problem, phi)
+        for after in (1, 2):
+            quick = optimize_over_efficient_set(problem, phi,
+                                                batch_cuts_after=after)
+            assert quick.value == plain.value, (after, quick.value, plain.value)
+            assert quick.proved_optimal == plain.proved_optimal
+            if any(it.batched for it in quick.iterations):
+                batched += 1
+            compared += 1
+    assert batched > 0, "no instance ever reached the batching trigger"
+    return f"{compared} runs compared, {batched} of them actually batched"
+
+
+def test_batching_reaches_the_paper_optimum():
+    problem, phi = paper_problem()
+    sol = optimize_over_efficient_set(problem, phi, batch_cuts_after=1)
+    assert [int(v) for v in sol.x] == [3, 3]
+    assert sol.value == Fraction(5, 17)
+    assert sol.proved_optimal
+    # the batch is recorded in the trace, not applied silently
+    assert any(it.batched for it in sol.iterations)
 
 
 def test_minimisation_by_sign_flip():

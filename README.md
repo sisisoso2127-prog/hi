@@ -65,7 +65,7 @@ efficient point, a bound, and the absolute gap between them.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 29 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 34 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -101,6 +101,12 @@ implementation departs from the printed text. The short version:
   all, and the step fires on about one instance in eighty. It is implemented,
   repaired and kept — but the README says plainly that it does not make the
   method faster.
+
+There is also one addition the paper does not have: `batch_cuts_after` cuts on
+several cheaply generated efficient points at once, which takes the heaviest
+instance from 11 step-1 solves to 8 (27.1 s → 15.7 s). It is **off by default**,
+because on instances that were never hard it only grows the model — the same
+notes carry the losses alongside the win.
 
 ## Layout
 

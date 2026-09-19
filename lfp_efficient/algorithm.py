@@ -58,7 +58,8 @@ from typing import Callable, List, Optional, Sequence
 
 from .edges import EdgeCandidate, clean_tableau_at, explore_edges
 from .efficiency import (add_dominance_cut, best_with_same_criterion,
-                         lower_bounds, repair_to_efficient, test_efficiency)
+                         has_linear_criteria, lower_bounds, repair_to_efficient,
+                         spread_weights, test_efficiency, weighted_sum_efficient)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
                    solve_fractional_milp)
 from .model import FractionalObjective, MOILFP, Model
@@ -79,6 +80,8 @@ class IterationLog:
     best_same_criterion: Optional[List[Fraction]] = None  # argmax of Q(x~_l)
     phi_same_criterion: Optional[Fraction] = None
     edge_candidate: Optional[EdgeCandidate] = None
+    #: efficient points cut in one batch before this iteration's step 1
+    batched: List[List[Fraction]] = field(default_factory=list)
     incumbent: Optional[List[Fraction]] = None
     incumbent_value: Optional[Fraction] = None
     note: str = ""
@@ -99,6 +102,9 @@ class IterationLog:
         if self.best_same_criterion is not None:
             lines.append(f"  Q(x~_{self.l}) : {pt(self.best_same_criterion)}"
                          f"   Phi = {fmt(self.phi_same_criterion)}")
+        if self.batched:
+            lines.append(f"  batch : cut on {len(self.batched)} extra efficient "
+                         f"point(s) from the weighted-sum scalarisation")
         if self.edge_candidate is not None:
             c = self.edge_candidate
             lines.append(f"  edge exploration : efficient point {pt(c.x)} on the edge "
@@ -183,6 +189,7 @@ class Solution:
 
 def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
                                 use_edge_exploration: bool = True,
+                                batch_cuts_after: Optional[int] = None,
                                 max_iterations: int = 1000,
                                 time_budget: Optional[float] = None,
                                 verbose: bool = False) -> Solution:
@@ -199,6 +206,12 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
         Walk the zero-reduced-gradient edges (Definition 2) before cutting.
         Switching it off changes nothing to the returned optimum, only to the
         number of iterations.
+    batch_cuts_after
+        Off by default, and deliberately so -- see *What batching is and is
+        not worth* below.  When set to ``k`` and the loop is still open after
+        ``k`` iterations, generate ``p + 1`` efficient points in one go by
+        weighted-sum scalarisation and cut on all of them at once, then carry
+        on.  Requires linear criteria.
     time_budget
         Seconds after which to stop and return the best answer found **with a
         certified gap** instead of running to optimality.  Without it the
@@ -231,7 +244,37 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
     Interrupting inside step 1 is the only place the budget can be honoured
     mid-iteration; the efficiency test and ``Q`` are left to finish, since a
     truncated efficiency test yields no usable efficient point.
+
+    What batching is and is not worth
+    ---------------------------------
+    The run time is (number of step 1 solves) x (size of the region), and the
+    region grows by ``p`` binaries and ``p + 1`` rows per cut.  Handing the
+    method a good incumbent was measured **not to touch the first factor at
+    all** -- given the optimum for free at iteration 1, all three reference
+    instances still took exactly as many iterations, because what gets cut is
+    decided by the efficiency test on ``x_l``, not by ``Phi_opt``.
+
+    Batching does touch it.  On the heaviest instance shipped here it takes 11
+    step 1 solves down to 8 and the run from 27.1 s to 15.7 s.  But the extra
+    cuts are a bet that those points are ones the loop would have had to cut
+    anyway, and when the bet loses the model has grown for nothing: on
+    ``medium n=6`` the solve count does not move and the run goes from 1.45 s
+    to 2.20 s.  Over 21 instances the total falls 34.3 s -> 23.6 s, and
+    essentially all of that is the one heavy instance.
+
+    Filtering out generated centres that are already inside an existing cut
+    was tried and changes nothing -- they are genuinely new non-dominated
+    vectors, just not ones on the path.  Raising the trigger to 5 removes the
+    tax on the cheap instances and gives most of the win back.
+
+    So it is insurance for the heavy tail, not a general speed-up, and that is
+    why it is off unless asked for.
     """
+    if batch_cuts_after is not None and not has_linear_criteria(problem):
+        raise ValueError(
+            "batch_cuts_after needs linear criteria: it generates its extra "
+            "cut centres by weighted-sum scalarisation, and a sum of ratios "
+            "is not a linear objective")
     deadline = None if time_budget is None else monotonic() + time_budget
     M = lower_bounds(problem)
     # Established once on D: every truncated region is a subset of it, so the
@@ -281,9 +324,37 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
             print(sol.report(include_iterations=False))
         return sol
 
+    batched = False
+    cut_vectors: List[List[Fraction]] = []
+
     for l in range(1, max_iterations + 1):
         log = IterationLog(l)
         logs.append(log)
+
+        # ---- step 0 (optional): one batch of cheap efficient points --------
+        # Each centre is efficient by the weighted-sum theorem, so it owes the
+        # same Q(x~) as any other efficient centre before its cut: the slice
+        # {Z = Z(x~)} it destroys is entirely efficient and has to be banked.
+        if batch_cuts_after is not None and not batched and l > batch_cuts_after:
+            batched = True
+            for w in spread_weights(problem.p):
+                point = weighted_sum_efficient(problem, w)
+                if point is None:
+                    continue
+                z = problem.Z(point)
+                if z in cut_vectors:
+                    continue
+                cut_vectors.append(z)
+                cache[tuple(point)] = True
+                if point not in explored:
+                    explored.append(point)
+                q = best_with_same_criterion(
+                    region, problem, point, phi, cutoff=phi_opt,
+                    denominator_positive=positive_denominator)
+                if q.feasible and (phi_opt is None or q.objective > phi_opt):
+                    x_opt, phi_opt = q.x, q.objective
+                region = add_dominance_cut(region, problem, point)
+                log.batched.append(point)
 
         # ---- step 1: upper bound on the truncated region ------------------
         # the incumbent is handed over as a cutoff: the only thing that matters
@@ -362,6 +433,7 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
         # test when the chain is already at its end -- which is always the
         # case for linear criteria.
         x_tilde = repair_to_efficient(problem, test.witness)
+        cut_vectors.append(problem.Z(x_tilde))
         cache[tuple(x_tilde)] = True
         explored.append(x_tilde)
         log.efficient_point = x_tilde
