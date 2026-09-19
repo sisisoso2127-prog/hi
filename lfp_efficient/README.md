@@ -474,6 +474,32 @@ dropped whole without ever being split. The open list is therefore a certified
 upper bound on everything still unfound, so `time_budget` and the gap work
 exactly as they do for the paper's method.
 
+**And the margin grows with the number of criteria.** Everything above has
+`p = 3`. Two things grow with `p` and pull against each other: the split
+produces `p` children, so the box list branches wider; but the non-dominated
+set grows too, so the decision-space method needs more cuts, and every cut
+costs it `p` binaries and `p+1` rows. Four instances at each `p`, `n = 6`:
+
+| `p` | decision space | criterion space | |
+|---:|---:|---:|---:|
+| 2 | 0.61 s | 0.35 s | 1.74× |
+| 3 | 1.02 s | 0.34 s | 2.99× |
+| 4 | 4.21 s | 0.61 s | 6.92× |
+| 5 | 112.77 s | 1.09 s | **103×** |
+| 6 | 26.15 s | 1.08 s | 24.3× |
+
+All twenty agreed and all twenty were proved optimal on both sides. The worst
+case for the paper's method was `p = 5` on **six variables**: 110.95 s against
+0.64 s, a factor of 173, and within a minute of the two-minute budget the
+measurement allowed it.
+
+The two forces are not comparable, which is the point. Branching multiplies a
+count of **cheap, fixed-size** models; the binaries multiply the **cost of one
+model**, and they accumulate. So more criteria hurt the decision-space method
+far more than they hurt this one — the opposite of what one might expect from
+"the split makes `p` children", and the strongest single sign that the
+difference here is structural rather than a matter of tuning.
+
 **Why both methods stay.** The value of this package is that it is a reference
 implementation of the paper, and this search is not in the paper. It is offered
 beside it, not in place of it.
