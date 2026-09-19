@@ -19,7 +19,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
                            maximize_by_full_enumeration,
-                           optimize_in_criterion_space,
+                           optimize_hybrid, optimize_in_criterion_space,
                            optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
                            solve_relaxation, test_efficiency)
@@ -418,6 +418,112 @@ def test_criterion_space_bound_never_cuts_off_the_optimum():
                 assert sol.value <= truth, (sol.value, truth)
             if sol.upper_bound is not None:
                 assert sol.upper_bound >= truth, (sol.upper_bound, truth)
+            if sol.proved_optimal:
+                assert sol.value == truth
+            checked += 1
+    return f"{checked} runs across 3 budgets, the bound always holds"
+
+
+def test_hybrid_solves_the_paper_example():
+    problem, phi = paper_problem()
+    sol = optimize_hybrid(problem, phi)
+    assert [int(v) for v in sol.x] == [3, 3]
+    assert sol.value == Fraction(5, 17)
+    assert sol.proved_optimal
+
+
+def test_switch_after_is_a_dial_between_the_two_methods():
+    """switch_after = 0 is the pure box search; past the longest run it is the
+    pure paper method.  Both ends must give the same answer as the middle."""
+    problem, phi = paper_problem()
+    ends = [optimize_hybrid(problem, phi, switch_after=k) for k in (0, 1, 2, 50)]
+    assert {s.value for s in ends} == {Fraction(5, 17)}
+    assert all(s.proved_optimal for s in ends)
+    # at switch_after = 0 nothing of the paper's loop ran
+    assert ends[0].iterations and ends[0].iterations[0].l == 1
+
+
+def test_hybrid_agrees_with_both_pure_methods_and_the_scan():
+    """The handover must not lose an efficient point.  Checked against the two
+    methods it is made of AND against the independent scan, since a handover
+    that dropped a box would still agree with itself."""
+    rng = random.Random(770077)
+    compared = 0
+    switched = 0
+    for _ in range(14):
+        problem, phi, bounds = random_instance(rng)
+        paper = optimize_over_efficient_set(problem, phi)
+        boxes = optimize_in_criterion_space(problem, phi)
+        scan = best_over_efficient_set_by_scan(problem, phi, bounds)[1]
+        for k in (1, 2):
+            hybrid = optimize_hybrid(problem, phi, switch_after=k)
+            assert hybrid.value == paper.value == boxes.value == scan, (
+                k, hybrid.value, paper.value, boxes.value, scan)
+            assert hybrid.proved_optimal
+            if len(paper.iterations) > k:
+                switched += 1
+            compared += 1
+    assert switched > 0, "no instance ever reached the handover"
+    return f"{compared} runs, {switched} of them actually switched"
+
+
+def test_the_handover_replays_the_cuts_rather_than_restarting():
+    """A cut deletes { Z <= Z(x~) }; removing that same set from a box list is
+    what carries it over.  The two must remove exactly the same points."""
+    from lfp_efficient.criterion_space import Box, remove_everywhere
+    problem, _ = paper_problem()
+    enum = enumerate_efficient_set(problem, bounds=[5, 5])
+    centres = [[F(2), F(1)], [F(3), F(3)]]
+
+    region = problem.model.copy()
+    boxes = [Box()]
+    for centre in centres:
+        region = add_dominance_cut(region, problem, centre)
+        boxes = remove_everywhere(problem, boxes, centre)
+
+    models = [b.restricted(problem.model) for b in boxes]
+    checked = 0
+    for x in enum.feasible:
+        in_boxes = any(m.is_feasible(x) for m in models)
+        # the cut region keeps x iff some criterion strictly improves on every
+        # centre -- exactly what the boxes keep
+        survives = all(any(a > b for a, b in zip(problem.Z(x), problem.Z(c)))
+                       for c in centres)
+        assert in_boxes == survives, (x, in_boxes, survives)
+        checked += 1
+    return f"{checked} points, cut and box list remove the same set"
+
+
+def test_hybrid_handles_fractional_criteria():
+    rng = random.Random(24680)
+    compared = 0
+    for _ in range(8):
+        problem, phi, bounds = random_moilfp(rng)
+        try:
+            paper = optimize_over_efficient_set(problem, phi)
+        except (ZeroDivisionError, ValueError):
+            continue
+        hybrid = optimize_hybrid(problem, phi, switch_after=1)
+        assert hybrid.value == paper.value, (hybrid.value, paper.value)
+        compared += 1
+    assert compared >= 4, compared
+    return f"{compared} fractional instances agree"
+
+
+def test_hybrid_keeps_the_answer_certified_under_a_budget():
+    """Stopped in either phase, the incumbent is real and the bound holds."""
+    rng = random.Random(13579)
+    checked = 0
+    for _ in range(5):
+        problem, phi, bounds = random_instance(rng)
+        truth = optimize_over_efficient_set(problem, phi).value
+        for budget in (0.001, 0.05, 0.5):
+            sol = optimize_hybrid(problem, phi, switch_after=1,
+                                  time_budget=budget)
+            if sol.value is not None:
+                assert sol.value <= truth, (budget, sol.value, truth)
+            if sol.upper_bound is not None:
+                assert sol.upper_bound >= truth, (budget, sol.upper_bound, truth)
             if sol.proved_optimal:
                 assert sol.value == truth
             checked += 1

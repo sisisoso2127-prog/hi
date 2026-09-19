@@ -111,9 +111,35 @@ def split(problem: MOILFP, box: Box, centre: Sequence[Fraction],
             for k in range(problem.p)]
 
 
+def remove_everywhere(problem: MOILFP, boxes: Sequence[Box],
+                      centre: Sequence[Fraction],
+                      bound: Optional[Fraction] = None) -> List[Box]:
+    """Delete ``{ Z <= Z(centre) }`` from **every** box of a list.
+
+    This is what carries a decision-space cut over into criterion space: the
+    cut and this operation remove exactly the same set, one as `p` binaries and
+    `p+1` big-M rows bolted onto a model, the other as a rewrite of a list.
+    Applying it once per cut already made turns a half-finished run of the
+    paper's method into the starting box list of this one, so the work done is
+    kept rather than thrown away.
+
+    The list can grow by a factor of `p` per cut, but the boxes that come out
+    empty are dropped by their own sub-problem on the first pass.
+    """
+    out: List[Box] = []
+    for box in boxes:
+        out.extend(split(problem, box, centre,
+                         bound if bound is not None else box.bound))
+    return out
+
+
 def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
                                 max_boxes: int = 200_000,
                                 time_budget: Optional[float] = None,
+                                initial_boxes: Optional[Sequence[Box]] = None,
+                                incumbent: Optional[Sequence[Fraction]] = None,
+                                incumbent_value: Optional[Fraction] = None,
+                                explored_points: Optional[Sequence] = None,
                                 verbose: bool = False) -> Solution:
     """Solve ``max { Phi(x) : x efficient for (P_D) }`` by searching boxes.
 
@@ -134,6 +160,12 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
         Seconds after which to stop and return the incumbent with a certified
         gap.  The bound is ``max`` over the boxes still open of the value their
         parent reached, which bounds every efficient point they still hold.
+    initial_boxes, incumbent, incumbent_value, explored_points
+        Start from work already done rather than from scratch -- what
+        :func:`lfp_efficient.optimize_hybrid` hands over when it switches.  The
+        boxes must together cover every criterion vector not already settled,
+        and the incumbent must be attained at a known efficient point; both
+        hold for what the hybrid passes.
     verbose
         Print each box as it is settled.
 
@@ -143,9 +175,9 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
     deadline = None if time_budget is None else monotonic() + time_budget
     positive_denominator = denominator_stays_positive(problem.model, phi)
 
-    phi_opt: Optional[Fraction] = None
-    x_opt: Optional[List[Fraction]] = None
-    explored: List[List[Fraction]] = []
+    phi_opt: Optional[Fraction] = incumbent_value
+    x_opt: Optional[List[Fraction]] = list(incumbent) if incumbent else None
+    explored: List[List[Fraction]] = [list(p) for p in (explored_points or [])]
     logs: List[IterationLog] = []
     initial_gap: Optional[Fraction] = None
 
@@ -179,7 +211,8 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
             print(sol.report(include_iterations=False))
         return sol
 
-    push(Box())
+    for box in (initial_boxes if initial_boxes is not None else [Box()]):
+        push(box)
     settled = 0
 
     while open_boxes:
