@@ -32,6 +32,7 @@ from .edges import (alternative_optima_columns, clean_tableau_at,
                     edge_direction, explore_edges, max_step, max_step_in,
                     reduced_gradient, walk_edge)
 from .efficiency import (EfficiencyTest, add_dominance_cut, add_sylva_crema_cut,
+                         efficient_dominator,
                          best_with_same_criterion, has_linear_criteria,
                          lower_bounds, repair_to_efficient, spread_weights,
                          test_efficiency, weighted_sum_efficient)
@@ -58,7 +59,8 @@ __all__ = [
     "random_maximal_point",
     "test_efficiency", "EfficiencyTest", "lower_bounds",
     "add_sylva_crema_cut", "add_dominance_cut", "best_with_same_criterion",
-    "repair_to_efficient", "weighted_sum_efficient", "spread_weights",
+    "repair_to_efficient", "efficient_dominator",
+    "weighted_sum_efficient", "spread_weights",
     "has_linear_criteria",
     "augmented_tchebychev_efficient", "ideal_point", "tchebychev_incumbent",
     "reduced_gradient", "alternative_optima_columns", "max_step", "max_step_in",

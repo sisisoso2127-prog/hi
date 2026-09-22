@@ -59,7 +59,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from .algorithm import Solution
 from .criterion_space import optimize_in_criterion_space
-from .efficiency import repair_to_efficient, test_efficiency
+from .efficiency import efficient_dominator, test_efficiency
 from .model import GE, LE, FractionalObjective, MOILFP, Model
 from .rational import F, ZERO
 
@@ -336,8 +336,8 @@ def metaheuristic_incumbent(problem: MOILFP, phi: FractionalObjective,
     best: Optional[Tuple[List[Fraction], Fraction]] = None
     for _, point in scored[:candidates]:
         test = test_efficiency(problem, point)
-        efficient = point if test.efficient else repair_to_efficient(problem,
-                                                                    test.witness)
+        efficient = point if test.efficient else efficient_dominator(problem,
+                                                                     test)
         try:
             value = phi(efficient)
         except ZeroDivisionError:

@@ -275,7 +275,7 @@ def certify_optimum(problem: MOILFP, phi, x_opt: Sequence[Fraction],
     reference methods that stays affordable once ``|D|`` runs into the hundreds
     of thousands.
     """
-    from .efficiency import repair_to_efficient, test_efficiency
+    from .efficiency import efficient_dominator, test_efficiency
 
     x_opt = list(x_opt)
     if not problem.model.is_feasible(x_opt):
@@ -322,6 +322,6 @@ def certify_optimum(problem: MOILFP, phi, x_opt: Sequence[Fraction],
         if outcome.efficient:
             return Certificate(False, challengers, tests,
                                reason=f"the efficient point {pt} has Phi > {value}")
-        witnesses.append(problem.Z(repair_to_efficient(problem, outcome.witness)))
+        witnesses.append(problem.Z(efficient_dominator(problem, outcome)))
 
     return Certificate(True, challengers, tests)
