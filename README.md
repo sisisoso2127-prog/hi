@@ -61,6 +61,59 @@ bound and the audit trail of every iteration; with `time_budget=...` the method
 becomes **anytime** — stop whenever and get a real solution attained at a known
 efficient point, a bound, and the absolute gap between them.
 
+## The other question: show me the solutions
+
+The rest of this package answers *which efficient point maximises `Phi`*, and
+proves it. `efficient_subset` answers the question a decision maker usually
+asks instead — **show me efficient solutions with their `Phi`, so I can look at
+them**:
+
+```python
+from lfp_efficient import efficient_subset
+
+result = efficient_subset(problem, phi)
+print(result.report())
+for x, value in zip(result.points, result.values):
+    print(x, value)
+```
+
+```
+7 efficient solutions (every one certified)
+  Phi* = 5/17 at (3, 3)  [proved optimal]
+     7 from the Pareto archive
+  this is a SUBSET of E(P_D); completeness is not claimed
+```
+
+Nothing here is new computation — it packages two sources the machinery
+already had:
+
+| source | coverage of `E(P_D)` | cost |
+|---|---:|---:|
+| the exact search's own trail | 51 % | free — a by-product of proving optimality |
+| the Pareto archive, verified | 98–100 % | 0.07 s walk, **0.25–0.62 s to certify** |
+| augmented Tchebychev | 39 % | 0.60 s |
+
+**The Tchebychev generator is not included, and that is a measured decision.**
+On its own it reaches 39 %, and on top of the archive it adds **nothing at
+all** — every point it found was already there. It would cost roughly ten times
+the archive's walk and deliver no extra solution. It stays exported for anyone
+who wants it deliberately.
+
+**Certification is the cost, not the search.** The archive filters by dominance
+among points it has *seen*, which is not the exact test — about one member in
+2000 turns out not to be efficient. Certifying the whole archive is one integer
+program per member, six to eight times the walk itself. It is on by default,
+because an uncertified "efficient set" is a claim rather than a result;
+`certify=False` is there for anyone who knows what they are holding.
+
+**Two things it does not claim.** It is not the whole efficient set, and the
+coverage above is measured against exhaustive enumeration *on instances small
+enough to enumerate* — where `E(P_D)` cannot be enumerated there is no way to
+know what fraction was found. And the exact search's trail is a **biased**
+sample, not a representative one: it is exactly the points the search had to cut
+on, so it concentrates where `Phi` is large. For ranking by `Phi` that bias
+points the useful way, but it is a bias.
+
 ## What is verified, and how
 
 | | |

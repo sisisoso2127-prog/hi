@@ -32,6 +32,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            repair_to_efficient)
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for
+from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.milp import solve_relaxation, warm_relaxation
 from lfp_efficient.simplex import (INFEASIBLE, OPTIMAL as LP_OPTIMAL, STALLED,
                                    add_linear_row, restore_feasibility)
@@ -647,6 +648,75 @@ def test_the_known_dominator_shortcut_keeps_the_answer():
         checked += 1
     assert checked >= 10, checked
     return f"{checked} instances agree with the independent scan"
+
+
+def test_every_delivered_solution_is_efficient_and_scored():
+    """The deliverable's whole claim: each member is efficient, and its value
+    is the one ``Phi`` actually takes there."""
+    rng = random.Random(606)
+    members = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        result = efficient_subset(problem, phi)
+        assert result.certified
+        for point, value in zip(result.points, result.values):
+            assert test_efficiency(problem, point).efficient, point
+            assert phi(point) == value, (point, value)
+            members += 1
+        assert result.values == sorted(result.values, reverse=True)
+    assert members > 20, members
+    return f"{members} delivered solutions, all efficient and correctly scored"
+
+
+def test_the_delivered_set_contains_the_proved_optimum():
+    """A subset that omitted the answer would be worse than useless, so the
+    optimum must be in it -- and first, since the members are ranked."""
+    rng = random.Random(707)
+    checked = 0
+    for _ in range(10):
+        problem, phi, bounds = random_instance(rng)
+        best_x, best_value, _, _ = best_over_efficient_set_by_scan(
+            problem, phi, bounds)
+        if best_x is None:
+            continue
+        result = efficient_subset(problem, phi)
+        assert result.proved_optimal, "the exact half must still prove its answer"
+        assert result.optimum is not None
+        assert result.optimum[1] == best_value, (result.optimum, best_value)
+        assert result.values[0] == best_value
+        assert tuple(result.points[0]) == tuple(result.optimum[0])
+        checked += 1
+    assert checked >= 8, checked
+    return f"{checked} instances, the optimum is present and ranked first"
+
+
+def test_each_source_can_be_asked_for_alone():
+    """The two sources are independent, and asking for neither is refused
+    rather than silently returning nothing."""
+    problem, phi = paper_problem()
+    only_exact = efficient_subset(problem, phi, metaheuristic=False)
+    assert only_exact.proved_optimal and len(only_exact) > 0
+    assert set(only_exact.sources) == {"the exact search"}
+
+    only_heuristic = efficient_subset(problem, phi, exact=False)
+    assert only_heuristic.optimum is None, "no exact half, so nothing is proved"
+    assert not only_heuristic.proved_optimal
+    assert set(only_heuristic.sources) == {"the Pareto archive"}
+
+    for point in only_heuristic.points:
+        assert test_efficiency(problem, point).efficient
+
+    uncertified = efficient_subset(problem, phi, exact=False, certify=False)
+    assert not uncertified.certified, "an uncertified set must say so"
+
+    try:
+        efficient_subset(problem, phi, exact=False, metaheuristic=False)
+    except ValueError as exc:
+        assert "at least one source" in str(exc)
+    else:
+        raise AssertionError("asking for no source was accepted")
+    return (f"exact alone {len(only_exact)}, archive alone "
+            f"{len(only_heuristic)}, both refused when neither")
 
 
 def test_batching_is_refused_on_fractional_criteria():
