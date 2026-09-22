@@ -1,0 +1,26 @@
+===============================================================================
+MOUVEMENT C : REPARER OU RETIRER - plafond 300, 2 graines
+===============================================================================
+   n  corr  gr  ecart libre  ecart ancre   ecart sans     q_lb libre/ancre/sans
+-------------------------------------------------------------------------------
+  10  0.00   1         0.0%         0.0%         0.0%  37.667 / 37.667 / 37.667
+  10  0.00   2         0.0%         0.0%         0.0%  4.722 / 4.722 / 4.722
+  10  0.50   1         0.0%         0.0%         0.0%  37.667 / 37.667 / 37.667
+  10  0.50   2         0.0%         0.0%         0.0%  4.680 / 4.680 / 4.680
+  20  0.00   1        80.8%        74.5%        72.4%  3.149 / 3.020 / 3.021
+  20  0.00   2        40.6%        44.3%        58.4%  12.400 / 12.400 / 8.688
+  20  0.50   1         0.0%         0.0%         0.0%  2.157 / 2.157 / 2.157
+  20  0.50   2         0.0%         0.0%         0.0%  17.000 / 17.000 / 17.000
+  30  0.00   1        78.6%        89.8%        75.2%  4.387 / 2.265 / 3.519
+  30  0.00   2        23.7%        65.6%        45.6%  32.250 / 15.235 / 23.000
+  30  0.50   1         1.2%         0.0%         4.4%  3.161 / 3.161 / 3.079
+  30  0.50   2        13.7%         0.0%         0.0%  37.750 / 37.750 / 37.750
+-------------------------------------------------------------------------------
+  libre  ecart median    0.6%   moyen   19.9%   contre `libre` : mieux 0  pire 0  egal 12   rendement C 4/316
+  ancre  ecart median    0.0%   moyen   22.8%   contre `libre` : mieux 3  pire 3  egal 6   rendement C 4/358
+  sans   ecart median    0.0%   moyen   21.3%   contre `libre` : mieux 3  pire 3  egal 6   C retire
+
+  Lecture. `sans` meilleur => le mouvement ne merite pas sa place.
+  `ancre` meilleur => le defaut etait sa conception, non son
+  principe. Aucun des deux => il est neutre, et son cout est du
+  gaspillage qu'il faut nommer.

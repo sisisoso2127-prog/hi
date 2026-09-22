@@ -1,0 +1,20 @@
+================================================================================================================
+SECONDE ROUTE (seuil avance sur le relache) - plafond 900 appels entiers, 3 graines, declencheur ACTIF
+================================================================================================================
+   n  corr  gr  reprod  ecart sans  ecart avec  gain pts   statut  tours  ILP 2e   coupes s/a     ILP s/a  coherent
+----------------------------------------------------------------------------------------------------------------
+  20  0.00   1     oui       97.3%       68.5%   +28.78  optimal      3       3    205/201     900/891          ok
+  20  0.00   2     oui       21.0%       21.5%    -0.50non engagee      0       0    165/162     900/900          ok
+  20  0.00   3     oui        0.0%        0.0%    +0.00non engagee      0       0    193/193     900/900          ok
+  20  0.50   1     oui        0.0%        0.0%    +0.00     None      0       0     32/32      143/143          ok
+  20  0.50   2     oui        0.0%        0.0%    +0.00     None      0       0     40/40      571/571          ok
+  20  0.50   3     oui        0.0%        0.0%    +0.00     None      0       0     40/40      561/561          ok
+  30  0.00   1     oui       92.9%       71.0%   +21.97  optimal      3       3    149/147     900/891          ok
+
+================================================================================
+JOURNAL INCOMPLET -- banc interrompu par un delai de 5400 s (code 124). Ce
+qui precede est donc PARTIEL, et ce qui manque n'a pas ete joue. Marqueur
+place dans le fichier et non seulement dans le log de lancement : un journal
+partiel qui ne se declare pas partiel sera compare a un tableau comme s'il
+etait complet.
+================================================================================

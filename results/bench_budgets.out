@@ -1,0 +1,33 @@
+============================================================================
+VIVIER : UN PLAFOND OU DEUX - plafond 300 appels, 3 graines
+============================================================================
+   n  corr  gr  ecart commun  ecart separes    gain   coupes c/s  prouve c/s
+----------------------------------------------------------------------------
+  20  0.00   1         80.8%          80.8%   +0.00      109/108         F/F
+  20  0.00   2         40.6%          41.0%   -0.35      102/101         F/F
+  20  0.00   3         37.4%          37.4%   +0.00        84/84         F/F
+  20  0.50   1          0.0%           0.0%   +0.00        32/32         T/T
+  20  0.50   2          0.0%           0.0%   +0.00        56/56         T/T
+  20  0.50   3          0.0%           0.0%   +0.00        57/57         T/T
+  30  0.00   1         78.6%          78.6%   +0.00        93/93         F/F
+  30  0.00   2         23.7%          22.3%   +1.38      106/125         F/F
+  30  0.00   3         32.5%          32.5%   +0.00      109/115         F/F
+  30  0.50   1          1.2%           1.2%   +0.00        83/83         F/F
+  30  0.50   2         13.7%          13.7%   +0.00        91/89         F/F
+  30  0.50   3          0.0%           0.0%   +0.00        40/64         T/T
+  40  0.00   1         96.5%          96.5%   +0.00      102/114         F/F
+  40  0.00   2         87.3%          87.2%   +0.07        93/95         F/F
+  40  0.00   3         60.3%          57.7%   +2.61      102/120         F/F
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+  40  0.50   1          0.0%           0.0%   +0.00        56/56         T/T
+  40  0.50   2         43.9%          43.9%   +0.00        87/87         F/F
+  40  0.50   3         16.7%          16.9%   -0.19        89/87         F/F
+----------------------------------------------------------------------------
+  ecart median   commun  28.1%   separes  27.4%
+  ecart moyen    commun  34.1%   separes  33.9%
+  optimalite prouvee   commun 5/18   separes 5/18
+  `separes` contre `commun` : MIEUX 3  PIRE 2  EGAL 13
+
+  Si `separes` degrade, la regle du vivier unique est fondee.
+  Sinon, la justification publiee tombe et il faut le dire.

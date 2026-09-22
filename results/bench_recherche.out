@@ -1,0 +1,27 @@
+=================================================================
+RECHERCHE SEULE - plafonds [300, 900] appels entiers, 2 graines
+=================================================================
+   n  corr  gr     q_lb @300     q_lb @900   progression  archive
+-----------------------------------------------------------------
+  20  0.00   1        3.1489        3.1489         +0.0%       50
+  20  0.00   2       12.4000       15.5000        +25.0%       70
+  20  0.50   1        2.1569        2.1569         +0.0%        4
+  20  0.50   2       13.7500       17.0000        +23.6%       39
+  30  0.00   1        4.3871        4.3871         +0.0%       52
+  30  0.00   2       32.2500       34.2500         +6.2%       87
+  30  0.50   1        3.1613        3.1613         +0.0%        9
+  30  0.50   2       37.7500       37.7500         +0.0%       42
+  40  0.00   1        3.5750        5.3478        +49.6%       71
+  40  0.00   2        3.7170        3.7170         +0.0%       35
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+  40  0.50   1        7.1702        7.8421         +9.4%       29
+  40  0.50   2        3.0196        3.0196         +0.0%       36
+-----------------------------------------------------------------
+  lignes ou q_lb PROGRESSE en triplant le plafond : 5/12
+  progression : mediane +0.0 %   moyenne +9.5 %   max +49.6 %
+
+  Lecture. Une progression franche dit que la recherche n'etait
+  pas a son plafond, donc qu'une part de l'ecart garanti lui est
+  imputable et non a la borne. Une progression nulle dit le
+  contraire, et renvoie la question a la construction du relache.

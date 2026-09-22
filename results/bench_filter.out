@@ -1,0 +1,21 @@
+========================================================================================================
+A/B DU LEMME DE CLOTURE - 12 instances, budget 12 s par variante, comparaison APPARIEE
+========================================================================================================
+instance                   q identique  prouve A/B   ILP A   ILP B   dILP   LP B  coupes A/B  arch A/B  lemme  filtre
+--------------------------------------------------------------------------------------------------------
+molfp_n8_m5_p4_c000_s2             ouiT/         T     555     555     +0    163    40/40      20/20        0     non
+molfp_n8_m5_p4_c000_s1             ouiT/         T     432     432     +0    179    40/40      20/20        0     non
+molfp_n10_m6_p3_c000_s2            ouiT/         T     299     299     +0    120    35/35      21/21        0     non
+molfp_n15_m8_p3_c000_s1            ouiT/         T     221     200    -21    134    36/36      26/26       21     non
+molfp_n5_m3_p4_c000_s1             ouiT/         T     237     215    -22    169    36/36      25/25       22     non
+molfp_n6_m4_p4_c000_s1             ouiT/         T     255     231    -24    144    30/30      24/24       24     non
+molfp_n20_m11_p3_c050_s2           ouiT/         T     432     432     +0    129    40/40      20/20        0     non
+molfp_n6_m4_p3_c000_s1             ouiT/         T     180     162    -18    126    35/35      21/21       18     non
+molfp_n5_m3_p2_c090_s2             ouiT/         T      22      22     +0      7     3/3        1/1         0     non
+molfp_n5_m3_p3_c090_s1             ouiT/         T      35      35     +0     19     6/6        1/1         0     non
+molfp_n7_m4_p2_c090_s1             ouiT/         T      29      29     +0     11     5/5        1/1         0     non
+molfp_n8_m5_p3_c090_s2             ouiT/         T      38      38     +0     19     6/6        1/1         0     non
+--------------------------------------------------------------------------------------------------------
+  delta ILP par paire : mediane +0   moyenne -7.1   total -85   baisses 4/12
+  preuves : gagnees 0   perdues 0   inchangees 12
+  VALIDITE q_lb <= q_ub : TOUT VALIDE
