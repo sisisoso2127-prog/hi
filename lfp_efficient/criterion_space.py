@@ -130,7 +130,8 @@ from time import monotonic
 from typing import List, Optional, Sequence, Tuple
 
 from .algorithm import IterationLog, Solution
-from .efficiency import best_with_same_criterion, repair_to_efficient, test_efficiency
+from .efficiency import (best_with_same_criterion, efficient_dominator,
+                         test_efficiency)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
                    solve_fractional_milp)
 from .model import LE, FractionalObjective, MOILFP, Model
@@ -357,7 +358,7 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
                 explored.append(x_b)
             log.efficient_point = x_b
         else:
-            centre = repair_to_efficient(problem, test.witness)
+            centre = efficient_dominator(problem, test)
             if centre not in explored:
                 explored.append(centre)
             log.efficient_point = centre

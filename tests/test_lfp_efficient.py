@@ -27,7 +27,8 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            solve_fractional_milp, solve_linear_milp,
                            solve_relaxation, test_efficiency,
                            augmented_tchebychev_efficient, ideal_point,
-                           tchebychev_incumbent)
+                           tchebychev_incumbent, efficient_dominator,
+                           repair_to_efficient)
 from lfp_efficient.rational import F, fmt
 
 
@@ -453,6 +454,76 @@ def test_the_early_exit_never_changes_the_answer_when_seeded():
         agreed += 1
     assert agreed >= 7, agreed
     return f"{agreed} instances, seeded and unseeded agree and both proved"
+
+
+def test_a_failed_tests_witness_is_already_efficient_on_linear_criteria():
+    """Ecker & Kouada, checked rather than assumed.
+
+    With linear criteria the test maximises a strictly positive weighted sum of
+    ``Z`` over ``{ Z(y) >= Z(x*) }``; anything dominating a maximiser lies in
+    that region and scores strictly higher, so no maximiser is dominated.
+    :func:`efficient_dominator` relies on this to skip an integer program.
+    """
+    rng = random.Random(90210)
+    checked = 0
+    for _ in range(14):
+        problem, _, bounds = random_instance(rng)
+        for _ in range(10):
+            point = [F(rng.randint(0, b)) for b in bounds]
+            if not problem.model.is_feasible(point):
+                continue
+            outcome = test_efficiency(problem, point)
+            if outcome.efficient:
+                continue
+            witness = outcome.witness
+            assert test_efficiency(problem, witness).efficient, witness
+            assert efficient_dominator(problem, outcome) == list(witness)
+            assert problem.dominates(witness, point), (witness, point)
+            checked += 1
+    assert checked > 15, checked
+    return f"{checked} witnesses, every one efficient and dominating"
+
+
+def test_the_dominator_shortcut_agrees_with_the_walk_it_replaces():
+    """The shortcut must return what ``repair_to_efficient`` would, or the
+    search would cut on a different centre and stop being the same method."""
+    rng = random.Random(1337)
+    agreed = 0
+    for _ in range(12):
+        problem, _, bounds = random_instance(rng)
+        for _ in range(8):
+            point = [F(rng.randint(0, b)) for b in bounds]
+            if not problem.model.is_feasible(point):
+                continue
+            outcome = test_efficiency(problem, point)
+            if outcome.efficient:
+                continue
+            assert (efficient_dominator(problem, outcome)
+                    == repair_to_efficient(problem, outcome.witness))
+            agreed += 1
+    assert agreed > 15, agreed
+    return f"{agreed} cases, shortcut == walk"
+
+
+def test_the_walk_is_still_taken_on_fractional_criteria():
+    """With a ratio the objective is no longer monotone in ``Z``, so the
+    shortcut must not fire -- it has to fall back to the walk."""
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4).add([1, 1], LE, 5)
+    problem = MOILFP(model, [FractionalObjective([1, 0], [1, 1], 1, 2),
+                             FractionalObjective([0, 1], [1, 0], 0, 3)])
+    walked = 0
+    for combo in [(0, 0), (1, 0), (0, 1), (1, 1), (2, 1)]:
+        point = [F(v) for v in combo]
+        if not model.is_feasible(point):
+            continue
+        outcome = test_efficiency(problem, point)
+        if outcome.efficient:
+            continue
+        result = efficient_dominator(problem, outcome)
+        assert test_efficiency(problem, result).efficient, result
+        walked += 1
+    assert walked > 0, "no inefficient point to walk from"
+    return f"{walked} fractional repairs, each ending efficient"
 
 
 def test_batching_is_refused_on_fractional_criteria():

@@ -58,7 +58,7 @@ from typing import Callable, List, Optional, Sequence
 
 from .edges import EdgeCandidate, clean_tableau_at, explore_edges
 from .efficiency import (add_dominance_cut, best_with_same_criterion,
-                         has_linear_criteria, lower_bounds, repair_to_efficient,
+                         has_linear_criteria, lower_bounds, efficient_dominator,
                          spread_weights, test_efficiency, weighted_sum_efficient)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
                    solve_fractional_milp)
@@ -440,7 +440,7 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
         # Walking the dominance chain settles it, and costs one confirming
         # test when the chain is already at its end -- which is always the
         # case for linear criteria.
-        x_tilde = repair_to_efficient(problem, test.witness)
+        x_tilde = efficient_dominator(problem, test)
         cut_vectors.append(problem.Z(x_tilde))
         cache[tuple(x_tilde)] = True
         explored.append(x_tilde)

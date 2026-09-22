@@ -186,6 +186,48 @@ ideas: on the metaheuristic-seeded hybrid this exit cuts only **4 %** of boxes
 not complements** — a good incumbent arrives early enough that the hopeless
 tail barely forms.
 
+**Not rediscovering Ecker & Kouada once per box.** When a box's maximiser
+fails the efficiency test, the search needs an efficient point to cut on
+instead, and called `repair_to_efficient` on the test's witness. That walk
+*begins* with a full efficiency test on the witness — and with linear criteria
+the answer is known in advance. The test maximises `Σₖ(Zₖ(y) − Zₖ(x*))`, a
+strictly positive weighted sum of `Z` up to a constant, over
+`{y ∈ D : Z(y) ≥ Z(x*)}`. If some `z` dominated a maximiser `y*`, then
+`Z(z) ≥ Z(y*) ≥ Z(x*)`, so `z` lies in that same region and scores strictly
+higher — contradiction. No maximiser is dominated, ties included.
+
+Checked before being relied on: **349 witnesses of failed tests across 60
+linear-criteria instances, none of them dominated.** `efficient_dominator`
+takes the shortcut when the criteria are linear and falls back to the walk when
+they are not — with a ratio the `Dₖ(y)` factor breaks monotonicity in `Z` and a
+dominating point can score lower.
+
+| | base | shortcut |
+|---|---:|---:|
+| integer programs | 1466 | **1341** (−8.5 %) |
+| branch-and-bound nodes | 8105 | **7618** (−6.0 %) |
+| boxes solved, optima | — | identical |
+
+**A note on how that was measured, which matters more than the 6 %.** The
+wall-clock A/B for this change reads 0.96× — *slower* — and is faster on 9 of
+18 instances. That cannot be causal: removing 125 integer programs cannot cost
+time. This machine's noise floor is roughly ±30 % per instance even at
+per-instance minima over five repeats, so it simply cannot resolve a 6 %
+effect. The table above therefore counts **deterministic work** — programs and
+nodes — which is the same number on every run and every machine.
+
+The prediction was wrong too, and in an instructive way. The profile that
+motivated the change showed the efficiency test at 18.4 ms/call, the dearest
+operation in the search; but what the shortcut removes is the *repair's* test
+at 7.68 ms — the cheap kind, because proving `θ = 0` on a point already known
+efficient is easier than searching for a dominator. 8.5 % of the programs are
+only 6.0 % of the nodes. Reasoning from the mean cost of a call would have
+overstated this by half.
+
+The shortcut is used at all four sites that pass a failed test's witness, so
+the paper's own method gets the same saving and the comparison between the two
+stays fair.
+
 **The augmented weighted Tchebychev program**
 (`augmented_tchebychev_efficient`) is the scalarisation the surrounding
 literature reaches for — Chaabane, Brahmi and Ramdani (2012) optimise over an
