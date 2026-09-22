@@ -49,11 +49,15 @@ $1.42\times$. Seeding it from the augmented weighted Tchebychev program --- the
 scalarization the surrounding literature generates efficient points with ---
 \emph{loses} to not seeding at all, at $0.71\times$.
 
-A fourth change, pruning the open list the moment its best bound cannot beat
-the incumbent, removes a quarter of the sub-problems and no measurable time;
-stacked on the metaheuristic seed it removes 4\% rather than 25\%, because the
-two feed the same bound comparison and are substitutes rather than
-complements.
+Two further changes sharpen the exact search without altering what it returns.
+Pruning the open list the moment its best bound cannot beat the incumbent
+removes a quarter of the sub-problems and no measurable time; stacked on the
+metaheuristic seed it removes 4\% rather than 25\%, because the two feed the
+same bound comparison and are substitutes rather than complements. And not
+re-deriving a theorem of Ecker and Kouada once per inefficient box removes
+$6\%$ of the branch \& bound nodes at an identical box count. Both are reported
+in work rather than in seconds, because both effects are smaller than this
+machine's noise floor and no number of repeats changes that.
 
 The Tchebychev result is the informative one, and it does not say the
 scalarization is weak. As a generator it is strictly stronger than a weighted sum, reaching
@@ -332,7 +336,67 @@ This is why every seed in this note is \emph{verified} before it is used, and
 why that verification, not the heuristic, turns out to be the cost of
 Section~\ref{sec:meta}.
 
+\subsection{Not paying twice for Ecker \& Kouada}
+\label{sec:ecker}
+
+When a box's maximiser $x_B$ fails the efficiency test, the algorithm needs an
+efficient point to cut on in its place, and the obvious way to get one is to
+walk the dominance chain from the test's witness until a test returns
+$\theta = 0$. With \emph{linear} criteria that walk is over before it starts,
+and the program that discovers this can be skipped.
+
+\begin{proposition}\label{prop:ecker}
+With linear criteria, every optimal solution of the efficiency test applied to
+$x^{*}$ is efficient.
+\end{proposition}
+
+\begin{proof}
+With $d_k = 0$ the test maximizes
+$\sum_k e_k(y; x^{*}) = \sum_k \bigl(\Z_k(y) - \Z_k(x^{*})\bigr)$, a strictly
+positive weighted sum of $\Z$ up to an additive constant, over
+$R = \{\, y \in \Dset : \Z(y) \geqslant \Z(x^{*}) \,\}$. Let $y^{*}$ be a
+maximizer and suppose $z \in \Dset$ dominated it. Then
+$\Z(z) \geqslant \Z(y^{*}) \geqslant \Z(x^{*})$, so $z \in R$; and
+$\sum_k \Z_k(z) > \sum_k \Z_k(y^{*})$ because at least one component is
+strictly larger. That contradicts optimality, so no maximizer is dominated ---
+ties included, since the argument never assumes $y^{*}$ unique.
+\end{proof}
+
+\noindent
+The proposition is due to Ecker and Kouada; what is measured here is the cost
+of not using it. With \emph{fractional} criteria it is false, and the proof
+says where: the $k$-th term of the objective carries a factor $D_k(y)$ that
+varies from point to point, the objective stops being monotone in $\Z$, and a
+dominating point can score lower than a dominated one. There the walk is paid.
+
+Checked before being relied on: 349 witnesses of failed tests across 60
+linear-criteria instances, none of them dominated.
+
+\begin{table}[h]
+\centering
+\caption{Skipping the redundant test, over the 18 instances. The search is
+\emph{identical} --- same centres, same boxes, same answers --- so only the
+price of reaching each centre moves.}
+\begin{tabular}{lrrr}
+\toprule
+ & before & after & \\
+\midrule
+integer programs solved  & $1466$ & $1341$ & $-8.5\%$ \\
+branch \& bound nodes     & $8105$ & $7618$ & $-6.0\%$ \\
+boxes solved, optima     & \multicolumn{3}{c}{identical} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The programs removed are \emph{cheaper than average} --- $8.5\%$ of the count
+against $6.0\%$ of the nodes --- because proving $\theta = 0$ on a point already
+known to be efficient is easier than searching for a dominator. The same
+shortcut applies to the decision-space method, which uses the same test, so the
+comparison of Section~\ref{sec:results} is unaffected by it.
+
 \section{Computational results: decision space versus criterion space}
+\label{sec:results}
 
 All figures come from an exact rational implementation with no floating-point
 arithmetic anywhere, so every comparison below is between two exactly solved
@@ -708,7 +772,7 @@ a subset, and they are not interchangeable: one is a certified partial sample
 of the front, the other a near-complete sample whose membership is a
 conjecture until tested.
 
-\section{Two measurement errors, and what they cost}
+\section{Three measurement lessons, and what they cost}
 
 We report these because the direction of a result is worth less than the
 knowledge of how it was checked.
@@ -733,6 +797,25 @@ $0.91\times$), the Pareto seed ties or wins --- not the size of any win. Single
 speed-up figures quoted without their instance family should be read with this
 in mind, including ours.
 
+\paragraph{Below the noise floor, count work and not seconds.} The change of
+Section~\ref{sec:ecker} removes 125 integer programs, and its wall-clock A/B
+reads $0.96\times$ --- \emph{slower} --- faster on 9 of 18 instances. That
+cannot be causal: removing work cannot cost time. The machine used here has a
+noise floor of roughly $\pm 30\%$ per instance even at per-instance minima over
+five repeats, so it cannot resolve a $6\%$ effect, and no number of repeats
+fixes that. Counting integer programs and branch \& bound nodes gives the same
+figure on every run and every machine, which is why
+Section~\ref{sec:ecker} reports those and no seconds at all.
+
+Two habits follow, and we adopted both only after failing at them. A
+measurement taken while anything else was running on the machine is discarded,
+not quoted --- the first A/B for that section was contaminated exactly so and
+was re-run. And a gain predicted from the \emph{mean} cost of a call is not a
+prediction: the profile that motivated the change showed the efficiency test at
+$18.4$\,ms per call, the dearest operation in the search, but what the shortcut
+removes is the repair's test at $7.68$\,ms, the cheap kind. Reasoning from the
+wrong row of the right profile overstated the gain by half.
+
 \section{Summary of what was and was not gained}
 
 \begin{table}[h]
@@ -751,12 +834,13 @@ Tchebychev as a generator            & \textbf{win} & reaches unsupported points
 incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
 early exit on a hopeless bound       & partial      & 25\% fewer boxes, no time \\
 early exit \emph{on top of} the seed  & \textbf{loss} & 4\% fewer boxes: a substitute \\
+skipping the redundant test          & \textbf{win} & 6\% fewer nodes, same search \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Of the nine, three are wins, four are losses, one is a tie and one pays in
+Of the ten, four are wins, four are losses, one is a tie and one pays in
 sub-problems but not in time. They are reported at the same length as the wins
 because they carry the same information: a hybridization pays only where the
 exact method has a mechanism the first phase can feed, that mechanism is
@@ -785,7 +869,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 55 tests. Several check
+exact rational arithmetic throughout, and carries 60 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -801,6 +885,15 @@ points would still agree with the optimum on favourable instances:
       checked efficient against exhaustive enumeration, and the refusals
       ($\rho \leqslant 0$, a zero weight, fractional criteria) are checked to
       fire.
+\item Proposition~\ref{prop:ecker} --- every witness of a failed test on
+      linear criteria is checked both efficient and dominating; the shortcut is
+      checked to return exactly what the walk it replaces returns, so the
+      centre never moves; and on fractional criteria the walk is checked to
+      still be taken and still to end efficient.
+\item The early exit of Section~\ref{sec:exit} --- the run must end with boxes
+      still open and unsolved while staying proved optimal and agreeing with
+      the independent scan, and a seeded run, where the exit fires sooner, must
+      return the same value as an unseeded one.
 \item The unsupported-reach claim --- on the reference instance, the three
       unsupported efficient points are all reached by \eqref{eq:tcheb} while no
       positive weighted sum reaches any.
