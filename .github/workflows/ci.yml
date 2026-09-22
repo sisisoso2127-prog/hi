@@ -73,6 +73,12 @@ jobs:
       - name: Fractional criteria (MOILFP)
         run: python examples/fractional_example.py
 
+      # The augmented weighted Tchebychev program of the surrounding
+      # literature, measured against the generators already in the package.
+      # Asserts that every seeded run returns the same proved optimum.
+      - name: Tchebychev comparison
+        run: python examples/tchebychev_study.py
+
   package:
     name: package (build and install)
     runs-on: ubuntu-latest

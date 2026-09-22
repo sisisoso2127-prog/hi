@@ -25,6 +25,9 @@ exact rational arithmetic.
 from .algorithm import IterationLog, Solution, optimize_over_efficient_set
 from .criterion_space import Box, optimize_in_criterion_space, remove_everywhere
 from .hybrid import optimize_hybrid
+from .metaheuristic import (ParetoArchive, metaheuristic_incumbent,
+                            optimize_hybrid_metaheuristic, pareto_local_search,
+                            random_maximal_point)
 from .edges import (alternative_optima_columns, clean_tableau_at,
                     edge_direction, explore_edges, max_step, max_step_in,
                     reduced_gradient, walk_edge)
@@ -42,17 +45,22 @@ from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
 from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
                     MOILP, Model)
 from .rational import F, fmt
+from .tchebychev import (augmented_tchebychev_efficient, ideal_point,
+                         tchebychev_incumbent)
 
 __all__ = [
     "Model", "MOILP", "MOILFP", "FractionalObjective", "Constraint",
     "LE", "GE", "EQ",
     "optimize_over_efficient_set", "Solution", "IterationLog",
     "optimize_in_criterion_space", "Box", "remove_everywhere",
-    "optimize_hybrid",
+    "optimize_hybrid", "optimize_hybrid_metaheuristic",
+    "metaheuristic_incumbent", "pareto_local_search", "ParetoArchive",
+    "random_maximal_point",
     "test_efficiency", "EfficiencyTest", "lower_bounds",
     "add_sylva_crema_cut", "add_dominance_cut", "best_with_same_criterion",
     "repair_to_efficient", "weighted_sum_efficient", "spread_weights",
     "has_linear_criteria",
+    "augmented_tchebychev_efficient", "ideal_point", "tchebychev_incumbent",
     "reduced_gradient", "alternative_optima_columns", "max_step", "max_step_in",
     "edge_direction", "walk_edge", "explore_edges", "clean_tableau_at",
     "solve_milp", "solve_linear_milp", "solve_fractional_milp",

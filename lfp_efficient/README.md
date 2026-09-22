@@ -504,6 +504,61 @@ difference here is structural rather than a matter of tuning.
 implementation of the paper, and this search is not in the paper. It is offered
 beside it, not in place of it.
 
+## An exact–metaheuristic hybrid
+
+`metaheuristic.optimize_hybrid_metaheuristic` runs a Pareto local search first
+and hands the box search an incumbent. Measured on 18 instances:
+
+```
+9.50s  ->  7.60s     1.25x     10 of 18 faster
+```
+
+Read by regime rather than by the total, because the heuristic's cost is nearly
+fixed:
+
+| | exact only | metaheuristic + exact | |
+|---|---:|---:|---:|
+| `hardest n=10` | 49 boxes, 3.02 s | 34 boxes, **1.94 s** | **1.56×** |
+| `n=8 s0` | 16 boxes, 0.53 s | 10 boxes, **0.34 s** | 1.53× |
+| `p=7 s1` | 197 boxes, 1.36 s | 120 boxes, **0.95 s** | 1.43× |
+| `p=5 s1` | 6 boxes, **0.02 s** | 6 boxes, 0.03 s | 0.56× |
+
+It wins where the search is expensive and loses where there was nothing to win.
+The **ceiling**, measured by handing the search the true optimum for free, is
+1.42×; at 1.25× the heuristic reaches 88 % of it.
+
+**Why it can pay here and cannot pay there.** Handing the *paper's* method the
+true optimum for free at iteration 1 saves **zero iterations** on all three
+reference instances — what gets cut is decided by the efficiency test on `x_l`,
+not by `Phi_opt`. A box, by contrast, is discarded **whole** when its bound
+fails to beat the incumbent. So the worth of a heuristic incumbent depends on
+which exact method it is hybridised with: no mechanism in one, a real one in
+the other. That contrast is measured in both directions and is the more
+interesting of the two results.
+
+**Where correctness lives.** The incumbent prunes whole boxes, so the value of
+a *dominated* point could prune away the true optimum. Nothing leaves the
+metaheuristic unverified: every candidate is confirmed efficient by the exact
+test of Theorem 1, or walked to an efficient point whose value is returned in
+its place. The heuristic decides where to look; it never decides what is true.
+A test pins exactly this — every incumbent efficient, and never above the
+optimum, against the independent scan.
+
+**Two things had to be right, and both were wrong first.** The neighbourhood
+needs **swaps** (one coordinate down, another up), not only unit steps: from a
+maximal point a step up is infeasible and a step down lowers every criterion
+with non-negative coefficients, so the archive refuses it and the walk dies at
+once — three archive points, an incumbent at 13 % of the optimum. With swaps:
+28–69 points and 60–100 %. And the archive **is** the search: restarting from
+fresh random points throws it away between walks, and four times the effort did
+not fix that monotonically (0.360, 0.280, 0.458).
+
+**What costs what.** Not the walk — it is 0.01–0.08 s and barely sensitive to
+its budget. The cost is the *verification*, one integer program per candidate,
+which is the price of soundness. Examining the single best archive member gave
+exactly the same incumbent as examining four on every instance tried, at a
+quarter to a half of the cost, so `candidates` defaults to 1.
+
 **Performance.** The method is MILP-bound: every iteration maximises `Phi` over
 a region carrying `p` extra binaries and `p+1` extra rows per cut already made,
 and that one sub-problem is 94 % of the run time. Profiling drove every choice
@@ -552,6 +607,99 @@ are verified against the scan in `examples/large_example.py`, and the
 certificate is checked to prove the real optimum while rejecting a merely
 efficient point, a merely good one and an infeasible one.
 
+## The augmented weighted Tchebychev program: a reference from the literature
+
+`tchebychev.py` implements the scalarisation the surrounding literature uses to
+generate efficient points, and measures it against the two generators already
+in the package. It is here because the references this work sits next to
+— Chaabane, Brahmi and Ramdani (2012), Younsi-Abbaci and Moulai (2021) — build
+on it, so "how does the proposed hybrid compare with the existing methods" has
+to be answered against it and not only against the weighted sum.
+
+With `z*` the ideal point, `z*_k = max { Z_k(x) : x in D }`, weights `w > 0`
+and an augmentation `rho > 0`:
+
+```
+min   max_k  w_k ( z*_k - Z_k(x) )  +  rho * sum_k ( z*_k - Z_k(x) )
+s.t.  x in D
+```
+
+which linearises with one continuous variable `lambda >= w_k (z*_k - Z_k(x))`
+for each `k`. So each weight vector costs one integer program on a model with
+`n + 1` variables and `p` extra rows, plus `p` programs paid once for `z*`.
+
+**Why the optimum is efficient, for any `w > 0` and `rho > 0`.** Let `x*` solve
+it and suppose some `y` dominated it. Every deviation `z*_k - Z_k(y)` is then no
+larger than at `x*`, so the `max` term does not increase, while the sum
+*strictly* decreases because one term strictly does. The objective at `y` would
+be strictly smaller — contradiction. Without `rho` the second half of that
+argument is unavailable and a merely **weakly** efficient point can minimise the
+program; that is the whole job of the augmentation, and a `rho <= 0` is refused
+rather than quietly accepted.
+
+**What it buys over a weighted sum.** A weighted sum maximises only at
+*supported* efficient points, those on the convex hull of the criterion image.
+On the paper's instance three of the seven efficient points are unsupported:
+the Tchebychev program reaches all three, and no strictly positive weighted sum
+reaches any (`test_tchebychev_reaches_efficient_points_no_weighted_sum_can`).
+Over the 20 random instances of `examples/tchebychev_study.py`, from the same
+grid of 27 weight vectors, it reached 112 of 175 efficient points against the
+weighted sum's 66, and 29 of the 54 unsupported ones against **0**; all 540
+optima it returned were efficient. A wider sweep over 40 instances agrees:
+216/369 against 135/369, 56 unsupported against 0, 1080 optima and no
+inefficient one.
+
+**What it does not buy: a better seed.** `tchebychev_incumbent` is a drop-in
+alternative to `metaheuristic_incumbent` — both return an efficient point and
+its `Phi` for the box search to start from. Over the 18 instances of the
+hybrid study:
+
+| seed | total | seed cost | exactly optimal |
+|---|---:|---:|---:|
+| none | 9.64 s | — | — |
+| Pareto local search | **7.97 s** (1.21×) | 0.57 s | 12 of 18 |
+| augmented Tchebychev | 13.50 s (0.71×) | 4.25 s | 5 of 18 |
+
+It is slower than doing nothing. Both halves of that are structural. The cost
+is `p + 1` integer programs on an enlarged model, and it is not the reference
+point's fault — `z*` took 0.01–0.13 s of the seed while the scalarisations took
+0.13–0.85 s. The quality is the real finding: **the program never looks at
+`Phi`**. Its weights steer in criterion space, relative to `z*`; the local
+search is guided by `Phi` at every move. A good spread of efficient points is
+not a good `Phi`, and the literature's generator is optimising the wrong thing
+for this objective.
+
+The ordering is stable across instance families; the size of the win is not.
+On the looser family in `examples/tchebychev_study.py` the Pareto seed is
+*exactly optimal on 15 of 24 instances* and still buys only 1.05×, because that
+search is not bound-limited. Seed **quality** and seed **value** are different
+quantities — the same lesson as the zero-iteration result for the paper's
+method. What does not move: Tchebychev loses to not seeding at all on every
+family tried (0.73×, 0.91×), and the Pareto seed ties or wins on every one.
+
+**As front generators the two trade places on a different axis.** On 20
+instances at `n = 4` the Tchebychev grid reached 64% of `E(P_D)` in 2.1 s and
+the Pareto archive 99% in 0.04 s. But the archive filters by dominance among
+the points it has *seen*, which is not the exact test of Definition 1: over a
+wider sweep one member in roughly 2000 was not efficient — reproducibly, a
+concrete case being a four-variable instance where the archive keeps
+`(2,1,1,1)` — while every Tchebychev optimum is efficient by construction.
+Cheap, near-complete, uncertified against expensive, partial, certified; and
+rare is not never, which is exactly why `metaheuristic_incumbent` puts the
+archive's best through `test_efficiency` (and `repair_to_efficient` when it
+fails) before any bound is allowed to cross into the exact search.
+
+**Linear criteria only.** `z*_k - Z_k(x)` has to be linear in `x` for those rows
+to be constraints of an integer *linear* program. With a ratio it is not, and
+`ideal_point` and `augmented_tchebychev_efficient` both refuse rather than
+return something unfounded. The references are for linear criteria too.
+
+**A measurement note.** An earlier harness scored a seed by the ratio
+`Phi(seed) / Phi*`. That ratio **inverts when `Phi*` is negative**, as it is on
+some of these instances, so a worse seed could score above 1. The tables here
+use the non-negative gap `(Phi* - Phi(seed)) / |Phi*|`, which is zero exactly
+when the seed is optimal and well defined whatever the sign.
+
 ## Modules
 
 | File | Contents |
@@ -564,3 +712,7 @@ efficient point, a merely good one and an infeasible one.
 | `edges.py` | reduced gradient, `Gamma_l`, `theta0`, edge walk |
 | `algorithm.py` | the main loop, with a full iteration trace |
 | `enumeration.py` | the three independent reference methods used by the tests |
+| `criterion_space.py` | the box search in criterion space, and two optimisations that lost |
+| `hybrid.py` | the exact-exact hybrid: the paper's method handing over to the box search |
+| `metaheuristic.py` | Pareto local search with an archive, and the seeded hybrid |
+| `tchebychev.py` | the augmented weighted Tchebychev program, measured as a reference |

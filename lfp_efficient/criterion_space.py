@@ -50,6 +50,37 @@ A point outside ``{ Z <= Z(a) }`` has a smallest index where it beats ``Z(a)``,
 and that index picks its child -- so the children cover the remainder exactly
 once.
 
+One thing that does not help
+----------------------------
+Filtering each box through its own continuous relaxation before paying for the
+integer program looks obvious -- two thirds of the boxes are discarded, and
+without a filter each of them pays a full fractional integer program first.
+Measured, it is a **loss**: 7.95s -> 8.36s over 27 instances, faster on one of
+them, and the box counts come out identical in every single row.
+
+The reason is that the filter already exists.  ``solve_fractional_milp`` is
+given the incumbent as a cutoff, and the first thing its branch & bound does is
+solve the root relaxation -- the very same linear program.  A second copy of it
+drops nothing extra and costs one more LP on every box that survives.  Recorded
+here so the idea is not tried a third time.
+
+Splitting two children at a time instead of ``p`` fails the same way, and
+worse.  The decomposition below can be read recursively -- ``[e_k >= 1]`` or
+``([e_k <= 0]`` and the rest) -- so the children can be produced one level at a
+time, with each intermediate node solved for a bound that, when it fails, would
+remove up to ``p - 1`` leaves unsolved.  Measured across ``p = 3..7`` it loses
+everywhere and loses *more* as ``p`` grows: 0.84x, 0.87x, 0.62x, 0.66x, 0.60x,
+with more boxes solved in nearly every instance.
+
+An intermediate node covers a **superset** of its own leaves, so its bound is
+**weaker** than theirs, and a weak bound does not prune.  The node is paid for
+and gives back a bound worse than the one that arrives free one step later.
+
+Both failures are the same mistake: adding a cheaper but weaker bound in front
+of a stronger one that is already there.  The cost that remains is not in boxes
+that are wasted, nor in how they are produced -- it is in the integer programs
+of the boxes that genuinely have to be solved.
+
 What bounds what
 ----------------
 A box's sub-problem maximises ``Phi`` over a superset of the efficient points

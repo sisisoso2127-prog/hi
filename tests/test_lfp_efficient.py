@@ -14,15 +14,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            add_dominance_cut, alternative_optima_columns,
                            clean_tableau_at, edge_direction, max_step_in,
+                           random_maximal_point,
                            spread_weights, weighted_sum_efficient,
                            best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
                            maximize_by_full_enumeration,
-                           optimize_hybrid, optimize_in_criterion_space,
+                           metaheuristic_incumbent, optimize_hybrid,
+                           optimize_hybrid_metaheuristic,
+                           optimize_in_criterion_space, pareto_local_search,
                            optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
-                           solve_relaxation, test_efficiency)
+                           solve_relaxation, test_efficiency,
+                           augmented_tchebychev_efficient, ideal_point,
+                           tchebychev_incumbent)
 from lfp_efficient.rational import F, fmt
 
 
@@ -289,6 +294,119 @@ def test_a_zero_weight_is_refused():
         raise AssertionError("a zero weight was accepted")
 
 
+def test_every_augmented_tchebychev_optimum_is_efficient():
+    """The guarantee the generator rests on, checked against Definition 1.
+
+    For any ``w > 0`` and ``rho > 0`` the optimum of the augmented program is
+    efficient -- the augmentation is what rules out the merely *weakly*
+    efficient optima the plain Tchebychev program admits.
+    """
+    rng = random.Random(20250922)
+    checked = 0
+    for _ in range(12):
+        problem, phi, bounds = random_instance(rng)
+        enum = enumerate_efficient_set(problem, bounds=bounds)
+        if not enum.efficient:
+            continue
+        truth = {tuple(x) for x in enum.efficient}
+        for w in spread_weights(problem.p) + [[rng.randint(1, 6)
+                                               for _ in range(problem.p)]]:
+            point = augmented_tchebychev_efficient(problem, w)
+            if point is None:
+                continue
+            assert tuple(point) in truth, (w, point)
+            checked += 1
+    assert checked > 20, checked
+    return f"{checked} programs, every optimum efficient"
+
+
+def test_tchebychev_reaches_efficient_points_no_weighted_sum_can():
+    """What the augmented program buys over :func:`weighted_sum_efficient`.
+
+    A weighted sum can only maximise at a *supported* efficient point -- one on
+    the convex hull of the criterion image.  On the paper's instance three of
+    the seven efficient points are unsupported, and the Tchebychev program
+    reaches all three while no positive weighted sum reaches any.
+    """
+    problem, _ = paper_problem()
+    efficient = [tuple(x) for x in
+                 enumerate_efficient_set(problem, bounds=[6, 12]).efficient]
+    values = {x: tuple(z(list(x)) for z in problem.criteria) for x in efficient}
+
+    supported = set()
+    for w1 in range(1, 40):
+        for w2 in range(1, 40):
+            top = max(w1 * values[x][0] + w2 * values[x][1] for x in efficient)
+            supported.update(x for x in efficient
+                             if w1 * values[x][0] + w2 * values[x][1] == top)
+    unsupported = set(efficient) - supported
+    assert unsupported, "the instance was meant to have unsupported points"
+
+    reached = set()
+    for w1 in range(1, 8):
+        for w2 in range(1, 8):
+            point = augmented_tchebychev_efficient(problem, [w1, w2])
+            if point is not None:
+                reached.add(tuple(point))
+    assert unsupported <= reached, sorted(unsupported - reached)
+    return (f"{len(unsupported)} unsupported of {len(efficient)} efficient, "
+            f"all reached; no weighted sum reaches any")
+
+
+def test_the_ideal_point_dominates_every_efficient_point():
+    """``z*`` is an upper bound on each criterion, and generally attained by no
+    single feasible point -- which is what makes it a reference to move away
+    from rather than a solution."""
+    problem, _ = paper_problem()
+    z_star = ideal_point(problem)
+    efficient = enumerate_efficient_set(problem, bounds=[6, 12]).efficient
+    attained = 0
+    for x in efficient:
+        z = [c(list(x)) for c in problem.criteria]
+        assert all(z[k] <= z_star[k] for k in range(problem.p)), (x, z, z_star)
+        attained += all(z[k] == z_star[k] for k in range(problem.p))
+    assert attained == 0, "z* turned out to be feasible on this instance"
+    return f"z* = {tuple(z_star)}, above all {len(efficient)} efficient points"
+
+
+def test_tchebychev_refuses_what_would_void_its_guarantee():
+    """A zero weight drops a criterion from the ``max`` term and a zero ``rho``
+    readmits weakly efficient optima; neither is accepted silently."""
+    problem, phi = paper_problem()
+    for weights, rho, expected in [([1, 0], Fraction(1, 1000), "strictly positive"),
+                                   ([1, 1], Fraction(0), "rho must be positive"),
+                                   ([1, 1], Fraction(-1), "rho must be positive")]:
+        try:
+            augmented_tchebychev_efficient(problem, weights, rho)
+        except ValueError as exc:
+            assert expected in str(exc), (weights, rho, exc)
+        else:
+            raise AssertionError(f"accepted weights={weights} rho={rho}")
+
+    # and the incumbent it feeds is a genuine efficient point, not a claim
+    point, value = tchebychev_incumbent(problem, phi)
+    assert test_efficiency(problem, point).efficient, point
+    assert value == phi(point)
+    return "zero weight, zero rho and negative rho all refused"
+
+
+def test_tchebychev_is_refused_on_fractional_criteria():
+    """``z*_k - Z_k(x)`` with a ratio is not linear, so the rows of the
+    program would not be constraints of an integer linear program."""
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4).add([1, 1], LE, 5)
+    problem = MOILFP(model, [FractionalObjective([1, 0], [1, 1], 1, 2),
+                             FractionalObjective([0, 1], [1, 0], 0, 3)])
+    for call in (lambda: ideal_point(problem),
+                 lambda: augmented_tchebychev_efficient(problem, [1, 1])):
+        try:
+            call()
+        except ValueError as exc:
+            assert "linear" in str(exc), exc
+        else:
+            raise AssertionError("fractional criteria were accepted")
+    return "refused, with the reason stated"
+
+
 def test_batching_is_refused_on_fractional_criteria():
     """A sum of ratios is not a linear objective; the option says so rather
     than silently doing nothing."""
@@ -528,6 +646,108 @@ def test_hybrid_keeps_the_answer_certified_under_a_budget():
                 assert sol.value == truth
             checked += 1
     return f"{checked} runs across 3 budgets, the bound always holds"
+
+
+def test_the_metaheuristic_never_hands_over_an_inefficient_point():
+    """The one property the hybrid's correctness rests on.
+
+    The incumbent is used to prune whole boxes.  If it were the value of a
+    DOMINATED point it could exceed the best efficient value and prune away the
+    true optimum, so every candidate is verified or repaired before it leaves.
+    """
+    rng = random.Random(8080)
+    checked = 0
+    for _ in range(14):
+        problem, phi, bounds = random_instance(rng)
+        found = metaheuristic_incumbent(problem, phi, seed=checked)
+        if found is None:
+            continue
+        point, value = found
+        assert problem.model.is_feasible(point), point
+        assert test_efficiency(problem, point).efficient, point
+        assert phi(point) == value
+        truth = best_over_efficient_set_by_scan(problem, phi, bounds)[1]
+        assert value <= truth, (value, truth)     # a lower bound, never above
+        checked += 1
+    assert checked >= 8, checked
+    return f"{checked} incumbents, every one efficient and at most the optimum"
+
+
+def test_the_archive_holds_only_mutually_non_dominated_points():
+    rng = random.Random(1212)
+    total = 0
+    for _ in range(8):
+        problem, phi, bounds = random_instance(rng)
+        archive = pareto_local_search(problem, phi, seed=total)
+        points = archive.points()
+        for a in points:
+            for b in points:
+                if a is b:
+                    continue
+                assert not problem.dominates(a, b), (a, b)
+        total += len(points)
+    assert total > 0
+    return f"{total} archive points across 8 instances, none dominating another"
+
+
+def test_a_maximal_point_cannot_be_increased():
+    """What the search starts from: feasible, and on the boundary."""
+    import random as _random
+    from lfp_efficient.metaheuristic import _IntegerModel
+    problem, phi = paper_problem()
+    fast = _IntegerModel.build(problem, phi)
+    assert fast is not None
+    rng = _random.Random(4)
+    for _ in range(12):
+        x = random_maximal_point(problem.model, rng, fast)
+        assert x is not None
+        assert problem.model.is_feasible([F(v) for v in x])
+        for j in range(problem.n):
+            up = list(x)
+            up[j] += 1
+            assert not problem.model.is_feasible([F(v) for v in up]), (x, j)
+
+
+def test_the_hybrid_metaheuristic_returns_the_same_proved_optimum():
+    rng = random.Random(33445)
+    compared = 0
+    for _ in range(12):
+        problem, phi, bounds = random_instance(rng)
+        exact = optimize_in_criterion_space(problem, phi)
+        hybrid = optimize_hybrid_metaheuristic(problem, phi, seed=compared)
+        scan = best_over_efficient_set_by_scan(problem, phi, bounds)[1]
+        assert hybrid.value == exact.value == scan, (hybrid.value, exact.value, scan)
+        assert hybrid.proved_optimal
+        compared += 1
+    return f"{compared} instances, hybrid == exact == scan"
+
+
+def test_the_neighbourhood_contains_swaps_and_they_are_what_matter():
+    """From a maximal point a unit step up is infeasible and a step down lowers
+    every criterion with non-negative coefficients, so the archive refuses it;
+    the swap is what stays on the boundary and moves along the front.
+
+    Checked structurally on the generator, and then on the effect: with unit
+    steps alone the archive collapses to a handful of points.
+    """
+    from lfp_efficient.metaheuristic import _IntegerModel, _neighbours
+    problem, phi = paper_problem()
+    base = [3, 3]
+    moves = [list(y) for y in _neighbours(base, problem.n)]
+    units = [y for y in moves if sum(abs(a - b) for a, b in zip(y, base)) == 1]
+    swaps = [y for y in moves if sorted(a - b for a, b in zip(y, base)) == [-1, 1]]
+    assert len(units) >= 3 and len(swaps) == 2, (units, swaps)
+
+    # the effect, on an instance big enough to have a front to walk
+    rng = random.Random(7)
+    problem, phi, _ = random_instance(rng)
+    fast = _IntegerModel.build(problem, phi)
+    start = random_maximal_point(problem.model, rng, fast)
+    unit_only = [y for y in _neighbours(start, problem.n)
+                 if sum(abs(a - b) for a, b in zip(y, start)) == 1]
+    alive = [y for y in unit_only if fast.feasible(y)
+             and not problem.dominates([F(v) for v in start], [F(v) for v in y])]
+    assert len(alive) < len(unit_only), (start, alive, unit_only)
 
 
 def test_minimisation_by_sign_flip():
