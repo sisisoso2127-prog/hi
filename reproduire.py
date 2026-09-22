@@ -126,9 +126,8 @@ ENTREES: List[Entree] = [
            "le meme banc, declencheur ACTIF : c'est la comparaison que "
            "tab:porte publie, et non tab:geom"),
     Entree("bench_stable", "bench_stable.py", ["3"],
-           "tab:vivierstable", "declare",
-           "la moitie haute est verifiee ; la basse demande que le banc "
-           "aille au bout, ce qu'il n'a pas encore fait"),
+           "tab:vivierstable", "verifie",
+           "2 h 54 de calcul ; les deux moities concordent"),
     Entree("bench_vivier", "bench_vivier.py", ["300,900"],
            "tab:alternance", "declare"),
 

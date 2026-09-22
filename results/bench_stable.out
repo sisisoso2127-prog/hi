@@ -16,15 +16,42 @@
   30   0.0   2  insertion         23.7%      14.9%       oui
 --------------------------------------------------------------------------------------------
   40   0.0   2  surrogat          87.3%      85.9%       oui
+  40   0.0   2  insertion         87.3%      84.5%       oui
+--------------------------------------------------------------------------------------------
+  40   0.5   2  surrogat          43.9%       0.0%       oui
+  40   0.5   2  insertion         43.9%      18.5%       oui
+--------------------------------------------------------------------------------------------
+  surrogat     monotone sur 4/6 lignes
+  insertion    monotone sur 6/6 lignes
 
-================================================================================
-JOURNAL INCOMPLET -- le banc a ete interrompu par un delai de 5400 s
-(code de sortie 124) avant la fin de sa seconde partie. Ce qui figure
-ci-dessus est donc la PREMIERE partie seule : les six lignes du diagnostic
-de monotonie. La seconde partie -- le cout a plafond fixe sur les 18 lignes
-du lot d'echelle -- n'a pas ete jouee et reste NON VERIFIEE.
+============================================================================================
+2. CE QUE L'ORDRE STABLE COUTE -- plafond 300, 3 graines
+============================================================================================
+   n  corr  gr  ecart surrogat  ecart insertion    delta   coupes s/i
+--------------------------------------------------------------------------------------------
+  20   0.0   1           77.2%            80.8%    +3.56      109/109
+  20   0.0   2           43.6%            40.6%    -3.04      102/102
+  20   0.0   3           37.4%            37.4%    +0.00        84/84
+  20   0.5   1            0.0%             0.0%    +0.00        32/32
+  20   0.5   2            0.0%             0.0%    +0.00        56/56
+  20   0.5   3            0.0%             0.0%    +0.00        57/57
+  30   0.0   1           78.6%            78.6%    +0.00        93/93
+  30   0.0   2           22.8%            23.7%    +0.91      106/106
+  30   0.0   3           32.5%            32.5%    +0.00      108/109
+  30   0.5   1            1.2%             1.2%    +0.00        83/83
+  30   0.5   2           13.7%            13.7%    +0.00        91/91
+  30   0.5   3            0.0%             0.0%    +0.00        40/40
+  40   0.0   1           96.5%            96.5%    +0.00      102/102
+  40   0.0   2           87.3%            87.3%    +0.00        97/93
+  40   0.0   3           57.4%            60.3%    +2.95      106/102
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+  40   0.5   1            0.0%             0.0%    +0.00        56/56
+  40   0.5   2           43.9%            43.9%    +0.00        87/87
+  40   0.5   3           16.7%            16.7%    +0.00        89/89
+--------------------------------------------------------------------------------------------
+  delta d'ecart (insertion - surrogat) : median +0.00 pt   moyen +0.24 pt   pire +3.56 pt
+  preuves : surrogat 5/18   insertion 5/18
 
-Ce marqueur est dans le fichier et non seulement dans un journal de
-lancement : un journal partiel qui ne se declare pas partiel sera compare a
-un tableau comme s'il etait complet.
-================================================================================
+  Un delta POSITIF est une degradation : l'ordre stable donne un
+  ecart garanti plus grand. C'est le prix de la monotonie.
