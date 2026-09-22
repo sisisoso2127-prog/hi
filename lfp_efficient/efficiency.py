@@ -152,7 +152,18 @@ def efficient_dominator(problem: MOILFP,
     Measured: 349 witnesses of failed tests on linear-criteria instances, none
     of them dominated.  In the criterion-space search this removes one full
     efficiency test from each box whose maximiser is inefficient -- 125 of 146
-    on the 18-instance set.
+    on the 18-instance set -- and the search is otherwise **identical**: the
+    centre cut on is the same point either way, so the box count and the answer
+    do not move.
+
+    What it is worth, in work rather than in seconds: integer programs 1466 ->
+    1341 (8.5% fewer, exactly the 125 predicted) and branch & bound nodes 8105
+    -> 7618 (6.0% fewer).  The programs removed are **cheaper than average** --
+    8.5% of the count against 6.0% of the nodes -- because proving ``theta = 0``
+    on a point already known to be efficient is easier than searching for a
+    dominator.  Do not expect this from the per-call timings: the profile that
+    motivated the change reported 18.4 ms for an efficiency test and 7.68 ms for
+    a repair, and it is the *cheap* one that goes.
     """
     if has_linear_criteria(problem):
         return list(outcome.witness)
