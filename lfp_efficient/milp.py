@@ -22,7 +22,8 @@ from .rational import F, ZERO, fmt, is_integral
 from .rational import dot
 from .simplex import (FractionalPricing, INFEASIBLE, LinearPricing, OPTIMAL,
                       STALLED, SimplexResult, Tableau, UNBOUNDED,
-                      add_bound_row, restore_feasibility, solve_standard_form)
+                      add_bound_row, add_linear_row, restore_feasibility,
+                      solve_standard_form)
 
 #: returned when a time budget expired before the search finished.  The result
 #: then carries no proven optimum, but its ``bound`` is still a valid upper
@@ -48,6 +49,11 @@ class MilpResult:
     tableau: Optional[Tableau] = None
     n_structural: int = 0
     nodes: int = 0
+    #: the root relaxation of this sub-problem: its tableau, pricing and the
+    #: reference prices frozen at its vertex.  A sub-problem whose region is
+    #: this one plus a few rows can start from it instead of paying a phase I
+    #: of its own -- see :func:`solve_milp`'s *warm* argument.
+    root: Optional[tuple] = None
     #: a valid upper bound on the true optimum.  Equal to ``objective`` when the
     #: search ran to completion; on an interrupted search it is the largest
     #: relaxation value still open, which no feasible point can exceed.
@@ -133,9 +139,50 @@ def _child(model: Model, objective, parent: _Node, j: int, bound: int, upper: bo
     return _Node(tab, pricing, pricing.value(full), full[:model.n], branches), branches
 
 
+def _reference_point(tab, pricing):
+    """``(z1, z2)`` frozen at this tableau's vertex, for a restoration's ratio
+    test.  Zero for a linear objective, which does not use them."""
+    if isinstance(pricing, FractionalPricing):
+        full = tab.solution()
+        return dot(pricing.U, full) + pricing.alpha, dot(pricing.V, full) + pricing.beta
+    return ZERO, ZERO
+
+
+def warm_relaxation(model: Model, objective, warm):
+    """The root relaxation of *model*, started from a parent's solved tableau.
+
+    *warm* is ``(tableau, pricing, z1, z2, rows)``: a relaxation already solved
+    for a **superset** region, and the ``coeffs . x <= rhs`` rows that cut it
+    down to this one.  The parent's basis stays a basis once each new slack
+    joins it, so only the new rows can be primal infeasible and a dual
+    restoration fixes that -- the same argument branch & bound already uses for
+    its own children, applied one level up.
+
+    Falls back to the cold solve whenever the restoration stalls, so a warm
+    start that does not work out costs time and never correctness.
+    """
+    parent, parent_pricing, z1, z2, rows = warm
+    tab = parent.clone()
+    pricing = parent_pricing
+    for coeffs, rhs in rows:
+        pricing = add_linear_row(tab, pricing, coeffs, rhs)
+
+    status = restore_feasibility(tab, pricing, z1, z2)
+    if status == INFEASIBLE:
+        return SimplexResult(INFEASIBLE)
+    if status == STALLED:
+        return solve_relaxation(model, objective)
+    if tab.run(pricing) == UNBOUNDED:
+        return SimplexResult(UNBOUNDED, tableau=tab, n_structural=model.n,
+                             pricing=pricing)
+    x = tab.solution()
+    return SimplexResult(OPTIMAL, x, pricing.value(x), tab, model.n, pricing)
+
+
 def solve_milp(model: Model, objective, max_nodes: int = 200_000,
                cutoff: Optional[Fraction] = None,
-               deadline: Optional[float] = None) -> MilpResult:
+               deadline: Optional[float] = None,
+               warm=None) -> MilpResult:
     """Depth-first branch & bound, warm started from the parent basis.
 
     *objective* is either a list of coefficients (linear) or a
@@ -165,11 +212,14 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
     value.  The maximum of those, together with any cutoff, is a valid upper
     bound on the optimum and is returned in ``bound``.
     """
-    root = solve_relaxation(model, objective)
+    root = (warm_relaxation(model, objective, warm) if warm is not None
+            else solve_relaxation(model, objective))
     if root.status == INFEASIBLE:
         return MilpResult(INFEASIBLE, nodes=1)
     if root.status == UNBOUNDED:
         return MilpResult(UNBOUNDED, nodes=1)
+    root_z1, root_z2 = _reference_point(root.tableau, root.pricing)
+    root_start = (root.tableau, root.pricing, root_z1, root_z2)
 
     best = MilpResult(INFEASIBLE)
     nodes = 0
@@ -187,6 +237,7 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
             if cutoff is not None:
                 open_bounds.append(cutoff)
             return MilpResult(INTERRUPTED, best.x, best.objective, nodes=nodes,
+                              root=root_start,
                               bound=max(open_bounds) if open_bounds else None)
         node = stack.pop()
         nodes += 1
@@ -224,8 +275,9 @@ def solve_milp(model: Model, objective, max_nodes: int = 200_000,
             stack.append(child)                   # DFS, "down" explored first
 
     best.nodes = nodes
+    best.root = root_start
     if not best.feasible and cutoff is not None and any_feasible:
-        return MilpResult(CUTOFF, nodes=nodes, bound=cutoff)
+        return MilpResult(CUTOFF, nodes=nodes, root=root_start, bound=cutoff)
     return best
 
 
@@ -280,7 +332,8 @@ def denominator_stays_positive(model: Model, phi) -> bool:
 def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
                           cutoff: Optional[Fraction] = None,
                           denominator_positive: bool = False,
-                          deadline: Optional[float] = None) -> MilpResult:
+                          deadline: Optional[float] = None,
+                          warm=None) -> MilpResult:
     """``max (U'x+alpha)/(V'x+beta)`` over the integer points of *model*.
 
     Linear fractional programming always assumes ``V'x + beta > 0`` on the
@@ -310,7 +363,7 @@ def solve_fractional_milp(model: Model, phi, max_nodes: int = 200_000,
     phi = phi.lift(model.n)
     if denominator_positive:
         res = solve_milp(model, phi, max_nodes=max_nodes, cutoff=cutoff,
-                         deadline=deadline)
+                         deadline=deadline, warm=warm)
         if res.x:
             res.x = res.x[:model.n]
         return res

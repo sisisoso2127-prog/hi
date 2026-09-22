@@ -113,6 +113,27 @@ complements** -- a good incumbent arrives early enough that the hopeless tail
 barely forms, so there is nothing left for the exit to skip.  Anyone stacking
 these two ideas expecting them to add should read this row first.
 
+Warm starts across boxes
+------------------------
+A box's region is its parent's plus a handful of rows, yet each box used to
+solve its root relaxation cold -- and a phase I is needed whenever a row is not
+covered by a slack, which every ``e_k >= 1`` row forces.  Measured before
+building anything: 4992 of 18193 simplex pivots (27%) were phase I inside cold
+roots, and 788 of 824 roots paid one, at 6.3 pivots against 2.3 for phase II.
+
+So each child now carries its parent's solved root and the rows that cut it
+down (:func:`lfp_efficient.milp.warm_relaxation`).  Result: 18193 -> 16169
+pivots (11.1% fewer), cold roots 824 -> 307, with box counts, program counts
+and optima **identical** -- the same search at a lower price.
+
+Two things the measurement corrected.  The reachable ceiling was not 27% but
+about 17%: only a box with a parent can inherit one, and the efficiency tests
+and ``Q`` solves extend ``D`` rather than a box.  Caching a basis for ``D``
+would buy nothing there, because ``D``'s rows are all ``<=`` with non-negative
+right-hand sides, so its crash basis is free and phase I is skipped outright.
+And 517 warm starts stalled 0 times, so the cold fallback -- which exists so
+that a failed restoration costs time and never correctness -- never fired.
+
 What bounds what
 ----------------
 A box's sub-problem maximises ``Phi`` over a superset of the efficient points
@@ -149,6 +170,13 @@ class Box:
     rows: List[Row] = field(default_factory=list)
     #: an upper bound on ``Phi`` over this box, inherited from the parent
     bound: Optional[Fraction] = None
+    #: the parent's solved root relaxation, and the rows that cut it down to
+    #: this box.  Together they let this box's own root start from the
+    #: parent's basis instead of paying a phase I -- see
+    #: :func:`lfp_efficient.milp.warm_relaxation`.  ``None`` on a root box, and
+    #: on the boxes a hybrid hands over, which have no parent here.
+    start: Optional[tuple] = None
+    added: List[Row] = field(default_factory=list)
 
     def restricted(self, model: Model) -> Model:
         out = model.copy()
@@ -169,10 +197,18 @@ def _rows_for(problem: MOILFP, centre: Sequence[Fraction], k: int) -> List[Row]:
 
 
 def split(problem: MOILFP, box: Box, centre: Sequence[Fraction],
-          bound: Optional[Fraction]) -> List[Box]:
-    """The ``p`` disjoint children covering ``box`` minus ``{ Z <= Z(centre) }``."""
-    return [Box(box.rows + _rows_for(problem, centre, k), bound)
-            for k in range(problem.p)]
+          bound: Optional[Fraction], root: Optional[tuple] = None) -> List[Box]:
+    """The ``p`` disjoint children covering ``box`` minus ``{ Z <= Z(centre) }``.
+
+    *root* is the parent's solved root relaxation.  Each child's region is the
+    parent's minus a handful of rows, so passing it along lets the child start
+    from the parent's basis; it is carried, not used, here.
+    """
+    children = []
+    for k in range(problem.p):
+        added = _rows_for(problem, centre, k)
+        children.append(Box(box.rows + added, bound, root, added))
+    return children
 
 
 def remove_everywhere(problem: MOILFP, boxes: Sequence[Box],
@@ -316,10 +352,11 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
         log = IterationLog(settled)
         logs.append(log)
 
+        warm = (box.start + (box.added,)) if box.start is not None else None
         result = solve_fractional_milp(box.restricted(problem.model), phi,
                                        cutoff=phi_opt,
                                        denominator_positive=positive_denominator,
-                                       deadline=deadline)
+                                       deadline=deadline, warm=warm)
         if result.status == INTERRUPTED:
             if result.bound is not None:
                 box.bound = result.bound
@@ -376,7 +413,7 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
 
         log.criterion_vector = problem.Z(centre)
         log.incumbent, log.incumbent_value = x_opt, phi_opt
-        for child in split(problem, box, centre, result.objective):
+        for child in split(problem, box, centre, result.objective, result.root):
             push(child)
         log.note = f"split into {problem.p} boxes around Z(x~)"
         if verbose:

@@ -186,6 +186,43 @@ ideas: on the metaheuristic-seeded hybrid this exit cuts only **4 %** of boxes
 not complements** — a good incumbent arrives early enough that the hopeless
 tail barely forms.
 
+**Warm-starting a box from its parent.** A box's region is its parent's plus a
+handful of rows, yet every box solved its root relaxation from scratch — and
+`solve_standard_form` needs a phase I whenever a row is not covered by a slack,
+which every `e_k ≥ 1` row forces. Measured first, before anything was built:
+**4992 of 18193 simplex pivots (27 %) were phase I inside cold roots**, and 788
+of 824 roots (96 %) paid one. Phase I costs 6.3 pivots per root against 2.3 for
+phase II — the same "five sixths thrown away" the package already measured
+*inside* a branch-and-bound tree, one level up.
+
+`add_linear_row` is the general form of the branch and bound's own
+`add_bound_row`: it appends `coeffs·x ≤ rhs` to a solved tableau and eliminates
+every basic variable in it, which one pass does because a basic variable's
+column is a unit vector. The parent's basis then stays a basis once the new
+slacks join it, only the new rows can be primal infeasible, and the existing
+dual restoration fixes that.
+
+| | base | warm |
+|---|---:|---:|
+| simplex pivots | 18193 | **16169** (−11.1 %) |
+| cold root relaxations | 824 | **307** (−63 %) |
+| boxes, MILP programs, optima | — | identical |
+
+**The ceiling was never 27 %.** Only a box with a parent can inherit one, and
+that is 63 % of roots — the rest are the 146 efficiency tests and 125 `Q`
+solves, which extend `D` rather than another box, and `D`'s own basis is free
+(all its rows are `≤` with non-negative right-hand sides, so the crash basis
+covers them and phase I is skipped outright). So the reachable ceiling was
+~17 %, and 11.1 % of it survives after the restoration's own 1583 pivots.
+
+**517 warm starts, 0 stalls** — the cold fallback never fired once. It exists
+anyway, because a restoration that gives up must cost time and never
+correctness.
+
+The gain grows with `p` (28 % at `p=7`, 1–7 % at `p=3`), which is what more
+rows per box predicts, and two tiny instances lose a little where the
+restoration costs more than the phase I it replaces.
+
 **Not rediscovering Ecker & Kouada once per box.** When a box's maximiser
 fails the efficiency test, the search needs an efficient point to cut on
 instead, and called `repair_to_efficient` on the test's witness. That walk

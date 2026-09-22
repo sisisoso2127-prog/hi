@@ -431,6 +431,53 @@ def add_bound_row(tab: Tableau, pricing, j: int, bound: Fraction, upper: bool):
     return new_pricing
 
 
+def add_linear_row(tab: Tableau, pricing, coeffs: Sequence[Fraction],
+                   rhs: Fraction):
+    """Append ``coeffs . x <= rhs`` to *tab*, keeping the basis.
+
+    The general form of :func:`add_bound_row`, which is the special case of a
+    row touching a single structural variable.  A box of the criterion-space
+    search differs from its parent by rows of this shape, so the parent's
+    basis can be carried into the child exactly as a branch & bound node
+    carries its parent's.
+
+    The new row is written with its own slack, then **every** basic variable
+    occurring in it is eliminated so that the slack can be made basic.  One
+    pass suffices: the basic variable of row ``i`` has a unit column, so it is
+    zero in every other row, and eliminating one never reintroduces another.
+
+    The slack's value comes out as ``rhs - coeffs . x`` at the parent's vertex:
+    negative exactly when the new row cuts that vertex off, which is the only
+    reason the child is not immediately feasible.  Returns the extended
+    pricing object.
+    """
+    for row in tab.T:
+        row.append(ZERO)
+    for row in tab.cost_rows:
+        row.append(ZERO)          # a basic, zero-cost variable prices at 0
+    new_pricing = extend_pricing(pricing, 1)
+    tab._cost_owner = new_pricing
+    c_new = tab.n - 1
+
+    row = [ZERO] * tab.n
+    for j, v in enumerate(coeffs):
+        if v:
+            row[j] = F(v)
+    row[c_new] = ONE
+    value = F(rhs)
+
+    for i, basic in enumerate(tab.basis):
+        factor = row[basic]
+        if factor:
+            row = [a - factor * t for a, t in zip(row, tab.T[i])]
+            value = value - factor * tab.xb[i]
+
+    tab.T.append(row)
+    tab.xb.append(value)
+    tab.basis.append(c_new)
+    return new_pricing
+
+
 def _reference_prices(tab: Tableau, pricing, z1: Fraction, z2: Fraction) -> List[Fraction]:
     """Prices used to steer the restoration, frozen at the parent's vertex.
 
