@@ -157,6 +157,19 @@ The `complete` flag is set only when the box list actually emptied. A run
 stopped by `max_boxes` or `time_budget` returns what it has with
 `complete = False` rather than a front it cannot support.
 
+**The front is not the set of efficient points.** One vector can be attained by
+several efficient points, and the enumeration keeps *one per vector*. On random
+instances this never shows — 476 efficient points on 476 distinct vectors over
+32 of them — but that is the sample, not the problem: generic coefficients make
+ties improbable. Built deliberately, `|E| = 6` sits on 2 vectors and the
+enumeration returns 2 of the 6 points.
+
+That instance also shows what `Q` is for: its slice holds three points with
+`Phi` = `3/4`, `6/5`, `3/2`; the repair lands on the first and `Q` moves it to
+the third. So the largest value on the front is still the optimum — and without
+`Q` the answer would have been **half** of it, with the front still correct and
+the output looking entirely reasonable.
+
 **Vectors are not solutions.** `Phi` is a function of `x` and *not* of `Z(x)`,
 so one non-dominated vector can carry several efficient points with different
 `Phi` — enumerating the front does not by itself answer `(P_E)`. Given a `phi`,

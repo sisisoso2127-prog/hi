@@ -818,6 +818,39 @@ def test_the_front_is_complete_on_fractional_criteria_too():
     return f"{vectors} vectors over fractional instances, front exact"
 
 
+def test_a_complete_front_is_not_the_whole_set_of_efficient_points():
+    """The limit of what ``enumerate_front`` claims, on an instance built to
+    expose it.
+
+    Random instances with generic criterion coefficients never show this --
+    over 32 of them, 476 efficient points sat on 476 distinct vectors.  That is
+    a property of the sample, so the case is constructed instead: a criterion
+    that ignores a variable makes slices non-singleton at once.
+
+    The point of the test is the last assertion.  The front returns one point
+    per vector and so misses efficient points, yet the optimum survives,
+    because ``Q`` keeps the *best* point of each slice.  Without it the answer
+    here would be ``3/4`` instead of ``3/2``.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])      # x3 does not enter Z
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)   # but it enters Phi
+
+    efficient = enumerate_efficient_set(problem, [2, 2, 2]).efficient
+    vectors = {tuple(problem.Z(x)) for x in efficient}
+    assert len(efficient) > len(vectors), "the instance was meant to have ties"
+
+    front = enumerate_front(problem, phi)
+    assert front.complete
+    assert {tuple(v) for v in front.vectors} == vectors, "the front is complete"
+    assert len(front.points) < len(efficient), "and yet it misses points"
+
+    assert max(front.values) == max(phi(x) for x in efficient)
+    return (f"{len(efficient)} efficient points on {len(vectors)} vectors; "
+            f"the front keeps {len(front.points)} and still finds the optimum")
+
+
 def test_an_interrupted_enumeration_refuses_to_claim_completeness():
     """Stopped early, the front is a subset and must not pretend otherwise."""
     problem, phi = paper_problem()
