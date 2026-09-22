@@ -31,6 +31,33 @@ that says ``a`` dominates ``v``, which no non-dominated vector admits.  So
 ``v`` can only leave at the moment it is recorded -- and since the region is
 exhausted, every ``v`` is recorded exactly once.
 
+The front is not the set of efficient points
+--------------------------------------------
+One non-dominated vector can be attained by several efficient points, and this
+module returns **one point per vector**.  So the front is complete while the
+set of points it carries need not be.
+
+On random instances with generic criterion coefficients the distinction never
+shows up: over 32 such instances, 476 efficient points sat on 476 distinct
+vectors and every slice was a singleton.  That is a property of the sample, not
+of the problem -- generic coefficients make ties improbable.  Make a criterion
+ignore a variable and the ties appear at once::
+
+    D : x1,x2,x3 <= 2,  x1 + x2 <= 3
+    Z = (x1, x2)                       # x3 does not enter Z
+    Phi = (x1 + x2 + 3*x3) / (x1 + x2 + 1)
+
+Here ``|E(P_D)| = 6`` sits on **2** vectors, and this module returns 2 points of
+the 6.  The slice ``Z = (1,2)`` alone holds ``(1,2,0)``, ``(1,2,1)`` and
+``(1,2,2)``, with ``Phi`` equal to ``3/4``, ``6/5`` and ``3/2``.
+
+And that is exactly why ``Q`` is solved rather than skipped: it keeps the
+**best** point of each slice.  On the instance above the repair lands on
+``Phi = 3/4`` and ``Q`` moves it to ``3/2`` -- so the largest value on the front
+is still the optimum of ``(P_E)``, which it would not be otherwise.  Skipping
+``Q`` would have halved the answer while leaving the front itself correct, and
+leaving the output looking entirely reasonable.
+
 Vectors are not solutions
 -------------------------
 ``Phi`` is a function of ``x`` and **not** of ``Z(x)``, so one non-dominated
@@ -61,6 +88,9 @@ class Front:
     """The complete non-dominated set, and one efficient point for each vector."""
 
     vectors: List[List[Fraction]] = field(default_factory=list)
+    #: one efficient point per vector -- the best on its slice when a ``Phi``
+    #: was given.  **Not** every efficient point: a slice can hold several, and
+    #: only one is kept.  See the module docstring for a worked case.
     points: List[List[Fraction]] = field(default_factory=list)
     #: ``Phi`` at each point, when a ``Phi`` was given; the point is then the
     #: best one on its slice, so this is the most a decision maker can get
@@ -68,7 +98,9 @@ class Front:
     values: List[Fraction] = field(default_factory=list)
     #: boxes settled -- the unit of work, as in the optimisation search
     boxes: int = 0
-    #: ``True`` when the list emptied, so the front is provably complete
+    #: ``True`` when the list emptied, so the **front** is provably complete.
+    #: That is completeness of the non-dominated *vectors*, not of the
+    #: efficient *points* -- see the module docstring.
     complete: bool = False
 
     def __len__(self) -> int:

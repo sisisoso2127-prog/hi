@@ -975,6 +975,23 @@ what it has with the flag \emph{false} --- a front that cannot say it is whole
 is a subset with extra steps, and saying so is the difference between the two
 sections.
 
+\paragraph{The front is not the set of efficient points.}  One non-dominated
+vector can be attained by several efficient points, and the enumeration keeps
+\emph{one per vector}: the front is complete while the set of points it carries
+need not be.  On random instances the distinction never appeared --- over 32 of
+them, 476 efficient points sat on 476 distinct vectors --- but that is a
+property of the sample, since generic criterion coefficients make ties
+improbable.  Constructed deliberately, with a criterion that ignores a
+variable, $|\E| = 6$ sits on 2 vectors and the enumeration returns 2 points of
+the 6.
+
+That instance also shows what $Q$ is for.  Its slice $\Z = (1,2)$ holds three
+efficient points with $\Phi = 3/4$, $6/5$ and $3/2$; the repair lands on the
+first, and $Q$ moves it to the third.  So the largest value on the front is
+still the optimum of $(P_E)$ --- and without $Q$ the answer would have been
+\emph{half} of it, with the front itself still correct and the output looking
+entirely reasonable.
+
 \paragraph{Vectors are not solutions.}  By Remark~\ref{rem:notZ}, $\Phi$ is a
 function of $x$ and not of $\Z(x)$, so one non-dominated vector can carry
 several efficient points with different $\Phi$: enumerating the front does not
@@ -1087,7 +1104,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 72 tests. Several check
+exact rational arithmetic throughout, and carries 73 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
