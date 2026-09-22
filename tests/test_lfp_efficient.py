@@ -14,12 +14,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            add_dominance_cut, alternative_optima_columns,
                            clean_tableau_at, edge_direction, max_step_in,
+                           random_maximal_point,
                            spread_weights, weighted_sum_efficient,
                            best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
                            maximize_by_full_enumeration,
-                           optimize_hybrid, optimize_in_criterion_space,
+                           metaheuristic_incumbent, optimize_hybrid,
+                           optimize_hybrid_metaheuristic,
+                           optimize_in_criterion_space, pareto_local_search,
                            optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
                            solve_relaxation, test_efficiency)
@@ -528,6 +531,108 @@ def test_hybrid_keeps_the_answer_certified_under_a_budget():
                 assert sol.value == truth
             checked += 1
     return f"{checked} runs across 3 budgets, the bound always holds"
+
+
+def test_the_metaheuristic_never_hands_over_an_inefficient_point():
+    """The one property the hybrid's correctness rests on.
+
+    The incumbent is used to prune whole boxes.  If it were the value of a
+    DOMINATED point it could exceed the best efficient value and prune away the
+    true optimum, so every candidate is verified or repaired before it leaves.
+    """
+    rng = random.Random(8080)
+    checked = 0
+    for _ in range(14):
+        problem, phi, bounds = random_instance(rng)
+        found = metaheuristic_incumbent(problem, phi, seed=checked)
+        if found is None:
+            continue
+        point, value = found
+        assert problem.model.is_feasible(point), point
+        assert test_efficiency(problem, point).efficient, point
+        assert phi(point) == value
+        truth = best_over_efficient_set_by_scan(problem, phi, bounds)[1]
+        assert value <= truth, (value, truth)     # a lower bound, never above
+        checked += 1
+    assert checked >= 8, checked
+    return f"{checked} incumbents, every one efficient and at most the optimum"
+
+
+def test_the_archive_holds_only_mutually_non_dominated_points():
+    rng = random.Random(1212)
+    total = 0
+    for _ in range(8):
+        problem, phi, bounds = random_instance(rng)
+        archive = pareto_local_search(problem, phi, seed=total)
+        points = archive.points()
+        for a in points:
+            for b in points:
+                if a is b:
+                    continue
+                assert not problem.dominates(a, b), (a, b)
+        total += len(points)
+    assert total > 0
+    return f"{total} archive points across 8 instances, none dominating another"
+
+
+def test_a_maximal_point_cannot_be_increased():
+    """What the search starts from: feasible, and on the boundary."""
+    import random as _random
+    from lfp_efficient.metaheuristic import _IntegerModel
+    problem, phi = paper_problem()
+    fast = _IntegerModel.build(problem, phi)
+    assert fast is not None
+    rng = _random.Random(4)
+    for _ in range(12):
+        x = random_maximal_point(problem.model, rng, fast)
+        assert x is not None
+        assert problem.model.is_feasible([F(v) for v in x])
+        for j in range(problem.n):
+            up = list(x)
+            up[j] += 1
+            assert not problem.model.is_feasible([F(v) for v in up]), (x, j)
+
+
+def test_the_hybrid_metaheuristic_returns_the_same_proved_optimum():
+    rng = random.Random(33445)
+    compared = 0
+    for _ in range(12):
+        problem, phi, bounds = random_instance(rng)
+        exact = optimize_in_criterion_space(problem, phi)
+        hybrid = optimize_hybrid_metaheuristic(problem, phi, seed=compared)
+        scan = best_over_efficient_set_by_scan(problem, phi, bounds)[1]
+        assert hybrid.value == exact.value == scan, (hybrid.value, exact.value, scan)
+        assert hybrid.proved_optimal
+        compared += 1
+    return f"{compared} instances, hybrid == exact == scan"
+
+
+def test_the_neighbourhood_contains_swaps_and_they_are_what_matter():
+    """From a maximal point a unit step up is infeasible and a step down lowers
+    every criterion with non-negative coefficients, so the archive refuses it;
+    the swap is what stays on the boundary and moves along the front.
+
+    Checked structurally on the generator, and then on the effect: with unit
+    steps alone the archive collapses to a handful of points.
+    """
+    from lfp_efficient.metaheuristic import _IntegerModel, _neighbours
+    problem, phi = paper_problem()
+    base = [3, 3]
+    moves = [list(y) for y in _neighbours(base, problem.n)]
+    units = [y for y in moves if sum(abs(a - b) for a, b in zip(y, base)) == 1]
+    swaps = [y for y in moves if sorted(a - b for a, b in zip(y, base)) == [-1, 1]]
+    assert len(units) >= 3 and len(swaps) == 2, (units, swaps)
+
+    # the effect, on an instance big enough to have a front to walk
+    rng = random.Random(7)
+    problem, phi, _ = random_instance(rng)
+    fast = _IntegerModel.build(problem, phi)
+    start = random_maximal_point(problem.model, rng, fast)
+    unit_only = [y for y in _neighbours(start, problem.n)
+                 if sum(abs(a - b) for a, b in zip(y, start)) == 1]
+    alive = [y for y in unit_only if fast.feasible(y)
+             and not problem.dominates([F(v) for v in start], [F(v) for v in y])]
+    assert len(alive) < len(unit_only), (start, alive, unit_only)
 
 
 def test_minimisation_by_sign_flip():
