@@ -114,6 +114,60 @@ sample, not a representative one: it is exactly the points the search had to cut
 on, so it concentrates where `Phi` is large. For ranking by `Phi` that bias
 points the useful way, but it is a bias.
 
+## And if you want *all* of them: the complete front
+
+`efficient_subset` never claims completeness, and that is a real limitation
+rather than a modest phrasing. `enumerate_front` removes it:
+
+```python
+from lfp_efficient import enumerate_front
+
+front = enumerate_front(problem, phi)
+print(front.report())
+```
+
+```
+7 non-dominated vectors -- the complete front, proved
+  15 boxes settled
+  best Phi on the front: 5/17 at (3, 3)
+```
+
+`enumerate_nondominated` already did this, but **in decision space** — Sylva–Crema
+cuts, `p` binaries and `p+1` big-M rows per cut, the model growing all the way.
+That is the cost profile this whole package exists to avoid, and the same
+substitution works on enumeration:
+
+| | decision space | criterion space | |
+|---|---:|---:|---|
+| `n = 4`, 29 non-dominated vectors | 2.11 s | **0.32 s** | **6.68×** |
+
+*One size only.* Enumerating the whole front in decision space gets slow fast,
+and larger `n` was not measured — that row is what was run, not a trend.
+
+**Why it is complete, and not merely large.** A non-dominated vector `v` leaves
+the unexplored region only through a split around a centre `a` with `v ≤ Z(a)`.
+If `v ≠ Z(a)` that says `a` dominates `v` — which no non-dominated vector
+admits. So `v` can only leave at the moment it is recorded, and since the
+region is exhausted, every `v` is recorded exactly once. Termination is the
+same argument as the optimisation search's: the probe returns `x` inside the
+box and the efficient point it is repaired to dominates it, so the split
+removes at least `Z(x)`.
+
+The `complete` flag is set only when the box list actually emptied. A run
+stopped by `max_boxes` or `time_budget` returns what it has with
+`complete = False` rather than a front it cannot support.
+
+**Vectors are not solutions.** `Phi` is a function of `x` and *not* of `Z(x)`,
+so one non-dominated vector can carry several efficient points with different
+`Phi` — enumerating the front does not by itself answer `(P_E)`. Given a `phi`,
+each vector is therefore paired with the point maximising `Phi` **on its
+slice**, which is what the plain vector enumeration cannot give you.
+
+That pairing has a consequence worth stating: **the largest value on the front
+is the optimum of `(P_E)`**. So this is a second, independent way to solve the
+problem — and `test_the_best_phi_on_the_front_is_the_optimum_of_pe` uses it as
+a cross-check on the main algorithm.
+
 ## What is verified, and how
 
 | | |

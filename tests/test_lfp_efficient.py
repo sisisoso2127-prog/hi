@@ -16,6 +16,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            clean_tableau_at, edge_direction, max_step_in,
                            random_maximal_point,
                            spread_weights, weighted_sum_efficient,
+                           has_linear_criteria,
                            best_over_efficient_set_by_scan, certify_optimum,
                            best_with_same_criterion, enumerate_efficient_set,
                            enumerate_nondominated, lower_bounds,
@@ -33,6 +34,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for
 from lfp_efficient.subset import EfficientSubset, efficient_subset
+from lfp_efficient.front import Front, enumerate_front
 from lfp_efficient.milp import solve_relaxation, warm_relaxation
 from lfp_efficient.simplex import (INFEASIBLE, OPTIMAL as LP_OPTIMAL, STALLED,
                                    add_linear_row, restore_feasibility)
@@ -717,6 +719,114 @@ def test_each_source_can_be_asked_for_alone():
         raise AssertionError("asking for no source was accepted")
     return (f"exact alone {len(only_exact)}, archive alone "
             f"{len(only_heuristic)}, both refused when neither")
+
+
+def test_the_enumerated_front_is_the_whole_front():
+    """The claim that separates this from ``efficient_subset``: completeness.
+
+    Checked against exhaustive enumeration -- not a sample of it -- and the
+    ``complete`` flag must be set, since a front that cannot say it is whole is
+    only a subset with extra steps.
+    """
+    rng = random.Random(8128)
+    vectors = 0
+    for _ in range(12):
+        problem, phi, bounds = random_instance(rng)
+        truth = {tuple(problem.Z(x))
+                 for x in enumerate_efficient_set(problem, bounds).efficient}
+        if not truth:
+            continue
+        front = enumerate_front(problem, phi)
+        assert front.complete, "the box list emptied, so it must say so"
+        assert {tuple(v) for v in front.vectors} == truth, (
+            sorted({tuple(v) for v in front.vectors} ^ truth))
+        vectors += len(truth)
+    assert vectors > 20, vectors
+    return f"{vectors} non-dominated vectors, exactly the front every time"
+
+
+def test_each_front_point_is_efficient_and_attains_its_vector():
+    """A vector with a point that does not reach it, or is not efficient,
+    would make the pairing worthless even with the front itself correct."""
+    rng = random.Random(496)
+    checked = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        front = enumerate_front(problem, phi)
+        for vector, point, value in zip(front.vectors, front.points,
+                                        front.values):
+            assert test_efficiency(problem, point).efficient, point
+            assert problem.Z(point) == vector, (point, vector)
+            assert phi(point) == value
+            checked += 1
+    assert checked > 20, checked
+    return f"{checked} pairings, each efficient and on its own vector"
+
+
+def test_the_best_phi_on_the_front_is_the_optimum_of_pe():
+    """With Phi given, each vector carries the best point on its slice -- so the
+    largest of those values is the answer to (P_E).  That is the bridge between
+    enumerating the front and solving the problem, and it only holds because
+    the slice maximiser is taken rather than any representative."""
+    rng = random.Random(1729)
+    agreed = 0
+    for _ in range(10):
+        problem, phi, bounds = random_instance(rng)
+        best_x, best_value, _, _ = best_over_efficient_set_by_scan(
+            problem, phi, bounds)
+        if best_x is None:
+            continue
+        front = enumerate_front(problem, phi)
+        assert front.complete
+        assert max(front.values) == best_value, (max(front.values), best_value)
+        agreed += 1
+    assert agreed >= 8, agreed
+    return f"{agreed} instances: max Phi over the front == the optimum"
+
+
+def test_the_front_is_complete_on_fractional_criteria_too():
+    """Fractional criteria take the other repair path -- Ecker & Kouada does
+    not hold there, so the centre comes from a dominance walk instead.  The
+    front has to be checked on that path separately."""
+    rng = random.Random(4242)
+    vectors = 0
+    for _ in range(8):
+        n = rng.choice([2, 3])
+        model = Model(n)
+        for j in range(n):
+            unit = [0] * n
+            unit[j] = 1
+            model.add(unit, LE, 3)
+        model.add([rng.randint(1, 3) for _ in range(n)], LE, rng.randint(3, 6))
+        problem = MOILFP(model, [
+            FractionalObjective([rng.randint(0, 3) for _ in range(n)],
+                                [rng.randint(1, 2) for _ in range(n)],
+                                rng.randint(0, 2), rng.randint(1, 3))
+            for _ in range(2)])
+        assert not has_linear_criteria(problem)
+        phi = FractionalObjective([rng.randint(-3, 4) for _ in range(n)],
+                                  [rng.randint(1, 2) for _ in range(n)], 1, 2)
+        truth = {tuple(problem.Z(x))
+                 for x in enumerate_efficient_set(problem, [3] * n).efficient}
+        if not truth:
+            continue
+        front = enumerate_front(problem, phi)
+        assert front.complete
+        assert {tuple(v) for v in front.vectors} == truth
+        vectors += len(truth)
+    assert vectors > 15, vectors
+    return f"{vectors} vectors over fractional instances, front exact"
+
+
+def test_an_interrupted_enumeration_refuses_to_claim_completeness():
+    """Stopped early, the front is a subset and must not pretend otherwise."""
+    problem, phi = paper_problem()
+    partial = enumerate_front(problem, phi, max_boxes=2)
+    assert not partial.complete, "a budget-limited run claimed completeness"
+    assert partial.boxes <= 2
+    full = enumerate_front(problem, phi)
+    assert full.complete and len(full) > len(partial)
+    return f"stopped at {len(partial)} vectors, complete run has {len(full)}"
 
 
 def test_batching_is_refused_on_fractional_criteria():

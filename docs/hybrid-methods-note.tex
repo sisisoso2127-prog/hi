@@ -916,6 +916,78 @@ reporting a percentage it cannot support.  The exact search's trail is also a
 it concentrates where $\Phi$ is large.  For a decision maker ranking by $\Phi$
 that bias points the useful way, but it is a bias and is reported as one.
 
+\section{The complete front, in criterion space}
+\label{sec:front}
+
+Section~\ref{sec:subset} delivers a subset and refuses to claim completeness.
+That refusal is honest but it is also a limitation, and the same substitution
+this note is built on removes it.
+
+Complete enumeration of the non-dominated set was already available, but in
+\emph{decision} space: truncate $\Dset$ with Sylva--Crema cuts, pick a point,
+repair it, cut again.  Every cut costs $p$ binaries and $p+1$ big-$M$ rows, so
+the sub-problems grow --- exactly the cost profile Section~\ref{sec:box}
+replaces.  Keeping the unexplored region as a list of boxes instead gives the
+same enumeration with no binary anywhere and no model growth.
+
+\begin{table}[h]
+\centering
+\caption{Enumerating the whole front, six instances per row.}
+\begin{tabular}{lrrr}
+\toprule
+ & decision space & criterion space & ratio \\
+\midrule
+$n = 4$, 29 non-dominated vectors & $2.11$\,s & $0.32$\,s & $6.68\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\emph{One size only.}  Enumerating the whole front in decision space becomes
+slow quickly, and larger $n$ was not measured here; the row above is what was
+run, not a trend.  The direction is the one Section~\ref{sec:results} measures
+at length for the optimisation search, but it is not asserted for enumeration
+beyond this row.
+
+\begin{proposition}\label{prop:front}
+The enumeration terminates, and records every non-dominated vector exactly
+once.
+\end{proposition}
+
+\begin{proof}
+\emph{Termination.}  The probe returns a point $x$ of $\Dset$ inside the box,
+and the efficient point $a$ it is repaired to dominates it, so
+$\Z(x) \leqslant \Z(a)$ and the split around $a$ removes at least $\Z(x)$ from
+that box.  The unexplored region therefore shrinks on every pass, and the
+non-dominated set of a bounded integer program is finite.
+
+\emph{Completeness.}  A non-dominated vector $v$ leaves the region only through
+a split around some centre $a$ with $v \leqslant \Z(a)$.  If $v \neq \Z(a)$,
+that says $a$ dominates $v$, which no non-dominated vector admits.  So $v$
+leaves only at the moment it is recorded; and the loop ends only when the
+region is empty, so every $v$ is recorded, exactly once since the centres are
+de-duplicated by criterion vector.
+\end{proof}
+
+\paragraph{Completeness is a flag, not a default.}  It is set only when the box
+list actually emptied.  A run stopped by a box budget or a time budget returns
+what it has with the flag \emph{false} --- a front that cannot say it is whole
+is a subset with extra steps, and saying so is the difference between the two
+sections.
+
+\paragraph{Vectors are not solutions.}  By Remark~\ref{rem:notZ}, $\Phi$ is a
+function of $x$ and not of $\Z(x)$, so one non-dominated vector can carry
+several efficient points with different $\Phi$: enumerating the front does not
+by itself answer $(P_E)$.  Each vector is therefore paired with the maximiser of
+$\Phi$ \emph{on its slice}, at one extra integer program per vector --- the
+pairing a decision maker wants, and the one a plain vector enumeration cannot
+provide.
+
+That pairing has a consequence worth stating, because it closes the circle of
+this note: \textbf{the largest value on the front is the optimum of $(P_E)$.}
+The front enumeration is therefore a second, independent exact method for the
+problem, and the test suite uses it as a cross-check on the first.
+
 \section{Three measurement lessons, and what they cost}
 
 We report these because the direction of a result is worth less than the
@@ -1015,7 +1087,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 67 tests. Several check
+exact rational arithmetic throughout, and carries 72 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -1040,6 +1112,14 @@ points would still agree with the optimum on favourable instances:
       still open and unsolved while staying proved optimal and agreeing with
       the independent scan, and a seeded run, where the exit fires sooner, must
       return the same value as an unseeded one.
+\item Proposition~\ref{prop:front} --- the enumerated front is checked
+      against exhaustive enumeration, not a sample of it; each vector's point
+      is checked efficient and checked to attain that vector; the largest
+      ``Phi`` on the front is checked to equal the optimum of $(P_E)$; a
+      budget-limited run is checked to refuse the completeness flag; and the
+      whole of it is checked again on fractional criteria, where the centre
+      comes from a dominance walk rather than from
+      Proposition~\ref{prop:ecker}.
 \item The deliverable of Section~\ref{sec:subset} --- every member is checked
       efficient and checked to carry the value $\Phi$ actually takes there, the
       proved optimum is checked to be present and ranked first, and each source
