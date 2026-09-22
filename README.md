@@ -162,6 +162,69 @@ iterations** in the paper's method, because what it cuts is decided by the
 efficiency test and not by the incumbent. The worth of a heuristic incumbent
 depends on which exact method it is hybridised with.
 
+**The augmented weighted Tchebychev program**
+(`augmented_tchebychev_efficient`) is the scalarisation the surrounding
+literature reaches for — Chaabane, Brahmi and Ramdani (2012) optimise over an
+integer efficient set with it, Younsi-Abbaci and Moulai (2021) use it over the
+Pareto front. It is implemented here as a **generator of certified efficient
+points**, and measured against the two generators already in the package.
+
+It is strictly stronger than the weighted sum, which is the reason the
+literature prefers it. A weighted sum can only maximise at a *supported*
+efficient point; varying the Tchebychev weights reaches unsupported ones too.
+Over 20 random instances, from the same grid of 27 weight vectors:
+
+| | efficient points reached | of which unsupported |
+|---|---:|---:|
+| weighted sum | 66 / 175 | **0 / 54** |
+| augmented Tchebychev | 112 / 175 | 29 / 54 |
+
+and every one of the 540 optima it returned was efficient, none merely weakly
+so — which is what the augmentation `rho` buys. Those are the numbers
+`examples/tchebychev_study.py` prints; a wider sweep over 40 instances and 1080
+programs gives the same picture (216/369 against 135/369, 56 unsupported
+against 0, and again no inefficient optimum).
+
+**As a seed for the box search it loses, and the table says why.** Against the
+same 18 instances used for the metaheuristic above:
+
+| seed | total | seed cost | exactly optimal |
+|---|---:|---:|---:|
+| none (pure box search) | 9.64 s | — | — |
+| Pareto local search | **7.97 s** (1.21×) | 0.57 s | 12 of 18 |
+| augmented Tchebychev | 13.50 s (0.71×) | 4.25 s | 5 of 18 |
+
+Both halves of the loss are structural, not an artefact of this
+implementation. The cost is `p + 1` integer programs, each carrying an extra
+continuous variable and `p` extra rows; the ideal point is not the culprit
+(0.01–0.13 s of the seed, against 0.13–0.85 s for the scalarisations
+themselves). And the quality gap is the point: the Tchebychev program steers by
+criterion-space geometry relative to `z*` — **it never looks at `Phi`**. The
+local search is guided by `Phi` at every move. A generator of a good spread of
+efficient points is not the same thing as a generator of good `Phi`.
+
+That ordering is stable but the size of the win is not, and the two should not
+be confused. On the looser family in `examples/tchebychev_study.py` the Pareto
+seed is *exactly optimal on 15 of 24 instances* and still buys only 1.05×,
+because that search is not bound-limited — seed **quality** is not seed
+**value**, which is the same lesson as the zero-iteration result above.
+Tchebychev loses on every family tried (0.73×, 0.91×); the Pareto seed ties or
+wins on every one.
+
+The same split shows up when the two are compared as front generators rather
+than as seeds. On 20 instances at `n = 4`, Tchebychev reached 64% of `E(P_D)`
+in 2.1 s and the Pareto archive 99% in 0.04 s. But the archive filters by
+dominance among the points it has *seen*, which is not the exact test: over a
+wider sweep one member in roughly 2000 turned out not to be efficient, while
+every Tchebychev optimum is efficient by construction. Rare is not never, and
+that is precisely why `metaheuristic_incumbent` puts the archive's best through
+`test_efficiency` before any bound is allowed to cross into the exact search.
+
+A note on how this was measured: an earlier version of the harness scored a
+seed by the ratio `Phi(seed) / Phi*`, which **inverts when `Phi*` is negative**,
+as it is on some of these instances. The tables above use the non-negative gap
+`(Phi* - Phi(seed)) / |Phi*|`, zero exactly when the seed is optimal.
+
 **Batch cutting** (`batch_cuts_after`) cuts on several cheaply generated
 efficient points at once, taking the heaviest instance from 11 step-1 solves to
 8 (27.1 s → 15.7 s). It is **off by default**, because on instances that were
@@ -175,7 +238,7 @@ win.
 | `lfp_efficient/` | the package — and its long-form notes in `README.md` |
 | `examples/` | the paper's example, larger instances, the scaling study, the fractional case |
 | `tests/` | the test suite, runnable with a bare interpreter |
-| `studies/` | unrelated earlier experiments kept for the record (these use NumPy) |
+| `studies/` | earlier metaheuristic experiments kept for the record (these use NumPy) |
 
 ## License
 

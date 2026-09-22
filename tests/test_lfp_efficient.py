@@ -25,7 +25,9 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            optimize_in_criterion_space, pareto_local_search,
                            optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
-                           solve_relaxation, test_efficiency)
+                           solve_relaxation, test_efficiency,
+                           augmented_tchebychev_efficient, ideal_point,
+                           tchebychev_incumbent)
 from lfp_efficient.rational import F, fmt
 
 
@@ -290,6 +292,119 @@ def test_a_zero_weight_is_refused():
         assert "strictly positive" in str(exc)
     else:
         raise AssertionError("a zero weight was accepted")
+
+
+def test_every_augmented_tchebychev_optimum_is_efficient():
+    """The guarantee the generator rests on, checked against Definition 1.
+
+    For any ``w > 0`` and ``rho > 0`` the optimum of the augmented program is
+    efficient -- the augmentation is what rules out the merely *weakly*
+    efficient optima the plain Tchebychev program admits.
+    """
+    rng = random.Random(20250922)
+    checked = 0
+    for _ in range(12):
+        problem, phi, bounds = random_instance(rng)
+        enum = enumerate_efficient_set(problem, bounds=bounds)
+        if not enum.efficient:
+            continue
+        truth = {tuple(x) for x in enum.efficient}
+        for w in spread_weights(problem.p) + [[rng.randint(1, 6)
+                                               for _ in range(problem.p)]]:
+            point = augmented_tchebychev_efficient(problem, w)
+            if point is None:
+                continue
+            assert tuple(point) in truth, (w, point)
+            checked += 1
+    assert checked > 20, checked
+    return f"{checked} programs, every optimum efficient"
+
+
+def test_tchebychev_reaches_efficient_points_no_weighted_sum_can():
+    """What the augmented program buys over :func:`weighted_sum_efficient`.
+
+    A weighted sum can only maximise at a *supported* efficient point -- one on
+    the convex hull of the criterion image.  On the paper's instance three of
+    the seven efficient points are unsupported, and the Tchebychev program
+    reaches all three while no positive weighted sum reaches any.
+    """
+    problem, _ = paper_problem()
+    efficient = [tuple(x) for x in
+                 enumerate_efficient_set(problem, bounds=[6, 12]).efficient]
+    values = {x: tuple(z(list(x)) for z in problem.criteria) for x in efficient}
+
+    supported = set()
+    for w1 in range(1, 40):
+        for w2 in range(1, 40):
+            top = max(w1 * values[x][0] + w2 * values[x][1] for x in efficient)
+            supported.update(x for x in efficient
+                             if w1 * values[x][0] + w2 * values[x][1] == top)
+    unsupported = set(efficient) - supported
+    assert unsupported, "the instance was meant to have unsupported points"
+
+    reached = set()
+    for w1 in range(1, 8):
+        for w2 in range(1, 8):
+            point = augmented_tchebychev_efficient(problem, [w1, w2])
+            if point is not None:
+                reached.add(tuple(point))
+    assert unsupported <= reached, sorted(unsupported - reached)
+    return (f"{len(unsupported)} unsupported of {len(efficient)} efficient, "
+            f"all reached; no weighted sum reaches any")
+
+
+def test_the_ideal_point_dominates_every_efficient_point():
+    """``z*`` is an upper bound on each criterion, and generally attained by no
+    single feasible point -- which is what makes it a reference to move away
+    from rather than a solution."""
+    problem, _ = paper_problem()
+    z_star = ideal_point(problem)
+    efficient = enumerate_efficient_set(problem, bounds=[6, 12]).efficient
+    attained = 0
+    for x in efficient:
+        z = [c(list(x)) for c in problem.criteria]
+        assert all(z[k] <= z_star[k] for k in range(problem.p)), (x, z, z_star)
+        attained += all(z[k] == z_star[k] for k in range(problem.p))
+    assert attained == 0, "z* turned out to be feasible on this instance"
+    return f"z* = {tuple(z_star)}, above all {len(efficient)} efficient points"
+
+
+def test_tchebychev_refuses_what_would_void_its_guarantee():
+    """A zero weight drops a criterion from the ``max`` term and a zero ``rho``
+    readmits weakly efficient optima; neither is accepted silently."""
+    problem, phi = paper_problem()
+    for weights, rho, expected in [([1, 0], Fraction(1, 1000), "strictly positive"),
+                                   ([1, 1], Fraction(0), "rho must be positive"),
+                                   ([1, 1], Fraction(-1), "rho must be positive")]:
+        try:
+            augmented_tchebychev_efficient(problem, weights, rho)
+        except ValueError as exc:
+            assert expected in str(exc), (weights, rho, exc)
+        else:
+            raise AssertionError(f"accepted weights={weights} rho={rho}")
+
+    # and the incumbent it feeds is a genuine efficient point, not a claim
+    point, value = tchebychev_incumbent(problem, phi)
+    assert test_efficiency(problem, point).efficient, point
+    assert value == phi(point)
+    return "zero weight, zero rho and negative rho all refused"
+
+
+def test_tchebychev_is_refused_on_fractional_criteria():
+    """``z*_k - Z_k(x)`` with a ratio is not linear, so the rows of the
+    program would not be constraints of an integer linear program."""
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4).add([1, 1], LE, 5)
+    problem = MOILFP(model, [FractionalObjective([1, 0], [1, 1], 1, 2),
+                             FractionalObjective([0, 1], [1, 0], 0, 3)])
+    for call in (lambda: ideal_point(problem),
+                 lambda: augmented_tchebychev_efficient(problem, [1, 1])):
+        try:
+            call()
+        except ValueError as exc:
+            assert "linear" in str(exc), exc
+        else:
+            raise AssertionError("fractional criteria were accepted")
+    return "refused, with the reason stated"
 
 
 def test_batching_is_refused_on_fractional_criteria():
