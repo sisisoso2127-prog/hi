@@ -407,6 +407,54 @@ def test_tchebychev_is_refused_on_fractional_criteria():
     return "refused, with the reason stated"
 
 
+def test_the_search_stops_once_the_best_open_bound_is_hopeless():
+    """The heap is ordered by inherited bound descending, so the first box whose
+    bound the incumbent already beats proves every remaining box worthless.
+
+    Pinned as a mechanism, not as a timing: the run must end with boxes still
+    open and unsolved, and still be proved optimal with the same value the
+    exhaustive scan gives.
+    """
+    rng = random.Random(20250922)
+    stopped_early = 0
+    checked = 0
+    for _ in range(14):
+        problem, phi, bounds = random_instance(rng)
+        best_x, best_value, _, _ = best_over_efficient_set_by_scan(
+            problem, phi, bounds)
+        if best_x is None:
+            continue
+        solution = optimize_in_criterion_space(problem, phi)
+        assert solution.proved_optimal, "the early exit must keep the proof"
+        assert solution.value == best_value, (solution.value, best_value)
+        checked += 1
+        last = solution.iterations[-1]
+        if last.note and "dropped unsolved" in last.note:
+            stopped_early += 1
+    assert checked >= 10, checked
+    assert stopped_early > 0, "the exit never fired on any instance"
+    return f"{stopped_early} of {checked} runs ended on a hopeless best bound"
+
+
+def test_the_early_exit_never_changes_the_answer_when_seeded():
+    """Seeding raises the incumbent, which makes the exit fire sooner.  The
+    answer must not move -- that is what Proposition 2 of the note requires of
+    any seed, and the exit must not weaken it."""
+    rng = random.Random(4242)
+    agreed = 0
+    for _ in range(10):
+        problem, phi, bounds = random_instance(rng)
+        plain = optimize_in_criterion_space(problem, phi)
+        seeded = optimize_hybrid_metaheuristic(problem, phi)
+        if plain.x is None:
+            continue
+        assert plain.proved_optimal and seeded.proved_optimal
+        assert plain.value == seeded.value, (plain.value, seeded.value)
+        agreed += 1
+    assert agreed >= 7, agreed
+    return f"{agreed} instances, seeded and unseeded agree and both proved"
+
+
 def test_batching_is_refused_on_fractional_criteria():
     """A sum of ratios is not a linear objective; the option says so rather
     than silently doing nothing."""

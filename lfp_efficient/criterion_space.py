@@ -81,6 +81,38 @@ of a stronger one that is already there.  The cost that remains is not in boxes
 that are wasted, nor in how they are produced -- it is in the integer programs
 of the boxes that genuinely have to be solved.
 
+One thing that helps, and one measurement that confirms the sentence above
+------------------------------------------------------------------------
+The loop below pops from a heap ordered by **inherited bound descending** and
+used to solve every box it popped.  But once the best bound still open fails to
+beat the incumbent, so does every other bound in the list, and the whole
+remaining tail is busywork.  Measured before the fix, on 18 instances: 198 of
+733 solves (27%) had an inherited bound the incumbent already beat -- and on
+**every single instance** that count equalled the number of boxes still open
+when the condition first fired.  The waste is exactly a tail, never scattered,
+which is what the heap order predicts.  Stopping there cuts 733 boxes to 549,
+25% fewer, with the same answer still proved optimal.
+
+It buys almost no time: 7.44s -> 7.27s at per-instance minima over five
+repeats, with per-instance ratios scattered from 0.77x to 1.36x.  Since the
+change can only remove work, anything below 1.00x is machine noise, and the
+noise is larger than the effect.  That is not a disappointment but a
+confirmation: the tail boxes are the **cheapest** ones, each dropped by the
+root relaxation the moment it is given the cutoff.  A quarter of the
+sub-problems were genuinely wasted and worth almost nothing -- exactly as the
+paragraph above says.
+
+The change is kept because it is free and provably work-removing, and because
+the iteration log stops carrying a couple of hundred entries that only say
+"dropped".  It is not a speed-up and is not reported as one.
+
+A third thing the same measurement settles: seeding from the metaheuristic
+removes the same waste.  On the seeded hybrid this exit cuts only 4% of boxes
+(562 -> 539), against 25% unseeded.  The two are **substitutes, not
+complements** -- a good incumbent arrives early enough that the hopeless tail
+barely forms, so there is nothing left for the exit to skip.  Anyone stacking
+these two ideas expecting them to add should read this row first.
+
 What bounds what
 ----------------
 A box's sub-problem maximises ``Phi`` over a superset of the efficient points
@@ -259,6 +291,26 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
             return finish(OPTIMAL if x_opt is not None else "infeasible", False)
 
         _, _, _, box = heappop(open_boxes)
+
+        # The heap is ordered by inherited bound descending, and only the root
+        # (and the boxes a hybrid hands over) carry no bound -- those rank
+        # first, so by the time a bounded box reaches the top every box still
+        # open is bounded too.  If this one cannot beat the incumbent, neither
+        # can any of them: the answer is already proved and the rest of the
+        # list is busywork.
+        if (box.bound is not None and phi_opt is not None
+                and box.bound <= phi_opt):
+            log = IterationLog(settled + 1)
+            log.upper_bound = box.bound
+            log.incumbent, log.incumbent_value = x_opt, phi_opt
+            log.note = (f"the best bound still open is {box.bound}, which the "
+                        f"incumbent already beats: the {len(open_boxes) + 1} "
+                        f"remaining boxes are dropped unsolved.")
+            logs.append(log)
+            if verbose:
+                print(log)
+            break
+
         settled += 1
         log = IterationLog(settled)
         logs.append(log)
