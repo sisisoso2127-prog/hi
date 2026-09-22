@@ -23,6 +23,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            metaheuristic_incumbent, optimize_hybrid,
                            optimize_hybrid_metaheuristic,
                            optimize_in_criterion_space, pareto_local_search,
+                           Box,
                            optimize_over_efficient_set,
                            solve_fractional_milp, solve_linear_milp,
                            solve_relaxation, test_efficiency,
@@ -30,6 +31,10 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            tchebychev_incumbent, efficient_dominator,
                            repair_to_efficient)
 from lfp_efficient.rational import F, fmt
+from lfp_efficient.criterion_space import _rows_for
+from lfp_efficient.milp import solve_relaxation, warm_relaxation
+from lfp_efficient.simplex import (INFEASIBLE, OPTIMAL as LP_OPTIMAL, STALLED,
+                                   add_linear_row, restore_feasibility)
 
 
 def paper_problem():
@@ -524,6 +529,82 @@ def test_the_walk_is_still_taken_on_fractional_criteria():
         walked += 1
     assert walked > 0, "no inefficient point to walk from"
     return f"{walked} fractional repairs, each ending efficient"
+
+
+def test_a_row_added_to_a_solved_tableau_gives_the_cold_answer():
+    """``add_linear_row`` is the general form of the branch & bound's own
+    ``add_bound_row``; a box differs from its parent by rows of that shape.
+
+    Checked against the only thing that can arbitrate: rebuilding the model
+    with the extra row and solving it from scratch.
+    """
+    rng = random.Random(4711)
+    agreed = empty = 0
+    for _ in range(120):
+        n = rng.choice([2, 3, 4])
+        base = Model(n)
+        for j in range(n):
+            unit = [0] * n
+            unit[j] = 1
+            base.add(unit, LE, rng.randint(2, 5))
+        for _ in range(rng.randint(1, 2)):
+            base.add([rng.randint(1, 4) for _ in range(n)], LE, rng.randint(4, 14))
+        objective = [rng.randint(-4, 5) for _ in range(n)]
+        root = solve_relaxation(base, objective)
+        if root.status != LP_OPTIMAL:
+            continue
+
+        coeffs = [F(rng.randint(-3, 4)) for _ in range(n)]
+        rhs = F(rng.randint(-4, 10))
+        cold = solve_relaxation(base.copy().add(coeffs, LE, rhs), objective)
+
+        tableau = root.tableau.clone()
+        pricing = add_linear_row(tableau, root.pricing, coeffs, rhs)
+        status = restore_feasibility(tableau, pricing, F(0), F(0))
+        if status == STALLED:
+            continue
+        if status == INFEASIBLE:
+            assert cold.status == INFEASIBLE
+            empty += 1
+            continue
+        tableau.run(pricing)
+        assert cold.status == LP_OPTIMAL
+        assert pricing.value(tableau.solution()) == cold.objective
+        agreed += 1
+    assert agreed > 50, agreed
+    return f"{agreed} warm starts exact, {empty} correctly empty"
+
+
+def test_a_warm_root_equals_the_cold_root_it_replaces():
+    """What the box search relies on: starting from the parent's basis and
+    adding the child's rows lands on the same relaxation value as solving the
+    child's model from scratch."""
+    rng = random.Random(20260922)
+    agreed = 0
+    for _ in range(10):
+        problem, phi, bounds = random_instance(rng)
+        parent = Box()
+        model = parent.restricted(problem.model)
+        root = solve_fractional_milp(model, phi.lift(model.n),
+                                     denominator_positive=False)
+        if root.root is None:
+            continue
+        point = [F(rng.randint(0, b)) for b in bounds]
+        if not problem.model.is_feasible(point):
+            continue
+        for k in range(problem.p):
+            added = _rows_for(problem, point, k)
+            child = Box(parent.rows + added, None, root.root, added)
+            child_model = child.restricted(problem.model)
+            cold = solve_relaxation(child_model, phi.lift(child_model.n))
+            warm = warm_relaxation(child_model, phi.lift(child_model.n),
+                                   root.root + (added,))
+            assert warm.status == cold.status, (warm.status, cold.status)
+            if warm.status == LP_OPTIMAL:
+                assert warm.objective == cold.objective
+            agreed += 1
+    assert agreed > 10, agreed
+    return f"{agreed} child roots, warm == cold"
 
 
 def test_batching_is_refused_on_fractional_criteria():

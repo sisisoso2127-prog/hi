@@ -57,7 +57,9 @@ same bound comparison and are substitutes rather than complements. And not
 re-deriving a theorem of Ecker and Kouada once per inefficient box removes
 $6\%$ of the branch \& bound nodes at an identical box count. Both are reported
 in work rather than in seconds, because both effects are smaller than this
-machine's noise floor and no number of repeats changes that.
+machine's noise floor and no number of repeats changes that.  A third, warm
+starting each box from its parent's basis, removes $11\%$ of the simplex
+pivots at an identical box count.
 
 The Tchebychev result is the informative one, and it does not say the
 scalarization is weak. As a generator it is strictly stronger than a weighted sum, reaching
@@ -394,6 +396,52 @@ against $6.0\%$ of the nodes --- because proving $\theta = 0$ on a point already
 known to be efficient is easier than searching for a dominator. The same
 shortcut applies to the decision-space method, which uses the same test, so the
 comparison of Section~\ref{sec:results} is unaffected by it.
+
+\subsection{Warm-starting a box from its parent}
+\label{sec:warm}
+
+A box's region is its parent's plus a handful of rows, yet each box solved its
+root relaxation from scratch. A simplex phase~I is needed whenever a row is not
+covered by a slack column, which every $e_k \geqslant 1$ row of
+\eqref{eq:child} forces. Measured before anything was built: \textbf{4992 of
+18193 simplex pivots, 27\%, were phase~I inside cold roots}, and 788 of 824
+roots paid one --- $6.3$ pivots each against $2.3$ for phase~II.
+
+The parent's basis stays a basis of the child once the new rows' slacks join
+it, so only those rows can be primal infeasible and a dual restoration repairs
+them. That is the argument branch \& bound already uses for its own nodes,
+applied one level up; all it needs is the general form of the single-variable
+row that branching adds.
+
+\begin{table}[h]
+\centering
+\caption{Warm-starting each box from its parent, over the 18 instances.}
+\begin{tabular}{lrrr}
+\toprule
+ & before & after & \\
+\midrule
+simplex pivots            & $18193$ & $16169$ & $-11.1\%$ \\
+cold root relaxations     & $824$   & $307$   & $-63\%$ \\
+boxes, programs, optima   & \multicolumn{3}{c}{identical} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The ceiling was never 27\%.} Only a box with a parent can inherit
+one, and that is 63\% of the roots. The rest are the efficiency tests and the
+$Q$ sub-problems, which extend $\Dset$ rather than another box --- and caching
+a basis for $\Dset$ would buy nothing, because its rows are all $\leqslant$
+with non-negative right-hand sides, so its crash basis is free and phase~I is
+skipped outright. The reachable ceiling was about $17\%$, of which $11.1\%$
+survives the restoration's own $1583$ pivots. The gain grows with $p$ ($28\%$
+at $p = 7$ against $1$--$7\%$ at $p = 3$), which is what more rows per box
+predicts, and two very small instances lose a little where the restoration
+costs more than the phase~I it replaces.
+
+\paragraph{517 warm starts, 0 stalls.} The fallback to a cold solve never
+fired. It is kept regardless, because a restoration that gives up must cost
+time and never correctness --- which is also why the box counts above are
+identical rather than merely equal in the answers they produce.
 
 \section{Computational results: decision space versus criterion space}
 \label{sec:results}
@@ -835,12 +883,13 @@ incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
 early exit on a hopeless bound       & partial      & 25\% fewer boxes, no time \\
 early exit \emph{on top of} the seed  & \textbf{loss} & 4\% fewer boxes: a substitute \\
 skipping the redundant test          & \textbf{win} & 6\% fewer nodes, same search \\
+warm-starting a box from its parent  & \textbf{win} & 11\% fewer pivots, same search \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Of the ten, four are wins, four are losses, one is a tie and one pays in
+Of the eleven, five are wins, four are losses, one is a tie and one pays in
 sub-problems but not in time. They are reported at the same length as the wins
 because they carry the same information: a hybridization pays only where the
 exact method has a mechanism the first phase can feed, that mechanism is
@@ -869,7 +918,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 60 tests. Several check
+exact rational arithmetic throughout, and carries 62 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -894,6 +943,10 @@ points would still agree with the optimum on favourable instances:
       still open and unsolved while staying proved optimal and agreeing with
       the independent scan, and a seeded run, where the exit fires sooner, must
       return the same value as an unseeded one.
+\item Section~\ref{sec:warm} --- a row added to a solved tableau is checked
+      against rebuilding the model and solving it cold, on 120 random programs;
+      and a child box's warm root is checked to reach the same relaxation value
+      as its cold one.
 \item The unsupported-reach claim --- on the reference instance, the three
       unsupported efficient points are all reached by \eqref{eq:tcheb} while no
       positive weighted sum reaches any.
