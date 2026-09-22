@@ -607,6 +607,48 @@ def test_a_warm_root_equals_the_cold_root_it_replaces():
     return f"{agreed} child roots, warm == cold"
 
 
+def test_every_point_the_search_remembers_is_efficient():
+    """The invariant the known-dominator shortcut rests on.
+
+    ``Solution.explored`` collects the points the search has cut on and the
+    ``Q`` maximisers beside them.  The shortcut takes any member that dominates
+    a box's maximiser and cuts there without paying an efficiency test, so a
+    single inefficient member would make it cut on a dominated point and could
+    remove the true optimum.  Checked directly, not argued.
+    """
+    rng = random.Random(31415)
+    points = bad = 0
+    for _ in range(12):
+        problem, phi, _ = random_instance(rng)
+        solution = optimize_in_criterion_space(problem, phi)
+        for point in solution.explored:
+            points += 1
+            bad += not test_efficiency(problem, point).efficient
+    assert points > 20, points
+    assert bad == 0, f"{bad} of {points} remembered points were not efficient"
+    return f"{points} remembered points, every one efficient"
+
+
+def test_the_known_dominator_shortcut_keeps_the_answer():
+    """Cutting on a remembered efficient point instead of the test's maximiser
+    changes which boxes are produced, so this is checked against the answer and
+    the proof rather than against a box count."""
+    rng = random.Random(2718)
+    checked = 0
+    for _ in range(14):
+        problem, phi, bounds = random_instance(rng)
+        best_x, best_value, _, _ = best_over_efficient_set_by_scan(
+            problem, phi, bounds)
+        if best_x is None:
+            continue
+        solution = optimize_in_criterion_space(problem, phi)
+        assert solution.proved_optimal, "the shortcut must keep the proof"
+        assert solution.value == best_value, (solution.value, best_value)
+        checked += 1
+    assert checked >= 10, checked
+    return f"{checked} instances agree with the independent scan"
+
+
 def test_batching_is_refused_on_fractional_criteria():
     """A sum of ratios is not a linear objective; the option says so rather
     than silently doing nothing."""

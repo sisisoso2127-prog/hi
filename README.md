@@ -186,6 +186,39 @@ ideas: on the metaheuristic-seeded hybrid this exit cuts only **4 %** of boxes
 not complements** — a good incumbent arrives early enough that the hopeless
 tail barely forms.
 
+**Cutting on a point the search already proved efficient.** Splitting a profile
+of the work by operation put the cost somewhere unexpected: the efficiency test
+is **52 % of all simplex pivots on 146 calls** — 58 pivots each against 11.8
+for a box solve. So the question stopped being "make the test cheaper" and
+became "pay it less often".
+
+When a box's maximiser `x_b` is inefficient the search runs that test to find an
+efficient point dominating it. But it already holds a list of points it has
+*proved* efficient, and finding one that dominates `x_b` is arithmetic rather
+than an integer program. Measured before building: one does on **21 of 146
+tests (14 %), and on 17 % of the inefficient cases**.
+
+| | base | shortcut |
+|---|---:|---:|
+| simplex pivots | 16169 | **14602** (−9.7 %) |
+| boxes solved | 549 | **534** (−15) |
+| optima | — | identical, all proved |
+
+The boxes went *down*, which was not the prediction. Among the remembered
+points that dominate `x_b` the highest is taken, and `{Z ≤ Z(centre)}` removes
+more of the box the higher its centre — so skipping the test and cutting better
+compound instead of trading off. One instance gained a box; the rest lost or
+held.
+
+Soundness rests on one invariant: **every point the search remembers is
+efficient.** `explored` holds the centres it cut on and the `Q` maximisers
+beside them, and a `Q` maximiser shares its centre's criterion vector, so it is
+efficient whenever the centre is. A single inefficient member would let the
+search cut on a dominated point and delete the true optimum, so the invariant
+is a test rather than an argument — 0 failures over 34 remembered points, and
+the shortcut itself is checked against the independent scan rather than against
+a box count, since it deliberately changes which boxes are produced.
+
 **Warm-starting a box from its parent.** A box's region is its parent's plus a
 handful of rows, yet every box solved its root relaxation from scratch — and
 `solve_standard_form` needs a phase I whenever a row is not covered by a slack,

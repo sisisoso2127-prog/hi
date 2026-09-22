@@ -1,0 +1,309 @@
+\documentclass[11pt,a4paper]{article}
+\input{preamble-shared}
+
+\title{Results, with the charts behind them\\
+\large what was measured, in which unit, and what the unit hides}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Every number here comes from a run of the shipped code in exact rational
+arithmetic, cross-checked against an independent reference, and every chart is
+generated from those numbers by \texttt{docs/figs/regenerate.py}.  The losses
+are reported at the same length as the wins, and so is the one finding that
+outlasts all of them: on this machine wall-clock time cannot resolve the
+effects being measured, so most of what follows is counted in \emph{work} ---
+sub-problems, branch-and-bound nodes, simplex pivots --- and not in seconds.
+\end{abstract}
+
+\tableofcontents
+
+\section{What is being compared}
+
+Two exact methods answer $(P_E)$ and agree on every instance.  They differ in
+where they keep the unexplored part of the problem, and that decides the cost:
+
+\begin{description}
+\item[decision space] truncates $\Dset$ with Sylva--Crema cuts.  Each cut is a
+  disjunction, so it costs $p$ binaries and $p+1$ big-$M$ rows, and every
+  sub-problem is strictly larger than the last.
+\item[criterion space] keeps a list of boxes in $\R^p$.  The same truncation is
+  a box subtraction; every sub-problem is $\Dset$ plus a few ordinary rows, and
+  \textbf{the model never grows}.
+\end{description}
+
+\section{The margin, and how it moves with $p$}
+
+\begin{table}[h]
+\centering
+\caption{Decision space against criterion space, $n = 6$, four instances per
+row.  All twenty agreed and were proved optimal on both sides.}
+\begin{tabular}{crrr}
+\toprule
+$p$ & decision space & criterion space & ratio \\
+\midrule
+2 & $0.61$ s   & $0.35$ s & $1.74\times$ \\
+3 & $1.02$ s   & $0.34$ s & $2.99\times$ \\
+4 & $4.21$ s   & $0.61$ s & $6.92\times$ \\
+5 & $112.77$ s & $1.09$ s & $103\times$ \\
+6 & $26.15$ s  & $1.08$ s & $24.3\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-margin}\\[2pt]
+\fig{r-margin-legend}
+\end{center}
+\noindent
+\emph{The bars are clipped at 30\,s so the small $p$ stay visible; the $p=5$
+decision-space bar runs off the top at $112.77$\,s.}
+
+Two forces grow with $p$ and pull against each other.  The split produces $p$
+children, so the list branches wider; but the non-dominated set grows too, so
+the decision-space method needs more cuts, and each cut costs it $p$ binaries
+and $p+1$ rows.  The measurement settles which dominates, and it settles it
+against the prediction made before running it: branching multiplies a
+\emph{count} of cheap, fixed-size models, while the binaries multiply the
+\emph{cost of one model}, and they accumulate.
+
+\paragraph{On the magnitudes.}  The direction is solid --- the per-$p$ median
+ratios are $1.35$, $3.2$, $2.1$, $12.6$, $15.8$, and every instance agreed and
+was proved optimal.  The totals are not stable estimates: four instances per
+$p$ is few, and $110.95$ of the $112.77$ seconds at $p = 5$ come from a single
+instance.  The table reports what was measured, not an expected value.
+
+\section{Four improvements to the exact search}
+
+Each of the four removes work without changing the answer.  They are listed
+with the unit each was measured in, because no single unit sees all four.
+
+\begin{table}[h]
+\centering
+\caption{What each change removes, and what it leaves alone.}
+\begin{tabular}{lllr}
+\toprule
+change & unit & before $\to$ after & \\
+\midrule
+early exit on a hopeless bound & sub-problems & $733 \to 549$ & $-25\%$ \\
+not re-deriving Ecker \& Kouada & b\&b nodes & $8105 \to 7618$ & $-6.0\%$ \\
+warm-starting a box from its parent & simplex pivots & $18193 \to 16169$ & $-11.1\%$ \\
+cutting on a remembered efficient point & simplex pivots & $16169 \to 14602$ & $-9.7\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-improve}\\[2pt]
+\fig{r-improve-legend}
+\end{center}
+
+\subsection{Why four different units}
+
+Because each change removes a different \emph{kind} of work, and a unit that
+sees one is blind to the others.
+
+\begin{itemize}
+\item The early exit removes whole sub-problems, so it shows in a box count ---
+  but those sub-problems are the \emph{cheapest} ones, each killed by the root
+  relaxation the moment it sees the cutoff, so it barely moves nodes or pivots.
+\item Ecker \& Kouada removes an integer program per inefficient box, so it
+  shows in programs and nodes --- but not in the box count, which is identical.
+\item The warm start removes a simplex phase~I per box, so it shows only in
+  pivots: programs, nodes and boxes are all identical.
+\item The remembered-point shortcut removes an efficiency test \emph{and}
+  changes which boxes are produced, so it is the only one of the four that is
+  not answer-identical by construction and had to be checked against the
+  answer instead.
+\end{itemize}
+
+\subsection{The measurement lesson}
+
+The wall-clock A/B for the Ecker \& Kouada change reads $0.96\times$ ---
+\emph{slower} --- and is faster on 9 of 18 instances.  That cannot be causal:
+removing 125 integer programs cannot cost time.
+
+The conclusion is about the instrument.  This machine's noise floor is roughly
+$\pm 30\%$ per instance \emph{even at per-instance minima over five repeats},
+so it cannot resolve a $6\%$ effect, and no number of repeats fixes that.
+Counting integer programs, nodes and pivots gives the same figure on every run
+and every machine.
+
+Two habits follow, both adopted only after failing at them first:
+
+\begin{enumerate}
+\item A measurement taken while anything else was running on the machine is
+  \textbf{discarded, not quoted}.  The first A/B for that change was
+  contaminated exactly so and was re-run.
+\item A gain predicted from the \textbf{mean} cost of a call is not a
+  prediction.  The profile showed the efficiency test at $18.4$\,ms per call,
+  the dearest operation in the search --- but what the shortcut removes is the
+  repair's test at $7.68$\,ms, the cheap kind.  Reasoning from the wrong row of
+  the right profile overstated the gain by half.
+\end{enumerate}
+
+\section{Hybridisation: what paid and what did not}
+
+\subsection{Seeding the exact search}
+
+\begin{table}[h]
+\centering
+\caption{Seeding the box search, 18 instances.  ``Exactly optimal'' counts the
+instances where the seed already attains $\Phi^{*}$.}
+\begin{tabular}{lrrr}
+\toprule
+seed & total & seed cost & exactly optimal \\
+\midrule
+none                   & $9.64$ s  & ---      & --- \\
+Pareto local search    & $\mathbf{7.97}$ s $(1.21\times)$ & $0.57$ s & 12 of 18 \\
+augmented Tchebychev   & $13.50$ s $(0.71\times)$ & $4.25$ s & 5 of 18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}\fig{r-seed}\end{center}
+
+\noindent
+The Tchebychev seed is \emph{slower than not seeding at all}, and both halves
+of that are structural.  Its cost is $p+1$ integer programs on an enlarged
+model --- not the reference point's fault, since computing $z^{*}$ took
+$0.01$--$0.13$\,s of the seed against $0.13$--$0.85$\,s for the scalarisations.
+Its quality is the real finding: the program steers by criterion-space geometry
+relative to $z^{*}$ and \textbf{never looks at $\Phi$}, while the local search
+is guided by $\Phi$ at every move.
+
+\subsection{But as a generator it is the stronger of the two}
+
+A weighted sum maximises only at \emph{supported} efficient points.  Varying
+the Tchebychev weights reaches unsupported ones too, which is what the
+literature uses it for.
+
+\begin{center}
+\fig{r-reach}\\[2pt]
+\fig{r-reach-legend}
+\end{center}
+
+\begin{table}[h]
+\centering
+\caption{Reach from the same grid of 27 weight vectors, 20 random instances.}
+\begin{tabular}{lrr}
+\toprule
+ & efficient points reached & of which unsupported \\
+\midrule
+weighted sum         & $66 / 175$  & $\mathbf{0 / 54}$ \\
+augmented Tchebychev & $112 / 175$ & $29 / 54$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+All 540 optima returned were efficient.  A wider sweep over 40 instances
+agrees: $216/369$ against $135/369$, 56 unsupported against 0, and 1080 optima
+with none inefficient.
+
+\section{The asymmetry, which is the most transferable result}
+
+\begin{table}[h]
+\centering
+\caption{The \emph{same} free optimum, handed to each exact method at
+iteration 1.}
+\begin{tabular}{lrl}
+\toprule
+exact method & effect & mechanism \\
+\midrule
+criterion-space box search & $1.42\times$, up to 52\% fewer boxes
+  & boxes discarded whole \\
+decision-space cut method  & \textbf{zero} iterations saved
+  & none \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The heuristic is identical in both rows.  What differs is whether the exact
+method has a mechanism through which a lower bound can remove work: a box is
+compared against the incumbent \emph{before} it is split, and failing that
+comparison deletes it with every descendant it would have had; what the
+decision-space method cuts is decided by the efficiency test on its own
+maximiser, and $\Phi_{\mathrm{opt}}$ enters only as a cutoff inside a branch
+and bound that would have found the same point anyway.
+
+So ``hybridise an exact method with a metaheuristic'' is not one question with
+one answer, and the mechanism is cheaper to check than the hybrid is to build
+and measure.
+
+\subsection{Two ideas that feed the same mechanism do not add}
+
+\begin{table}[h]
+\centering
+\caption{Sub-problems solved over the 18 instances.}
+\begin{tabular}{lrr}
+\toprule
+ & boxes solved & reduction \\
+\midrule
+neither                       & 733 & --- \\
+early exit only               & 549 & 25\% \\
+metaheuristic seed only       & 562 & 23\% \\
+both                          & 539 & 26\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Either alone removes about a quarter; together they remove about a quarter.  On
+top of the seed the exit is worth $4\%$ rather than $25\%$, because a good
+incumbent arrives early enough that the hopeless tail barely forms.  Two ideas
+add only when they feed different mechanisms; two that feed the same one are
+one idea, measured twice.
+
+\section{Every verdict, including the losses}
+
+\begin{table}[h]
+\centering
+\caption{The twelve things tried, with what each was worth.}
+\begin{tabular}{lll}
+\toprule
+attempt & verdict & effect \\
+\midrule
+decision space $\to$ criterion space & \textbf{win}  & $5.05\times$, up to $173\times$ \\
+exact--exact handover ($s=1$)        & tie           & $8.47$ s vs $8.11$ s \\
+exact--exact handover ($s=3$)        & \textbf{loss} & $13.14$ s vs $8.47$ s \\
+exact--metaheuristic (Pareto archive)& \textbf{win}  & $1.25\times$ of a $1.42\times$ ceiling \\
+exact--Tchebychev seed               & \textbf{loss} & $0.71\times$ \\
+Tchebychev as a generator            & \textbf{win}  & reaches unsupported points \\
+incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
+LP pre-filter on each box            & \textbf{loss} & $7.95 \to 8.36$ s, box counts identical \\
+two-at-a-time split                  & \textbf{loss} & loses across $p=3..7$, worse as $p$ grows \\
+early exit on a hopeless bound       & partial       & 25\% fewer boxes, no measurable time \\
+early exit \emph{on top of} the seed & \textbf{loss} & 4\% rather than 25\%: a substitute \\
+warm start + remembered point        & \textbf{win}  & 20\% fewer pivots together \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Five are losses and one is a tie.  They are reported at the same length as the
+wins because they carry the same information: a change pays only where the
+method has a mechanism it can feed, that mechanism is cheaper to identify than
+the change is to build and measure, and two ideas feeding the same mechanism
+are one idea counted twice.
+
+\section{How all of this is checked}
+
+Exact rational arithmetic throughout, no floating point anywhere, no
+third-party dependency, and 64 tests run on every commit.  Several check
+\emph{properties} rather than answers, since a method that silently lost
+efficient points would still agree with the optimum on favourable instances:
+the split is a partition; the metaheuristic never hands over an inefficient
+point; every remembered point is efficient; a warm root reaches the same value
+as the cold one it replaces; the early exit leaves boxes open and still proves
+optimality.
+
+Answers are cross-checked three ways: against the decision-space method,
+against exhaustive enumeration on small instances, and against a
+$\Phi$-ordered scan on instances up to $34635$ feasible points.
+
+\end{document}

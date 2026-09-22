@@ -113,6 +113,30 @@ complements** -- a good incumbent arrives early enough that the hopeless tail
 barely forms, so there is nothing left for the exit to skip.  Anyone stacking
 these two ideas expecting them to add should read this row first.
 
+Paying the efficiency test less often
+-------------------------------------
+Splitting the work by operation put the cost somewhere unexpected: the
+efficiency test is **52% of all simplex pivots on 146 calls** -- 58 pivots each
+against 11.8 for a box solve.  So the question is not how to make the test
+cheaper but how to pay it less often.
+
+When a box's maximiser is inefficient the test is run to find an efficient
+point dominating it -- but the search already holds a list of points it has
+*proved* efficient, and checking whether one dominates the maximiser is
+arithmetic.  One does on 21 of 146 tests (14%), and on 17% of the inefficient
+cases.  Result: 16169 -> 14602 pivots (9.7% fewer) and 549 -> 534 boxes.
+
+The box count falling was not the prediction.  The highest dominating point is
+taken, and ``{ Z <= Z(centre) }`` removes more of the box the higher its
+centre, so skipping the test and cutting better compound rather than trade off.
+
+**The invariant this rests on**: every point in ``explored`` is efficient.  It
+holds the centres cut on and the ``Q`` maximisers beside them, and a ``Q``
+maximiser shares its centre's criterion vector, so it is efficient whenever the
+centre is.  One inefficient member would let the search cut on a dominated
+point and delete the true optimum, so it is pinned by a test rather than by
+this paragraph.
+
 Warm starts across boxes
 ------------------------
 A box's region is its parent's plus a handful of rows, yet each box used to
@@ -379,6 +403,33 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
         log.relaxed_point, log.upper_bound = x_b, result.objective
         if phi_opt is not None and result.objective <= phi_opt:
             log.note = "the box cannot beat the incumbent: dropped."
+            if verbose:
+                print(log)
+            continue
+
+        # A point already proved efficient that dominates x_b is a valid centre
+        # on the spot, and finding one is arithmetic rather than an integer
+        # program.  Prefer the highest such point: the cut removes
+        # { Z <= Z(centre) }, so a larger Z(centre) removes more of the box.
+        known = [a for a in explored if problem.dominates(a, x_b)]
+        if known:
+            centre = max(known, key=lambda a: tuple(problem.Z(a)))
+            log.efficient_point = centre
+            q = best_with_same_criterion(problem.model, problem, centre, phi,
+                                         cutoff=phi_opt,
+                                         denominator_positive=positive_denominator)
+            if q.feasible:
+                log.best_same_criterion, log.phi_same_criterion = q.x, q.objective
+                if q.x not in explored:
+                    explored.append(q.x)
+                if phi_opt is None or q.objective > phi_opt:
+                    x_opt, phi_opt = q.x, q.objective
+            log.criterion_vector = problem.Z(centre)
+            log.incumbent, log.incumbent_value = x_opt, phi_opt
+            for child in split(problem, box, centre, result.objective, result.root):
+                push(child)
+            log.note = (f"a point already proved efficient dominates the "
+                        f"maximiser: cut there, no efficiency test paid")
             if verbose:
                 print(log)
             continue
