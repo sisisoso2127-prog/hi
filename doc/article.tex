@@ -1695,11 +1695,11 @@ A & $\varepsilon$ partiel & $18/453$ & $4{,}0\ \%$\\
 B & plancher absolu & $15/500$ & $3{,}0\ \%$\\
 C & LNS / \emph{fix-and-optimize} & $\mathbf{4/316}$ & $\mathbf{1{,}3\ \%}$\\
 \midrule
-\multicolumn{4}{l}{\emph{profondeur des chaînes, sur $751$ réparations}}\\
-\multicolumn{2}{l}{$0$ -- le point était déjà efficace} & $214$
- & $\mathbf{28{,}5\ \%}$\\
-\multicolumn{2}{l}{$1$ pas} & $384$ & $51{,}1\ \%$\\
-\multicolumn{2}{l}{$2$ pas ou plus} & $153$ & $20{,}4\ \%$\\
+\multicolumn{4}{l}{\emph{profondeur des chaînes, sur $\nbReparations{}$ réparations}}\\
+\multicolumn{2}{l}{$0$ -- le point était déjà efficace} & $221$
+ & $\mathbf{\profZero{}\ \%}$\\
+\multicolumn{2}{l}{$1$ pas} & $341$ & $\profUn{}\ \%$\\
+\multicolumn{2}{l}{$2$ pas ou plus} & $169$ & $23{,}1\ \%$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1757,10 +1757,10 @@ pas ce qu'un opérateur rapporte, et nous avions lu ce tableau trop vite.
 
 \paragraph{La profondeur médiane vaut $1$, et ce n'est pas la bonne
 lecture.} L'affirmation sur laquelle repose le diagnostic du verrou est
-confirmée : $51{,}1\ \%$ des chaînes ont exactement un pas. Mais
-$\mathbf{28{,}5\ \%}$ sont de profondeur \emph{zéro} -- le point sorti du
+confirmée : $\profUn{}\ \%$ des chaînes ont exactement un pas. Mais
+$\mathbf{\profZero{}\ \%}$ sont de profondeur \emph{zéro} -- le point sorti du
 mouvement était déjà efficace, aucun point dominé n'a été traversé,
-\textbf{aucune coupe de dominance n'a été récoltée}. Plus du quart du
+\textbf{aucune coupe de dominance n'a été récoltée}. Près d'un tiers du
 travail de recherche ne produit donc aucune munition pour la certification.
 C'est une raison de plus, et mesurée celle-là, pour que l'archive alimente
 le vivier (§\ref{sec:defauts}).

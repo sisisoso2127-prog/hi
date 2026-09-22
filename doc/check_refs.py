@@ -192,7 +192,12 @@ def controle(path: str) -> List[str]:
             if "&" in ligne or "newcommand" in ligne:
                 continue                      # cellule de tableau, ou la def
             for lit, mac in litteraux.items():
-                if lit in ligne:
+                # Frontiere de chiffre OBLIGATOIRE. Sans elle, « 30{,}2 »
+                # se retrouve dans « 230{,}26 » et le fascheur reclame une
+                # macro pour une valeur qui n'a rien a voir. Une regle qui
+                # crie a tort finit par ne plus etre lue.
+                if re.search(r"(?<![\d])" + re.escape(lit) + r"(?![\d])",
+                             ligne):
                     pbs.append(f"valeur mesuree en dur ligne {num} : "
                                f"{lit} -- utiliser \\{mac}")
     return pbs

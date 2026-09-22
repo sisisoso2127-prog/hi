@@ -1123,9 +1123,9 @@ chaînes de réparation traversent.
 \paragraph{Un constat mesuré, pas une intuition.} La campagne mesure une
 profondeur médiane de chaîne de réparation égale à $1$ : la recherche ne
 franchit qu'un point dominé par mouvement. La lecture fine est encore plus
-défavorable à la coupe classique -- $\mathbf{28{,}5\ \%}$ des chaînes sont
+défavorable à la coupe classique -- $\mathbf{\profZero{}\ \%}$ des chaînes sont
 de profondeur \emph{zéro}, le mouvement tombant d'emblée sur un point
-efficace, de sorte que plus du quart du travail de recherche ne produit
+efficace, de sorte que près d'un tiers du travail de recherche ne produit
 \emph{aucun} centre de coupe de dominance (§\ref{sec:divers}). Dans le régime à $\Ecal$ épais --
 celui qui résiste -- l'archive compte des dizaines de points efficaces
 certifiés quand les points dominés se comptent sur les doigts. Et sur les
@@ -1330,7 +1330,7 @@ rapportons plutôt que de construire un mécanisme sans objet.
 \begin{remark}[une seconde lecture, et pourquoi nous n'en attendons rien]
 Le théorème autorise aussi à prendre pour centre le \emph{résultat brut}
 d'un mouvement, sans aucun test d'efficacité ; la matière est alors
-abondante -- $1\,269$ mouvements tentés pour $751$ réparations
+abondante -- $1\,269$ mouvements tentés pour $\nbReparations{}$ réparations
 (tableau~\ref{tab:voisinage}). Mais le gain supposé s'évanouit à l'examen :
 la réparation est faite \emph{de toute façon}, l'archive et l'incumbent en
 ayant besoin, si bien qu'aucun appel n'est économisé. Elle ne deviendrait un
@@ -2179,11 +2179,11 @@ A & $\varepsilon$ partiel        & $18/453$ & $4{,}0\ \%$\\
 B & plancher absolu              & $15/500$ & $3{,}0\ \%$\\
 C & LNS / \emph{fix-and-optimize} & $\mathbf{4/316}$ & $\mathbf{1{,}3\ \%}$\\
 \midrule
-\multicolumn{4}{l}{\emph{profondeur des chaînes, sur $751$ réparations}}\\
+\multicolumn{4}{l}{\emph{profondeur des chaînes, sur $\nbReparations{}$ réparations}}\\
 \multicolumn{2}{l}{$0$ -- le point était déjà efficace}
- & $214$ & $\mathbf{28{,}5\ \%}$\\
-\multicolumn{2}{l}{$1$ pas} & $384$ & $51{,}1\ \%$\\
-\multicolumn{2}{l}{$2$ pas ou plus} & $153$ & $20{,}4\ \%$\\
+ & $221$ & $\mathbf{\profZero{}\ \%}$\\
+\multicolumn{2}{l}{$1$ pas} & $341$ & $\profUn{}\ \%$\\
+\multicolumn{2}{l}{$2$ pas ou plus} & $169$ & $23{,}1\ \%$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2268,11 +2268,11 @@ opérateur rapporte.
 
 \paragraph{La profondeur médiane vaut bien $1$, et ce n'est pas la bonne
 lecture.} L'affirmation sur laquelle repose le diagnostic du verrou
-(§\ref{sec:verrou}) est confirmée -- $51{,}1\ \%$ des chaînes ont exactement
-un pas. Mais $\mathbf{28{,}5\ \%}$ sont de profondeur \emph{zéro} : le point
+(§\ref{sec:verrou}) est confirmée -- $\profUn{}\ \%$ des chaînes ont exactement
+un pas. Mais $\mathbf{\profZero{}\ \%}$ sont de profondeur \emph{zéro} : le point
 sorti du mouvement était déjà efficace, aucun point dominé n'a été traversé,
-\textbf{aucune coupe du théorème~\ref{th:effcut} n'a été récoltée}. Plus du
-quart du travail de recherche ne produit donc aucune munition pour la
+\textbf{aucune coupe du théorème~\ref{th:effcut} n'a été récoltée}. Près d'un
+tiers du travail de recherche ne produit donc aucune munition pour la
 certification. C'est une raison de plus, et mesurée celle-là, pour que
 l'archive alimente le vivier.
 
