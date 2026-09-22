@@ -1,0 +1,735 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[margin=2.6cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Z}{Z}
+\newcommand{\Dset}{D}
+\newcommand{\E}{E(P_{\Dset})}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Zint}{\mathbb{Z}}
+
+\title{Hybrid methods for optimizing a linear fractional function\\
+over the integer efficient set:\\
+\large what each hybridization is worth, measured}
+
+% Put your name and affiliation here before sending this anywhere.
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Optimizing a linear fractional function $\Phi$ over the efficient set of a
+multi-objective integer program is usually done by repeatedly truncating the
+\emph{decision} space with Sylva--Crema cuts. Each cut states a disjunction, so
+it costs $p$ binary variables and $p+1$ big-$M$ rows, and the sub-problem
+solved at every iteration is strictly larger than the one before it. We first
+move the unexplored part of the problem into \emph{criterion} space, as a list
+of boxes: the truncation becomes a box subtraction, every sub-problem is the
+original feasible set plus a handful of ordinary linear rows, and the model
+never grows. On 35 instances this is faster on 34, by $5.05\times$ overall and
+$9.01\times$ on the heaviest, with the margin widening in $p$.
+
+We then hybridize that exact search three ways and report what each is worth.
+Handing it the unfinished work of the published method (exact--exact)
+\emph{ties} it. Seeding it from a Pareto local search with an archive
+(exact--metaheuristic) gives $1.25\times$ against a measured ceiling of
+$1.42\times$. Seeding it from the augmented weighted Tchebychev program --- the
+scalarization the surrounding literature generates efficient points with ---
+\emph{loses} to not seeding at all, at $0.71\times$.
+
+The last result is the informative one, and it does not say the scalarization
+is weak. As a generator it is strictly stronger than a weighted sum, reaching
+unsupported efficient points no positive weighted sum can reach. It is a poor
+\emph{seed} because it steers in criterion space relative to the ideal point
+and never looks at $\Phi$. Symmetrically, the same free optimum that saves the
+box search a third of its work saves the decision-space method \emph{zero}
+iterations. What a heuristic incumbent is worth is a property of the exact
+method it is attached to, not of the heuristic; we measure this in both
+directions. All arithmetic is exact and rational, every answer is proved
+optimal and cross-checked against independent references, and the negative
+results and two corrected measurement errors are reported alongside the wins.
+\end{abstract}
+
+\tableofcontents
+
+\section{Problem}
+
+Let
+\begin{equation}
+  (P_{\Dset}) \qquad \text{``}\max\text{''} \quad
+  \Z_k(x) = \frac{c_k^{\top}x + a_k}{d_k^{\top}x + b_k},
+  \quad k = 1,\dots,p,
+  \qquad x \in \Dset = \{\, x \in \Zint^n_+ : Ax \leqslant b \,\},
+\end{equation}
+with $\Dset$ non-empty and bounded and every denominator
+$D_k(x) = d_k^{\top}x + b_k$ strictly positive on $\Dset$. A point
+$x \in \Dset$ is \emph{efficient} when no $y \in \Dset$ satisfies
+$\Z(y) \geqslant \Z(x)$ with at least one strict inequality; $\E$ denotes the
+set of efficient points. Linear criteria are the degenerate case $d_k = 0$,
+$b_k = 1$.
+
+Given the decision maker's criterion
+$\Phi(x) = (U^{\top}x + \alpha)/(V^{\top}x + \beta)$, the problem is
+\begin{equation}
+  (P_E) \qquad \max \ \Phi(x) \quad \text{s.t.} \quad x \in \E .
+\end{equation}
+$\E$ is a union of faces of $\Dset$: non-convex, with no explicit description.
+The point of any method for $(P_E)$ is to reach the global optimum
+\emph{without enumerating} $\E$.
+
+An efficient point is \emph{supported} when it maximizes some strictly positive
+weighted sum $w^{\top}\Z$ over $\Dset$ --- equivalently, when its criterion
+vector lies on the convex hull of the criterion image. The distinction matters
+throughout Section~\ref{sec:tcheb}: in an integer program unsupported efficient
+points are common, and no weighted sum reaches any of them.
+
+\section{Where the cost of the decision-space method comes from}
+
+One iteration of the published method maximizes $\Phi$ over a truncated region
+$\Dset_l$, tests the maximizer $x_l$ for efficiency, banks the best $\Phi$ on
+the criterion slice about to be destroyed, and then truncates:
+\begin{equation}\label{eq:cut}
+  \text{delete} \quad \{\, x : \Z(x) \leqslant \Z(\tilde{x}) \,\} .
+\end{equation}
+Keeping the complement means keeping the $x$ for which \emph{some} criterion
+strictly improves on $\tilde{x}$. That is a disjunction, and a disjunction is
+not a system of linear inequalities. It is modelled with one binary per
+criterion,
+\begin{equation}\label{eq:bigM}
+  e_k(x;\tilde{x}) \geqslant 1 \cdot y_k + M_k (1 - y_k), \quad k = 1,\dots,p,
+  \qquad \sum_{k=1}^{p} y_k \geqslant 1 ,
+\end{equation}
+where $M_k$ is a lower bound on $e_k$ over the region, so $y_k = 0$ leaves its
+row vacuous and $y_k = 1$ forces a strict improvement.
+
+\textbf{Every cut therefore adds $p$ binaries and $p+1$ rows.} On the heaviest
+instance we ship, eleven cuts leave $33$ binaries and $44$ rows on top of
+$\Dset$, and the late sub-problems cost far more than the early ones. This is
+the whole of the method's cost profile: the number of iterations is modest, but
+each one is solved on a strictly larger mixed-integer program than the last.
+
+This observation fixes the cost model used for every comparison in this note:
+\begin{equation}\label{eq:cost}
+  \text{total cost} \;\approx\; (\text{number of sub-problems solved})
+  \times (\text{size of a sub-problem}).
+\end{equation}
+The two factors are attacked by different ideas. Section~\ref{sec:box} removes
+the growth of the second. Sections~\ref{sec:meta} and~\ref{sec:tcheb} attack
+the first, and the measurements there are only interpretable because the second
+has already been made constant.
+
+\section{The same truncation in criterion space}\label{sec:box}
+
+Equation~\eqref{eq:cut} deletes a \emph{box} from $\R^p$. If the unexplored
+part of the problem is carried as a list of boxes rather than as a region of
+$\Zint^n$, the truncation is a rewrite of that list, and each sub-problem is
+\begin{equation}\label{eq:sub}
+  \max \ \Phi(x) \qquad \text{s.t.} \qquad x \in \Dset, \quad \text{the box's rows},
+\end{equation}
+which is $\Dset$ plus at most $2p$ ordinary linear rows. No binary variable
+appears, and \textbf{the model never grows}: a box deep in the search carries a
+few more rows than a shallow one, and that is all.
+
+\subsection{How a box is written, and why not with numbers}
+
+The obvious encoding, $l_k \leqslant \Z_k(x) \leqslant u_k$, fails. In the
+general case $\Z_k$ is a ratio, so its values are rational, and the exact
+``$+1$'' step that the split below needs would be lost.
+
+Write the box with the linear form of the paper's Theorem~4 instead:
+\begin{equation}\label{eq:e}
+  e_k(x;a) \;=\; D_k(a)\, D_k(x) \bigl( \Z_k(x) - \Z_k(a) \bigr)
+  \;=\; \bigl(D_k(a) c_k - N_k(a) d_k\bigr)^{\top} x
+      + \bigl(D_k(a) a_k - N_k(a) b_k\bigr).
+\end{equation}
+Both denominators being positive, $e_k$ carries the sign of
+$\Z_k(x) - \Z_k(a)$ while being \emph{linear in $x$}; with integer data it is
+integer-valued on integer points. Hence, exactly and with no minimal step to
+estimate,
+\begin{equation}\label{eq:exact}
+  \Z_k(x) > \Z_k(a) \iff e_k(x;a) \geqslant 1,
+  \qquad
+  \Z_k(x) \leqslant \Z_k(a) \iff e_k(x;a) \leqslant 0 .
+\end{equation}
+Linear and fractional criteria therefore go through the same code, and on a
+linear criterion $e_k$ collapses to $c_k^{\top}x - c_k^{\top}a$.
+
+\subsection{The split}
+
+\begin{proposition}\label{prop:split}
+Let $B$ be a box and $a \in \Dset$. For $k = 1,\dots,p$ put
+\begin{equation}\label{eq:child}
+  B_k \;=\; B \;\cap\; \{\, x : e_k(x;a) \geqslant 1 \,\}
+            \;\cap\; \bigcap_{j<k} \{\, x : e_j(x;a) \leqslant 0 \,\} .
+\end{equation}
+Then $B_1,\dots,B_p$ are pairwise disjoint and
+$\bigcup_k B_k = B \setminus \{\, x : \Z(x) \leqslant \Z(a) \,\}$.
+\end{proposition}
+
+\begin{proof}
+Let $x \in B$ with $\Z(x) \not\leqslant \Z(a)$. The set of indices at which $x$
+strictly beats $\Z(a)$ is non-empty; let $k$ be its smallest element. By
+\eqref{eq:exact}, $e_k(x;a) \geqslant 1$, and $e_j(x;a) \leqslant 0$ for every
+$j < k$, so $x \in B_k$. Conversely a point of $B_k$ has
+$e_k \geqslant 1$, hence $\Z(x) \not\leqslant \Z(a)$. Disjointness: membership
+of $B_k$ forces $k$ to be exactly that smallest index, and a point has only
+one.
+\end{proof}
+
+\noindent
+Each of the $p$ children is the parent's row list plus at most $k$ further
+rows, all of them ordinary linear inequalities in $x$.
+
+\subsection{Bounding, and why it is what makes seeding possible}
+\label{sec:bound}
+
+The sub-problem~\eqref{eq:sub} maximizes $\Phi$ over a \emph{superset} of the
+efficient points whose criterion vector lies in the box, so its value bounds
+all of them. A box whose bound does not beat the incumbent is therefore
+discarded \emph{whole} and never split. Children inherit their parent's value
+as a bound, which makes the open list a certified upper bound on everything
+still unfound; the method is \emph{anytime} in the same sense, and for the same
+reason, as the decision-space one.
+
+This is the single structural fact that Sections~\ref{sec:meta}
+and~\ref{sec:tcheb} rest on. A better incumbent does not merely stop the search
+sooner; it deletes subtrees. The decision-space method has no such mechanism,
+which is measured in Section~\ref{sec:asymmetry} and is the reason the two
+methods respond so differently to the very same incumbent.
+
+\section{Two obstacles specific to a fractional objective}
+
+Criterion-space search is a known family for optimizing a \emph{linear}
+function over the efficient set. It does not transfer to $(P_E)$ by
+inspection, for two reasons.
+
+\begin{remark}[$\Phi$ is a function of $x$, not of $\Z(x)$]
+\label{rem:notZ}
+Two feasible points with the same criterion vector may have different values of
+$\Phi$. Enumerating non-dominated vectors and evaluating $\Phi$ on a
+representative of each is therefore wrong. Inside every box a genuine
+fractional integer program must be solved, and before cutting on an efficient
+centre $\tilde{x}$ the sub-problem
+$Q(\tilde{x}) = \max \{\, \Phi(x) : x \in \Dset,\ \Z(x) = \Z(\tilde{x}) \,\}$
+must be solved first, since the whole slice $\{\Z = \Z(\tilde{x})\}$ is
+efficient and is about to be removed.
+\end{remark}
+
+\begin{remark}[Box boundaries must be integer-valued]
+As argued above, numeric bounds on $\Z_k$ are rational in the fractional case.
+Writing the boundaries through $e_k$ restores an exact integral threshold and,
+as a by-product, makes fractional criteria work with no special case.
+\end{remark}
+
+\section{The algorithm}
+
+\begin{algorithm}[h]
+\caption{Criterion-space search for $(P_E)$, optionally seeded}
+\label{alg:box}
+\begin{algorithmic}[1]
+\State $L \gets \{\, \R^p \,\}$
+\State $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}}) \gets$ a \emph{verified
+       efficient} seed and its value, or $(\varnothing, -\infty)$
+\While{$L \neq \varnothing$}
+  \State remove from $L$ a box $B$ of largest inherited bound
+  \State solve \eqref{eq:sub} on $B$ with cutoff $\Phi_{\mathrm{opt}}$
+  \If{infeasible, or its value $\leqslant \Phi_{\mathrm{opt}}$}
+     \State \textbf{continue} \Comment{$B$ is discarded whole}
+  \EndIf
+  \State let $x_B$ be its maximizer
+  \If{$x_B$ is efficient}
+     \State $\Phi_{\mathrm{opt}} \gets \Phi(x_B)$; \
+            $x_{\mathrm{opt}} \gets x_B$; \ $a \gets x_B$
+     \Statex \Comment{$x_B$ already maximizes $\Phi$ on its whole slice, so no $Q$ is owed}
+  \Else
+     \State $a \gets$ an efficient point dominating $x_B$
+     \State solve $Q(a)$ and update $(\Phi_{\mathrm{opt}}, x_{\mathrm{opt}})$
+  \EndIf
+  \State add to $L$ the $p$ children of $B$ given by \eqref{eq:child}
+\EndWhile
+\State \Return $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}})$, proved optimal
+\end{algorithmic}
+\end{algorithm}
+
+Termination: every pass removes at least the criterion vector $\Z(a)$, and the
+non-dominated set of a bounded integer program is finite.
+
+Line 2 is the whole of the hybridization interface. Everything in
+Sections~\ref{sec:meta} and~\ref{sec:tcheb} is a different way of filling it,
+and the correctness requirement is stated once, in Proposition~\ref{prop:seed}
+below: the seed must be \emph{efficient}, not merely good.
+
+\begin{proposition}[Soundness of an arbitrary seed]\label{prop:seed}
+If the seed $x_0$ in line 2 is efficient, Algorithm~\ref{alg:box} returns the
+same $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}})$ as the unseeded run, and
+$\Phi_{\mathrm{opt}}$ is the global optimum of $(P_E)$. If $x_0$ is merely
+feasible, the algorithm may return a strictly suboptimal value.
+\end{proposition}
+
+\begin{proof}
+$\Phi_{\mathrm{opt}}$ is used only as a cutoff, and a box is discarded when its
+bound fails to \emph{beat} it. If $x_0 \in \E$ then
+$\Phi(x_0) \leqslant \max_{x \in \E}\Phi(x)$, so no box containing an optimal
+criterion vector is ever discarded, and the incumbent is a feasible value of
+$(P_E)$ throughout; the two runs therefore agree. If $x_0 \notin \E$ then
+$\Phi(x_0)$ may exceed the optimum of $(P_E)$ --- a dominated point can score
+arbitrarily well on $\Phi$ --- and the box containing the true optimum is
+discarded by the very first bound comparison.
+\end{proof}
+
+\noindent
+This is why every seed in this note is \emph{verified} before it is used, and
+why that verification, not the heuristic, turns out to be the cost of
+Section~\ref{sec:meta}.
+
+\section{Computational results: decision space versus criterion space}
+
+All figures come from an exact rational implementation with no floating-point
+arithmetic anywhere, so every comparison below is between two exactly solved
+problems. Both methods were run on the same instances in the same process.
+
+\begin{table}[h]
+\centering
+\caption{Decision space versus criterion space, $p = 3$.}
+\begin{tabular}{lrrr}
+\toprule
+instance & decision space & criterion space & ratio \\
+\midrule
+35 instances, total & $40.65$ s & $8.06$ s & $5.05\times$ \\
+heaviest $n=10$     & $23.47$ s & $2.61$ s & $9.01\times$ \\
+$n=8$, hardest seed & $2.97$ s  & $0.45$ s & $6.56\times$ \\
+$n=10$, easiest seed& $0.36$ s  & $0.41$ s & $0.86\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The box search is faster on 34 of the 35, and the single regression is the
+instance the decision-space method settles in three iterations, where paying 13
+boxes is a net loss. Every answer agrees with the decision-space method and
+with an independent scan, and both are proved optimal everywhere.
+
+\begin{table}[h]
+\centering
+\caption{The margin against the number of criteria, $n = 6$, four instances
+each. All twenty agreed and were proved optimal on both sides.}
+\begin{tabular}{crrr}
+\toprule
+$p$ & decision space & criterion space & ratio \\
+\midrule
+2 & $0.61$ s   & $0.35$ s & $1.74\times$ \\
+3 & $1.02$ s   & $0.34$ s & $2.99\times$ \\
+4 & $4.21$ s   & $0.61$ s & $6.92\times$ \\
+5 & $112.77$ s & $1.09$ s & $103\times$ \\
+6 & $26.15$ s  & $1.08$ s & $24.3\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two forces grow with $p$ and pull against each other: the split produces $p$
+children, so the list branches wider; but the non-dominated set grows too, so
+the decision-space method needs more cuts, and each cut costs it $p$ binaries
+and $p+1$ rows. The measurement settles which dominates, and it settles it
+against the prediction we made before running it. Branching multiplies a
+\emph{count} of cheap, fixed-size models; the binaries multiply the \emph{cost
+of one model}, and they accumulate. The worst case observed for the published
+method was $p = 5$ on six variables: $110.95$ s against $0.64$ s, a factor of
+$173$.
+
+\paragraph{On the magnitudes.} The direction is solid: the per-$p$ median
+ratios are $1.35$, $3.2$, $2.1$, $12.6$, $15.8$, and every instance agreed and
+was proved optimal. The totals are not stable estimates --- four instances per
+$p$ is few, and $110.95$ of the $112.77$ seconds at $p=5$ come from a single
+instance. The tables report what was measured, not expected values.
+
+\section{First hybridization: exact--exact}
+
+Since the published method closes in one iteration whenever the maximizer of
+$\Phi$ over $\Dset$ happens to be efficient, a hybrid suggests itself: run its
+loop, and if it has not closed after $s$ iterations, hand the unfinished work
+to the box search. The handover is not a restart. Replaying each cut as a box
+subtraction (Proposition~\ref{prop:split} applied to every box of the current
+list) reproduces the region the first phase reached, and the incumbent, being
+attained at a known efficient point, is a valid seed by
+Proposition~\ref{prop:seed}.
+
+Measured on 24 instances against the better of the two pure methods on each:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+ & total & within 15\% of the better \\
+\midrule
+$s = 3$              & $13.14$ s  & 4 of 24 \\
+$s = 1$              & $8.47$ s   & 23 of 24 \\
+pure box search      & $8.11$ s   & --- \\
+the published method & $268.61$ s & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+We report this as a negative result. At $s = 1$ the hybrid \emph{ties} the pure
+box search --- $8.47$ s against $8.11$ s here, and $1.47$ s against $1.54$ s on
+a family built so that $\Phi$ is easy; two differences of about 4\% pointing
+opposite ways. The criterion-space search is what matters; this hybrid earns
+its place only as insurance for the one-iteration case, not as a third method
+that beats both. The first default we chose, $s = 3$, was measurably wrong and
+is reported here because it was: $13.14$ s against $8.47$ s.
+
+\section{Second hybridization: exact--metaheuristic}\label{sec:meta}
+
+By Proposition~\ref{prop:seed} the box search will accept any efficient point
+as a seed, and by Section~\ref{sec:bound} a good one deletes subtrees. That
+makes a metaheuristic the natural first phase --- it is cheap and it is guided
+by $\Phi$, which is exactly the quantity the cutoff compares against.
+
+\subsection{The heuristic}
+
+A Pareto local search maintains an archive of mutually non-dominated points.
+From several random maximal starting points it walks the neighbourhood of each
+archive member, admitting any neighbour the archive does not dominate. The
+archive \emph{is} the search: restarting from fresh random points between walks
+throws it away, and four times the effort did not compensate for that
+(obtaining $0.360$, $0.280$ and $0.458$ of the optimum on three instances where
+the archive-driven version obtained the optimum).
+
+The neighbourhood needs \emph{swap} moves ($-1$ on one coordinate, $+1$ on
+another), not only unit steps. From a maximal point a unit step up is
+infeasible, and a unit step down lowers every criterion with non-negative
+coefficients, so the archive refuses it and the walk dies immediately: three
+archive points and an incumbent at 13\% of the optimum. With swaps the archive
+holds 28--69 points and the incumbent reaches 60--100\%.
+
+\subsection{Where correctness lives}
+
+The archive is filtered by dominance \emph{among the points it has seen}, which
+is not the exact efficiency test. Proposition~\ref{prop:seed} makes that gap
+fatal if ignored, so nothing crosses unverified: the best archive member is put
+through the exact test, and if it fails, it is walked to an efficient point
+dominating it and that point's value is used instead. The heuristic decides
+\emph{where to look}; it never decides what is true.
+
+The gap is not hypothetical. Over a wide sweep, one archive member in roughly
+2000 turned out not to be efficient --- reproducibly, a concrete case being a
+four-variable instance whose archive retains $(2,1,1,1)$. Rare is not never.
+
+\subsection{What it costs, and what it is worth}
+
+The cost is \emph{not} the walk, which takes $0.01$--$0.08$\,s and is barely
+sensitive to its budget. We assumed the opposite and optimized the walk first;
+the timings then showed the total \emph{falling as the walk's budget rose},
+because a poor archive yields candidates needing longer repair chains, each one
+an integer program. The cost is the verification --- the price of
+Proposition~\ref{prop:seed}. Examining the single best archive member gave
+exactly the same incumbent as examining four on every instance tried, at a
+quarter to a half of the cost.
+
+\begin{table}[h]
+\centering
+\caption{Exact--metaheuristic hybrid, 18 instances. Same optimum everywhere,
+all proved optimal.}
+\begin{tabular}{lrrr}
+\toprule
+instance & exact only & metaheuristic $+$ exact & ratio \\
+\midrule
+total, 18 instances & $9.50$ s & $7.60$ s & $1.25\times$ \\
+\midrule
+hardest $n=10$ & 49 boxes, $3.02$ s & 34 boxes, $1.94$ s & $1.56\times$ \\
+$n=8$, seed 0  & 16 boxes, $0.53$ s & 10 boxes, $0.34$ s & $1.53\times$ \\
+$p=7$, seed 1  & 197 boxes, $1.36$ s & 120 boxes, $0.95$ s & $1.43\times$ \\
+$p=5$, seed 1  & 6 boxes, $0.02$ s  & 6 boxes, $0.03$ s   & $0.56\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+It wins where the search is expensive and loses where there was nothing to win,
+which is what a nearly fixed first-phase cost predicts. The \emph{ceiling},
+measured by handing the search the true optimum for free, is $1.42\times$; at
+$1.25\times$ the heuristic realizes 88\% of it.
+
+\section{The asymmetry: a seed is worth what the exact method can do with it}
+\label{sec:asymmetry}
+
+The ceiling experiment can be run on the published method too, and this is the
+comparison we consider the most transferable result in this note.
+
+\begin{table}[h]
+\centering
+\caption{The \emph{same} free optimum, handed to each exact method at
+iteration 1.}
+\begin{tabular}{lrr}
+\toprule
+exact method & effect of a free optimal incumbent & mechanism \\
+\midrule
+criterion-space box search & $1.42\times$, up to 52\% fewer boxes
+  & boxes discarded whole \\
+decision-space cut method  & \textbf{zero} iterations saved
+  & none \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The reason is structural. What the decision-space method cuts at iteration $l$
+is decided by the efficiency test applied to $x_l$, through
+\eqref{eq:cut}; $\Phi_{\mathrm{opt}}$ enters the sub-problem only as a cutoff
+inside a branch-and-bound that would have found the same $x_l$ anyway. A box,
+by contrast, is compared against the incumbent \emph{before} it is ever split,
+and failing that comparison deletes it together with every descendant it would
+have had.
+
+So ``hybridize an exact method with a metaheuristic'' is not one question with
+one answer. The heuristic is identical in both rows above; what differs is
+whether the exact method has a mechanism through which a lower bound can remove
+work. Before building such a hybrid, the mechanism is what should be checked.
+
+\section{Third hybridization: the Tchebychev reference}\label{sec:tcheb}
+
+The surrounding literature generates efficient points with the augmented
+weighted Tchebychev program, so a fair evaluation of the two hybrids above has
+to be made against it and not only against a weighted sum. We therefore
+implement it and measure it, rather than cite it.
+
+\subsection{The program}
+
+With $z^{*}$ the ideal point, $z^{*}_k = \max\{\Z_k(x) : x \in \Dset\}$,
+weights $w > 0$ and an augmentation $\rho > 0$:
+\begin{equation}\label{eq:tcheb}
+  \min_{x \in \Dset} \quad \max_{k} \; w_k\bigl(z^{*}_k - \Z_k(x)\bigr)
+  \;+\; \rho \sum_{k=1}^{p} \bigl(z^{*}_k - \Z_k(x)\bigr),
+\end{equation}
+which linearizes with a single continuous variable $\lambda$ subject to
+$\lambda \geqslant w_k (z^{*}_k - \Z_k(x))$ for each $k$. Each weight vector
+therefore costs one integer program on a model with $n+1$ variables and $p$
+extra rows, plus $p$ programs paid once for $z^{*}$.
+
+\begin{proposition}\label{prop:tcheb}
+For any $w > 0$ and any $\rho > 0$, every optimal solution of
+\eqref{eq:tcheb} is efficient.
+\end{proposition}
+
+\begin{proof}
+Let $x^{*}$ be optimal and suppose some $y \in \Dset$ dominated it, so
+$\Z(y) \geqslant \Z(x^{*})$ with at least one strict inequality. Then
+$z^{*}_k - \Z_k(y) \leqslant z^{*}_k - \Z_k(x^{*})$ for every $k$, so the
+$\max$ term does not increase; and since $\rho > 0$ and at least one
+inequality is strict, the sum term \emph{strictly} decreases. The objective at
+$y$ would be strictly smaller than at $x^{*}$, contradicting optimality.
+\end{proof}
+
+\noindent
+The augmentation is exactly what makes the second half of that argument
+available: with $\rho = 0$ the objective at $y$ need only be no larger, and a
+merely \emph{weakly} efficient point can minimize the program. Our
+implementation therefore refuses $\rho \leqslant 0$ and refuses a zero weight
+rather than returning a point whose status is in doubt. It also refuses
+fractional criteria, for which $z^{*}_k - \Z_k(x)$ is not linear and the rows
+above are not constraints of an integer linear program; the references
+assume linear criteria as well.
+
+\subsection{As a generator it is strictly stronger than a weighted sum}
+
+A weighted sum maximizes only at supported efficient points. Varying $w$ in
+\eqref{eq:tcheb} reaches unsupported ones too, and that is what the literature
+uses it for.
+
+\begin{table}[h]
+\centering
+\caption{Reach from the same grid of 27 weight vectors, 20 random instances.}
+\begin{tabular}{lrr}
+\toprule
+ & efficient points reached & of which unsupported \\
+\midrule
+weighted sum         & $66 / 175$  & $\mathbf{0 / 54}$ \\
+augmented Tchebychev & $112 / 175$ & $29 / 54$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+All 540 optima returned were efficient, as Proposition~\ref{prop:tcheb}
+requires. A wider sweep over 40 instances agrees: $216/369$ against $135/369$,
+56 unsupported against 0, and 1080 optima with no inefficient one. On the
+reference instance of the published paper, three of the seven efficient points
+are unsupported; the Tchebychev program reaches all three and no strictly
+positive weighted sum reaches any.
+
+\subsection{As a seed it loses to not seeding at all}
+
+\begin{table}[h]
+\centering
+\caption{Seeding the box search, 18 instances. ``Exactly optimal'' counts the
+instances where the seed already attains $\Phi^{*}$.}
+\begin{tabular}{lrrr}
+\toprule
+seed & total & seed cost & exactly optimal \\
+\midrule
+none (pure box search) & $9.64$ s  & ---      & --- \\
+Pareto local search    & $\mathbf{7.97}$ s $(1.21\times)$ & $0.57$ s & 12 of 18 \\
+augmented Tchebychev   & $13.50$ s $(0.71\times)$ & $4.25$ s & 5 of 18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Both halves of the loss are structural rather than artefacts of the
+implementation.
+
+\paragraph{Cost.} It is $p+1$ integer programs on an enlarged model. It is
+\emph{not} the reference point: computing $z^{*}$ took $0.01$--$0.13$\,s of the
+seed against $0.13$--$0.85$\,s for the scalarizations themselves, so replacing
+$z^{*}$ by a cheaper reference would not change the verdict.
+
+\paragraph{Quality.} This is the real finding. Program~\eqref{eq:tcheb} steers
+by criterion-space geometry relative to $z^{*}$ and \textbf{never looks at
+$\Phi$}. The local search of Section~\ref{sec:meta} is guided by $\Phi$ at
+every move. A good spread of efficient points is not a good $\Phi$, and by
+Remark~\ref{rem:notZ} it cannot be made into one by post-processing: $\Phi$ is
+not a function of $\Z(x)$, so two points the generator regards as
+interchangeable may differ arbitrarily in the only quantity the search cares
+about.
+
+We therefore keep the Tchebychev program as the reference the evaluation needs,
+and do not wire it into the default hybrid.
+
+\subsection{The two generators compared directly}
+
+\begin{table}[h]
+\centering
+\caption{As generators of a subset of $\E$, 20 instances at $n = 4$.}
+\begin{tabular}{lrrl}
+\toprule
+ & coverage of $\E$ & time & certification \\
+\midrule
+augmented Tchebychev & 64\% & $2.1$ s  & every point efficient by construction \\
+Pareto archive       & 99\% & $0.04$ s & $\approx 1$ member in 2000 not efficient \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Cheap, near-complete and uncertified against expensive, partial and certified.
+That is the trade the exact--metaheuristic hybrid closes: it takes the cheap,
+near-complete generator and buys the missing certificate with a single exact
+test, which is why the verification and not the walk is its dominant cost.
+
+This also delimits the expected result of the thesis --- ``a subset of
+efficient solutions generated by hybrid algorithms''. Both columns produce such
+a subset, and they are not interchangeable: one is a certified partial sample
+of the front, the other a near-complete sample whose membership is a
+conjecture until tested.
+
+\section{Two measurement errors, and what they cost}
+
+We report these because the direction of a result is worth less than the
+knowledge of how it was checked.
+
+\paragraph{An unsound quality metric.} Seed quality was first scored by the
+ratio $\Phi(\text{seed}) / \Phi^{*}$. That ratio \emph{inverts when $\Phi^{*}$
+is negative}, which it is on several instances in these families: a strictly
+worse seed can score above~1. All seed-quality figures in this note use the
+non-negative gap $(\Phi^{*} - \Phi(\text{seed}))/|\Phi^{*}|$, which is
+well defined whatever the sign and is zero exactly when the seed is optimal.
+No published number changed direction under the correction, but the metric was
+wrong and one table read $1.286$ for a seed that was in fact 29\% below the
+optimum.
+
+\paragraph{Seed quality is not seed value.} On a looser instance family, the
+Pareto seed is \emph{exactly optimal on 15 of 24 instances} and still buys only
+$1.05\times$, because that search is not bound-limited: there are few boxes
+whose bound the incumbent can defeat. Quality is a property of the heuristic;
+value is a property of the pair. What is stable across all families we tried is
+the \emph{ordering} --- Tchebychev loses to no seed at all ($0.73\times$,
+$0.91\times$), the Pareto seed ties or wins --- not the size of any win. Single
+speed-up figures quoted without their instance family should be read with this
+in mind, including ours.
+
+\section{Summary of what was and was not gained}
+
+\begin{table}[h]
+\centering
+\caption{Every hybridization attempted, with its verdict.}
+\begin{tabular}{lll}
+\toprule
+hybridization & verdict & effect \\
+\midrule
+decision space $\to$ criterion space & \textbf{win} & $5.05\times$, up to $173\times$ \\
+exact--exact handover ($s=1$)        & tie          & $8.47$ s vs $8.11$ s \\
+exact--exact handover ($s=3$)        & \textbf{loss} & $13.14$ s vs $8.47$ s \\
+exact--metaheuristic (Pareto archive) & \textbf{win} & $1.25\times$ of a $1.42\times$ ceiling \\
+exact--Tchebychev seed               & \textbf{loss} & $0.71\times$ \\
+Tchebychev as a generator            & \textbf{win} & reaches unsupported points \\
+incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Three of the seven are losses and one is a tie. They are reported at the same
+length as the wins because they carry the same information: a hybridization
+pays only where the exact method has a mechanism the first phase can feed, and
+identifying that mechanism is cheaper than building the hybrid and measuring
+it afterwards.
+
+\section{Prior work, and what remains to be checked}
+
+Criterion-space search for optimizing a function over the efficient set of a
+multi-objective integer program is an established family, and the surveys
+report it as currently more effective than decision-space search. Those methods
+are for \emph{linear} objectives. The literature on a linear \emph{fractional}
+objective over an integer efficient set --- including the branch-and-cut
+methods this note compares against, and the extensions to fractional criteria
+and to quadratic objectives --- works in decision space. The augmented weighted
+Tchebychev program of Section~\ref{sec:tcheb} is standard and is used here
+exactly as the references use it; nothing about it is claimed as new. The
+combination treated in Section~\ref{sec:box} appears not to have been
+addressed, for the reason given in Remark~\ref{rem:notZ}: $\Phi$ is a function
+of $x$ and not of $\Z(x)$, so the transfer is not immediate.
+
+\textbf{This is a statement about what we did not find, not a claim of
+novelty.} A proper bibliographic review, including the sources behind
+paywalls, remains to be done before any such claim is made.
+
+\section{Reproducibility}
+
+The implementation is pure Python with no third-party dependency, computes in
+exact rational arithmetic throughout, and carries 55 tests. Several check
+properties rather than answers, since a method that silently lost efficient
+points would still agree with the optimum on favourable instances:
+
+\begin{itemize}
+\itemsep2pt
+\item Proposition~\ref{prop:split} directly --- for every centre and every
+      feasible point, the point is either removed by the cut and in no child,
+      or kept and in exactly one.
+\item Proposition~\ref{prop:seed} operationally --- the metaheuristic is
+      checked, over 14 instances and against an independent scan, never to hand
+      over an inefficient point.
+\item Proposition~\ref{prop:tcheb} --- every optimum of \eqref{eq:tcheb} is
+      checked efficient against exhaustive enumeration, and the refusals
+      ($\rho \leqslant 0$, a zero weight, fractional criteria) are checked to
+      fire.
+\item The unsupported-reach claim --- on the reference instance, the three
+      unsupported efficient points are all reached by \eqref{eq:tcheb} while no
+      positive weighted sum reaches any.
+\end{itemize}
+
+\noindent
+Every comparison in this note is reproduced by scripts in the repository, run
+on every commit by continuous integration, which assert that each seeded run
+returns the same proved optimum as the unseeded one.
+
+\end{document}

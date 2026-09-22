@@ -239,6 +239,7 @@ win.
 | `examples/` | the paper's example, larger instances, the scaling study, the fractional case |
 | `tests/` | the test suite, runnable with a bare interpreter |
 | `studies/` | earlier metaheuristic experiments kept for the record (these use NumPy) |
+| `docs/` | the write-up: every method, every measurement, and every negative result |
 
 ## License
 
