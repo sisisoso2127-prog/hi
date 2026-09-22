@@ -1,0 +1,33 @@
+% Shared preamble for the three companion documents.  Deliberately minimal:
+% only packages a bare TeX Live carries, since every figure is built from
+% LaTeX `picture` primitives rather than from TikZ or an external plotter.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\Z}{Z}
+\newcommand{\Dset}{D}
+\newcommand{\E}{E(P_{\Dset})}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Zint}{\mathbb{Z}}
+\newcommand{\fig}[1]{\input{figs/#1}}
+
+% the legend shared by every criterion-space figure
+\newcommand{\figlegend}{%
+  \par\smallskip\noindent{\footnotesize
+  \textcolor{green!45!black}{$\blacksquare$}~efficient point\quad
+  \textcolor{black!45}{$\square$}~dominated point\quad
+  \textcolor{blue!60!black}{$\square$}~the box being settled\quad
+  \textcolor{red!35}{$\blacksquare$}~what the cut removes\quad
+  \textcolor{red!65!black}{$\square$}~the children left\quad
+  \textcolor{red!65!black}{$\circ$}~$x_B$\quad
+  \textcolor{orange!85!black}{$\circ$}~the centre cut on\par}}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}

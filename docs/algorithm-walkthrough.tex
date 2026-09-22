@@ -1,0 +1,341 @@
+\documentclass[11pt,a4paper]{article}
+\input{preamble-shared}
+
+\title{The criterion-space search, step by step\\
+\large what each line of the algorithm does, and why it is that line}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This is a companion to the main note: it takes the algorithm one line at a
+time and says what the line computes, what it costs, what breaks without it,
+and which of the package's tests pins it.  It assumes only the problem
+statement of Section~\ref{sec:setting}; the measurements and the comparison
+with other methods live in the main note, and the two worked examples live in
+the companion \emph{Worked examples}.
+\end{abstract}
+
+\tableofcontents
+
+\section{The setting, in one page}\label{sec:setting}
+
+Let
+\begin{equation}\label{eq:pd}
+  (P_{\Dset}) \qquad \text{``}\max\text{''} \quad
+  \Z_k(x) = \frac{c_k^{\top}x + a_k}{d_k^{\top}x + b_k},
+  \quad k = 1,\dots,p,
+  \qquad x \in \Dset = \{\, x \in \Zint^n_+ : Ax \leqslant b \,\},
+\end{equation}
+with $\Dset$ non-empty and bounded and every denominator positive on it.  A
+point $x \in \Dset$ is \emph{efficient} when no $y \in \Dset$ has
+$\Z(y) \geqslant \Z(x)$ with one strict inequality; $\E$ is the set of them.
+
+Given the decision maker's own criterion
+$\Phi(x) = (U^{\top}x + \alpha)/(V^{\top}x + \beta)$, the problem is
+\begin{equation}\label{eq:pe}
+  (P_E) \qquad \max \ \Phi(x) \quad \text{s.t.} \quad x \in \E .
+\end{equation}
+
+Three facts drive everything below.
+
+\begin{description}
+\item[$\E$ has no description.] It is a union of faces of $\Dset$, non-convex,
+  and not given by inequalities.  So $(P_E)$ cannot be handed to a solver; a
+  method has to \emph{generate} candidates and prove the rest away.
+\item[$\Phi$ is a function of $x$, not of $\Z(x)$.] Two feasible points with
+  the same criterion vector can have different $\Phi$.  Enumerating
+  non-dominated vectors and scoring one representative of each is therefore
+  wrong, and this is what makes the criterion-space transfer non-trivial.
+\item[Efficiency is decidable by one integer program.]  Theorem~1's test,
+  Section~\ref{sec:test}.
+\end{description}
+
+\section{The one object the algorithm manipulates}
+
+\subsection{$e_k$: the linear form that carries a ratio's sign}
+
+Write, for a reference point $a \in \Dset$,
+\begin{equation}\label{eq:e}
+  e_k(x;a) \;=\; D_k(a)\, D_k(x)\, \bigl( \Z_k(x) - \Z_k(a) \bigr)
+  \;=\; \bigl(D_k(a) c_k - N_k(a) d_k\bigr)^{\top} x
+      + \bigl(D_k(a) a_k - N_k(a) b_k\bigr),
+\end{equation}
+where $N_k, D_k$ are the numerator and denominator of $\Z_k$.  Two properties,
+and the whole method rests on them:
+
+\begin{enumerate}
+\item $e_k(\cdot\,;a)$ is \textbf{linear in $x$} --- the right-hand side of
+  \eqref{eq:e} is an affine function --- even though $\Z_k$ is a ratio.
+\item Both denominators being positive, $e_k$ carries the \textbf{sign} of
+  $\Z_k(x) - \Z_k(a)$.  With integer data it is integer-valued on integer
+  points, so
+  \begin{equation}\label{eq:exact}
+    \Z_k(x) > \Z_k(a) \iff e_k(x;a) \geqslant 1,
+    \qquad
+    \Z_k(x) \leqslant \Z_k(a) \iff e_k(x;a) \leqslant 0 .
+  \end{equation}
+\end{enumerate}
+
+\paragraph{Why not just write $l_k \leqslant \Z_k(x) \leqslant u_k$?}  Because
+$\Z_k$ is a ratio, its values are rational, and there is no smallest step
+between two of them to put in a strict inequality.  Equation~\eqref{eq:exact}
+replaces an estimated tolerance by an exact integral threshold, and it does so
+without special-casing: on a \emph{linear} criterion ($d_k = 0$, $b_k = 1$)
+$e_k$ collapses to $c_k^{\top}x - c_k^{\top}a$ and every formula below becomes
+the one written for linear criteria.
+
+\subsection{A box}
+
+A \textbf{box} is a region of criterion space, carried as a list of rows on
+$x$, each of the form $\text{coeffs} \cdot x \leqslant \text{rhs}$, together
+with an upper bound on $\Phi$ over it inherited from its parent.  The root box
+is all of $\R^p$ and carries no rows.
+
+Every row a box ever receives is one of the two halves of \eqref{eq:exact}, so
+a box is exactly an axis-aligned region of criterion space --- which is what
+makes the pictures in the companion \emph{Worked examples} faithful rather
+than illustrative.
+
+\section{The efficiency test}\label{sec:test}
+
+\begin{equation}\label{eq:test}
+  \theta(x^{*}) \;=\; \max \ \sum_{k=1}^{p} e_k(x; x^{*})
+  \quad \text{s.t.} \quad e_k(x; x^{*}) \geqslant 0 \ \ \forall k, \qquad x \in \Dset .
+\end{equation}
+
+$x^{*}$ is feasible for it with value $0$, so $\theta \geqslant 0$ always, and
+$x^{*}$ is efficient exactly when $\theta = 0$.  Every coefficient is an
+integer, so $\theta$ is an integer: the test is exact, with no tolerance,
+unlike a formulation written directly on the ratios.
+
+\begin{proposition}[Ecker \& Kouada]\label{prop:ecker}
+With \emph{linear} criteria, every optimal solution of \eqref{eq:test} is
+itself efficient.
+\end{proposition}
+
+\begin{proof}
+With $d_k = 0$ the objective is $\sum_k (\Z_k(x) - \Z_k(x^{*}))$, a strictly
+positive weighted sum of $\Z$ up to a constant, maximised over
+$R = \{\, x \in \Dset : \Z(x) \geqslant \Z(x^{*}) \,\}$.  Let $y^{*}$ be a
+maximiser and suppose $z \in \Dset$ dominated it.  Then
+$\Z(z) \geqslant \Z(y^{*}) \geqslant \Z(x^{*})$, so $z \in R$, and
+$\sum_k \Z_k(z) > \sum_k \Z_k(y^{*})$ --- contradicting optimality.  The
+argument never assumes $y^{*}$ unique, so it covers ties.
+\end{proof}
+
+\noindent
+This matters twice.  It gives the algorithm its cut centre for free when the
+criteria are linear; and it \emph{fails} for fractional criteria, where the
+$k$-th term of \eqref{eq:test} carries a factor $D_k(x)$ that varies from point
+to point, the objective stops being monotone in $\Z$, and a dominating point
+can score lower than a dominated one.  There the maximiser only dominates, and
+a walk along the dominance chain is paid until a test returns $\theta = 0$.
+
+\section{The split}
+
+\begin{proposition}\label{prop:split}
+Let $B$ be a box and $a \in \Dset$.  For $k = 1,\dots,p$ put
+\begin{equation}\label{eq:child}
+  B_k \;=\; B \;\cap\; \{\, x : e_k(x;a) \geqslant 1 \,\}
+            \;\cap\; \bigcap_{j<k} \{\, x : e_j(x;a) \leqslant 0 \,\} .
+\end{equation}
+Then $B_1,\dots,B_p$ are pairwise disjoint and
+$\bigcup_k B_k = B \setminus \{\, x : \Z(x) \leqslant \Z(a) \,\}$.
+\end{proposition}
+
+\begin{proof}
+Let $x \in B$ with $\Z(x) \not\leqslant \Z(a)$.  The set of indices where $x$
+strictly beats $\Z(a)$ is non-empty; let $k$ be its smallest element.  By
+\eqref{eq:exact}, $e_k(x;a) \geqslant 1$ and $e_j(x;a) \leqslant 0$ for $j<k$,
+so $x \in B_k$.  Conversely a point of $B_k$ has $e_k \geqslant 1$, hence
+$\Z(x) \not\leqslant \Z(a)$.  Membership of $B_k$ forces $k$ to be exactly that
+smallest index, and a point has only one --- so the $B_k$ are disjoint.
+\end{proof}
+
+\noindent
+Each child is the parent's row list plus at most $k$ further rows, all ordinary
+linear inequalities.  \textbf{This is the whole difference from the
+decision-space method.}  There the same truncation is a disjunction --- "some
+criterion strictly improves" --- which is not a system of linear inequalities
+and is modelled with $p$ binaries and $p+1$ big-$M$ rows \emph{per cut}, so
+every sub-problem is strictly larger than the last.  Here the model never
+grows: a deep box carries a few more ordinary rows than a shallow one, and
+that is all.
+
+\section{The algorithm, line by line}
+
+\begin{algorithm}[H]
+\caption{Criterion-space search for $(P_E)$}\label{alg:main}
+\begin{algorithmic}[1]
+\State $L \gets \{\, \R^p \,\}$ \Comment{the open list, a heap on the inherited bound}
+\State $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}}) \gets$ a verified efficient seed, or $(\varnothing, -\infty)$
+\State $\mathcal{S} \gets \varnothing$ \Comment{points already proved efficient}
+\While{$L \neq \varnothing$}
+  \State $B \gets$ the box of $L$ with the largest inherited bound \label{ln:pop}
+  \If{$B$ carries a bound and it does not beat $\Phi_{\mathrm{opt}}$} \label{ln:exit}
+     \State \textbf{stop}: no box still open can improve \Comment{the answer is already proved}
+  \EndIf
+  \State solve $\max \{\, \Phi(x) : x \in \Dset,\ \text{rows of } B \,\}$ with cutoff $\Phi_{\mathrm{opt}}$ \label{ln:solve}
+  \If{infeasible, or its value $\leqslant \Phi_{\mathrm{opt}}$}
+     \State \textbf{continue} \Comment{$B$ is discarded whole, never split} \label{ln:drop}
+  \EndIf
+  \State $x_B \gets$ its maximiser; \ $B.\mathrm{bound} \gets$ its value
+  \If{some $a \in \mathcal{S}$ dominates $x_B$} \label{ln:known}
+     \State $\tilde{x} \gets$ the highest such $a$ \Comment{no efficiency test is paid}
+  \Else
+     \State run the test \eqref{eq:test} on $x_B$ \label{ln:test}
+     \If{$\theta(x_B) = 0$}
+        \State $\tilde{x} \gets x_B$; \ update $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}})$ with $\Phi(x_B)$ \label{ln:eff}
+        \Statex \hspace{\algorithmicindent}\Comment{$x_B$ maximises $\Phi$ on its whole slice already, so no $Q$ is owed}
+     \Else
+        \State $\tilde{x} \gets$ an efficient point dominating $x_B$ \Comment{Proposition~\ref{prop:ecker}, or a walk} \label{ln:repair}
+     \EndIf
+  \EndIf
+  \If{$\tilde{x} \neq x_B$}
+     \State solve $Q(\tilde{x}) = \max \{\, \Phi(x) : x \in \Dset,\ \Z(x) = \Z(\tilde{x}) \,\}$; update the incumbent \label{ln:q}
+  \EndIf
+  \State $\mathcal{S} \gets \mathcal{S} \cup \{\tilde{x}\} \cup \{\text{the } Q \text{ maximiser}\}$ \label{ln:remember}
+  \State add to $L$ the $p$ children of $B$ given by \eqref{eq:child} around $\tilde{x}$ \label{ln:split}
+\EndWhile
+\State \Return $(x_{\mathrm{opt}}, \Phi_{\mathrm{opt}})$, proved optimal
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Line~\ref{ln:pop} --- best bound first}
+
+The list is a heap ordered by \emph{inherited} bound, descending; the root, and
+any box a hybrid hands over, carry no bound and rank first.  Taking the most
+promising box first raises the incumbent early, which is what lets the rest be
+dropped whole at line~\ref{ln:drop}.
+
+\subsection{Line~\ref{ln:exit} --- stopping on a hopeless best bound}
+
+Because the heap is ordered by bound descending and the unbounded boxes rank
+first, by the time a \emph{bounded} box reaches the top every box still open is
+bounded too.  If this one cannot beat the incumbent, none of them can: the
+answer is already proved and the remaining list is busywork.
+
+Measured before this line existed: $198$ of $733$ sub-problems were solved
+despite carrying such a bound, and on \emph{every one} of the 18 instances that
+count equalled the number of boxes still open when the condition first fired.
+The waste is exactly a tail, never scattered --- which is why one early exit is
+the whole fix rather than a filter on every box.
+
+\subsection{Line~\ref{ln:solve} --- the sub-problem}
+
+$\Dset$ plus at most $2p$ ordinary rows, and \textbf{no binary variable
+anywhere}.  The cutoff turns the branch and bound into the question ``is there
+a point better than the incumbent, and if so which is best'', which prunes most
+of the tree in the late boxes.
+
+The child's region is the parent's plus a handful of rows, so its root
+relaxation starts from the parent's basis rather than from a phase~I: the
+parent's basis stays a basis once the new rows' slacks join it, only those rows
+can be primal infeasible, and a dual restoration repairs them.  A restoration
+that stalls falls back to the cold solve, so a warm start that does not work
+out costs time and never correctness.
+
+\subsection{Line~\ref{ln:drop} --- dropping a box whole}
+
+The sub-problem maximises $\Phi$ over a \emph{superset} of the efficient points
+whose criterion vector lies in $B$ --- it ignores efficiency entirely --- so its
+value bounds all of them.  A box whose bound does not beat the incumbent is
+therefore discarded together with every descendant it would have had.
+
+This is the mechanism a better incumbent feeds, and it is why seeding the
+search is worth anything at all.  The decision-space method has no counterpart:
+what it cuts is decided by the efficiency test on its own maximiser, so the
+same free optimum saves it \emph{zero} iterations.
+
+\subsection{Line~\ref{ln:known} --- reusing a point already proved efficient}
+
+What the algorithm needs after line~\ref{ln:solve} is an efficient point to cut
+on.  The test at line~\ref{ln:test} produces one, and it is the single most
+expensive operation in the search --- $52\%$ of all simplex pivots, on $146$
+calls out of $806$ sub-problems.  But $\mathcal{S}$ already holds points
+\emph{proved} efficient, and asking whether one of them dominates $x_B$ is
+arithmetic.  One does on $14\%$ of the tests.
+
+Taking the \emph{highest} such point is not a detail: \eqref{eq:child} removes
+$\{\Z \leqslant \Z(\tilde{x})\}$, so a higher centre removes more of the box.
+Skipping the test and cutting better compound, and the box count falls too.
+
+\paragraph{The invariant this rests on.}  Every point in $\mathcal{S}$ is
+efficient.  It receives the centres cut on and, beside each, the maximiser of
+$Q$ --- which shares its centre's criterion vector and is therefore efficient
+whenever the centre is.  A single inefficient member would let the search cut
+on a dominated point and delete the true optimum, so this is pinned by a test
+rather than by this paragraph.
+
+\subsection{Line~\ref{ln:eff} --- when the maximiser is already efficient}
+
+Then $x_B$ is a genuine feasible point of $(P_E)$ and its value is a valid
+incumbent.  No $Q$ is owed: $x_B$ maximises $\Phi$ over the whole box, hence
+over the slice $\{\Z = \Z(x_B)\}$ inside it.
+
+\subsection{Line~\ref{ln:repair} --- when it is not}
+
+$x_B$ is dominated, so its value is \textbf{not} a valid incumbent --- taking
+it would be the one way to lose the optimum, because the cutoff at
+line~\ref{ln:solve} would then discard boxes that could still beat the true
+answer.  What the algorithm needs is an efficient point dominating $x_B$:
+Proposition~\ref{prop:ecker} hands it over for linear criteria, and for
+fractional ones a walk along the dominance chain reaches one.
+
+\subsection{Line~\ref{ln:q} --- the sub-problem $Q$}
+
+The slice $\{\Z = \Z(\tilde{x})\}$ is entirely efficient --- nothing can
+dominate a point of it without dominating $\tilde{x}$ --- and it is about to be
+removed by the split.  Since $\Phi$ is a function of $x$ and not of $\Z(x)$,
+its best value on that slice need not be attained at $\tilde{x}$, so it is
+computed and banked before the region goes.
+
+\emph{This line is the one an implementation reading only the criterion vectors
+would omit, and omitting it loses optima silently: the answer stays plausible
+and is wrong only on instances where the slice is not a singleton.}
+
+\subsection{Line~\ref{ln:split} --- the split}
+
+Proposition~\ref{prop:split}, with $\tilde{x}$ as centre.  Termination follows:
+every pass removes at least the criterion vector $\Z(\tilde{x})$ from the open
+region, and the non-dominated set of a bounded integer program is finite.
+
+\section{What is checked, and how}
+
+Several of the package's tests check \emph{properties} rather than answers,
+because a method that silently lost efficient points would still agree with the
+optimum on favourable instances.
+
+\begin{table}[h]
+\centering
+\caption{The line, and what pins it.}
+\begin{tabular}{llp{6.6cm}}
+\toprule
+line & claim & how it is checked \\
+\midrule
+\ref{ln:split} & Proposition~\ref{prop:split} & for every centre and every
+  feasible point: removed by the cut and in no child, or kept and in exactly
+  one \\
+\ref{ln:exit} & the exit keeps the proof & the run must end with boxes still
+  open and unsolved, stay proved optimal, and agree with an independent scan \\
+\ref{ln:known} & $\mathcal{S}$ holds only efficient points & every remembered
+  point is re-tested; 0 failures over 34 \\
+\ref{ln:repair} & Proposition~\ref{prop:ecker} & 349 witnesses of failed tests
+  on linear criteria, none dominated; the shortcut returns exactly what the
+  walk it replaces returns \\
+\ref{ln:solve} & the warm start is sound & a row added to a solved tableau,
+  against rebuilding the model and solving it cold, on 120 random programs \\
+seed & an efficient seed keeps the answer & seeded and unseeded runs agree and
+  are both proved \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Sixty-four tests in all, run on every commit, in exact rational arithmetic with
+no floating point anywhere and no third-party dependency.
+
+\end{document}
