@@ -162,6 +162,30 @@ iterations** in the paper's method, because what it cuts is decided by the
 efficiency test and not by the incumbent. The worth of a heuristic incumbent
 depends on which exact method it is hybridised with.
 
+**An early exit on a hopeless best bound.** The box loop pops from a heap
+ordered by inherited bound descending, and used to solve every box it popped.
+But once the *best* bound still open fails to beat the incumbent, so does every
+other, and the whole remaining tail is busywork. Measured before changing
+anything: 198 of 733 solves (27 %) had such a bound — and on **every one of the
+18 instances** that count equalled the number of boxes still open when the
+condition first fired. The waste is exactly a tail, never scattered, which is
+what the heap order predicts. Stopping there takes **733 boxes to 549, 25 %
+fewer**, same answers, still proved optimal.
+
+It is **not a speed-up**: 7.44 s → 7.27 s at per-instance minima over five
+repeats, with per-instance ratios scattered from 0.77× to 1.36×. Since the
+change can only remove work, anything under 1.00× is machine noise — and the
+noise is bigger than the effect. That is a confirmation rather than a
+disappointment: the tail boxes are the *cheapest* ones, each killed by the root
+relaxation the moment it sees the cutoff. A quarter of the sub-problems were
+genuinely wasted and worth almost nothing.
+
+And the same measurement settles a question worth asking before stacking
+ideas: on the metaheuristic-seeded hybrid this exit cuts only **4 %** of boxes
+(562 → 539), against 25 % unseeded. The seed and the exit are **substitutes,
+not complements** — a good incumbent arrives early enough that the hopeless
+tail barely forms.
+
 **The augmented weighted Tchebychev program**
 (`augmented_tchebychev_efficient`) is the scalarisation the surrounding
 literature reaches for — Chaabane, Brahmi and Ramdani (2012) optimise over an
