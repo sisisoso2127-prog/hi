@@ -49,8 +49,14 @@ $1.42\times$. Seeding it from the augmented weighted Tchebychev program --- the
 scalarization the surrounding literature generates efficient points with ---
 \emph{loses} to not seeding at all, at $0.71\times$.
 
-The last result is the informative one, and it does not say the scalarization
-is weak. As a generator it is strictly stronger than a weighted sum, reaching
+A fourth change, pruning the open list the moment its best bound cannot beat
+the incumbent, removes a quarter of the sub-problems and no measurable time;
+stacked on the metaheuristic seed it removes 4\% rather than 25\%, because the
+two feed the same bound comparison and are substitutes rather than
+complements.
+
+The Tchebychev result is the informative one, and it does not say the
+scalarization is weak. As a generator it is strictly stronger than a weighted sum, reaching
 unsupported efficient points no positive weighted sum can reach. It is a poor
 \emph{seed} because it steers in criterion space relative to the ideal point
 and never looks at $\Phi$. Symmetrically, the same free optimum that saves the
@@ -208,6 +214,38 @@ and~\ref{sec:tcheb} rest on. A better incumbent does not merely stop the search
 sooner; it deletes subtrees. The decision-space method has no such mechanism,
 which is measured in Section~\ref{sec:asymmetry} and is the reason the two
 methods respond so differently to the very same incumbent.
+
+\subsection{Stopping when the best bound still open is hopeless}
+\label{sec:exit}
+
+The open list is kept in a heap ordered by inherited bound \emph{descending},
+and only the root --- and the boxes a hybrid hands over --- carry no bound;
+those rank first. So by the time a bounded box reaches the top, every box still
+open is bounded too, and if this one cannot beat the incumbent, neither can any
+of them. The search is finished, and the remaining list is busywork.
+
+Measured before the change was made, on the 18 instances used throughout
+Sections~\ref{sec:meta}--\ref{sec:tcheb}: 198 of 733 sub-problems (27\%) were
+solved despite carrying an inherited bound the incumbent already beat --- and
+on \emph{every single instance} that count equalled the number of boxes still
+open when the condition first fired. The waste is exactly a tail, never
+scattered, which is what the heap order predicts and which is why a single
+early exit is the whole of the fix rather than a per-box filter. Stopping there
+takes 733 boxes to 549, \textbf{25\% fewer}, with the same answers, all still
+proved optimal.
+
+\paragraph{It is not a speed-up, and we do not report it as one.} The total is
+$7.44$\,s against $7.27$\,s at per-instance minima over five repeats, with
+per-instance ratios scattered from $0.77\times$ to $1.36\times$. The change can
+only \emph{remove} work, so every ratio below $1.00\times$ is machine noise ---
+and the noise is larger than the effect.
+
+That is a confirmation rather than a disappointment, and it sharpens the cost
+model of \eqref{eq:cost}. The tail boxes are the \emph{cheapest} ones: each is
+killed by the root relaxation the instant it is handed the cutoff, so a quarter
+of the sub-problems were genuinely wasted and worth almost nothing. Where the
+count of sub-problems and the cost of the search come apart, it is the count
+that is the easier number to improve and the weaker one to quote.
 
 \section{Two obstacles specific to a fractional objective}
 
@@ -496,6 +534,44 @@ one answer. The heuristic is identical in both rows above; what differs is
 whether the exact method has a mechanism through which a lower bound can remove
 work. Before building such a hybrid, the mechanism is what should be checked.
 
+\subsection{Two ideas that feed the same mechanism do not add}
+\label{sec:substitutes}
+
+The same reasoning has a consequence that is easy to miss when improvements are
+collected one at a time. The early exit of Section~\ref{sec:exit} and the
+metaheuristic seed of Section~\ref{sec:meta} look independent --- one prunes at
+the top of the list, the other starts the incumbent higher --- but they act
+through the \emph{same} mechanism, the bound comparison of
+Section~\ref{sec:bound}. So they should not be expected to compose, and
+measured, they do not:
+
+\begin{table}[h]
+\centering
+\caption{Sub-problems solved over the 18 instances, with each idea alone and
+with both.}
+\begin{tabular}{lrr}
+\toprule
+ & boxes solved & reduction \\
+\midrule
+neither                      & 733 & --- \\
+early exit only              & 549 & 25\% \\
+metaheuristic seed only      & 562 & 23\% \\
+both                         & 539 & 26\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Either alone removes about a quarter of the sub-problems; together they remove
+about a quarter. On top of the seed, the exit is worth 4\% rather than 25\%,
+because a good incumbent arrives early enough that the hopeless tail barely
+forms --- there is nothing left to skip. They are \textbf{substitutes, not
+complements}.
+
+We record this because the arithmetic of stacked improvements is where
+plausible reasoning goes wrong most cheaply. Two ideas add only when they feed
+different mechanisms; two that feed the same one are one idea, measured twice.
+
 \section{Third hybridization: the Tchebychev reference}\label{sec:tcheb}
 
 The surrounding literature generates efficient points with the augmented
@@ -673,16 +749,19 @@ exact--metaheuristic (Pareto archive) & \textbf{win} & $1.25\times$ of a $1.42\t
 exact--Tchebychev seed               & \textbf{loss} & $0.71\times$ \\
 Tchebychev as a generator            & \textbf{win} & reaches unsupported points \\
 incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
+early exit on a hopeless bound       & partial      & 25\% fewer boxes, no time \\
+early exit \emph{on top of} the seed  & \textbf{loss} & 4\% fewer boxes: a substitute \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Three of the seven are losses and one is a tie. They are reported at the same
-length as the wins because they carry the same information: a hybridization
-pays only where the exact method has a mechanism the first phase can feed, and
-identifying that mechanism is cheaper than building the hybrid and measuring
-it afterwards.
+Of the nine, three are wins, four are losses, one is a tie and one pays in
+sub-problems but not in time. They are reported at the same length as the wins
+because they carry the same information: a hybridization pays only where the
+exact method has a mechanism the first phase can feed, that mechanism is
+cheaper to identify than the hybrid is to build and measure, and two ideas
+feeding the same mechanism are one idea counted twice.
 
 \section{Prior work, and what remains to be checked}
 
