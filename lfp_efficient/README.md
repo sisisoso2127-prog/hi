@@ -504,6 +504,61 @@ difference here is structural rather than a matter of tuning.
 implementation of the paper, and this search is not in the paper. It is offered
 beside it, not in place of it.
 
+## An exact–metaheuristic hybrid
+
+`metaheuristic.optimize_hybrid_metaheuristic` runs a Pareto local search first
+and hands the box search an incumbent. Measured on 18 instances:
+
+```
+9.50s  ->  7.60s     1.25x     10 of 18 faster
+```
+
+Read by regime rather than by the total, because the heuristic's cost is nearly
+fixed:
+
+| | exact only | metaheuristic + exact | |
+|---|---:|---:|---:|
+| `hardest n=10` | 49 boxes, 3.02 s | 34 boxes, **1.94 s** | **1.56×** |
+| `n=8 s0` | 16 boxes, 0.53 s | 10 boxes, **0.34 s** | 1.53× |
+| `p=7 s1` | 197 boxes, 1.36 s | 120 boxes, **0.95 s** | 1.43× |
+| `p=5 s1` | 6 boxes, **0.02 s** | 6 boxes, 0.03 s | 0.56× |
+
+It wins where the search is expensive and loses where there was nothing to win.
+The **ceiling**, measured by handing the search the true optimum for free, is
+1.42×; at 1.25× the heuristic reaches 88 % of it.
+
+**Why it can pay here and cannot pay there.** Handing the *paper's* method the
+true optimum for free at iteration 1 saves **zero iterations** on all three
+reference instances — what gets cut is decided by the efficiency test on `x_l`,
+not by `Phi_opt`. A box, by contrast, is discarded **whole** when its bound
+fails to beat the incumbent. So the worth of a heuristic incumbent depends on
+which exact method it is hybridised with: no mechanism in one, a real one in
+the other. That contrast is measured in both directions and is the more
+interesting of the two results.
+
+**Where correctness lives.** The incumbent prunes whole boxes, so the value of
+a *dominated* point could prune away the true optimum. Nothing leaves the
+metaheuristic unverified: every candidate is confirmed efficient by the exact
+test of Theorem 1, or walked to an efficient point whose value is returned in
+its place. The heuristic decides where to look; it never decides what is true.
+A test pins exactly this — every incumbent efficient, and never above the
+optimum, against the independent scan.
+
+**Two things had to be right, and both were wrong first.** The neighbourhood
+needs **swaps** (one coordinate down, another up), not only unit steps: from a
+maximal point a step up is infeasible and a step down lowers every criterion
+with non-negative coefficients, so the archive refuses it and the walk dies at
+once — three archive points, an incumbent at 13 % of the optimum. With swaps:
+28–69 points and 60–100 %. And the archive **is** the search: restarting from
+fresh random points throws it away between walks, and four times the effort did
+not fix that monotonically (0.360, 0.280, 0.458).
+
+**What costs what.** Not the walk — it is 0.01–0.08 s and barely sensitive to
+its budget. The cost is the *verification*, one integer program per candidate,
+which is the price of soundness. Examining the single best archive member gave
+exactly the same incumbent as examining four on every instance tried, at a
+quarter to a half of the cost, so `candidates` defaults to 1.
+
 **Performance.** The method is MILP-bound: every iteration maximises `Phi` over
 a region carrying `p` extra binaries and `p+1` extra rows per cut already made,
 and that one sub-problem is 94 % of the run time. Profiling drove every choice

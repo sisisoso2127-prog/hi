@@ -65,7 +65,7 @@ efficient point, a bound, and the absolute gap between them.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 45 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 50 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -150,6 +150,17 @@ search (8.47 s against 8.11 s, and 1.47 s against 1.54 s on a family where the
 paper's method closes in one iteration — two ~4% differences pointing opposite
 ways). It is insurance for the one-iteration case, not a third method that
 beats both. `switch_after = 3`, the first default, was measurably wrong.
+
+**An exact–metaheuristic hybrid** (`optimize_hybrid_metaheuristic`) runs a
+Pareto local search first and hands the box search a **verified efficient**
+incumbent. 9.50 s → 7.60 s over 18 instances (1.25×), reaching 1.56× on the
+heaviest and losing only where the exact search already took milliseconds. The
+ceiling, measured by handing over the true optimum for free, is 1.42×.
+
+The contrast is the interesting part: the same free optimum saves **zero
+iterations** in the paper's method, because what it cuts is decided by the
+efficiency test and not by the incumbent. The worth of a heuristic incumbent
+depends on which exact method it is hybridised with.
 
 **Batch cutting** (`batch_cuts_after`) cuts on several cheaply generated
 efficient points at once, taking the heaviest instance from 11 step-1 solves to

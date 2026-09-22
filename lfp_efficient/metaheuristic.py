@@ -305,15 +305,21 @@ def pareto_local_search(problem: MOILFP, phi: FractionalObjective,
 
 def metaheuristic_incumbent(problem: MOILFP, phi: FractionalObjective,
                             seeds: int = 8, budget: int = 4000,
-                            candidates: int = 4,
+                            candidates: int = 1,
                             seed: int = 0) -> Optional[Tuple[List[Fraction], Fraction]]:
     """A **verified efficient** point and its ``Phi``, or ``None``.
 
     The archive's best-scoring members are taken in order and put through the
     exact machinery: confirmed efficient, or walked to an efficient point whose
-    value is returned in their place.  Only *candidates* of them are examined,
-    since each costs one integer program and the point of the exercise is to be
-    cheap next to the exact search that follows.
+    value is returned in their place.  Each costs an integer program, and the
+    whole point of the exercise is to be cheap next to the exact search that
+    follows.
+
+    *candidates* defaults to **1**, measured: taking the best archive member
+    alone gave exactly the same incumbent as taking four on every instance
+    tried, at a quarter to a half of the cost (on the heaviest, 0.14s -> 0.05s).
+    The cost of this function is the verification, not the walk -- the walk
+    itself is 0.01-0.08s and is barely sensitive to its budget.
     """
     archive = pareto_local_search(problem, phi, seeds, budget, seed)
     if not len(archive):
@@ -343,7 +349,7 @@ def metaheuristic_incumbent(problem: MOILFP, phi: FractionalObjective,
 
 def optimize_hybrid_metaheuristic(problem: MOILFP, phi: FractionalObjective,
                                   seeds: int = 8, budget: int = 4000,
-                                  candidates: int = 4, seed: int = 0,
+                                  candidates: int = 1, seed: int = 0,
                                   time_budget: Optional[float] = None,
                                   verbose: bool = False) -> Solution:
     """Metaheuristic first, then the exact box search seeded with what it found.
