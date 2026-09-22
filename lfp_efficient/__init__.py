@@ -46,6 +46,7 @@ from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
 from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
                     MOILP, Model)
 from .rational import F, fmt
+from .front import Front, enumerate_front
 from .subset import EfficientSubset, efficient_subset
 from .tchebychev import (augmented_tchebychev_efficient, ideal_point,
                          tchebychev_incumbent)
@@ -72,6 +73,7 @@ __all__ = [
     "enumerate_nondominated", "maximize_by_full_enumeration", "FullEnumeration",
     "best_over_efficient_set_by_scan", "certify_optimum", "Certificate",
     "efficient_subset", "EfficientSubset",
+    "enumerate_front", "Front",
     "F", "fmt",
 ]
 
