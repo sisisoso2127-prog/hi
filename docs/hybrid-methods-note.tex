@@ -397,6 +397,51 @@ known to be efficient is easier than searching for a dominator. The same
 shortcut applies to the decision-space method, which uses the same test, so the
 comparison of Section~\ref{sec:results} is unaffected by it.
 
+\subsection{Paying the efficiency test less often}
+\label{sec:known}
+
+Splitting the work by operation puts the cost somewhere the wall-clock profile
+did not: the efficiency test is \textbf{52\% of all simplex pivots on 146
+calls}, 58 pivots each against $11.8$ for a box sub-problem. The useful
+question is therefore not how to make the test cheaper but how to pay it less
+often.
+
+When a box's maximiser $x_B$ is inefficient, the test is what produces the
+efficient point to cut on. But the search already holds the points it has
+\emph{proved} efficient, and asking whether one of them dominates $x_B$ is
+arithmetic rather than an integer program. One does on 21 of 146 tests
+(14\%), and on 17\% of the inefficient cases.
+
+\begin{table}[h]
+\centering
+\caption{Cutting on a remembered efficient point when one dominates the box's
+maximiser.}
+\begin{tabular}{lrrr}
+\toprule
+ & before & after & \\
+\midrule
+simplex pivots  & $16169$ & $14602$ & $-9.7\%$ \\
+boxes solved    & $549$   & $534$   & $-15$ \\
+optima          & \multicolumn{3}{c}{identical, all proved} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The box count \emph{falling} was not the prediction. Among the remembered
+points dominating $x_B$ the highest is taken, and \eqref{eq:child} removes more
+of the box the higher its centre, so skipping the test and cutting better
+compound instead of trading off.
+
+\paragraph{The invariant this rests on.} Every point the search remembers is
+efficient: it remembers the centres it cut on and, beside each, the maximiser
+of $Q$, which shares its centre's criterion vector and is therefore efficient
+whenever the centre is. One inefficient member would let the search cut on a
+dominated point and remove the true optimum, so this is pinned by a test rather
+than by an argument. Unlike the two changes above, this one deliberately
+\emph{changes} which boxes are produced, so it is checked against the answer
+and the proof rather than against a box count.
+
 \subsection{Warm-starting a box from its parent}
 \label{sec:warm}
 
@@ -884,12 +929,13 @@ early exit on a hopeless bound       & partial      & 25\% fewer boxes, no time 
 early exit \emph{on top of} the seed  & \textbf{loss} & 4\% fewer boxes: a substitute \\
 skipping the redundant test          & \textbf{win} & 6\% fewer nodes, same search \\
 warm-starting a box from its parent  & \textbf{win} & 11\% fewer pivots, same search \\
+cutting on a remembered efficient point & \textbf{win} & 10\% fewer pivots, 15 fewer boxes \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Of the eleven, five are wins, four are losses, one is a tie and one pays in
+Of the twelve, six are wins, four are losses, one is a tie and one pays in
 sub-problems but not in time. They are reported at the same length as the wins
 because they carry the same information: a hybridization pays only where the
 exact method has a mechanism the first phase can feed, that mechanism is
@@ -918,7 +964,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 62 tests. Several check
+exact rational arithmetic throughout, and carries 64 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -943,6 +989,9 @@ points would still agree with the optimum on favourable instances:
       still open and unsolved while staying proved optimal and agreeing with
       the independent scan, and a seeded run, where the exit fires sooner, must
       return the same value as an unseeded one.
+\item The invariant of Section~\ref{sec:known} --- every point the search
+      remembers is checked efficient, since the shortcut there cuts on one
+      without re-testing it.
 \item Section~\ref{sec:warm} --- a row added to a solved tableau is checked
       against rebuilding the model and solving it cold, on 120 random programs;
       and a child box's warm root is checked to reach the same relaxation value
