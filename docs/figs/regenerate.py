@@ -223,6 +223,15 @@ def main():
         "of 175 / of 54", scale=175))
     write("r-reach-legend", legend([("weighted sum", "blue!55!black"),
                                     ("Tchebychev", "orange!80!black")]))
+    # The probe's direction: cuts are unchanged, the branch & bound is not.
+    write("r-probe-nodes", bars(
+        [("$n=4$", [658, 1397]), ("$n=5$", [372, 2105])],
+        "b\\&b nodes", scale=2105))
+    write("r-probe-cuts", bars(
+        [("$n=4$", [9, 9]), ("$n=5$", [9, 9])],
+        "cuts", scale=10))
+    write("r-probe-legend", legend([("maximise a direction", "blue!55!black"),
+                                    ("zero objective", "orange!80!black")]))
     print("figures written to", OUT)
 
 

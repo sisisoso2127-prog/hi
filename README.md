@@ -157,6 +157,36 @@ here, on a different task.
 *Four instances, and the spread is wide.* The mechanism explains the spread,
 but these are four runs, not a distribution.
 
+**Is the baseline fair?** A 204× margin invites the suspicion that the loser was
+handicapped, so we profiled it. Of the 137 s the `n=5` instance spends producing
+30 vectors, **100% is inside the probe** — 31 calls, 14983 branch & bound nodes —
+against 0.09 s for the repair and 0.02 s for adding the cuts. The model grows
+from 5 columns and 7 rows to 95 and 127, exactly `p` binaries and `p+1` rows per
+cut. The cost is *structural*: it is the growth of the sub-problems, which is
+the thing the box search removes.
+
+One candidate handicap remained: the probe only needs *some* feasible point, yet
+it maximises a direction. Stopping at the first integer point found looks
+strictly cheaper. It is the opposite:
+
+| probe | cuts | B&B nodes | time |
+|---|---:|---:|---:|
+| `n=4` maximise | 9 | 658 | **1.35 s** |
+| `n=4` zero objective | 9 | 1397 | 5.33 s |
+| `n=5` maximise | 9 | 372 | **0.79 s** |
+| `n=5` zero objective | 9 | 2105 | 10.15 s |
+
+**The cut counts are identical** — the direction changes neither how many vectors
+there are nor the order they appear in. What explodes is the branch & bound
+inside each probe, because a zero objective gives it nothing to prune with:
+every node's relaxation is worth 0, so no bound can discard a subtree until an
+integer point has been stumbled upon. The direction is load-bearing, the
+criterion-space method uses the same one, and the 204× stands.
+
+Recorded because it is a plausible-looking optimisation that makes things 4–13×
+worse, and because it was checked while suspecting the *comparison* was unfair —
+it was not.
+
 **Why it is complete, and not merely large.** A non-dominated vector `v` leaves
 the unexplored region only through a split around a centre `a` with `v ≤ Z(a)`.
 If `v ≠ Z(a)` that says `a` dominates `v` — which no non-dominated vector
@@ -211,7 +241,7 @@ what finding the single best point costs.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 50 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 74 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |

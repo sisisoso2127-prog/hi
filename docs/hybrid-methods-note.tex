@@ -957,6 +957,53 @@ tracked the number of cuts rather than $n$ --- measured here independently, on
 a different task.  \emph{Four instances, and the spread is wide}: the mechanism
 explains it, but these are four runs and not a distribution.
 
+\subsection{Is the baseline fair?  Where the decision-space time actually goes}
+\label{sec:probe}
+
+A $204\times$ margin invites the suspicion that the loser was handicapped, so
+we profiled it rather than quoting it.  On the $n=5$ instance, of $137$\,s
+spent producing 30 vectors, \textbf{$137.21$\,s --- 100\% --- is inside the
+probe}, over 31 calls and 14983 branch \& bound nodes; the repair takes
+$0.09$\,s and adding the cuts $0.02$\,s.  The model grows from 5 columns and 7
+rows to 95 and 127, which is exactly $p$ binaries and $p+1$ rows per cut.  The
+cost is therefore structural --- it is the growth of the sub-problems, which is
+the thing Section~\ref{sec:box} removes --- and not an artefact of some
+inefficiency on the side of the comparison.
+
+One candidate handicap remained.  The probe only needs \emph{some} feasible
+point of the truncated region, yet it maximises a linear direction; stopping at
+the first integer point found looks strictly cheaper.  Measured, it is the
+opposite:
+
+\begin{table}[h]
+\centering
+\caption{Probing by maximising a direction against probing with a zero
+objective.}
+\begin{tabular}{lrrr}
+\toprule
+ & cuts & B\&B nodes & time \\
+\midrule
+$n=4$, maximise & $9$ & $658$  & $1.35$\,s \\
+$n=4$, zero     & $9$ & $1397$ & $5.33$\,s \\
+$n=5$, maximise & $9$ & $372$  & $0.79$\,s \\
+$n=5$, zero     & $9$ & $2105$ & $10.15$\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The \textbf{cut counts are identical}: the direction changes neither how many
+vectors there are nor the order they come out in.  What explodes is the branch
+\& bound inside each probe, by a factor of two to six, because a zero objective
+gives it nothing to prune with --- every node's relaxation is worth $0$, so no
+bound can discard a subtree until an integer point has been stumbled upon.  The
+direction is load-bearing rather than decorative, the criterion-space method
+uses the same one, and the $204\times$ stands.
+
+We report this because it is a plausible-looking optimisation that makes things
+four to thirteen times worse, and because it was checked while suspecting the
+\emph{comparison} was unfair --- it was not.
+
 \begin{proposition}\label{prop:front}
 The enumeration terminates, and records every non-dominated vector exactly
 once.

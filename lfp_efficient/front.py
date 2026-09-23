@@ -31,6 +31,32 @@ that says ``a`` dominates ``v``, which no non-dominated vector admits.  So
 ``v`` can only leave at the moment it is recorded -- and since the region is
 exhausted, every ``v`` is recorded exactly once.
 
+Why the probe maximises a direction instead of just finding a point
+--------------------------------------------------------------------
+The probe only needs *some* feasible point of the box, so maximising a linear
+direction looks like paid-for waste: a zero objective would stop at the first
+integer point found.  Measured, it is the opposite, and by a lot.
+
+Profiling the decision-space enumeration on an instance that takes 137 s put
+**100%** of the time in the probe, over 31 calls and 14983 branch & bound
+nodes, with the model growing from 5 columns and 7 rows to 95 and 127 -- which
+is exactly ``p`` binaries and ``p+1`` rows per cut, so that part is structural
+and expected.  Replacing the direction by a zero objective:
+
+    n=4   9 cuts,  658 nodes, 1.35s   ->  9 cuts, 1397 nodes,  5.33s
+    n=5   9 cuts,  372 nodes, 0.79s   ->  9 cuts, 2105 nodes, 10.15s
+
+The **cut counts are identical**: the probe's direction does not change how
+many vectors there are, or the order they come out in.  What explodes is the
+branch & bound inside each probe, because a zero objective gives it nothing to
+prune with -- every node's relaxation is worth 0, so no bound can discard
+anything until an integer point has been stumbled upon.
+
+So the direction is load-bearing rather than decorative, and this module uses
+the same one.  Recorded because it is a plausible-looking optimisation that
+makes things four to thirteen times worse, and because it was checked while
+suspecting the *comparison* was unfair -- it was not.
+
 The front is not the set of efficient points
 --------------------------------------------
 One non-dominated vector can be attained by several efficient points, and this

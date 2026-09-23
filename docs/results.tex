@@ -76,6 +76,77 @@ was proved optimal.  The totals are not stable estimates: four instances per
 $p$ is few, and $110.95$ of the $112.77$ seconds at $p = 5$ come from a single
 instance.  The table reports what was measured, not an expected value.
 
+\section{Is the margin real, or is the baseline handicapped?}
+
+A $103\times$ margin --- and a $204\times$ one on front enumeration --- invites
+the suspicion that the loser was crippled rather than beaten, so the losing
+method was profiled instead of merely quoted.
+
+\paragraph{Where the time goes.}  On the instance that takes $137$ s to produce
+a 30-vector front in decision space:
+
+\begin{table}[h]
+\centering
+\caption{Profile of the decision-space enumeration, $137.38$ s in total.}
+\begin{tabular}{lrrr}
+\toprule
+ & time & share & calls \\
+\midrule
+probe (the integer program) & $137.21$\,s & $\mathbf{100\%}$ & $31$ \\
+repair to an efficient point & $0.09$\,s & $0\%$ & $30$ \\
+building and adding the cut & $0.02$\,s & $0\%$ & $30$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Over those 31 calls, branch \& bound explores $14983$ nodes, and the model
+grows from $5$ columns and $7$ rows to $95$ and $127$ --- exactly $p$ binaries
+and $p+1$ rows per cut.  Nothing outside the sub-problems is worth optimising,
+and the growth of the sub-problems is precisely what the criterion-space method
+does not have.  \textbf{The cost is structural.}
+
+\paragraph{The one candidate handicap, tested.}  The probe only needs
+\emph{some} feasible point of the truncated region, yet it maximises a linear
+direction.  Dropping the objective looks strictly cheaper --- stop at the first
+integer point found.  Measured, it is four to thirteen times \emph{worse}:
+
+\begin{table}[h]
+\centering
+\caption{Probing by maximising a direction against probing with a zero
+objective.  Same instances, same cuts.}
+\begin{tabular}{lrrr}
+\toprule
+ & cuts & b\&b nodes & time \\
+\midrule
+$n=4$, maximise a direction & $9$ & $658$  & $\mathbf{1.35}$\,s \\
+$n=4$, zero objective       & $9$ & $1397$ & $5.33$\,s \\
+$n=5$, maximise a direction & $9$ & $372$  & $\mathbf{0.79}$\,s \\
+$n=5$, zero objective       & $9$ & $2105$ & $10.15$\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-probe-cuts}\\[6pt]
+\fig{r-probe-nodes}\\[2pt]
+\fig{r-probe-legend}
+\end{center}
+
+\noindent
+The two charts are the whole finding: the top one is flat and the bottom one is
+not.  \textbf{The cut counts are identical} --- the direction changes neither
+how many vectors there are nor the order they come out in --- while the branch
+\& bound inside each probe grows by a factor of two to six.  A zero objective
+gives it nothing to prune with: every node's relaxation is worth $0$, so no
+bound can discard a subtree until an integer point has been stumbled upon.
+
+So the direction is load-bearing rather than decorative, the criterion-space
+method uses the same one, and the margins stand.  This is reported at length
+because it is a plausible-looking optimisation that makes things much worse,
+and because it was checked while \emph{suspecting the comparison was unfair} ---
+which is the only time such a check is worth anything.
+
 \section{Four improvements to the exact search}
 
 Each of the four removes work without changing the answer.  They are listed
@@ -263,7 +334,7 @@ one idea, measured twice.
 
 \begin{table}[h]
 \centering
-\caption{The twelve things tried, with what each was worth.}
+\caption{The thirteen things tried, with what each was worth.}
 \begin{tabular}{lll}
 \toprule
 attempt & verdict & effect \\
@@ -280,12 +351,13 @@ two-at-a-time split                  & \textbf{loss} & loses across $p=3..7$, wo
 early exit on a hopeless bound       & partial       & 25\% fewer boxes, no measurable time \\
 early exit \emph{on top of} the seed & \textbf{loss} & 4\% rather than 25\%: a substitute \\
 warm start + remembered point        & \textbf{win}  & 20\% fewer pivots together \\
+zero-objective probe                 & \textbf{loss} & $4$--$13\times$ slower, cuts identical \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Five are losses and one is a tie.  They are reported at the same length as the
+Six are losses and one is a tie.  They are reported at the same length as the
 wins because they carry the same information: a change pays only where the
 method has a mechanism it can feed, that mechanism is cheaper to identify than
 the change is to build and measure, and two ideas feeding the same mechanism
@@ -294,7 +366,7 @@ are one idea counted twice.
 \section{How all of this is checked}
 
 Exact rational arithmetic throughout, no floating point anywhere, no
-third-party dependency, and 64 tests run on every commit.  Several check
+third-party dependency, and 74 tests run on every commit.  Several check
 \emph{properties} rather than answers, since a method that silently lost
 efficient points would still agree with the optimum on favourable instances:
 the split is a partition; the metaheuristic never hands over an inefficient
