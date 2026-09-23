@@ -242,7 +242,7 @@ def probe_order(problem: MOILFP, points):
 def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
                  seeds: int = 8, budget: int = 4000,
                  seed: int = 0, adaptive: bool = True,
-                 patience: int = 1, max_rounds: int = 8) -> GeneratedSeeds:
+                 patience: int = 0, max_rounds: int = 8) -> GeneratedSeeds:
     """Efficient points from a Pareto local search, verified and ordered.
 
     Unlike the Tchebychev program, a local search gives no guarantee, so every
@@ -286,9 +286,16 @@ def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
         # neighbourhoods: seven of them reached 86% at n=12 and cost more than
         # the exact search they were meant to shorten.  Doubling pays at most
         # twice the cost of the round that was the right size.
+        # The first round is already sized to the instance.  Doubling from 8
+        # needs four rounds to reach the scale n=12 wants, and the rounds
+        # below it are wasted: measured, 4.94s of walk where 2.0s covers the
+        # front.  Restarts are what matter, so they scale with n.
         scale = 1 << r
-        archive = pareto_local_search(problem, phi, seeds=seeds * scale,
-                                      budget=budget * scale, seed=seed + r)
+        start_seeds = seeds * max(1, problem.n // 4)
+        start_budget = budget * max(1, problem.n // 4)
+        archive = pareto_local_search(problem, phi, seeds=start_seeds * scale,
+                                      budget=start_budget * scale,
+                                      seed=seed + r)
         gained = 0
         for x in archive.points():
             key = tuple(problem.Z(x))
@@ -308,7 +315,13 @@ def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
         result.rounds = r + 1
         if not adaptive:
             break
-        quiet = quiet + 1 if gained == 0 else 0
+        # Stop on DIMINISHING returns, not on zero.  Rounds double, so the
+        # round after the last productive one is the most expensive of all;
+        # waiting for it to come back empty pays for the whole search twice.
+        # A round that adds under a tenth of what is already held is the
+        # signal, and it arrives one doubling earlier.
+        threshold = max(1, len(seen) // 10)
+        quiet = quiet + 1 if gained <= threshold else 0
         if quiet > patience:
             break
 

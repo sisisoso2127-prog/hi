@@ -2168,6 +2168,46 @@ def test_the_seeds_are_handed_over_in_the_probe_s_own_order():
     return f"{checked} instances, seeds in descending probe order"
 
 
+
+def test_the_adaptive_walk_changes_the_cost_and_not_the_answer():
+    """Restarting until the walk stops finding must not move the answer.
+
+    The adaptive walk runs a different number of rounds on every instance, so
+    it hands over a different set of seeds each time.  One seed that is not
+    efficient, or one placed where it does not belong, drops a vector from the
+    front silently -- the run still finishes and still looks complete.  So both
+    settings are compared on every instance, and the seeds are re-verified.
+    """
+    rng = random.Random(514229)
+    checked = rounds = grew = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        plain = complete_efficient_set(problem, phi)
+
+        fixed = pareto_seeds(problem, phi, adaptive=False)
+        grown = pareto_seeds(problem, phi, adaptive=True)
+        assert grown.rounds >= 1
+        assert len(grown.vectors) >= len(fixed.vectors), (
+            "more rounds found fewer vectors")
+        if len(grown.vectors) > len(fixed.vectors):
+            grew += 1
+        rounds += grown.rounds
+        for point in grown.points:
+            assert test_efficiency(problem, point).efficient, (
+                "a later round handed over an inefficient seed")
+
+        for seeds in (fixed.points, grown.points):
+            front = enumerate_front(problem, phi, seeds=seeds)
+            whole = complete_efficient_set(problem, phi, front=front)
+            assert whole.complete, "a seeded run must still prove completeness"
+            assert ({tuple(x) for x in whole.points}
+                    == {tuple(x) for x in plain.points}), "E(P_D) changed"
+            assert whole.best_value == plain.best_value, "the optimum changed"
+        checked += 1
+    return (f"{checked} instances, {rounds} rounds in total, identical "
+            f"E(P_D) both ways; more rounds found more vectors on {grew}")
+
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the
