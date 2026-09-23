@@ -38,7 +38,9 @@ from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
 from lfp_efficient.generated import (generate_seeds, generated_front)
 from lfp_efficient.complete import (CompleteSet, complete_efficient_set,
-                                    slice_rows, variable_bounds)
+                                    reduce_rows, slice_equations,
+                                    slice_points, slice_rows,
+                                    variable_bounds)
 from lfp_efficient.milp import solve_relaxation, warm_relaxation
 from lfp_efficient.simplex import (INFEASIBLE, OPTIMAL as LP_OPTIMAL, STALLED,
                                    add_linear_row, restore_feasibility)
@@ -2011,6 +2013,70 @@ def test_the_filter_changes_the_cost_and_not_the_answer():
     assert saved, "the filter removed no probe at all"
     return (f"{checked} instances, three settings, one answer; "
             f"{saved}/{total} probes removed ({saved / total:.0%})")
+
+
+
+# --------------------------------------------------------------------------
+# eliminating variables with the slice equations
+# --------------------------------------------------------------------------
+def test_elimination_gives_exactly_the_same_slice_as_the_plain_scan():
+    """The fast path against the reference, slice for slice.
+
+    ``slice_points`` solves the ``p`` equations and scans ``n - r`` variables;
+    ``_fast_feasible_points`` keeps all ``n`` and uses the equations only to
+    prune.  They must return the same set -- and a sign error in the
+    substitution, which is what the first draft had, returns the *empty* set on
+    almost every slice while still looking like a working optimisation.
+    """
+    from lfp_efficient.enumeration import _fast_feasible_points
+
+    rng = random.Random(27182)
+    slices = points = 0
+    for _ in range(14):
+        problem, _, _ = random_instance(rng)
+        bounds = variable_bounds(problem)
+        for v in enumerate_front(problem).vectors:
+            reference = set(_fast_feasible_points(problem, bounds,
+                                                  slice_rows(problem, v)))
+            fast = set(slice_points(problem, bounds, v))
+            assert fast == reference, (
+                f"slice {v}: {len(reference - fast)} points lost, "
+                f"{len(fast - reference)} invented")
+            assert reference, "a non-dominated vector with an empty slice"
+            slices += 1
+            points += len(reference)
+    return f"{slices} slices, {points} points, identical both ways"
+
+
+def test_the_elimination_is_exact_and_rejects_fractional_solutions():
+    """A point is kept only when the eliminated variables come out integer.
+
+    The one condition that is not linear, and so the one the scan cannot prune
+    on.  Here the equations force ``2*x1 = 1`` on part of the box, so a
+    rational solution exists and no integer one does.
+    """
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4)
+    problem = MOILP(model, [[2, 0], [0, 1]])          # Z_1 = 2*x1 is even
+    bounds = [4, 4]
+
+    assert slice_points(problem, bounds, [F(4), F(2)]) == [(2, 2)]
+    assert slice_points(problem, bounds, [F(3), F(2)]) == [], (
+        "Z_1 = 3 needs x1 = 3/2 and must yield nothing")
+
+    solved = reduce_rows(slice_equations(problem, [F(3), F(2)]), 2)
+    assert solved is not None, "the system is consistent over the rationals"
+    return "2*x1 = 3 is solvable in Q and rejected over Z, as it must be"
+
+
+def test_an_inconsistent_slice_is_settled_without_scanning():
+    """Elimination detects an empty slice from the equations alone."""
+    model = Model(2).add([1, 0], LE, 3).add([0, 1], LE, 3)
+    problem = MOILP(model, [[1, 1], [2, 2]])          # Z_2 = 2 * Z_1 always
+    assert reduce_rows(slice_equations(problem, [F(2), F(4)]), 2) is not None
+    assert reduce_rows(slice_equations(problem, [F(2), F(5)]), 2) is None, (
+        "Z_2 = 5 with Z_1 = 2 contradicts Z_2 = 2*Z_1")
+    assert slice_points(problem, [3, 3], [F(2), F(5)]) == []
+    return "a contradictory slice is refuted by the elimination, not by a scan"
 
 
 # --------------------------------------------------------------------------
