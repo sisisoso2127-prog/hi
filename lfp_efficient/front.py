@@ -100,13 +100,14 @@ from heapq import heappop, heappush
 from time import monotonic
 from typing import List, Optional, Sequence, Tuple
 
-from .criterion_space import Box, split
+from .criterion_space import Box, looks_empty, split
 from .efficiency import (best_with_same_criterion, efficient_dominator,
-                         test_efficiency)
+                         has_linear_criteria, test_efficiency)
 from .milp import denominator_stays_positive, solve_linear_milp
 from .model import FractionalObjective, MOILFP
 from .rational import F, ZERO
 from .simplex import OPTIMAL
+from .tchebychev import anti_ideal_point, ideal_point
 
 
 @dataclass
@@ -132,6 +133,8 @@ class Front:
     probes: int = 0
     #: vectors recorded from the seeds, at no integer program at all
     seeded: int = 0
+    #: boxes dropped by the free filter, without a program
+    filtered: int = 0
 
     def __len__(self) -> int:
         return len(self.vectors)
@@ -199,7 +202,9 @@ def pre_split(problem: MOILFP, seeds) -> Tuple[List[Box], List[List[Fraction]]]:
 def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
                     max_boxes: int = 200_000,
                     time_budget: Optional[float] = None,
-                    seeds: Optional[List[Sequence[Fraction]]] = None) -> Front:
+                    seeds: Optional[List[Sequence[Fraction]]] = None,
+                    filter_boxes: bool = True,
+                    use_range: bool = False) -> Front:
     """Enumerate the whole non-dominated set, in criterion space.
 
     With *phi*, each vector is paired with the point maximising ``Phi`` on its
@@ -218,6 +223,11 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
     unchanged; what changes is how much of it had to be found.  Seeds that are
     not efficient make the output wrong, not slow, so they must come from a
     source that guarantees it.
+
+    *filter_boxes* applies :func:`~lfp_efficient.criterion_space.looks_empty`
+    before each probe, dropping the boxes arithmetic alone can settle.  It is
+    exact and one-sided, so it changes what the search costs and nothing about
+    what it returns; it is a parameter so that the A/B can be run.
     """
     deadline = None if time_budget is None else monotonic() + time_budget
     positive = (denominator_stays_positive(problem.model, phi)
@@ -230,6 +240,10 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
     for z in problem.criteria:
         for j in range(problem.n):
             probe[j] += F(z.U[j])
+
+    ideal = anti = None
+    if filter_boxes and use_range and has_linear_criteria(problem):
+        ideal, anti = ideal_point(problem), anti_ideal_point(problem)
 
     front = Front()
     counter = 0
@@ -279,6 +293,10 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
 
         _, box = heappop(open_boxes)
         front.boxes += 1
+
+        if filter_boxes and looks_empty(problem, box, ideal, anti):
+            front.filtered += 1
+            continue                # settled by arithmetic: no program spent
 
         model = box.restricted(problem.model)
         direction = probe + [ZERO] * (model.n - problem.n)
