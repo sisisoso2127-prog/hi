@@ -733,6 +733,35 @@ doesn't:
 At least as good as the linear case. Nothing in the construction distinguishes
 them — the `e_k` rows are integer-valued for ratios too.
 
+**Five instance families, and a prediction that was wrong.** Everything else
+here comes from one generator. Four more move what the mechanism depends on —
+`loose` raises `|D|` an order of magnitude while leaving `|F|` alone;
+`knapsack` is two capacity rows, all coefficients positive; `conflicting` gives
+the criteria opposing signs (large `|F|`); `aligned` correlates them (small):
+
+| family | \|F\| | cover | ratio | faster on |
+|---|---:|---:|---:|---:|
+| `mixed` | 8 / 30 | 100 / 97% | **1.37** / 1.30× | 28/30 |
+| `loose` | 9 / 44 | 83 / 86% | 1.29 / 1.23× | 28/30 |
+| `knapsack` | 12 / 41 | 100 / 90% | 1.33 / 1.27× | 29/30 |
+| `conflicting` | 107 / 105 | 100 / 93% | 1.14 / 1.14× | 26/30 |
+| `aligned` | 6 / 11 | 100 / 84% | 1.31 / 1.14× | 25/30 |
+| **all 150** | | | **1.23×** | **136** |
+
+Every family pays, so the advantage isn't an artefact of the generator it was
+found with. **But it refutes a prediction we wrote down first:** we expected
+`conflicting` (large front, much to discover) to be the *best* case and
+`aligned` the worst. The opposite holds, and the margin narrows with `|F|`
+inside every family too.
+
+**The ceiling that explains it.** A seed removes one probe; the enumeration
+spends 2.6–4.5 probes *per vector*, the rest on boxes that turn out empty and
+that no seed can touch. So even at 100% coverage the probe saving is capped
+near a quarter to a third — which is exactly the 24–32% measured — putting a
+**hard ceiling of about 1.4×** on the idea, independent of `|F|`. What grows
+with `|F|` is the walk's cost, one efficiency test per archive member. A large
+front buys no more and costs more.
+
 **Where it fails, and the one line that fixes it.** At `n = 12` the margin falls
 to 1.00×, and at `n=12, p=5` to 0.97×. We first blamed the probe count
 outgrowing `|F|`. **The measurement refutes that** — probes per vector are flat

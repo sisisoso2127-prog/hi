@@ -40,9 +40,11 @@ criteria as much as for linear ones; solving those equations eliminates $r$
 variables before enumeration begins and is worth a median $49\times$ over
 scanning with them as pruning rows.  Third, a hybridisation that pays: a Pareto
 local search supplies verified efficient points which are placed in the box
-list without a probe.  Over 150 instances it reaches the whole of $\E$ at
-$1.31\times$ the pure exact method, faster on 139, with identical answers
-throughout.
+list without a probe.  It reaches the whole of $\E$ at $1.36\times$ the pure
+exact method over 120 instances spanning $n = 6 \dots 12$, faster on 116, at
+$1.39\times$ on genuinely fractional criteria, and between $1.14\times$ and
+$1.37\times$ on each of five structurally different instance families, with
+identical answers throughout.
 
 The hybridisation only pays when the seeds are handed over in the order the
 exact search's own probe would meet them; in the order the archive produces
@@ -662,6 +664,70 @@ on its own, so more budget costs nothing and buys nothing.  That reading holds
 \emph{at this size} --- and generalising it is exactly the mistake the next
 subsection is about.
 
+\subsection{Five instance families, and a prediction that was wrong}
+\label{sec:families}
+
+Everything above comes from one pseudo-random generator, so the magnitudes
+could belong to it rather than to the method.  Four further families move the
+quantities the mechanism depends on, and move them a long way: \texttt{loose}
+raises $|\Dset|$ by an order of magnitude while leaving $|F|$ alone;
+\texttt{knapsack} uses two capacity rows with all coefficients positive, the
+shape most of the applied literature has; \texttt{conflicting} gives the
+criteria opposing signs, which makes $|F|$ large; \texttt{aligned} correlates
+them, which makes it small.
+
+\begin{table}[h]
+\centering
+\caption{The hybrid on five structurally different families, 15 instances per
+cell, 150 in all.  Identical front and identical optimum on every one.}
+\label{tab:families}
+\begin{tabular}{lrrrrrr}
+\toprule
+family & $n$ & $p$ & $|F|$ & cover & ratio & faster on \\
+\midrule
+\texttt{mixed}       & $7$ & $3$ & $8$   & $100\%$ & $\mathbf{1.37\times}$ & $13/15$ \\
+\texttt{mixed}       & $8$ & $4$ & $30$  & $97\%$  & $1.30\times$ & $15/15$ \\
+\texttt{loose}       & $7$ & $3$ & $9$   & $83\%$  & $1.29\times$ & $14/15$ \\
+\texttt{loose}       & $8$ & $4$ & $44$  & $86\%$  & $1.23\times$ & $14/15$ \\
+\texttt{knapsack}    & $7$ & $3$ & $12$  & $100\%$ & $1.33\times$ & $15/15$ \\
+\texttt{knapsack}    & $8$ & $4$ & $41$  & $90\%$  & $1.27\times$ & $14/15$ \\
+\texttt{conflicting} & $6$ & $3$ & $107$ & $100\%$ & $1.14\times$ & $13/15$ \\
+\texttt{conflicting} & $7$ & $3$ & $105$ & $93\%$  & $1.14\times$ & $13/15$ \\
+\texttt{aligned}     & $7$ & $3$ & $6$   & $100\%$ & $1.31\times$ & $12/15$ \\
+\texttt{aligned}     & $8$ & $4$ & $11$  & $84\%$  & $1.14\times$ & $13/15$ \\
+\midrule
+\textbf{all 150} & & & & & $\mathbf{1.23\times}$ & $\mathbf{136}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Every family pays, between $1.14\times$ and $1.37\times$ in the median, so the
+advantage is not an artefact of the generator it was found with.  That is the
+result this section was run for.
+
+\paragraph{The prediction it refutes.}  We expected \texttt{conflicting}, with
+$|F| \approx 107$, to be the family the hybrid liked \emph{most} --- a large
+front is much to discover, and discovery is what a seed removes --- and
+\texttt{aligned}, with $|F| = 6$, to be the one it liked least.  \textbf{The
+opposite holds}: \texttt{conflicting} is the worst of the five at
+$1.14\times$, and the margin narrows with $|F|$ \emph{within} every family too:
+$1.37 \to 1.30$, $1.29 \to 1.23$, $1.33 \to 1.27$, $1.31 \to 1.14$ as $|F|$
+grows from $8$ to $30$, $9$ to $44$, $12$ to $41$, $6$ to $11$.
+
+\paragraph{Why, and the ceiling it implies.}  A seed removes one probe, and the
+enumeration spends between $2.6$ and $4.5$ probes \emph{per vector} --- the
+rest go to boxes that turn out empty, which no seed can remove.  So even at
+$100\%$ coverage the probe saving is capped near a quarter to a third, which is
+what the campaign measures directly ($24$--$32\%$ where coverage is good).
+That puts a hard ceiling of roughly $1.4\times$ on the whole idea, and it is
+independent of $|F|$.  What does depend on $|F|$ is the walk's cost: it pays
+one efficiency test per archive member, so it grows with the front while the
+saving does not.  A large front therefore buys no more and costs more, which
+is exactly the ordering in the table --- and the same mechanism as the
+$n = 12$, $p = 5$ case of Section~\ref{sec:collapse}, reached from a different
+direction.
+
 \subsection{Where it fails, why, and the one line that fixes it}
 \label{sec:collapse}
 
@@ -925,15 +991,24 @@ once the front is large enough that covering it costs more walking than the
 probes it saves, no amount of heuristic effort helps, and the honest
 instrument for deciding is the balance rather than the coverage.
 
-\paragraph{Limitations.}  The hybrid's advantage depends on the walk staying
+\paragraph{Limitations.}  The method has a ceiling near $1.4\times$, and
+Section~\ref{sec:families} derives it from measurement rather than from
+optimism: a seed removes one probe, the enumeration spends $2.6$ to $4.5$
+probes per vector, and the rest go to boxes that turn out empty and that no
+heuristic can remove.  Going past that ceiling would mean attacking the
+emptiness proof, on which Section~\ref{sec:wall} reports four failed attempts.
+
+The advantage also depends on the walk staying
 cheap next to the search, and Section~\ref{sec:collapse} shows where that
 stops: at $|F| = 302$ the walk covers $45\%$ of the front and the margin falls
 to $1.14\times$, with more walking making it worse rather than better.  We
 have no rule that says in advance how much walking an instance deserves; the
 instance-sized first round is a measured heuristic, not a bound.
 
-The instances are drawn from one pseudo-random family
-with $n \leqslant 12$ and $p \leqslant 6$.  The \emph{directions} reported here
+The instances span five families with $n \leqslant 12$ and
+$p \leqslant 6$; within that range the direction is stable while the magnitude
+varies by a factor of two between families, which is itself the honest measure
+of how far a single number should be carried.  The \emph{directions} reported here
 are explained by mechanisms that are themselves measured --- sub-program counts,
 node counts, pivot counts --- but the \emph{magnitudes} are properties of that
 family and should not be read as expected values elsewhere.  A full
