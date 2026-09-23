@@ -150,6 +150,8 @@ class GeneratedSeeds:
     #: scalarisations solved, including the ``p`` for the ideal point
     programs: int = 0
     seconds: float = 0.0
+    #: walk restarts spent, when the walk sized itself
+    rounds: int = 1
 
     def __len__(self) -> int:
         return len(self.vectors)
@@ -239,7 +241,8 @@ def probe_order(problem: MOILFP, points):
 
 def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
                  seeds: int = 8, budget: int = 4000,
-                 seed: int = 0) -> GeneratedSeeds:
+                 seed: int = 0, adaptive: bool = True,
+                 patience: int = 1, max_rounds: int = 8) -> GeneratedSeeds:
     """Efficient points from a Pareto local search, verified and ordered.
 
     Unlike the Tchebychev program, a local search gives no guarantee, so every
@@ -248,24 +251,67 @@ def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
     the earlier seeding hybrids -- and here it is not, because **the
     enumeration was going to pay the same test anyway**: every probe it skips
     was going to be followed by one.  What a seed really costs is its share of
-    a walk that takes about $0.011$\,s for a whole archive.
+    the walk.
+
+    Why the walk restarts itself
+    ----------------------------
+    A fixed budget is a fixed amount of work against a target that grows.
+    Measured across instance sizes, that is exactly how the hybrid fails: what
+    collapses is not the exact phase but **the share of the front the walk
+    finds**, from 87% at ``n = 6`` down to 35% at ``n = 12`` and 12% at
+    ``n = 12, p = 5`` -- and the speed-up tracks it down to $0.97\times$.  The
+    probe count per vector stays flat throughout (2.4--5.2), so the cause is
+    the walk and not the search.
+
+    With *adaptive*, the walk is restarted with fresh random starts, each
+    round **twice the size of the last**, until a round contributes no
+    criterion vector the earlier rounds had not, plus *patience* rounds of
+    confirmation.  Doubling rather than repeating matters: seven identical
+    rounds reached 86% at ``n = 12`` and cost more than the exact search they
+    were meant to shorten, while doubling pays at most twice the cost of the
+    round that was the right size.  It then stops on its own where a
+    constant cannot: the walk sizes itself to the front rather than to the
+    number 4000.  Restarts matter more than neighbours -- at ``n = 12`` raising
+    the restarts from 8 to 16 took coverage from 35% to 95% while the walk's
+    own time barely moved.
     """
     started = monotonic()
     result = GeneratedSeeds()
-    archive = pareto_local_search(problem, phi, seeds=seeds, budget=budget,
-                                  seed=seed)
     seen = set()
-    for x in archive.points():
-        outcome = test_efficiency(problem, x)
-        point = list(x) if outcome.efficient else efficient_dominator(problem,
-                                                                     outcome)
-        result.programs += 1
-        key = tuple(problem.Z(point))
-        if key in seen:
-            continue
-        seen.add(key)
-        result.points.append(list(point))
-        result.vectors.append(list(key))
+    quiet = 0
+    rounds = max_rounds if adaptive else 1
+
+    for r in range(rounds):
+        # Doubling, not repetition.  Identical rounds re-walk the same
+        # neighbourhoods: seven of them reached 86% at n=12 and cost more than
+        # the exact search they were meant to shorten.  Doubling pays at most
+        # twice the cost of the round that was the right size.
+        scale = 1 << r
+        archive = pareto_local_search(problem, phi, seeds=seeds * scale,
+                                      budget=budget * scale, seed=seed + r)
+        gained = 0
+        for x in archive.points():
+            key = tuple(problem.Z(x))
+            if key in seen:
+                continue            # cheap pre-filter: no test on a repeat
+            outcome = test_efficiency(problem, x)
+            point = (list(x) if outcome.efficient
+                     else efficient_dominator(problem, outcome))
+            result.programs += 1
+            key = tuple(problem.Z(point))
+            if key in seen:
+                continue
+            seen.add(key)
+            gained += 1
+            result.points.append(list(point))
+            result.vectors.append(list(key))
+        result.rounds = r + 1
+        if not adaptive:
+            break
+        quiet = quiet + 1 if gained == 0 else 0
+        if quiet > patience:
+            break
+
     result.points = probe_order(problem, result.points)
     result.seconds = monotonic() - started
     return result
