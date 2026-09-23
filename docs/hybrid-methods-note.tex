@@ -70,6 +70,23 @@ machine's noise floor and no number of repeats changes that.  A third, warm
 starting each box from its parent's basis, removes $11\%$ of the simplex
 pivots at an identical box count.
 
+Two results arrived late and are the ones we would keep if only two could be
+kept.  Completing the front to the whole efficient set was dominated by the
+slice scan; \emph{solving} the $p$ slice equations instead of pruning on them,
+which eliminates that many variables before the scan starts, is worth
+$49\times$ in the median and up to $130\times$.  And a Pareto walk that hands
+its verified archive to the front enumeration --- a seed that removes the cost
+of \emph{discovering} a vector rather than the cost of proving one optimal ---
+reaches the whole of $\E$ at $1.31\times$ the pure exact method over 150
+instances, faster on 139 of them.  That hybridization pays where three earlier
+ones did not, for a reason the earlier failures predict: the verification its
+seeds need is a test the enumeration was going to pay anyway.  It also had to
+be ordered the way the search's own probe would meet the points; in archive
+order the same hybrid \emph{loses}.
+Against those, four separate changes that remove a fifth to a quarter of the
+sub-problems buy nothing at all, and we say why rather than leave a fifth
+attempt to someone: in this search the sub-problems that can be removed
+cheaply are the ones that were already cheap.
 The Tchebychev result is the informative one, and it does not say the
 scalarization is weak. As a generator it is strictly stronger than a weighted sum, reaching
 unsupported efficient points no positive weighted sum can reach. It is a poor
@@ -1332,6 +1349,58 @@ always buys only the proof of that.  The one instance in thirty is why the
 proof is worth buying: nothing about the front's own output says which of the
 two cases you are in.
 
+\subsection{Solving the slice equations instead of pruning on them}
+\label{sec:elim}
+
+The scan above keeps all $n$ variables and feeds the $p$ slice equations to a
+depth-first search as ordinary pruning rows.  That is wasteful, and the waste
+is the dominant cost as soon as $n$ grows: profiling the complete enumeration
+at $n \geqslant 9$ put $25$--$30$\,s in the slice scan against under a second
+in the front enumeration, and at $n = 12$ a single slice could not be finished
+inside a two-minute budget.
+
+The equations are \emph{linear}.  So solve them.  Gaussian elimination in exact
+rationals expresses $r$ of the variables as linear functions of the rest;
+substituting them into every row of the model leaves an equivalent system in
+$n - r$ unknowns, and the scan runs on that.  Two rows per eliminated variable
+keep it inside its own box, so its bounds still prune.  At each leaf the
+eliminated variables are rebuilt, and the one condition that is \emph{not}
+linear --- that they come out integer --- is checked there.  An inconsistent
+system settles the slice as empty without any scan at all.
+
+The search space $(ub+1)^{n}$ becomes $(ub+1)^{n-r}$.
+
+\begin{table}[h]
+\centering
+\caption{The slice scan, pruning against eliminating.  Fourteen instances at
+$n = 7 \dots 12$; the same set of points every time.}
+\begin{tabular}{lrrr}
+\toprule
+instance & prune & eliminate & ratio \\
+\midrule
+$n=9$, $p=3$  & $29.71$\,s  & $0.31$\,s & $96.7\times$ \\
+$n=10$, $p=5$ & $119.47$\,s & $0.92$\,s & $129.9\times$ \\
+$n=12$, $p=3$ & $796.84$\,s & $8.34$\,s & $95.5\times$ \\
+\midrule
+median of all fourteen & & & $\mathbf{49.2\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Exactness is untouched: every coefficient is a rational and the elimination is
+exact, so this changes the order of the search and nothing else.  It is also
+the \emph{only} change in this note that ever beat the wall of
+Section~\ref{sec:wall}, and it did so by attacking an exponent rather than a
+count.
+
+\paragraph{A sign error that ran, and returned nothing.}  The first draft had a
+plus where the eliminated variables' contribution must be subtracted.  It ran
+without error, looked like a working optimisation, and returned the
+\emph{empty} set on 179 of 185 slices --- it would have dropped efficient
+points from $\E$ silently.  Only the comparison against the un-eliminated scan
+caught it, which is what that comparison is for, and the test suite keeps it.
+
 \paragraph{What is verified.}  The complete set is checked against exhaustive
 enumeration on two families, one generic and one built to force ties
 ($24$ instances, exact match, $21$ non-singleton slices).
@@ -1340,6 +1409,245 @@ points on non-dominated slices, every one efficient.  The front's own
 representative is checked to lie inside its slice.  And, as everywhere else in
 this note, an exhausted budget returns \texttt{complete = False} rather than a
 set that claims what it did not prove.
+
+\section{Seeding the enumeration from a generator, which does not pay}
+\label{sec:gen}
+
+Section~\ref{sec:tcheb} found the augmented Tchebychev program a strong
+\emph{generator} and a poor \emph{seed}, and blamed the second on its never
+looking at $\Phi$.  Enumerating the front has no $\Phi$ to look at: the target
+is the vectors themselves, so the reason it failed there does not apply.  It is
+also the natural candidate, because its optima are efficient \emph{by
+construction} --- no verification needed, which is what the metaheuristic seed
+pays for.
+
+The arithmetic to check, stated before measuring: seeding $k$ vectors removes
+$k$ probes and $k$ efficiency tests, and costs $p$ programs for the ideal point
+plus one per weight vector.
+
+\begin{table}[h]
+\centering
+\caption{The front enumeration seeded from the Tchebychev generator, against
+the same enumeration unseeded.  120 instances, $n = 5 \dots 7$, $p = 3, 4$;
+identical fronts throughout.}
+\begin{tabular}{llrrr}
+\toprule
+instance & grid & seeded & programs & time \\
+\midrule
+$n=5$, $p=3$ & narrow & $75\%$ of front  & $1.06\times$ & $1.44\times$ \\
+$n=5$, $p=3$ & wide   & $\mathbf{100\%}$ & $1.48\times$ & $\mathbf{2.61\times}$ \\
+$n=6$, $p=4$ & wide   & $71\%$           & $1.21\times$ & $1.80\times$ \\
+$n=7$, $p=3$ & narrow & $38\%$           & $1.03\times$ & $1.16\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Every ratio is the wrong way, and the decisive row is the second: the wide grid
+seeds \textbf{the entire front} and is the \emph{worst} of the eight
+configurations.  More seeding is more loss, which is not what a useful seed
+does.
+
+The reason is structural.  Seeding $k$ distinct vectors saves at most $k$
+probes and costs at least $k$ scalarisations, plus $p$ for the ideal point,
+plus one for every weight that lands on a vector already seen.  And a
+scalarisation is not cheaper than a probe:
+
+\begin{table}[h]
+\centering
+\caption{One probe against one scalarisation, on identical instances.}
+\begin{tabular}{lrr}
+\toprule
+ & time & b\&b nodes \\
+\midrule
+one probe         & $9.48$\,ms  & $0$ \\
+one scalarisation & $20.90$\,ms & $21$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The probe maximises a linear direction over $\Dset$ plus a few ordinary rows
+and usually needs no branching at all; the scalarisation minimises a
+\emph{maximum}, which costs a continuous variable and $p$ extra rows, and it
+branches.  It is cheaper than a probe on only 7 of 40 instances.  Even
+crediting the seed with the $7.68$\,ms efficiency test it also removes ---
+$17.2$\,ms saved against $20.9$\,ms spent --- a single seed is already a losing
+trade before the ideal point and the duplicate weights are counted.
+
+\paragraph{And the saving is not guaranteed either.}  Seeding was expected to
+remove exactly one probe per seed, and in the median it does: $+1.00$ over 152
+instances.  But the pre-split imposes a box structure the search would not have
+chosen, and on \textbf{5 of those 152} the seeded run spent \emph{more} probes,
+up to four more.  That observation is what Section~\ref{sec:order} turns into a
+fix.
+
+\section{The hybridization that pays: a walk that seeds the enumeration}
+\label{sec:hybridfront}
+
+Until this section nothing in this note was both \emph{hybrid} and
+\emph{complete}.  $\E$ was reached by a purely exact method; every
+hybridization had been attached to the optimisation search, and the one
+attached to the enumeration --- a Tchebychev generator, Section~\ref{sec:gen}
+--- lost.  That gap was real, and this closes it.
+
+\subsection{Why a seed is worth something here at all}
+
+A seed for the optimisation search feeds one mechanism: the \emph{bound}.  A
+search that already knows a good value prunes boxes whose bound cannot beat it.
+The front enumeration \textbf{has no bound and no incumbent} --- it must
+exhaust every box --- so a seed of that kind is worth exactly nothing.
+
+What it does have is a different mechanism.  Every box costs one probe, one
+efficiency test and sometimes a repair, all spent to find \emph{a vector}; a
+vector already known needs none of them.  Seeding here is not ``start from a
+better value'' but ``do not pay to discover what you already know''.
+Soundness is unchanged, because a seed enters the box list exactly where a
+found point would have: the split around it is the same split, and
+Proposition~\ref{prop:front} applies verbatim.
+
+\subsection{Why the archive pays where the scalarisation did not}
+
+Two things separate them, and both are measured.
+
+\paragraph{Cost per vector.}  A Tchebychev scalarisation costs $20.90$\,ms and
+buys one point; a Pareto walk costs about $0.011$\,s and buys a whole archive,
+covering \textbf{95\% of the front} in the median.
+
+\paragraph{The verification is free here, and only here.}  The walk proves
+nothing, so every archive member has to be put through the exact efficiency
+test --- and that verification was the cost that sank the metaheuristic seed
+in Section~\ref{sec:meta}.  Here it is not a cost at all, because \textbf{the
+enumeration was going to pay the same test anyway}: every probe the seed
+removes was going to be followed by one.  The verification cancels and the
+probe is the gain.  The Tchebychev generator has the opposite profile --- its
+points need no verification, and it has no cheap way to produce them.
+
+\subsection{The order is the whole difference}
+\label{sec:order}
+
+Handed over in archive order the hybrid \emph{lost}, at $0.81\times$, and the
+probe count went \emph{up} on 4 of 12 instances: the pre-split was building a
+box structure the search would not have chosen.  The probe maximises a fixed
+linear direction, so the search splits first around whatever scores highest on
+it.  Sorting the seeds by that same direction reproduces that structure
+instead of fighting it.
+
+\begin{table}[h]
+\centering
+\caption{Probes against the unseeded search, by the order the seeds are handed
+over.}
+\begin{tabular}{lrr}
+\toprule
+order & probes & raised the count on \\
+\midrule
+archive order        & $0.89\times$ & 4 of 12 \\
+\textbf{probe order} & $\mathbf{0.70\times}$ & \textbf{none} \\
+reversed             & $0.94\times$ & 5 of 12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The reversed arm is what makes the direction causal rather than a coincidence.
+\textbf{A $1.33\times$ win was sitting behind a sort.}
+
+\subsection{What it is worth, on 150 instances}
+
+\begin{table}[h]
+\centering
+\caption{The hybrid against the pure exact methods, thirty instances at each of
+five configurations, $n = 6 \dots 9$.  Medians of per-instance ratios, with the
+interquartile range.}
+\label{tab:hybridfront}
+\begin{tabular}{lrrr}
+\toprule
+ & median & IQR & faster on \\
+\midrule
+front enumeration & $1.33\times$ & $[1.20,\ 1.51]$ & $139/150$ \\
+$\E$ complete     & $\mathbf{1.31\times}$ & $[1.17,\ 1.47]$ & $139/150$ \\
+probes            & $0.72\times$ & $[0.67,\ 0.75]$ & \emph{never worse} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The answer is identical on every one of the 150 --- the same front, the same
+$\E$, the same optimum of $(P_E)$ --- which the campaign asserts rather than
+assumes.  The heuristic decides only how much of the front has to be
+discovered.
+
+This is the fourth hybridization in this note and the first to pay outside the
+optimisation search.  The rule the other three established survives it intact,
+with the second half now doing the work: \emph{a hybridization pays only where
+the exact method has a mechanism the first phase can feed \textbf{more cheaply
+than the exact method feeds it itself}}.
+
+\section{A wall met four times, and the one change that went round it}
+\label{sec:wall}
+
+Four separate changes in this note remove between a fifth and a quarter of the
+sub-problems and buy nothing.
+
+\begin{table}[h]
+\centering
+\caption{Four attempts on the sub-problem count.}
+\begin{tabular}{lrr}
+\toprule
+change & sub-problems removed & cost \\
+\midrule
+early exit on a hopeless bound      & $25\%$        & no measurable time \\
+free contradiction filter           & $24.8\%$      & $0.98\times$ pivots \\
+range filter (ideal + anti-ideal)   & $+11.3\%$     & $1.03\times$ pivots \\
+dominated-whole filter              & $8$--$23\%$   & $1.077\times$ pivots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Only the second is kept, and it is worth $2\%$.  The reason is the same every
+time, and after four it is a property rather than an accident:
+
+\begin{quote}
+\textbf{In this search, removing sub-problems does not remove time, because
+the ones that can be removed cheaply are the ones that were already cheap.}
+\end{quote}
+
+An empty box --- and $73\%$ of them are empty --- is refuted by the simplex
+almost at once: every probe in the families measured here costs \emph{zero}
+branch \& bound nodes, because the relaxation is integral or infeasible at the
+root.  A filter that catches empty boxes is therefore catching the cheapest
+work in the search.
+
+The only change that ever went round this wall is Section~\ref{sec:elim}: it
+attacks an \emph{exponent} rather than a count, and it is worth $49\times$.
+We state the wall plainly because the fifth attempt is not worth anyone's
+afternoon.
+
+\subsection{And the same wall on the proof, not only the search}
+\label{sec:cert}
+
+One more attempt deserves its own paragraph, because it tests something wider
+than an optimisation.  After the walk seeds $95\%$ of the front, $93\%$ of the
+remaining boxes are empty and the enumeration is almost purely a \emph{proof of
+emptiness}.  But ``is there a feasible point not dominated by any of the $k$
+known ones?'' is \textbf{one} question, and the box list answers it by
+splitting it into hundreds.  Sylva--Crema answers it in one integer program:
+$k$ cuts, built once and never iterated --- which removes the growth that made
+that formulation expensive in Section~\ref{sec:cost}.
+
+It is sound: 13 of 30 instances were proved complete by a single program, with
+no wrong verdict.  It is also $4.5\times$ slower in the median and
+$100\times$ slower at worst ($239$\,s against $1.95$\,s), because $k$ cuts mean
+$kp$ binaries in one model --- $88$ of them at $k = 22$, $p = 4$.
+
+That closes a question this note had left open.  The claim so far was that
+criterion space is the better \emph{search}, because the model never grows.
+The certificate tests whether it is also the better \emph{proof}, where there
+is no iteration and no growth at all.  \textbf{It is, by $4.5\times$}:
+answering $1363$ cheap questions beats answering one question with $88$
+binaries.  The box decomposition is not only a better search; it is a better
+proof.
 
 \section{Three measurement lessons, and what they cost}
 
@@ -1408,12 +1716,17 @@ warm-starting a box from its parent  & \textbf{win} & 11\% fewer pivots, same se
 cutting on a remembered efficient point & \textbf{win} & 10\% fewer pivots, 15 fewer boxes \\
 zero-objective probe (a baseline check) & \textbf{loss} & $4$--$13\times$ slower, same cuts \\
 slices instead of an efficiency test    & \textbf{win} & the whole of $\E$, under $2\times$ \\
+eliminating the slice variables        & \textbf{win} & $49\times$ median, up to $130\times$ \\
+Tchebychev seeding the enumeration     & \textbf{loss} & worse the more it seeds \\
+\textbf{Pareto walk seeding the enumeration} & \textbf{win} & $\mathbf{1.31\times}$ to all of $\E$ \\
+free box filters (three of them)       & partial      & $2\%$, then two losses \\
+one-program completeness certificate   & \textbf{loss} & $4.5\times$ slower, sound \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Of the fourteen, seven are wins, five are losses, one is a tie and one pays
+Of the nineteen, nine are wins, eight are losses, one is a tie and two pay
 in sub-problems but not in time. They are reported at the same length as the wins
 because they carry the same information: a hybridization pays only where the
 exact method has a mechanism the first phase can feed, that mechanism is
@@ -1442,7 +1755,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 80 tests. Several check
+exact rational arithmetic throughout, and carries 92 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 

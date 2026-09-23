@@ -259,6 +259,23 @@ def main():
         [("$|F|\\,1$--$4$", [2.7]), ("$|F|\\,5$--$12$", [7.5]),
          ("$|F|\\,13+$", [31.4])],
         "median ratio", colors=["green!45!black"], scale=32))
+    # the hybrid that pays, and the order it needed
+    write("r-hybrid", bars(
+        [("front", [1.33]), ("$E(P_D)$", [1.31]), ("probes", [0.72])],
+        "ratio", colors=["green!45!black"], scale=1.5))
+    write("r-order", bars(
+        [("archive", [0.89]), ("probe order", [0.70]), ("reversed", [0.94])],
+        "probes", colors=["orange!80!black"], scale=1.0))
+    # four attempts on the sub-problem count, and the one that went round it
+    # Three of the four COST time; a bar chart cannot draw a negative saving,
+    # so they are drawn at zero and the caption says so. The point is the gap
+    # between the two series, which is the whole finding.
+    write("r-wall", bars(
+        [("early exit", [25, 0]), ("contradiction", [24.8, 2]),
+         ("range", [11.3, 0]), ("dominated", [15, 0])],
+        "\\% removed / saved", scale=26))
+    write("r-wall-legend", legend([("sub-problems removed", "blue!55!black"),
+                                   ("time saved", "orange!80!black")]))
     print("figures written to", OUT)
 
 

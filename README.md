@@ -306,7 +306,7 @@ do occur, the front alone silently returns a fraction of the answer.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 80 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 92 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -664,6 +664,122 @@ efficient points at once, taking the heaviest instance from 11 step-1 solves to
 8 (27.1 s → 15.7 s). It is **off by default**, because on instances that were
 never hard it only grows the model — the notes carry the losses alongside the
 win.
+
+## The hybrid that reaches all of `E(P_D)` — and the three that don't
+
+Everything above reaches `E(P_D)` by a **purely exact** method. Every
+hybridisation so far was hung on the *optimisation* search, where a seed feeds
+the **bound**. The front enumeration has no bound and no incumbent — it must
+exhaust every box — so a seed of that kind is worth exactly nothing there.
+
+It has a different mechanism: every box costs a probe, an efficiency test and
+sometimes a repair, all to find *a vector*, and a vector already known needs
+none of them. Seeding here is not "start from a better value" but **"don't pay
+to discover what you already know"**.
+
+```python
+from lfp_efficient import hybrid_complete_set
+
+result = hybrid_complete_set(problem, phi)
+print(result.report())        # same E(P_D), same optimum, ~1.31x faster
+```
+
+| | median | IQR | faster on |
+|---|---:|---:|---:|
+| front enumeration | 1.33× | [1.20, 1.51] | 139/150 |
+| **`E(P_D)` complete** | **1.31×** | [1.17, 1.47] | 139/150 |
+| probes | 0.72× | [0.67, 0.75] | *never worse* |
+
+Thirty instances at each of five configurations. **Identical answers on all
+150** — same front, same `E(P_D)`, same optimum — asserted, not assumed. The
+heuristic decides only how much of the front has to be *discovered*.
+
+**Why the walk pays where the generator didn't.** A Tchebychev scalarisation
+costs 20.90 ms and buys one point; a Pareto walk costs 0.011 s and buys a whole
+archive covering **95% of the front**. The walk's points need verification and
+Tchebychev's don't — and that verification is **not a cost here**, because the
+enumeration was going to pay the same efficiency test on every probe the seed
+removes. It cancels; the probe is the gain.
+
+Seeding from the generator instead is *worse the more of the front it seeds*:
+with a wide weight grid it covers 100% and runs at **2.61×** the unseeded time.
+One probe is 9.48 ms and 0 b&b nodes; one scalarisation is 20.90 ms and 21
+nodes, cheaper on only 7 of 40.
+
+**And a 1.33× win was sitting behind a sort.** In archive order the hybrid
+*lost* at 0.81×, with the probe count *rising* on 4 of 12 instances — the
+pre-split was building a box structure the search would not have chosen:
+
+| seed order | probes | raised the count on |
+|---|---:|---:|
+| archive order | 0.89× | 4 of 12 |
+| **probe order** | **0.70×** | **none** |
+| reversed | 0.94× | 5 of 12 |
+
+The reversed arm is what makes the direction causal rather than a coincidence.
+
+## Solving the slice equations: the largest gain in the package
+
+Completing the front to `E(P_D)` was dominated by the slice scan — 25–30 s
+against under a second for the front at `n ≥ 9`, and at `n = 12` a slice could
+not finish inside two minutes.
+
+The `p` slice equations are **linear**, so solve them. Gaussian elimination in
+exact rationals expresses `r` variables as functions of the rest; substituting
+them into every model row leaves an equivalent system in `n − r` unknowns. The
+search space `(ub+1)^n` becomes `(ub+1)^(n−r)`.
+
+| instance | prune | eliminate | ratio |
+|---|---:|---:|---:|
+| `n=9, p=3` | 29.71 s | 0.31 s | 96.7× |
+| `n=10, p=5` | 119.47 s | 0.92 s | 129.9× |
+| **`n=12, p=3`** | **796.84 s** | **8.34 s** | 95.5× |
+| *median of all fourteen* | | | **49.2×** |
+
+Exactness is untouched — every coefficient is a `Fraction` — so this changes
+the order of the search and nothing else.
+
+*A sign error that ran, and returned nothing.* The first draft put a plus where
+the eliminated variables' contribution must be **subtracted**. It ran without
+error, looked like a working optimisation, and returned the **empty set on 179
+of 185 slices** — silently dropping efficient points. Only the comparison
+against the un-eliminated scan caught it, which is what that comparison is for.
+
+## A wall met four times
+
+Four separate changes remove a fifth to a quarter of the sub-problems and buy
+nothing:
+
+| change | sub-problems removed | cost |
+|---|---:|---:|
+| early exit on a hopeless bound | 25% | no measurable time |
+| free contradiction filter | 24.8% | 0.98× pivots |
+| range filter | +11.3% | 1.03× pivots |
+| dominated-whole filter | 8–23% | 1.077× pivots |
+
+> **In this search, removing sub-problems does not remove time, because the
+> ones that can be removed cheaply are the ones that were already cheap.**
+
+An empty box — and **73% of them are** — is refuted by the simplex almost at
+once: every probe in these families costs **zero** branch & bound nodes,
+because the relaxation is integral or infeasible at the root. The only change
+that ever went round this wall attacked an **exponent** rather than a count,
+and is the 49× above. We state the wall plainly so the fifth attempt isn't
+worth anyone's afternoon.
+
+**The same wall on the *proof*, not just the search.** After the walk seeds 95%
+of the front, 93% of the remaining boxes are empty and the enumeration is
+almost purely a proof of emptiness. "Is there a feasible point not dominated by
+any of the `k` known ones?" is **one** question, and Sylva–Crema answers it in
+one integer program built once — no iteration, no growth. It's sound: 13 of 30
+instances proved complete by a single program, no wrong verdict. It is also
+**4.5× slower** in the median and 100× at worst (239 s against 1.95 s), because
+`k` cuts mean `k·p` binaries in one model.
+
+That closes a wider question. Criterion space was claimed the better *search*
+because the model never grows; this tests whether it's also the better *proof*,
+where nothing grows at all. **It is, by 4.5×** — answering 1363 cheap questions
+beats answering one with 88 binaries.
 
 ## How the numbers were measured
 
