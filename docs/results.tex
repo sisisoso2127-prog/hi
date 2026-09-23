@@ -37,44 +37,155 @@ where they keep the unexplored part of the problem, and that decides the cost:
 
 \section{The margin, and how it moves with $p$}
 
+Thirty instances per row, $n = 6$.  The statistic is the \textbf{median of the
+per-instance ratios}: a ratio of totals would be decided by the single heaviest
+instance, which is the one thing a small sample gets most wrong.
+
 \begin{table}[h]
 \centering
-\caption{Decision space against criterion space, $n = 6$, four instances per
-row.  All twenty agreed and were proved optimal on both sides.}
-\begin{tabular}{crrr}
+\caption{Decision space against criterion space, thirty instances per row.}
+\label{tab:cmargin}
+\begin{tabular}{crrrrr}
 \toprule
-$p$ & decision space & criterion space & ratio \\
+$p$ & decision & criterion & ratio (median) & IQR & max \\
 \midrule
-2 & $0.61$ s   & $0.35$ s & $1.74\times$ \\
-3 & $1.02$ s   & $0.34$ s & $2.99\times$ \\
-4 & $4.21$ s   & $0.61$ s & $6.92\times$ \\
-5 & $112.77$ s & $1.09$ s & $103\times$ \\
-6 & $26.15$ s  & $1.08$ s & $24.3\times$ \\
+2 & $0.07$ s & $0.04$ s & $1.52\times$  & $[1.25,\ 1.91]$   & $6.0\times$ \\
+3 & $0.34$ s & $0.12$ s & $2.69\times$  & $[1.87,\ 3.72]$   & $10.1\times$ \\
+4 & $0.50$ s & $0.13$ s & $4.99\times$  & $[2.39,\ 11.62]$  & $76.3\times$ \\
+5 & $2.19$ s & $0.25$ s & $7.93\times$  & $[3.61,\ 19.98]$  & $33.8\times$ \\
+6 & $3.67$ s & $0.31$ s & $14.57\times$ & $[7.90,\ 25.17]$  & $65.7\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{center}
-\fig{r-margin}\\[2pt]
-\fig{r-margin-legend}
+\fig{r-campaign-margin}
 \end{center}
+
 \noindent
-\emph{The bars are clipped at 30\,s so the small $p$ stay visible; the $p=5$
-decision-space bar runs off the top at $112.77$\,s.}
+Three of the 150 runs were stopped by a $45$ s budget --- one at $p=5$, two at
+$p=6$ --- and are excluded rather than counted as their budget.  That censoring
+is \emph{one-sided}: it can only make the decision-space method look better, so
+every margin here is conservative.  Every instance that finished gave the same
+optimum on both sides.
 
-Two forces grow with $p$ and pull against each other.  The split produces $p$
-children, so the list branches wider; but the non-dominated set grows too, so
-the decision-space method needs more cuts, and each cut costs it $p$ binaries
-and $p+1$ rows.  The measurement settles which dominates, and it settles it
-against the prediction made before running it: branching multiplies a
-\emph{count} of cheap, fixed-size models, while the binaries multiply the
-\emph{cost of one model}, and they accumulate.
+\paragraph{An earlier table said the curve turned over.  It does not.}  Four
+instances per $p$ gave $1.74$, $2.99$, $6.92$, $103$ and $24.3$, and the text
+went on to explain the turn between $p=5$ and $p=6$.  There was nothing to
+explain: that $103\times$ was one instance supplying $110.95$ of $112.77$
+seconds.  With thirty instances the progression is clean and monotone.  The old
+figures were not wrong as measurements --- they are what those four instances
+did --- but they were quoted as a trend, and four runs cannot carry one.
 
-\paragraph{On the magnitudes.}  The direction is solid --- the per-$p$ median
-ratios are $1.35$, $3.2$, $2.1$, $12.6$, $15.8$, and every instance agreed and
-was proved optimal.  The totals are not stable estimates: four instances per
-$p$ is few, and $110.95$ of the $112.77$ seconds at $p = 5$ come from a single
-instance.  The table reports what was measured, not an expected value.
+\section{Where the margin comes from, counted}
+
+Wall-clock cannot resolve a small effect on this machine, so the campaign
+counts the deterministic work as well: sub-programs solved and branch \& bound
+nodes explored, identical on every run and every machine.
+
+\begin{table}[h]
+\centering
+\caption{Ratios of decision space over criterion space, same thirty instances
+per row.}
+\begin{tabular}{crrr}
+\toprule
+$p$ & sub-programs & b\&b nodes & time \\
+\midrule
+2 & $1.72\times$ & $1.28\times$ & $1.52\times$ \\
+3 & $1.40\times$ & $1.79\times$ & $2.69\times$ \\
+4 & $1.19\times$ & $2.68\times$ & $4.99\times$ \\
+5 & $1.17\times$ & $3.16\times$ & $7.93\times$ \\
+6 & $\mathbf{1.02\times}$ & $\mathbf{5.37\times}$ & $\mathbf{14.57\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-campaign-work}\\[2pt]
+\fig{r-campaign-work-legend}
+\end{center}
+
+\noindent
+\textbf{This is the whole cost model, read off the measurement.}  At $p=6$ the
+two methods solve \emph{the same number of sub-programs} --- $1.02\times$, down
+steadily from $1.72\times$ at $p=2$ --- and one still takes $14.57\times$ as
+long.  The entire margin has moved into the cost of \emph{one} sub-problem:
+the branch \& bound inside it explores $5.37\times$ the nodes, because by then
+it carries $p$ binaries and $p+1$ big-$M$ rows per cut while the box search
+carries none.  The branching that was supposed to work against the box list
+wins the sub-program count at small $p$ and gives it back as $p$ grows; the
+other term compounds.
+
+\section{Is the margin real, or is the baseline handicapped?}
+
+A $103\times$ margin --- and a $204\times$ one on front enumeration --- invites
+the suspicion that the loser was crippled rather than beaten, so the losing
+method was profiled instead of merely quoted.
+
+\paragraph{Where the time goes.}  On the instance that takes $137$ s to produce
+a 30-vector front in decision space:
+
+\begin{table}[h]
+\centering
+\caption{Profile of the decision-space enumeration, $137.38$ s in total.}
+\begin{tabular}{lrrr}
+\toprule
+ & time & share & calls \\
+\midrule
+probe (the integer program) & $137.21$\,s & $\mathbf{100\%}$ & $31$ \\
+repair to an efficient point & $0.09$\,s & $0\%$ & $30$ \\
+building and adding the cut & $0.02$\,s & $0\%$ & $30$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Over those 31 calls, branch \& bound explores $14983$ nodes, and the model
+grows from $5$ columns and $7$ rows to $95$ and $127$ --- exactly $p$ binaries
+and $p+1$ rows per cut.  Nothing outside the sub-problems is worth optimising,
+and the growth of the sub-problems is precisely what the criterion-space method
+does not have.  \textbf{The cost is structural.}
+
+\paragraph{The one candidate handicap, tested.}  The probe only needs
+\emph{some} feasible point of the truncated region, yet it maximises a linear
+direction.  Dropping the objective looks strictly cheaper --- stop at the first
+integer point found.  Measured, it is four to thirteen times \emph{worse}:
+
+\begin{table}[h]
+\centering
+\caption{Probing by maximising a direction against probing with a zero
+objective.  Same instances, same cuts.}
+\begin{tabular}{lrrr}
+\toprule
+ & cuts & b\&b nodes & time \\
+\midrule
+$n=4$, maximise a direction & $9$ & $658$  & $\mathbf{1.35}$\,s \\
+$n=4$, zero objective       & $9$ & $1397$ & $5.33$\,s \\
+$n=5$, maximise a direction & $9$ & $372$  & $\mathbf{0.79}$\,s \\
+$n=5$, zero objective       & $9$ & $2105$ & $10.15$\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-probe-cuts}\\[6pt]
+\fig{r-probe-nodes}\\[2pt]
+\fig{r-probe-legend}
+\end{center}
+
+\noindent
+The two charts are the whole finding: the top one is flat and the bottom one is
+not.  \textbf{The cut counts are identical} --- the direction changes neither
+how many vectors there are nor the order they come out in --- while the branch
+\& bound inside each probe grows by a factor of two to six.  A zero objective
+gives it nothing to prune with: every node's relaxation is worth $0$, so no
+bound can discard a subtree until an integer point has been stumbled upon.
+
+So the direction is load-bearing rather than decorative, the criterion-space
+method uses the same one, and the margins stand.  This is reported at length
+because it is a plausible-looking optimisation that makes things much worse,
+and because it was checked while \emph{suspecting the comparison was unfair} ---
+which is the only time such a check is worth anything.
 
 \section{Four improvements to the exact search}
 
@@ -175,6 +286,44 @@ Its quality is the real finding: the program steers by criterion-space geometry
 relative to $z^{*}$ and \textbf{never looks at $\Phi$}, while the local search
 is guided by $\Phi$ at every move.
 
+\paragraph{Thirty paired instances, and one verdict softens.}  Eighteen
+instances quoted as a total has the same flaw as the margin table above, so the
+campaign re-ran it paired: each of thirty instances at $n=6$, $p=4$ is solved
+three times, and the statistic is the median of the per-instance speed-ups.
+
+\begin{table}[h]
+\centering
+\caption{What a seed is worth, thirty paired instances.  The gap is
+$(\Phi^{*}-\Phi(\text{seed}))/|\Phi^{*}|$, zero exactly when the seed is
+optimal.}
+\begin{tabular}{lrrrr}
+\toprule
+seed & speed-up (median) & IQR & seed gap & exactly optimal \\
+\midrule
+Pareto archive & $1.10\times$ & $[1.02,\ 1.27]$ & $0.000$ & $24/30$ \\
+Tchebychev     & $1.02\times$ & $[1.00,\ 1.09]$ & $0.170$ & $8/30$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The \emph{ordering} is what every sample has said and is the part that holds:
+the Pareto seed is worth something, the Tchebychev seed is not.  Two things
+change, and both are corrections.
+
+The Pareto seed is worth \textbf{less} than the $1.21\times$ above: a median of
+$1.10\times$, with a first quartile of $1.02\times$, so half the instances gain
+three percent or less.  The win is real --- both quartiles sit above $1$ and
+the seed is exactly optimal on $24$ of $30$ --- but it is small, and the worst
+instance runs at $0.618\times$, a genuine loss, because the verification is
+paid whether or not the bound can use it.
+
+And the Tchebychev seed \textbf{does not lose here; it does nothing}: not
+$0.71\times$ but $1.02\times$, IQR $[1.00,\ 1.09]$ --- a wash.  The verdict
+that survives both samples is the weaker one, \emph{it never pays}.  What is
+stable is the quality figure that explains it: a median gap of $0.170$ against
+$0.000$, and $8$ of $30$ exactly optimal against $24$ of $30$.
+
 \subsection{But as a generator it is the stronger of the two}
 
 A weighted sum maximises only at \emph{supported} efficient points.  Varying
@@ -259,20 +408,494 @@ incumbent arrives early enough that the hopeless tail barely forms.  Two ideas
 add only when they feed different mechanisms; two that feed the same one are
 one idea, measured twice.
 
+\section{Enumerating the whole front, and what the margin tracks}
+
+The same substitution works on complete enumeration of the non-dominated set,
+and there the mechanism is visible directly: \textbf{every vector is a cut}, so
+in decision space a larger front means more binaries and more big-$M$ rows on
+every sub-problem that follows, while the box list never grows.  The campaign
+swept the constraint tightness on purpose to move $|F|$ --- fifteen instances
+at each of three tightnesses, $n=5$, $p=3$, nothing censored, the same vectors
+returned on both sides every time.
+
+\begin{table}[h]
+\centering
+\caption{The front-enumeration margin against the size of the front, forty-five
+instances.}
+\begin{tabular}{lrrrr}
+\toprule
+$|F|$ & instances & ratio (median) & IQR & max \\
+\midrule
+$1$--$4$  & $26$ & $2.7\times$  & $[1.7,\ 3.9]$   & $9.8\times$ \\
+$5$--$12$ & $17$ & $7.5\times$  & $[5.2,\ 16.0]$  & $23.8\times$ \\
+$13+$     & $2$  & $31.4\times$ & $[24.9,\ 38.0]$ & $38.0\times$ \\
+\midrule
+all       & $45$ & $4.1\times$  & $[2.3,\ 7.6]$   & $38.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-campaign-front}
+\end{center}
+
+\noindent
+The margin roughly triples and then quadruples as the front grows: $|F|$
+\emph{is} the number of cuts.  The $13+$ row rests on two instances and is
+quoted as such --- this family at $n=5$ tops out near $|F|=13$.  A separately
+measured instance with $|F| = 30$ reached $204\times$; that is an observed
+extreme, and the typical case on this family is the $4.1\times$ of the last
+row.
+
+\paragraph{One ratio goes the other way.}  Counting branch \& bound nodes,
+criterion space explores about three and a half times \emph{more} of them and
+still finishes four times sooner --- its nodes carry no binary and no big-$M$
+row, so it wins by solving many easy programs instead of few hard ones.  The
+same count in the margin table goes the other way at every $p$, because there
+the two methods solve nearly the same number of sub-programs and the
+decision-space ones are the harder.  Both readings say the same thing: the cost
+lives in the size of a sub-problem.
+
+\section{The complete efficient set, for under one doubling}
+
+The front enumeration proves its \emph{vector} list complete and says, in the
+same breath, that the \emph{point} list is not: one point is kept per slice.
+Closing that gap turns out to be nearly free, for one reason:
+
+\begin{quote}
+If $v$ is non-dominated, \textbf{every} $x \in \Dset$ with $\Z(x) = v$ is
+efficient --- a $y$ dominating such an $x$ would give $\Z(y) \geqslant v$ with
+a strict inequality, making $v$ dominated.
+\end{quote}
+
+\noindent
+So $\E$ is exactly the union of the front's slices, and \textbf{no efficiency
+test is paid on any slice point}: the dearest operation in the package is not
+invoked at all.  A slice is $\Dset$ plus $p$ linear equalities --- linear even
+for fractional criteria, since $d^{\top}x + b > 0$ clears the ratio --- so
+there is no binary, no big-$M$, and no growth from one slice to the next.
+
+Below, five variables enter $\Z$ and $f$ further ones enter only their own
+bound $0 \leqslant x_j \leqslant 4$: invisible to $\Z$, so each slice is a grid
+of $5^{f}$ points that the front collapses to one.
+
+\begin{table}[h]
+\centering
+\caption{What the slices recover, and what they cost.}
+\begin{tabular}{rrrrrr}
+\toprule
+$f$ & $|$front$|$ & $|\E|$ & ratio & slices & extra time \\
+\midrule
+0 &  7 &     7 & $1\times$   & $0.016$\,s & $24\%$ \\
+0 & 13 &    13 & $1\times$   & $0.018$\,s & $10\%$ \\
+1 &  7 &    35 & $5\times$   & $0.019$\,s & $27\%$ \\
+1 & 13 &    65 & $5\times$   & $0.024$\,s & $13\%$ \\
+2 &  7 &   175 & $25\times$  & $0.036$\,s & $42\%$ \\
+2 & 13 &   325 & $25\times$  & $0.050$\,s & $24\%$ \\
+3 &  7 &   875 & $125\times$ & $0.103$\,s & $90\%$ \\
+3 & 13 &  1625 & $125\times$ & $0.167$\,s & $68\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-complete-gain}\\[6pt]
+\fig{r-complete-cost}\\[2pt]
+\fig{r-complete-legend}
+\end{center}
+
+\noindent
+The two charts are the finding: what is recovered multiplies by five at each
+step, and the extra time does not.  At $f = 3$ the front is \emph{complete and
+missing $99.2\%$ of the points}, and recovering all $1625$ of them never
+doubles the cost.  The scan is output-sensitive --- about $0.1$\,ms per point,
+against $7.68$\,ms for a single efficiency test, of which none are paid.
+
+\paragraph{The honest reading, which is conditional.}  At $f = 0$ the front
+\emph{already was} the efficient set, and the $10$--$24\%$ buys only the proof
+of that --- the usual case on generic instances, where $476$ efficient points
+sat on $476$ distinct vectors over $32$ of them.  This is not a speed-up and it
+is not uniform.  What it buys is that the method now \emph{knows} which case it
+is in, rather than returning a point list whose completeness rested on an
+assumption about the coefficients.
+
+\section{The hybridisation that pays, and the three that did not}
+
+Nothing above was both \emph{hybrid} and \emph{complete}: $\E$ was reached by a
+purely exact method, and every hybridisation had been hung on the optimisation
+search, where a seed feeds the \emph{bound}.  The front enumeration has no
+bound and no incumbent --- it must exhaust every box --- so a seed of that kind
+is worth nothing there.
+
+It has a different mechanism.  Every box costs a probe, an efficiency test and
+sometimes a repair, all spent to find \emph{a vector}; a vector already known
+needs none of them.  Seeding here is not ``start from a better value'' but
+``do not pay to discover what you already know''.
+
+\subsection{First attempt: a generator.  It loses.}
+
+The augmented Tchebychev program is the natural candidate --- its optima are
+efficient by construction, so they need no verification.  Over 120 instances it
+is \emph{worse the more of the front it seeds}: with a wide weight grid it
+covers $100\%$ of the front and runs at $2.61\times$ the unseeded time.
+
+The reason is one measurement: a scalarisation is not cheaper than the probe it
+replaces.
+
+\begin{table}[h]
+\centering
+\caption{One probe against one scalarisation, identical instances.}
+\begin{tabular}{lrr}
+\toprule
+ & time & b\&b nodes \\
+\midrule
+one probe         & $9.48$\,ms  & $0$ \\
+one scalarisation & $20.90$\,ms & $21$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Cheaper on only 7 of 40.  Seeding $k$ vectors saves at most $k$ probes and
+costs at least $k$ scalarisations plus $p$ for the ideal point --- a losing
+trade before the duplicate weights are counted.
+
+\subsection{Second attempt: a walk.  It pays --- once it is sorted.}
+
+A Pareto local search is different in kind: one walk of about $0.011$\,s yields
+a whole archive covering $95\%$ of the front.  Its points need verification,
+and that verification is \textbf{not} a cost here --- the enumeration was going
+to pay the same efficiency test on every probe the seed removes.  It cancels,
+and the probe is the gain.
+
+But handed over in archive order the hybrid \emph{lost}, at $0.81\times$, with
+the probe count \emph{rising} on 4 of 12 instances: the pre-split was building
+a box structure the search would not have chosen.  Sorting the seeds by the
+direction the probe itself maximises reproduces that structure instead.
+
+\begin{center}
+\fig{r-order}
+\end{center}
+
+\begin{table}[h]
+\centering
+\caption{Probes against the unseeded search, by the order the seeds arrive.}
+\begin{tabular}{lrr}
+\toprule
+order & probes & raised the count on \\
+\midrule
+archive order        & $0.89\times$ & 4 of 12 \\
+\textbf{probe order} & $\mathbf{0.70\times}$ & \textbf{none} \\
+reversed             & $0.94\times$ & 5 of 12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The reversed arm makes the direction causal rather than a coincidence.
+\textbf{A $1.33\times$ win was sitting behind a sort.}
+
+\begin{table}[h]
+\centering
+\caption{The hybrid against the pure exact methods.  Thirty instances at each
+of five configurations, $n = 6 \dots 9$; medians of per-instance ratios.}
+\begin{tabular}{lrrr}
+\toprule
+ & median & IQR & faster on \\
+\midrule
+front enumeration & $1.33\times$ & $[1.20,\ 1.51]$ & $139/150$ \\
+$\E$ complete     & $\mathbf{1.31\times}$ & $[1.17,\ 1.47]$ & $139/150$ \\
+probes            & $0.72\times$ & $[0.67,\ 0.75]$ & \emph{never worse} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-hybrid}
+\end{center}
+
+\noindent
+Identical answers on all 150 --- same front, same $\E$, same optimum --- which
+the campaign asserts rather than assumes.  The heuristic decides only how much
+of the front has to be discovered.
+
+\section{Solving the slice equations: the largest gain here}
+
+Completing the front to $\E$ was dominated by the slice scan: at $n \geqslant 9$
+it took $25$--$30$\,s against under a second for the front, and at $n = 12$ a
+slice could not finish inside two minutes.
+
+The $p$ slice equations are \emph{linear}, so solve them.  Gaussian elimination
+in exact rationals expresses $r$ variables as functions of the rest;
+substituting them into every model row leaves an equivalent system in $n - r$
+unknowns.  The search space $(ub+1)^{n}$ becomes $(ub+1)^{n-r}$.
+
+\begin{table}[h]
+\centering
+\caption{Pruning on the slice equations against solving them.  Fourteen
+instances, $n = 7 \dots 12$, the same points every time.}
+\begin{tabular}{lrrr}
+\toprule
+instance & prune & eliminate & ratio \\
+\midrule
+$n=9$, $p=3$  & $29.71$\,s  & $0.31$\,s & $96.7\times$ \\
+$n=10$, $p=5$ & $119.47$\,s & $0.92$\,s & $129.9\times$ \\
+$n=12$, $p=3$ & $796.84$\,s & $8.34$\,s & $95.5\times$ \\
+\midrule
+median of all fourteen & & & $\mathbf{49.2\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{A sign error that ran, and returned nothing.}  The first draft put a
+plus where the eliminated variables' contribution must be subtracted.  It ran
+without error, looked like a working optimisation, and returned the
+\emph{empty} set on 179 of 185 slices --- silently dropping efficient points.
+Only the comparison against the un-eliminated scan caught it.
+
+\section{A wall met four times}
+
+Four separate changes remove between a fifth and a quarter of the sub-problems
+and buy nothing.
+
+\begin{table}[h]
+\centering
+\caption{Four attempts on the sub-problem count.}
+\begin{tabular}{lrr}
+\toprule
+change & sub-problems removed & cost \\
+\midrule
+early exit on a hopeless bound    & $25\%$       & no measurable time \\
+free contradiction filter         & $24.8\%$     & $0.98\times$ pivots \\
+range filter                      & $+11.3\%$    & $1.03\times$ pivots \\
+dominated-whole filter            & $8$--$23\%$  & $1.077\times$ pivots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-wall}\\[2pt]
+\fig{r-wall-legend}
+\end{center}
+\noindent
+\emph{Three of the four cost time rather than saving it; a bar cannot be drawn
+negative, so they sit at zero.  The gap between the two series is the finding.}
+
+\begin{quote}
+\textbf{In this search, removing sub-problems does not remove time, because the
+ones that can be removed cheaply are the ones that were already cheap.}
+\end{quote}
+
+\noindent
+An empty box --- and $73\%$ of them are --- is refuted by the simplex almost at
+once: every probe in these families costs \emph{zero} branch \& bound nodes,
+because the relaxation is integral or infeasible at the root.  A filter that
+catches empty boxes catches the cheapest work in the search.  The only change
+that went round this wall attacked an \emph{exponent} rather than a count, and
+is the $49\times$ above.
+
+\paragraph{The same wall on the proof.}  After the walk seeds $95\%$ of the
+front, $93\%$ of the remaining boxes are empty and the enumeration is almost
+purely a \emph{proof of emptiness}.  ``Is there a feasible point not dominated
+by any of the $k$ known ones?'' is \textbf{one} question, and Sylva--Crema
+answers it in one integer program built once, with no iteration and no growth.
+It is sound --- 13 of 30 instances proved complete by a single program, no
+wrong verdict --- and $4.5\times$ slower in the median, $100\times$ at worst
+($239$\,s against $1.95$\,s), because $k$ cuts mean $kp$ binaries in one model.
+
+That answers a question wider than the optimisation.  Criterion space was
+claimed to be the better \emph{search} because the model never grows; this
+tests whether it is also the better \emph{proof}, where nothing grows at all.
+\textbf{It is, by $4.5\times$.}
+
+\section{Fractional criteria, where the problem lives}
+
+Every figure so far uses \emph{linear} criteria --- a gap worth naming in a
+package about ratios.  It has a reason: the Tchebychev comparison needs them,
+since $z^{*}_k - \Z_k(x)$ is not linear when $\Z_k$ is a ratio.  The Pareto
+walk has no such requirement.
+
+\begin{table}[h]
+\centering
+\caption{Genuinely fractional criteria, ten instances per row.}
+\begin{tabular}{lrrr}
+\toprule
+configuration & $|F|$ & cover & ratio \\
+\midrule
+$n=5$, $p=2$ & $7$  & $100\%$ & $1.54\times$ \\
+$n=6$, $p=3$ & $22$ & $100\%$ & $1.35\times$ \\
+$n=7$, $p=3$ & $36$ & $100\%$ & $1.25\times$ \\
+\midrule
+all $40$ & & & $\mathbf{1.39\times}$, faster on $34$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+At least as good as the linear case, with the front covered completely.
+Nothing in the construction distinguishes the two.
+
+\section{Five families, and a prediction that was wrong}
+
+Everything else here comes from one generator, so the magnitudes could belong
+to it.  Four more families move what the mechanism depends on: \texttt{loose}
+raises $|\Dset|$ an order of magnitude while leaving $|F|$ alone,
+\texttt{knapsack} is two capacity rows with all coefficients positive,
+\texttt{conflicting} gives the criteria opposing signs (large $|F|$), and
+\texttt{aligned} correlates them (small $|F|$).
+
+\begin{table}[h]
+\centering
+\caption{Fifteen instances per cell, 150 in all; two sizes per family.
+Identical front and identical optimum on every one.}
+\begin{tabular}{lrrrr}
+\toprule
+family & $|F|$ & cover & ratio & faster on \\
+\midrule
+\texttt{mixed}       & $8$ / $30$    & $100$ / $97\%$ & $\mathbf{1.37}$ / $1.30\times$ & $28/30$ \\
+\texttt{loose}       & $9$ / $44$    & $83$ / $86\%$  & $1.29$ / $1.23\times$ & $28/30$ \\
+\texttt{knapsack}    & $12$ / $41$   & $100$ / $90\%$ & $1.33$ / $1.27\times$ & $29/30$ \\
+\texttt{conflicting} & $107$ / $105$ & $100$ / $93\%$ & $1.14$ / $1.14\times$ & $26/30$ \\
+\texttt{aligned}     & $6$ / $11$    & $100$ / $84\%$ & $1.31$ / $1.14\times$ & $25/30$ \\
+\midrule
+\textbf{all 150} & & & $\mathbf{1.23\times}$ & $\mathbf{136}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-families}\\[2pt]
+\fig{r-families-legend}
+\end{center}
+
+\noindent
+Every family pays, $1.14$--$1.37\times$.  The advantage is not an artefact of
+the generator it was found with, which is what this was run for.
+
+\paragraph{And the prediction it refutes.}  We expected \texttt{conflicting},
+with $|F| \approx 107$, to be the family the hybrid liked \emph{most} --- a
+large front is much to discover, and discovery is what a seed removes --- and
+\texttt{aligned} with $|F| = 6$ to be the least.  \textbf{The opposite holds},
+and in the chart the orange bar is below the blue one in four families and
+level with it in the fifth --- never above: the margin narrows as $|F|$ grows,
+within families as well as across them.
+
+\paragraph{What bounds it, and what does not.}  A seed removes \emph{one}
+probe, and the enumeration spends $2.3$ to $7.5$ probes per vector --- the rest
+go to boxes that turn out empty, which no seed can touch.  So the
+\emph{probe-count} saving is capped at one over that figure, and shrinks as it
+grows: sweeping $p$ at $n=7$ gives probes-per-vector $2.3$, $3.0$, $4.0$,
+$4.9$, $6.4$, $7.5$ and probes kept $0.68$, $0.75$, $0.82$, $0.87$ --- $32\%$
+removed at $p=3$ down to $13\%$ at $p=6$, over 72 instances with 68 faster.
+
+\begin{quote}
+That bound is exact and it is about \emph{counts}.  \textbf{It does not bound
+the time}, because a seed removes a probe on a non-empty box --- which carries
+an efficiency test behind it --- while the probes left behind are mostly on
+empty boxes and are refuted at once.  At $p=6$ the time ratio exceeds
+$1/(\text{probes kept})$.  An earlier draft here called it ``a hard ceiling of
+roughly $1.4\times$''; that is withdrawn.
+\end{quote}
+
+\noindent
+What does grow with $|F|$ is the walk's cost, one efficiency test per archive
+member --- so a large front buys no more and costs more.
+
+\section{Where the hybrid fails, and the line that fixes it}
+
+At $n = 12$ the margin falls to $1.00\times$, and at $n=12$, $p=5$ to
+$0.97\times$.  Our first explanation was that the probe count outgrows $|F|$.
+\textbf{The measurement refutes it}: probes per vector are flat across the
+range --- $2.4$, $2.7$, $2.7$, $2.8$, $2.8$, $3.0$, $3.9$, $5.2$.  What
+collapses is the share of the front the walk finds, and the speed-up tracks it.
+
+\begin{center}
+\fig{r-cover}\\[2pt]
+\fig{r-cover-legend}
+\end{center}
+
+\begin{table}[h]
+\centering
+\caption{Widening the walk alone, on the two instances that failed.}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{$n=12$, $p=3$} & \multicolumn{2}{c}{$n=12$, $p=5$} \\
+restarts / budget & cover & ratio & cover & ratio \\
+\midrule
+$8$ / $4000$    & $35\%$ & $1.03\times$ & $12\%$ & $0.98\times$ \\
+$16$ / $20000$  & $95\%$ & $\mathbf{1.61\times}$ & $46\%$ & $\mathbf{1.20\times}$ \\
+$32$ / $60000$  & $95\%$ & $1.53\times$ & $93\%$ & $1.12\times$ \\
+$64$ / $150000$ & $95\%$ & $1.44\times$ & $89\%$ & $1.17\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Restarts are the knob, not neighbours, and the fix is one line: the first round
+is sized to the instance.  \emph{Not} a second constant --- $4000$ was chosen
+at $n=7,8$ and generalised, which is what produced the collapse.
+
+\paragraph{But coverage is not the objective.}  The $p=5$ column says so
+directly: \textbf{$46\%$ coverage gives $1.20\times$ and $93\%$ gives
+$1.12\times$}.  A walk that restarts until it finds nothing new takes coverage
+there from $45\%$ to $97\%$ and is \emph{slower} --- $1.02\times$ against
+$1.14\times$, and a median $1.32\times$ against $1.36\times$ over 120
+instances.  It is in the code and switched off.
+
+\paragraph{A correction to our own reading.}  The collapse was first reported
+as ``$35\%$ coverage, $1.00\times$'' from \emph{one} instance; over six seeds
+of that configuration the unmodified walk averages $78\%$ and $1.35\times$.
+Real and severe where $|F|$ is large, but not as general as one instance made
+it look --- the fifth time here that a single instance misled.
+
+\section{How the campaign was measured}
+
+Most figures here were first taken on four to eight instances.  The
+\emph{direction} of each was argued from a mechanism, which is what made them
+worth reporting --- but a total over four runs is not an estimate.
+\texttt{studies/campaign.py} re-measures four of the claims over thirty
+instances per configuration, in $751$ seconds, and writes every per-instance
+record to a JSON file so the tables can be rebuilt and re-checked without
+paying for the run again.
+
+\begin{itemize}
+\item \textbf{The statistic is the median of the per-instance ratios}, with the
+  interquartile range, never a ratio of totals.  A ratio of totals is decided
+  by the single heaviest instance --- which is exactly how the $103\times$ at
+  $p=5$ came about.
+\item \textbf{Deterministic work is counted next to the seconds}: sub-programs
+  solved and branch \& bound nodes explored, identical on every run and every
+  machine.  This machine's noise floor is roughly $\pm 30\%$ per instance, so
+  seconds alone cannot resolve a small effect and no number of repeats fixes
+  that.
+\item \textbf{Censoring is reported, never hidden.}  A run that spends its time
+  budget is excluded from the medians and counted in the open, and a row with
+  more than half its runs censored says so instead of quoting a number.  In the
+  margin experiment censoring is one-sided --- it can only flatter the
+  decision-space method --- so those margins are conservative.
+\item \textbf{Agreement is asserted, not assumed.}  Every experiment checks
+  that the two methods return the same answer, not merely that one is faster.
+\end{itemize}
+
+\noindent
+Nothing else ran on the machine during the campaign; a contaminated measurement
+is discarded rather than quoted, which is a rule adopted here only after
+breaking it once.
+
 \section{Every verdict, including the losses}
 
 \begin{table}[h]
 \centering
-\caption{The twelve things tried, with what each was worth.}
+\caption{The twenty-two things tried, with what each was worth.}
 \begin{tabular}{lll}
 \toprule
 attempt & verdict & effect \\
 \midrule
-decision space $\to$ criterion space & \textbf{win}  & $5.05\times$, up to $173\times$ \\
+decision space $\to$ criterion space & \textbf{win}  & $1.5\times$ at $p=2$ to $14.6\times$ at $p=6$ \\
 exact--exact handover ($s=1$)        & tie           & $8.47$ s vs $8.11$ s \\
 exact--exact handover ($s=3$)        & \textbf{loss} & $13.14$ s vs $8.47$ s \\
-exact--metaheuristic (Pareto archive)& \textbf{win}  & $1.25\times$ of a $1.42\times$ ceiling \\
-exact--Tchebychev seed               & \textbf{loss} & $0.71\times$ \\
+exact--metaheuristic (Pareto archive)& \textbf{win}  & $1.10\times$ median, $24/30$ seeds exact \\
+exact--Tchebychev seed               & \textbf{loss} & $1.02\times$: a wash, never pays \\
 Tchebychev as a generator            & \textbf{win}  & reaches unsupported points \\
 incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
 LP pre-filter on each box            & \textbf{loss} & $7.95 \to 8.36$ s, box counts identical \\
@@ -280,12 +903,22 @@ two-at-a-time split                  & \textbf{loss} & loses across $p=3..7$, wo
 early exit on a hopeless bound       & partial       & 25\% fewer boxes, no measurable time \\
 early exit \emph{on top of} the seed & \textbf{loss} & 4\% rather than 25\%: a substitute \\
 warm start + remembered point        & \textbf{win}  & 20\% fewer pivots together \\
+zero-objective probe                 & \textbf{loss} & $4$--$13\times$ slower, cuts identical \\
+slices instead of an efficiency test  & \textbf{win}  & all of $\E$, under $2\times$ \\
+eliminating the slice variables       & \textbf{win}  & $49\times$ median, up to $130\times$ \\
+Tchebychev seeding the enumeration    & \textbf{loss} & worse the more it seeds \\
+\textbf{Pareto walk seeding it}              & \textbf{win}  & $\mathbf{1.31\times}$ to all of $\E$ \\
+free box filters (three of them)      & partial       & $2\%$, then two losses \\
+one-program completeness certificate  & \textbf{loss} & $4.5\times$ slower, sound \\
+sizing the walk to the instance       & \textbf{win}  & $1.00 \to 1.53\times$ at $n=12$ \\
+a walk that restarts until it stops   & \textbf{loss} & more coverage, less speed \\
+the hybrid on fractional criteria     & \textbf{win}  & $1.39\times$, better than linear \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Five are losses and one is a tie.  They are reported at the same length as the
+Nine are losses and one is a tie.  They are reported at the same length as the
 wins because they carry the same information: a change pays only where the
 method has a mechanism it can feed, that mechanism is cheaper to identify than
 the change is to build and measure, and two ideas feeding the same mechanism
@@ -294,7 +927,7 @@ are one idea counted twice.
 \section{How all of this is checked}
 
 Exact rational arithmetic throughout, no floating point anywhere, no
-third-party dependency, and 64 tests run on every commit.  Several check
+third-party dependency, and 93 tests run on every commit.  Several check
 \emph{properties} rather than answers, since a method that silently lost
 efficient points would still agree with the optimum on favourable instances:
 the split is a partition; the metaheuristic never hands over an inefficient

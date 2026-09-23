@@ -23,7 +23,9 @@ exact rational arithmetic.
 """
 
 from .algorithm import IterationLog, Solution, optimize_over_efficient_set
-from .criterion_space import Box, optimize_in_criterion_space, remove_everywhere
+from .criterion_space import (Box, looks_empty,
+                              optimize_in_criterion_space,
+                              remove_everywhere)
 from .hybrid import optimize_hybrid
 from .metaheuristic import (ParetoArchive, metaheuristic_incumbent,
                             optimize_hybrid_metaheuristic, pareto_local_search,
@@ -46,9 +48,15 @@ from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
 from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
                     MOILP, Model)
 from .rational import F, fmt
-from .front import Front, enumerate_front
+from .front import Front, enumerate_front, in_box, pre_split
+from .generated import (GeneratedSeeds, generate_seeds,
+                        generated_front, hybrid_complete_set, pareto_front,
+                        pareto_seeds, probe_order)
+from .complete import (CompleteSet, complete_efficient_set,
+                       variable_bounds)
 from .subset import EfficientSubset, efficient_subset
-from .tchebychev import (augmented_tchebychev_efficient, ideal_point,
+from .tchebychev import (anti_ideal_point,
+                         augmented_tchebychev_efficient, ideal_point,
                          tchebychev_incumbent)
 
 __all__ = [
@@ -56,6 +64,7 @@ __all__ = [
     "LE", "GE", "EQ",
     "optimize_over_efficient_set", "Solution", "IterationLog",
     "optimize_in_criterion_space", "Box", "remove_everywhere",
+    "looks_empty",
     "optimize_hybrid", "optimize_hybrid_metaheuristic",
     "metaheuristic_incumbent", "pareto_local_search", "ParetoArchive",
     "random_maximal_point",
@@ -64,7 +73,8 @@ __all__ = [
     "repair_to_efficient", "efficient_dominator",
     "weighted_sum_efficient", "spread_weights",
     "has_linear_criteria",
-    "augmented_tchebychev_efficient", "ideal_point", "tchebychev_incumbent",
+    "augmented_tchebychev_efficient", "ideal_point", "anti_ideal_point",
+    "tchebychev_incumbent",
     "reduced_gradient", "alternative_optima_columns", "max_step", "max_step_in",
     "edge_direction", "walk_edge", "explore_edges", "clean_tableau_at",
     "solve_milp", "solve_linear_milp", "solve_fractional_milp",
@@ -73,7 +83,11 @@ __all__ = [
     "enumerate_nondominated", "maximize_by_full_enumeration", "FullEnumeration",
     "best_over_efficient_set_by_scan", "certify_optimum", "Certificate",
     "efficient_subset", "EfficientSubset",
-    "enumerate_front", "Front",
+    "enumerate_front", "Front", "pre_split", "in_box",
+    "generated_front", "generate_seeds", "GeneratedSeeds",
+    "hybrid_complete_set", "pareto_front", "pareto_seeds",
+    "probe_order",
+    "complete_efficient_set", "CompleteSet", "variable_bounds",
     "F", "fmt",
 ]
 

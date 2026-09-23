@@ -103,6 +103,34 @@ def ideal_point(problem: MOILFP) -> List[Fraction]:
     return out
 
 
+def anti_ideal_point(problem: MOILFP) -> List[Fraction]:
+    """``min { Z_k(x) : x in D }`` for each criterion, cached.
+
+    The companion of :func:`ideal_point`, and used for the same kind of thing:
+    nothing in ``D`` falls below it, so a box asking for ``Z_k <= hi`` with
+    ``hi`` under this value is empty without being solved.  One program per
+    criterion, paid once.
+    """
+    cached = getattr(problem, "_anti_ideal", None)
+    if cached is not None:
+        return cached
+    if not has_linear_criteria(problem):
+        raise ValueError("the anti-ideal point is computed here for linear "
+                         "criteria; with ratios min Z_k is not a linear "
+                         "program")
+    point = []
+    for k in range(problem.p):
+        z = problem.criteria[k]
+        result = solve_linear_milp(problem.model,
+                                   [-Fraction(c) for c in z.U])
+        if result.status != OPTIMAL:
+            raise ValueError(f"min Z_{k + 1} has no optimum over D "
+                             f"({result.status})")
+        point.append(-result.objective + Fraction(z.alpha))
+    problem._anti_ideal = point
+    return point
+
+
 def augmented_tchebychev_efficient(
         problem: MOILFP, weights: Sequence[Fraction],
         rho: Fraction = Fraction(1, 1000),

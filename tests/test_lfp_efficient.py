@@ -32,9 +32,17 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            tchebychev_incumbent, efficient_dominator,
                            repair_to_efficient)
 from lfp_efficient.rational import F, fmt
-from lfp_efficient.criterion_space import _rows_for
+from lfp_efficient.criterion_space import _rows_for, looks_empty, split
 from lfp_efficient.subset import EfficientSubset, efficient_subset
-from lfp_efficient.front import Front, enumerate_front
+from lfp_efficient.front import (Front, enumerate_front, in_box,
+                                 pre_split)
+from lfp_efficient.generated import (generate_seeds, generated_front,
+                                     hybrid_complete_set, pareto_front,
+                                     pareto_seeds, probe_order)
+from lfp_efficient.complete import (CompleteSet, complete_efficient_set,
+                                    reduce_rows, slice_equations,
+                                    slice_points, slice_rows,
+                                    variable_bounds)
 from lfp_efficient.milp import solve_relaxation, warm_relaxation
 from lfp_efficient.simplex import (INFEASIBLE, OPTIMAL as LP_OPTIMAL, STALLED,
                                    add_linear_row, restore_feasibility)
@@ -1614,6 +1622,590 @@ def test_ecker_kouada_does_not_transfer_to_ratios(seed=2024):
     longer = sum(1 for length in fractional if length > 1)
     return (f"linear: {len(linear)} chains, all length 1 | "
             f"fractional: {longer}/{len(fractional)} longer than 1")
+
+
+
+# --------------------------------------------------------------------------
+# the complete efficient set
+# --------------------------------------------------------------------------
+def test_complete_efficient_set_matches_exhaustive_enumeration():
+    """``complete_efficient_set`` against a brute-force scan, on two families.
+
+    The second family is built to make slices non-singleton -- criteria that
+    ignore the last two variables -- because generic random coefficients almost
+    never produce a tie, and a method that silently dropped tied points would
+    pass a test drawn only from the first family.
+    """
+    checked = tie_slices = extra = 0
+    for tie in (False, True):
+        for seed in range(12):
+            rnd = random.Random(9000 + seed)
+            n, p, ub = 4, 2 + seed % 2, 3
+            model = Model(n)
+            for i in range(n):
+                row = [0] * n
+                row[i] = 1
+                model.add(row, LE, ub)
+            for _ in range(3):
+                model.add([rnd.randint(1, 3) for _ in range(n)], LE,
+                          rnd.randint(4, 2 * n))
+            if tie:
+                criteria = [[rnd.randint(-2, 3) for _ in range(2)] + [0, 0]
+                            for _ in range(p)]
+            else:
+                criteria = [[rnd.randint(-3, 4) for _ in range(n)]
+                            for _ in range(p)]
+            problem = MOILP(model, criteria)
+            truth = {tuple(x)
+                     for x in enumerate_efficient_set(problem, [ub] * n).efficient}
+            if not truth:
+                continue
+            checked += 1
+            result = complete_efficient_set(problem)
+            assert result.complete, "the front emptied, so the set is proved"
+            got = {tuple(x) for x in result.points}
+            assert got == truth, (
+                f"tie={tie} seed={seed}: {len(truth - got)} missing, "
+                f"{len(got - truth)} spurious")
+            tie_slices += sum(1 for s in result.slices if len(s) > 1)
+            extra += len(truth) - len(enumerate_front(problem).points)
+    assert tie_slices, "no non-singleton slice appeared -- the tie family failed"
+    return (f"{checked} instances, exact match; {tie_slices} non-singleton "
+            f"slices; {extra} points the front alone would have missed")
+
+
+def test_every_point_of_a_non_dominated_slice_is_efficient():
+    """The proposition the module rests on, checked rather than assumed.
+
+    If ``v`` is non-dominated then every ``x`` with ``Z(x) = v`` is efficient,
+    so the slices need no efficiency test at all.  A counterexample here would
+    mean ``complete_efficient_set`` returns inefficient points.
+    """
+    tested = multi = 0
+    for seed in range(16):
+        rnd = random.Random(4400 + seed)
+        n, p, ub = 4, 2, 2
+        model = Model(n)
+        for i in range(n):
+            row = [0] * n
+            row[i] = 1
+            model.add(row, LE, ub)
+        for _ in range(3):
+            model.add([rnd.randint(1, 3) for _ in range(n)], LE,
+                      rnd.randint(3, 2 * n))
+        # criteria ignoring the last two variables: ties are forced
+        problem = MOILP(model, [[rnd.randint(-2, 3) for _ in range(2)] + [0, 0]
+                                for _ in range(p)])
+        enum = enumerate_efficient_set(problem, [ub] * n)
+        efficient = {tuple(x) for x in enum.efficient}
+        if not efficient:
+            continue
+        by_vector = {}
+        for x in enum.feasible:
+            by_vector.setdefault(tuple(problem.Z(x)), []).append(tuple(x))
+        for v in {tuple(problem.Z(x)) for x in efficient}:
+            members = by_vector[v]
+            if len(members) > 1:
+                multi += 1
+            for x in members:
+                tested += 1
+                assert x in efficient, (
+                    f"{x} lies on the non-dominated slice {v} and is not "
+                    "efficient -- the proposition is false")
+    assert multi, "no non-singleton slice: the check would be vacuous"
+    return (f"{tested} points on non-dominated slices, all efficient; "
+            f"{multi} slices held more than one")
+
+
+def test_the_complete_set_contains_the_front_and_answers_PE():
+    """Three agreements at once, on the instance built to separate them.
+
+    The front's own representative must sit in its slice; the complete set must
+    strictly contain the front's point list; and the best ``Phi`` over the
+    complete set must equal the optimum of ``(P_E)``.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)
+
+    front = enumerate_front(problem, phi)
+    result = complete_efficient_set(problem, phi)
+    truth = enumerate_efficient_set(problem, [2, 2, 2]).efficient
+
+    assert result.complete
+    assert {tuple(x) for x in result.points} == {tuple(x) for x in truth}
+    assert len(result.points) > len(front.points), "it must add points"
+    for v, x in zip(front.vectors, front.points):
+        assert tuple(x) in {tuple(y) for y in result.slice_of(v)}, (
+            "the front's representative left its own slice")
+    assert result.best_value == max(phi(x) for x in truth)
+    exact = optimize_in_criterion_space(problem, phi)
+    assert result.best_value == exact.value, "it must answer (P_E) too"
+    return (f"{len(result.points)} points on {len(result.vectors)} vectors; "
+            f"front keeps {len(front.points)}; both give Phi* = "
+            f"{fmt(result.best_value)}")
+
+
+def test_the_slice_equations_are_linear_for_fractional_criteria():
+    """``Z(x) = v`` clears to ``(c - v d)'x = v b - a``, which is linear in x.
+
+    Checked on genuinely fractional criteria: every feasible point satisfying
+    the rows must have criterion vector exactly ``v``, and every point with
+    that vector must satisfy them.
+    """
+    rng = random.Random(777)
+    checked = 0
+    for _ in range(8):
+        problem, _, bounds = random_moilfp(rng)
+        assert not has_linear_criteria(problem)
+        enum = enumerate_efficient_set(problem, bounds)
+        if not enum.efficient:
+            continue
+        v = problem.Z(enum.efficient[0])
+        rows = slice_rows(problem, v)
+        for x in enum.feasible:
+            on_slice = all(sum(c * xi for c, xi in zip(coeffs, x)) <= rhs
+                           for coeffs, rhs in rows)
+            assert on_slice == (problem.Z(x) == list(v)), (
+                f"the rows and Z disagree at {x}")
+            checked += 1
+    assert checked, "no fractional instance produced an efficient point"
+    return f"{checked} point/row agreements on fractional criteria"
+
+
+def test_variable_bounds_really_bound_the_feasible_set():
+    """The box the slice scan runs in must contain ``D``, or points are lost."""
+    rng = random.Random(31337)
+    checked = 0
+    for _ in range(8):
+        problem, _, bounds = random_moilfp(rng)
+        derived = variable_bounds(problem)
+        for x in enumerate_efficient_set(problem, bounds).feasible:
+            for j, value in enumerate(x):
+                assert value <= derived[j], (
+                    f"x_{j + 1} = {value} exceeds the derived bound "
+                    f"{derived[j]}")
+            checked += 1
+    return f"{checked} feasible points, all inside the derived box"
+
+
+def test_an_exhausted_budget_never_claims_a_complete_set():
+    """``complete`` is a proof, so a truncated run must not set it."""
+    model = (Model(3).add([1, 0, 0], LE, 3).add([0, 1, 0], LE, 3)
+             .add([0, 0, 1], LE, 3).add([1, 1, 2], LE, 5))
+    problem = MOILP(model, [[4, -1, 1], [0, 2, 2]])
+
+    whole = complete_efficient_set(problem)
+    assert whole.complete
+
+    starved = complete_efficient_set(problem, max_boxes=1)
+    assert not starved.complete, "one box cannot prove a complete set"
+    assert len(starved.points) <= len(whole.points)
+
+    capped = complete_efficient_set(problem, max_points=1)
+    assert not capped.complete, "a point cap cannot prove a complete set"
+    return (f"whole {len(whole.points)} points (proved); starved "
+            f"{len(starved.points)}, capped {len(capped.points)}, neither claims it")
+
+
+
+# --------------------------------------------------------------------------
+# seeding the front enumeration from a generator
+# --------------------------------------------------------------------------
+def test_seeding_the_front_never_changes_the_front():
+    """A seed removes the cost of *finding* a vector, never the vector.
+
+    Seeded with points taken from its own unseeded answer, the enumeration must
+    return the same vectors, stay provably complete, and reach the same optimum
+    of ``(P_E)`` -- which it can only do if a seeded vector still pays for its
+    ``Q`` program.
+    """
+    rng = random.Random(24601)
+    checked = saved = costlier = 0
+    for _ in range(40):
+        problem, phi, _ = random_instance(rng)
+        plain = enumerate_front(problem, phi)
+        if len(plain.vectors) < 2:
+            continue
+        seeds = plain.points[::2]
+        seeded = enumerate_front(problem, phi, seeds=seeds)
+        assert seeded.complete, "a seeded run must still prove completeness"
+        assert ({tuple(v) for v in seeded.vectors}
+                == {tuple(v) for v in plain.vectors}), "the front changed"
+        assert max(seeded.values) == max(plain.values), "the optimum changed"
+        assert seeded.seeded == len(seeds), "not every seed was placed"
+        # Not an invariant: the pre-split imposes a box structure the search
+        # would not have chosen, and on a minority of instances that costs
+        # probes rather than saving them.  Over 152 instances it went the wrong
+        # way on 5.  What holds is the aggregate.
+        if seeded.probes > plain.probes:
+            costlier += 1
+        saved += plain.probes - seeded.probes
+        checked += 1
+    assert checked, "no instance had a front worth seeding"
+    assert saved > 0, f"seeding saved no probes in aggregate ({saved})"
+    assert costlier * 4 < checked, (
+        f"seeding cost probes on {costlier} of {checked} -- too many for a "
+        "minority effect")
+    return (f"{checked} instances, same front and same optimum, {saved} probes "
+            f"saved in aggregate, costlier on {costlier}")
+
+
+def test_a_seed_lands_in_exactly_one_box_of_the_split():
+    """The split is disjoint and covering, which is what makes ``pre_split`` sound.
+
+    A point whose vector has not been removed must satisfy the rows of exactly
+    one child -- not zero (the seed would be lost) and not two (it would be
+    split twice).
+    """
+    rng = random.Random(90210)
+    checked = 0
+    for _ in range(8):
+        problem, _, _ = random_instance(rng)
+        front = enumerate_front(problem)
+        if len(front.vectors) < 3:
+            continue
+        boxes, recorded = pre_split(problem, front.points[:2])
+        assert len(recorded) == 2
+        for point in front.points[2:]:
+            holders = [b for b in boxes if in_box(problem, b, point)]
+            assert len(holders) == 1, (
+                f"{point} lies in {len(holders)} boxes, not 1")
+            checked += 1
+    assert checked, "no instance produced enough vectors"
+    return f"{checked} points, each in exactly one box of the split"
+
+
+def test_duplicate_and_dominated_seeds_are_dropped_not_mishandled():
+    """Two seeds on the same slice, and a seed already removed by another.
+
+    A generator makes no promise that its points are distinct in criterion
+    space, so the same vector twice must place once; and a dominated point must
+    not be recorded as a front vector.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])      # x3 absent from Z
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)
+
+    twins = [[F(2), F(1), F(0)], [F(2), F(1), F(2)]]    # same Z, two points
+    assert problem.Z(twins[0]) == problem.Z(twins[1])
+    _, recorded = pre_split(problem, twins)
+    assert len(recorded) == 1, "the same vector was placed twice"
+
+    dominated = [F(0), F(0), F(0)]
+    boxes, recorded = pre_split(problem, [twins[0], dominated])
+    assert len(recorded) == 1, "a dominated seed was recorded as a front vector"
+
+    seeded = enumerate_front(problem, phi, seeds=twins)
+    plain = enumerate_front(problem, phi)
+    assert seeded.complete
+    assert ({tuple(v) for v in seeded.vectors}
+            == {tuple(v) for v in plain.vectors})
+    assert max(seeded.values) == max(plain.values)
+    return "duplicate placed once, dominated seed dropped, front unchanged"
+
+
+def test_the_generated_hybrid_agrees_with_the_plain_enumeration():
+    """The Tchebychev-seeded front against the unseeded one.
+
+    This is the hybrid the module was written to test.  It loses on cost --
+    that is recorded in ``lfp_efficient/generated.py`` -- but it must not lose
+    on the answer, and every point the generator supplies must be efficient by
+    its own guarantee, which is checked here rather than trusted.
+    """
+    rng = random.Random(13331)
+    checked = 0
+    for _ in range(8):
+        problem, phi, bounds = random_instance(rng)
+        seeds = generate_seeds(problem)
+        for point in seeds.points:
+            assert test_efficiency(problem, point).efficient, (
+                "the Tchebychev program returned an inefficient point")
+        front, again = generated_front(problem, phi)
+        plain = enumerate_front(problem, phi)
+        assert front.complete
+        assert ({tuple(v) for v in front.vectors}
+                == {tuple(v) for v in plain.vectors})
+        assert max(front.values) == max(plain.values)
+        assert front.seeded == len(seeds), "not every generated seed was used"
+        checked += 1
+    return (f"{checked} instances, generated seeds all efficient, "
+            "same front and same optimum")
+
+
+
+# --------------------------------------------------------------------------
+# the free box filter
+# --------------------------------------------------------------------------
+def test_the_free_filter_never_calls_a_live_box_empty():
+    """The one thing that would make the filter unsound, checked directly.
+
+    Every box the filter rejects is put to the probe anyway; a box the probe
+    finds feasible while the filter called it empty is a false positive, and
+    one of those silently loses part of the front.  Over the boxes below there
+    must be none.
+    """
+    from heapq import heappop, heappush
+
+    from lfp_efficient.criterion_space import Box
+    from lfp_efficient.milp import solve_linear_milp
+    from lfp_efficient.rational import ZERO
+    from lfp_efficient.simplex import OPTIMAL as LP_OK
+    from lfp_efficient.tchebychev import anti_ideal_point, ideal_point
+
+    rng = random.Random(60221)
+    boxes = caught = live = 0
+    for _ in range(12):
+        problem, _, _ = random_instance(rng)
+        ideal, anti = ideal_point(problem), anti_ideal_point(problem)
+        direction = [ZERO] * problem.n
+        for z in problem.criteria:
+            for j in range(problem.n):
+                direction[j] += F(z.U[j])
+        open_boxes, counter = [(0, Box())], 0
+        while open_boxes:
+            _, box = heappop(open_boxes)
+            boxes += 1
+            says_empty = looks_empty(problem, box, ideal, anti)
+            model = box.restricted(problem.model)
+            found = solve_linear_milp(
+                model, direction + [ZERO] * (model.n - problem.n))
+            really_empty = found.status != LP_OK
+            assert not (says_empty and not really_empty), (
+                "the filter called a box empty that holds a feasible point")
+            if says_empty:
+                caught += 1
+            if really_empty:
+                continue
+            live += 1
+            x = found.x[:problem.n]
+            outcome = test_efficiency(problem, x)
+            centre = (x if outcome.efficient
+                      else efficient_dominator(problem, outcome))
+            for child in split(problem, box, centre, None):
+                counter += 1
+                heappush(open_boxes, (counter, child))
+    assert caught, "the filter never fired: the check would be vacuous"
+    return (f"{boxes} boxes, {caught} called empty ({caught / boxes:.0%}), "
+            f"{live} live, no false positive")
+
+
+def test_the_filter_changes_the_cost_and_not_the_answer():
+    """All three settings must agree, vector for vector and value for value."""
+    rng = random.Random(8675309)
+    checked = saved = total = 0
+    for _ in range(12):
+        problem, phi, _ = random_instance(rng)
+        off = enumerate_front(problem, phi, filter_boxes=False)
+        free = enumerate_front(problem, phi, filter_boxes=True)
+        both = enumerate_front(problem, phi, filter_boxes=True, use_range=True)
+        for other in (free, both):
+            assert other.complete == off.complete
+            assert ({tuple(v) for v in other.vectors}
+                    == {tuple(v) for v in off.vectors}), "the front changed"
+            assert max(other.values) == max(off.values), "the optimum changed"
+            assert other.boxes == off.boxes, "the box structure changed"
+            assert other.probes <= off.probes, "the filter cost probes"
+        assert both.filtered >= free.filtered, "the range test caught less"
+        saved += off.probes - both.probes
+        total += off.probes
+        checked += 1
+    assert saved, "the filter removed no probe at all"
+    return (f"{checked} instances, three settings, one answer; "
+            f"{saved}/{total} probes removed ({saved / total:.0%})")
+
+
+
+# --------------------------------------------------------------------------
+# eliminating variables with the slice equations
+# --------------------------------------------------------------------------
+def test_elimination_gives_exactly_the_same_slice_as_the_plain_scan():
+    """The fast path against the reference, slice for slice.
+
+    ``slice_points`` solves the ``p`` equations and scans ``n - r`` variables;
+    ``_fast_feasible_points`` keeps all ``n`` and uses the equations only to
+    prune.  They must return the same set -- and a sign error in the
+    substitution, which is what the first draft had, returns the *empty* set on
+    almost every slice while still looking like a working optimisation.
+    """
+    from lfp_efficient.enumeration import _fast_feasible_points
+
+    rng = random.Random(27182)
+    slices = points = 0
+    for _ in range(14):
+        problem, _, _ = random_instance(rng)
+        bounds = variable_bounds(problem)
+        for v in enumerate_front(problem).vectors:
+            reference = set(_fast_feasible_points(problem, bounds,
+                                                  slice_rows(problem, v)))
+            fast = set(slice_points(problem, bounds, v))
+            assert fast == reference, (
+                f"slice {v}: {len(reference - fast)} points lost, "
+                f"{len(fast - reference)} invented")
+            assert reference, "a non-dominated vector with an empty slice"
+            slices += 1
+            points += len(reference)
+    return f"{slices} slices, {points} points, identical both ways"
+
+
+def test_the_elimination_is_exact_and_rejects_fractional_solutions():
+    """A point is kept only when the eliminated variables come out integer.
+
+    The one condition that is not linear, and so the one the scan cannot prune
+    on.  Here the equations force ``2*x1 = 1`` on part of the box, so a
+    rational solution exists and no integer one does.
+    """
+    model = Model(2).add([1, 0], LE, 4).add([0, 1], LE, 4)
+    problem = MOILP(model, [[2, 0], [0, 1]])          # Z_1 = 2*x1 is even
+    bounds = [4, 4]
+
+    assert slice_points(problem, bounds, [F(4), F(2)]) == [(2, 2)]
+    assert slice_points(problem, bounds, [F(3), F(2)]) == [], (
+        "Z_1 = 3 needs x1 = 3/2 and must yield nothing")
+
+    solved = reduce_rows(slice_equations(problem, [F(3), F(2)]), 2)
+    assert solved is not None, "the system is consistent over the rationals"
+    return "2*x1 = 3 is solvable in Q and rejected over Z, as it must be"
+
+
+def test_an_inconsistent_slice_is_settled_without_scanning():
+    """Elimination detects an empty slice from the equations alone."""
+    model = Model(2).add([1, 0], LE, 3).add([0, 1], LE, 3)
+    problem = MOILP(model, [[1, 1], [2, 2]])          # Z_2 = 2 * Z_1 always
+    assert reduce_rows(slice_equations(problem, [F(2), F(4)]), 2) is not None
+    assert reduce_rows(slice_equations(problem, [F(2), F(5)]), 2) is None, (
+        "Z_2 = 5 with Z_1 = 2 contradicts Z_2 = 2*Z_1")
+    assert slice_points(problem, [3, 3], [F(2), F(5)]) == []
+    return "a contradictory slice is refuted by the elimination, not by a scan"
+
+
+
+# --------------------------------------------------------------------------
+# the hybrid that reaches E(P_D)
+# --------------------------------------------------------------------------
+def test_the_hybrid_reaches_exactly_the_same_efficient_set():
+    """A metaheuristic decides how much is discovered, never what is returned.
+
+    ``hybrid_complete_set`` must agree with the pure exact
+    ``complete_efficient_set`` point for point, keep the completeness proof,
+    and reach the same optimum of ``(P_E)`` -- the maximiser may differ when a
+    slice holds several, so the *value* is what is compared.
+    """
+    rng = random.Random(112358)
+    checked = seeded = vectors = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        exact = complete_efficient_set(problem, phi)
+        hybrid = hybrid_complete_set(problem, phi)
+        assert hybrid.complete == exact.complete, "the proof changed"
+        assert ({tuple(x) for x in hybrid.points}
+                == {tuple(x) for x in exact.points}), "E(P_D) changed"
+        assert ({tuple(v) for v in hybrid.vectors}
+                == {tuple(v) for v in exact.vectors}), "the front changed"
+        assert hybrid.best_value == exact.best_value, "the optimum changed"
+        front, found = pareto_front(problem, phi)
+        assert front.seeded == len(found), "not every seed was placed"
+        seeded += front.seeded
+        vectors += len(exact.vectors)
+        checked += 1
+    return (f"{checked} instances, identical E(P_D); the walk supplied "
+            f"{seeded} of {vectors} front vectors")
+
+
+def test_every_seed_the_walk_supplies_is_verified_efficient():
+    """The local search proves nothing, so the seeds must be checked.
+
+    An unverified seed would be recorded as a front vector while being
+    dominated, which loses part of the answer rather than slowing it down.
+    """
+    rng = random.Random(1618033)
+    checked = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        found = pareto_seeds(problem, phi)
+        for point in found.points:
+            assert test_efficiency(problem, point).efficient, (
+                "the walk handed over an inefficient seed")
+            checked += 1
+    assert checked, "the walk produced no seed at all"
+    return f"{checked} seeds from the walk, every one verified efficient"
+
+
+def test_the_seeds_are_handed_over_in_the_probe_s_own_order():
+    """The order is load-bearing, not cosmetic.
+
+    In archive order the probe count rose on 4 of 12 instances; in this order
+    it rose on none.  The property under test is the ordering itself: each
+    seed must score no higher than its predecessor on the direction the probe
+    maximises.
+    """
+    rng = random.Random(2718281)
+    checked = 0
+    for _ in range(8):
+        problem, phi, _ = random_instance(rng)
+        found = pareto_seeds(problem, phi)
+        if len(found.points) < 2:
+            continue
+        direction = [F(0)] * problem.n
+        for z in problem.criteria:
+            for j in range(problem.n):
+                direction[j] += F(z.U[j])
+        scores = [sum(c * xi for c, xi in zip(direction, a))
+                  for a in found.points]
+        assert scores == sorted(scores, reverse=True), (
+            f"the seeds are not in probe order: {scores}")
+        # The sort is stable, so points that tie on the direction keep their
+        # incoming order; re-sorting a shuffled list reproduces the score
+        # sequence, not necessarily the same list.
+        shuffled = list(reversed(found.points))
+        again = probe_order(problem, shuffled)
+        assert [sum(c * xi for c, xi in zip(direction, a))
+                for a in again] == scores, "probe_order is not deterministic"
+        checked += 1
+    assert checked, "no instance produced two seeds"
+    return f"{checked} instances, seeds in descending probe order"
+
+
+
+def test_the_adaptive_walk_changes_the_cost_and_not_the_answer():
+    """Restarting until the walk stops finding must not move the answer.
+
+    The adaptive walk runs a different number of rounds on every instance, so
+    it hands over a different set of seeds each time.  One seed that is not
+    efficient, or one placed where it does not belong, drops a vector from the
+    front silently -- the run still finishes and still looks complete.  So both
+    settings are compared on every instance, and the seeds are re-verified.
+    """
+    rng = random.Random(514229)
+    checked = rounds = grew = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        plain = complete_efficient_set(problem, phi)
+
+        fixed = pareto_seeds(problem, phi, adaptive=False)
+        grown = pareto_seeds(problem, phi, adaptive=True)
+        assert grown.rounds >= 1
+        assert len(grown.vectors) >= len(fixed.vectors), (
+            "more rounds found fewer vectors")
+        if len(grown.vectors) > len(fixed.vectors):
+            grew += 1
+        rounds += grown.rounds
+        for point in grown.points:
+            assert test_efficiency(problem, point).efficient, (
+                "a later round handed over an inefficient seed")
+
+        for seeds in (fixed.points, grown.points):
+            front = enumerate_front(problem, phi, seeds=seeds)
+            whole = complete_efficient_set(problem, phi, front=front)
+            assert whole.complete, "a seeded run must still prove completeness"
+            assert ({tuple(x) for x in whole.points}
+                    == {tuple(x) for x in plain.points}), "E(P_D) changed"
+            assert whole.best_value == plain.best_value, "the optimum changed"
+        checked += 1
+    return (f"{checked} instances, {rounds} rounds in total, identical "
+            f"E(P_D) both ways; more rounds found more vectors on {grew}")
 
 
 # --------------------------------------------------------------------------

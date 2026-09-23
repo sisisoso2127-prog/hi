@@ -31,6 +31,32 @@ that says ``a`` dominates ``v``, which no non-dominated vector admits.  So
 ``v`` can only leave at the moment it is recorded -- and since the region is
 exhausted, every ``v`` is recorded exactly once.
 
+Why the probe maximises a direction instead of just finding a point
+--------------------------------------------------------------------
+The probe only needs *some* feasible point of the box, so maximising a linear
+direction looks like paid-for waste: a zero objective would stop at the first
+integer point found.  Measured, it is the opposite, and by a lot.
+
+Profiling the decision-space enumeration on an instance that takes 137 s put
+**100%** of the time in the probe, over 31 calls and 14983 branch & bound
+nodes, with the model growing from 5 columns and 7 rows to 95 and 127 -- which
+is exactly ``p`` binaries and ``p+1`` rows per cut, so that part is structural
+and expected.  Replacing the direction by a zero objective:
+
+    n=4   9 cuts,  658 nodes, 1.35s   ->  9 cuts, 1397 nodes,  5.33s
+    n=5   9 cuts,  372 nodes, 0.79s   ->  9 cuts, 2105 nodes, 10.15s
+
+The **cut counts are identical**: the probe's direction does not change how
+many vectors there are, or the order they come out in.  What explodes is the
+branch & bound inside each probe, because a zero objective gives it nothing to
+prune with -- every node's relaxation is worth 0, so no bound can discard
+anything until an integer point has been stumbled upon.
+
+So the direction is load-bearing rather than decorative, and this module uses
+the same one.  Recorded because it is a plausible-looking optimisation that
+makes things four to thirteen times worse, and because it was checked while
+suspecting the *comparison* was unfair -- it was not.
+
 The front is not the set of efficient points
 --------------------------------------------
 One non-dominated vector can be attained by several efficient points, and this
@@ -72,15 +98,16 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from heapq import heappop, heappush
 from time import monotonic
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
-from .criterion_space import Box, split
+from .criterion_space import Box, looks_empty, split
 from .efficiency import (best_with_same_criterion, efficient_dominator,
-                         test_efficiency)
+                         has_linear_criteria, test_efficiency)
 from .milp import denominator_stays_positive, solve_linear_milp
 from .model import FractionalObjective, MOILFP
 from .rational import F, ZERO
 from .simplex import OPTIMAL
+from .tchebychev import anti_ideal_point, ideal_point
 
 
 @dataclass
@@ -102,6 +129,12 @@ class Front:
     #: That is completeness of the non-dominated *vectors*, not of the
     #: efficient *points* -- see the module docstring.
     complete: bool = False
+    #: integer programs spent probing boxes -- the work a seed can remove
+    probes: int = 0
+    #: vectors recorded from the seeds, at no integer program at all
+    seeded: int = 0
+    #: boxes dropped by the free filter, without a program
+    filtered: int = 0
 
     def __len__(self) -> int:
         return len(self.vectors)
@@ -118,9 +151,62 @@ class Front:
         return "\n".join(lines)
 
 
+def in_box(problem: MOILFP, box: Box, x) -> bool:
+    """Does *x* satisfy every row of *box*?
+
+    A box is a conjunction of ``coeffs' x <= rhs`` rows on the model's own
+    variables, so this is a scan and not a program.  It is what lets a seed be
+    placed in the list without solving anything.
+    """
+    return all(sum(c * xi for c, xi in zip(coeffs, x[:problem.n])) <= rhs
+               for coeffs, rhs in box.rows)
+
+
+def pre_split(problem: MOILFP, seeds,
+              root: Optional[Box] = None) -> Tuple[List[Box], List[List[Fraction]]]:
+    """Split the root box around known efficient points, paying no programs.
+
+    The split of Section~3 is *disjoint* and covers the box minus
+    ``{ Z <= Z(centre) }``, so a point whose vector has not been removed lies
+    in exactly one child.  Placing a seed is therefore a scan of the list for
+    the box that holds it, followed by the same split the search would have
+    done -- with the probe, the efficiency test and the repair all skipped,
+    because the seed is already known to be efficient.
+
+    A seed whose vector has been removed by an earlier one is dominated by it
+    and is dropped: two seeds can be distinct points of the same slice, and a
+    generator makes no promise that they are not.
+
+    The seeds **must be efficient**.  Completeness survives an inefficient
+    centre -- the argument only needs it to lie in ``D`` -- but the recorded
+    vector would not be on the front, and the output would be wrong rather
+    than merely slow.
+    """
+    boxes = [root if root is not None else Box()]
+    recorded: List[List[Fraction]] = []
+    seen = set()
+    for a in seeds:
+        key = tuple(problem.Z(a))
+        if key in seen:
+            continue
+        index = next((i for i, b in enumerate(boxes) if in_box(problem, b, a)),
+                     None)
+        if index is None:               # already removed: dominated by a seed
+            continue
+        seen.add(key)
+        recorded.append([F(c) for c in a])
+        box = boxes.pop(index)
+        boxes.extend(split(problem, box, a, None))
+    return boxes, recorded
+
+
 def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
                     max_boxes: int = 200_000,
-                    time_budget: Optional[float] = None) -> Front:
+                    time_budget: Optional[float] = None,
+                    seeds: Optional[List[Sequence[Fraction]]] = None,
+                    filter_boxes: bool = True,
+                    use_range: bool = False,
+                    drop_dominated: bool = False) -> Front:
     """Enumerate the whole non-dominated set, in criterion space.
 
     With *phi*, each vector is paired with the point maximising ``Phi`` on its
@@ -131,6 +217,38 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
     which is the proof.  A run stopped by *max_boxes* or *time_budget* returns
     what it has with ``complete = False`` rather than a front it cannot
     support.
+
+    *seeds* are efficient points already known -- from a generator, from an
+    earlier run, from the decision maker.  Each is placed in the box list by
+    :func:`pre_split`, which records its vector and splits around it **without
+    solving anything**: no probe, no efficiency test, no repair.  The answer is
+    unchanged; what changes is how much of it had to be found.  Seeds that are
+    not efficient make the output wrong, not slow, so they must come from a
+    source that guarantees it.
+
+    *filter_boxes* applies :func:`~lfp_efficient.criterion_space.looks_empty`
+    before each probe, dropping the boxes arithmetic alone can settle.  It is
+    exact and one-sided, so it changes what the search costs and nothing about
+    what it returns; it stays a parameter so that the A/B can be re-run.  On by
+    default because it is free and removes about a quarter of the probes --
+    which is worth $2\%$ of the simplex pivots, not $25\%$, for the reason
+    given with that function.  *use_range* adds the ideal-point test, which
+    catches more boxes and costs $2p$ programs to set up; measured at
+$1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
+    bound with the ideal point so that a box whose whole upper corner is
+    already dominated can be discarded outright, children and all; it catches
+    $5.4\%$ of the boxes and removes $8$--$23\%$ of the probes, and still
+    measures $1.077\times$ the pivots and $1.05\times$ the time over 60
+    instances, so it is off too.
+
+    Three filters, three times the same wall, and it is worth naming rather
+    than rediscovering: **in this search, removing sub-problems does not
+    remove time, because the ones that can be removed cheaply are the ones
+    that were already cheap.**  The early exit of
+    :func:`~lfp_efficient.criterion_space.optimize_in_criterion_space` met it
+    first, at $25\%$ of the sub-problems and no measurable time.  The only
+    change in this package that ever beat it attacked an *exponent* instead of
+    a count -- eliminating variables with the slice equations, at $49\times$.
     """
     deadline = None if time_budget is None else monotonic() + time_budget
     positive = (denominator_stays_positive(problem.model, phi)
@@ -144,11 +262,53 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
         for j in range(problem.n):
             probe[j] += F(z.U[j])
 
+    ideal = anti = None
+    if filter_boxes and (use_range or drop_dominated) and has_linear_criteria(problem):
+        ideal = ideal_point(problem)
+        if use_range:
+            anti = anti_ideal_point(problem)
+
     front = Front()
     counter = 0
     open_boxes: List[Tuple[int, Box]] = []
-    heappush(open_boxes, (0, Box()))
     seen = set()
+
+    def record(centre):
+        """Bank one vector and, when a ``Phi`` was given, the best point on it.
+
+        The same for a seeded vector as for a found one: the ``Q`` program is
+        what makes the largest value on the front the optimum of ``(P_E)``, so
+        a seed must not skip it.  What a seed skips is the probe, the
+        efficiency test and the repair -- never this.
+        """
+        key = tuple(problem.Z(centre))
+        if key in seen:
+            return
+        seen.add(key)
+        front.vectors.append(list(key))
+        if phi is None:
+            front.points.append(list(centre))
+            return
+        best = best_with_same_criterion(problem.model, problem, centre, phi,
+                                        denominator_positive=positive)
+        if best.feasible:
+            front.points.append(list(best.x[:problem.n]))
+            front.values.append(best.objective)
+        else:                                   # Phi undefined on the slice
+            front.points.append(list(centre))
+
+    root = Box(hi=list(ideal)) if ideal is not None else Box()
+
+    if seeds:
+        boxes, recorded = pre_split(problem, seeds, root)
+        for a in recorded:
+            record(a)
+            front.seeded += 1
+        for box in boxes:
+            counter += 1
+            heappush(open_boxes, (counter, box))
+    else:
+        heappush(open_boxes, (0, root))
 
     while open_boxes:
         if front.boxes >= max_boxes:
@@ -159,9 +319,23 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
         _, box = heappop(open_boxes)
         front.boxes += 1
 
+        if filter_boxes and looks_empty(problem, box, ideal, anti):
+            front.filtered += 1
+            continue                # settled by arithmetic: no program spent
+
+        if drop_dominated and box.hi and all(h is not None for h in box.hi):
+            # Every x here has Z(x) <= box.hi.  If a vector already recorded
+            # dominates that whole corner, this box holds nothing new -- so it
+            # is dropped outright, children and all, not merely left unprobed.
+            if any(all(v[k] >= box.hi[k] for k in range(problem.p))
+                   for v in front.vectors):
+                front.filtered += 1
+                continue
+
         model = box.restricted(problem.model)
         direction = probe + [ZERO] * (model.n - problem.n)
         found = solve_linear_milp(model, direction)
+        front.probes += 1
         if found.status != OPTIMAL:
             continue                            # the box holds nothing: drop it
 
@@ -169,21 +343,7 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
         outcome = test_efficiency(problem, x)
         centre = x if outcome.efficient else efficient_dominator(problem, outcome)
 
-        key = tuple(problem.Z(centre))
-        if key not in seen:
-            seen.add(key)
-            front.vectors.append(list(key))
-            if phi is not None:
-                best = best_with_same_criterion(problem.model, problem, centre,
-                                                phi,
-                                                denominator_positive=positive)
-                if best.feasible:
-                    front.points.append(list(best.x[:problem.n]))
-                    front.values.append(best.objective)
-                else:                           # Phi undefined on the slice
-                    front.points.append(list(centre))
-            else:
-                front.points.append(list(centre))
+        record(centre)
 
         for child in split(problem, box, centre, None):
             counter += 1

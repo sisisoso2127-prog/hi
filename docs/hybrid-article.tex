@@ -1,0 +1,1061 @@
+\documentclass[11pt,a4paper]{article}
+\input{preamble-shared}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+
+\title{\bfseries A metaheuristic--exact hybrid for the \emph{complete} efficient
+set of a multi-objective integer program,\\ with a linear fractional decision
+criterion}
+
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Let $\Dset = \{x \in \Zint^{n}_{+} : Ax \leqslant b\}$ be bounded and let
+$\Z_1,\dots,\Z_p$ be criteria to maximise, each a ratio of affine forms with a
+strictly positive denominator on $\Dset$.  We address two questions about the
+efficient set $\E$: producing \emph{all} of it, and maximising a further linear
+fractional criterion $\Phi$ over it.
+
+Existing methods for the second question work in \emph{decision} space,
+truncating $\Dset$ with Sylva--Crema cuts.  Each cut is a disjunction and
+costs $p$ binary variables and $p+1$ big-$M$ rows, so every sub-problem is
+strictly larger than the last.  We keep the unexplored part of the problem in
+\emph{criterion} space instead, as a list of boxes: truncation becomes a box
+subtraction, every sub-problem is $\Dset$ plus a handful of ordinary linear
+rows, and the model never grows.
+
+Three results follow.  First, a characterisation that makes the complete
+efficient set cheap: \textbf{if $v$ is non-dominated then every $x \in \Dset$
+with $\Z(x) = v$ is efficient}, so $\E$ is exactly the union of the slices of
+the non-dominated set and \emph{no efficiency test is paid on any slice point}.
+Second, a slice is $\Dset$ plus $p$ \emph{linear} equations, for fractional
+criteria as much as for linear ones; solving those equations eliminates $r$
+variables before enumeration begins and is worth a median $49\times$ over
+scanning with them as pruning rows.  Third, a hybridisation that pays: a Pareto
+local search supplies verified efficient points which are placed in the box
+list without a probe.  It reaches the whole of $\E$ at $1.36\times$ the pure
+exact method over 120 instances spanning $n = 6 \dots 12$, faster on 116, at
+$1.39\times$ on genuinely fractional criteria, and between $1.14\times$ and
+$1.37\times$ on each of five structurally different instance families, with
+identical answers throughout.
+
+The hybridisation only pays when the seeds are handed over in the order the
+exact search's own probe would meet them; in the order the archive produces
+them the same hybrid is \emph{slower}.  We also report, at the same length,
+four changes that remove a quarter of the sub-problems and buy nothing, and a
+single-program completeness certificate that is sound and $4.5\times$ slower,
+because the negative results delimit where hybridisation can help at all.
+\end{abstract}
+
+\section{Problem and notation}
+
+\begin{equation}
+(P_{\Dset}) \qquad
+\text{``}\max\text{''} \ \ \Z_k(x) = \frac{c_k^{\top}x + a_k}{d_k^{\top}x + b_k},
+\quad k = 1,\dots,p, \qquad x \in \Dset ,
+\end{equation}
+with $\Dset = \{x \in \Zint^{n}_{+} : Ax \leqslant b\}$ non-empty and bounded
+and every denominator $D_k(x) = d_k^{\top}x + b_k$ strictly positive on
+$\Dset$.  A point $x \in \Dset$ is \emph{efficient} when no $y \in \Dset$
+satisfies $\Z(y) \geqslant \Z(x)$ with at least one strict inequality; $\E$
+denotes the set of efficient points and $F = \Z(\E)$ the non-dominated set.
+Linear criteria are the degenerate case $d_k = 0$, $b_k = 1$.
+
+Given a decision maker's criterion
+$\Phi(x) = (U^{\top}x + \alpha)/(V^{\top}x + \beta)$,
+
+\begin{equation}
+(P_E) \qquad \max \ \Phi(x) \quad \text{s.t.} \quad x \in \E .
+\end{equation}
+
+\noindent
+$\E$ is a union of faces of $\Dset$: non-convex, with no explicit description.
+
+Throughout, the data of each criterion is scaled to integers (numerator and
+denominator by the same factor, leaving the ratio untouched).  That makes the
+quantity
+\begin{equation}\label{eq:ek}
+  e_k(x ; \bar x) \;=\; D_k(\bar x)\,D_k(x)\,\bigl(\Z_k(x) - \Z_k(\bar x)\bigr)
+\end{equation}
+\emph{linear in $x$ and integer-valued}, so that
+$\Z_k(x) > \Z_k(\bar x) \iff e_k(x;\bar x) \geqslant 1$ exactly --- no minimal
+step has to be estimated, which is what makes the transposition from linear to
+fractional criteria faithful rather than approximate.
+
+\begin{remark}\label{rem:notZ}
+$\Phi$ is a function of $x$ and \textbf{not} of $\Z(x)$.  Two efficient points
+with the same criterion vector can have different $\Phi$.  Every criterion-space
+construction below has to account for this, and it is the reason the transfer
+of criterion-space search from linear to fractional objectives is not
+immediate.
+\end{remark}
+
+\section{Where the cost of the decision-space method comes from}
+\label{sec:cost}
+
+One iteration of the published approach maximises $\Phi$ over a truncated
+region $\Dset_l$, tests the maximiser for efficiency, banks the best $\Phi$ on
+the criterion slice about to be destroyed, and truncates:
+$\text{delete } \{x : \Z(x) \leqslant \Z(\tilde x)\}$.
+
+Keeping the complement means keeping the $x$ for which \emph{some} criterion
+strictly improves on $\tilde x$.  That is a disjunction, not a system of linear
+inequalities, and it is modelled with one binary per criterion:
+\begin{equation}\label{eq:cut}
+  e_k(x;\tilde x) \geqslant 1 \cdot y_k + M_k (1 - y_k), \quad k = 1,\dots,p,
+  \qquad \sum_{k=1}^{p} y_k \geqslant 1 ,
+\end{equation}
+with $M_k$ a lower bound on $e_k$ over the region.  \textbf{Every cut therefore
+adds $p$ binaries and $p+1$ rows}, and the late sub-problems cost far more than
+the early ones.  This fixes the cost model used throughout:
+\[
+  \text{total cost} \ \approx\ (\text{number of sub-problems})
+  \times (\text{cost of one, which grows}) .
+\]
+
+\section{The same truncation in criterion space}
+\label{sec:box}
+
+Keep the unexplored region as a list of \emph{boxes} instead.  Deleting
+$\{\Z \leqslant \Z(a)\}$ from a box is a box subtraction, and it has a disjoint
+$p$-way decomposition:
+\begin{equation}\label{eq:split}
+  \text{child } k: \quad e_k(x;a) \geqslant 1
+  \ \text{ and } \ e_j(x;a) \leqslant 0 \ \text{ for } j < k .
+\end{equation}
+Child $k$ asks that $\Z_k$ strictly improve on $a$ while no earlier criterion
+does.  The children are disjoint, they cover the box minus
+$\{\Z \leqslant \Z(a)\}$, and --- this is the point --- each is $\Dset$ plus a
+handful of ordinary linear rows.  \textbf{The model never grows.}  A box is
+written with the integer-valued rows \eqref{eq:ek} rather than with numeric
+bounds on $\Z_k$, which is what carries the construction to fractional
+criteria unchanged.
+
+Each box also carries, for nothing, an interval per criterion:
+child $k$ raises $lo_k$ to $\Z_k(a)$ and lowers $hi_j$ to $\Z_j(a)$ for $j<k$.
+We use it in Section~\ref{sec:wall}.
+
+\section{The complete efficient set}
+\label{sec:complete}
+
+\subsection{Enumerating the non-dominated set}
+
+The enumeration keeps a list of boxes covering the unexplored region.  It pops
+a box, \emph{probes} it by maximising a fixed strictly positive direction over
+$\Dset$ intersected with the box, repairs the maximiser to an efficient point
+$a$, records $\Z(a)$, and splits the box around $a$ by \eqref{eq:split}.
+
+\begin{proposition}\label{prop:front}
+The enumeration terminates and records every non-dominated vector exactly once.
+\end{proposition}
+
+\begin{proof}
+\emph{Termination.}  The probe returns a point $x$ of $\Dset$ inside the box,
+and the efficient point $a$ it is repaired to dominates it, so
+$\Z(x) \leqslant \Z(a)$ and the split around $a$ removes at least $\Z(x)$ from
+that box.  The unexplored region shrinks on every pass, and the non-dominated
+set of a bounded integer program is finite.
+
+\emph{Completeness.}  A non-dominated $v$ leaves the region only through a
+split around some centre $a$ with $v \leqslant \Z(a)$.  If $v \neq \Z(a)$ that
+says $a$ dominates $v$, which no non-dominated vector admits.  So $v$ leaves
+only at the moment it is recorded; the loop ends only when the region is empty,
+so every $v$ is recorded, exactly once since centres are de-duplicated by
+criterion vector.
+\end{proof}
+
+\subsection{From the non-dominated set to the efficient set}
+
+Completeness of $F$ is not completeness of $\E$: one vector can be attained by
+several efficient points and the enumeration keeps one per vector.  The gap
+closes on one observation.
+
+\begin{theorem}\label{thm:slice}
+If $v$ is non-dominated, then \textbf{every} $x \in \Dset$ with $\Z(x) = v$ is
+efficient.
+\end{theorem}
+
+\begin{proof}
+Suppose some $y \in \Dset$ dominated such an $x$.  Then
+$\Z(y) \geqslant \Z(x) = v$ with at least one strict inequality, which says $v$
+is dominated --- against the hypothesis.
+\end{proof}
+
+\begin{corollary}\label{cor:union}
+$\displaystyle \E \;=\; \bigcup_{v \in F} \{\, x \in \Dset : \Z(x) = v \,\}$,
+and \textbf{no efficiency test is paid on any slice point}.
+\end{corollary}
+
+\noindent
+The dearest operation in the whole method --- the efficiency test --- is simply
+not invoked on the slices.  What remains is to enumerate each slice.
+
+\subsection{\texorpdfstring{A slice is $\Dset$ plus $p$ linear equations}{A slice is D plus p linear equations}}
+\label{sec:elim}
+
+Fixing $\Z(x) = v$ is linear in $x$ \emph{even for fractional criteria}: since
+$D_k(x) > 0$ on $\Dset$, the equation
+$(c_k^{\top}x + a_k)/(d_k^{\top}x + b_k) = v_k$ clears to
+\begin{equation}\label{eq:slice}
+  (c_k - v_k d_k)^{\top} x \;=\; v_k b_k - a_k ,
+\end{equation}
+with no sign condition and no case split.  A slice therefore carries no binary,
+no big-$M$ and nothing that grows from one slice to the next.
+
+These are equations, so \emph{solve} them rather than use them to prune.
+Gaussian elimination in exact rationals expresses $r$ of the variables as
+linear functions of the rest; substituting into every row of the model leaves
+an equivalent system in $n - r$ unknowns, on which the enumeration runs.  Two
+rows per eliminated variable keep it inside its own bounds.  At each leaf the
+eliminated variables are rebuilt and the one condition that is \emph{not}
+linear --- that they come out integer --- is checked there.  An inconsistent
+system settles the slice as empty with no enumeration at all.  The search space
+$(ub+1)^{n}$ becomes $(ub+1)^{n-r}$.
+
+\begin{table}[h]
+\centering
+\caption{Pruning on the slice equations against solving them.  Fourteen
+instances, $n = 7 \dots 12$; identical point sets throughout.}
+\label{tab:elim}
+\begin{tabular}{lrrr}
+\toprule
+instance & prune & eliminate & ratio \\
+\midrule
+$n=9$, $p=3$  & $29.71$\,s  & $0.31$\,s & $96.7\times$ \\
+$n=10$, $p=5$ & $119.47$\,s & $0.92$\,s & $129.9\times$ \\
+$n=12$, $p=3$ & $796.84$\,s & $8.34$\,s & $95.5\times$ \\
+\midrule
+\textbf{median of all fourteen} & & & $\mathbf{49.2\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Every coefficient is a rational and the elimination is exact, so this changes
+the order of the enumeration and nothing about its output.
+
+\subsection{\texorpdfstring{Pairing each vector with a maximiser of $\Phi$}{Pairing each vector with a maximiser of Phi}}
+
+By Remark~\ref{rem:notZ} the front alone does not answer $(P_E)$.  Each vector
+is therefore paired with the maximiser of $\Phi$ \emph{on its slice}, at one
+extra integer program per vector.  That pairing has a consequence worth
+stating: \textbf{the largest value on the front is the optimum of $(P_E)$}, so
+the enumeration is a second, independent exact method for $(P_E)$ and serves as
+a cross-check on the first.
+
+\section{The hybridisation}
+\label{sec:hybrid}
+
+\subsection{What a seed can feed here, and what it cannot}
+
+A seed for an \emph{optimisation} search feeds one mechanism: the bound.  A
+search that already knows a good value prunes boxes whose bound cannot beat it.
+\textbf{The enumeration has no bound and no incumbent} --- it must exhaust every
+box --- so a seed of that kind is worth exactly nothing.
+
+It has a different mechanism.  Every box costs a probe, an efficiency test and
+sometimes a repair, all spent to find \emph{a vector}; a vector already known
+needs none of them.  Seeding here is not ``start from a better value'' but
+\emph{do not pay to discover what you already know}.
+
+\begin{proposition}\label{prop:seedsound}
+Let $S \subseteq \E$ be a set of efficient points.  Placing each $a \in S$ in
+the box list by locating the unique box containing it and splitting that box
+around $a$ by \eqref{eq:split}, then running the enumeration, returns the same
+$F$ and the same $\E$, still complete by Proposition~\ref{prop:front}.
+\end{proposition}
+
+\begin{proof}
+The split \eqref{eq:split} is disjoint and covers the box minus
+$\{\Z \leqslant \Z(a)\}$, so a point whose vector has not been removed lies in
+exactly one child; the location is therefore well defined, and a seed whose
+vector has already been removed is dominated by an earlier one and is
+discarded.  The operation performed on the list is exactly the one the
+enumeration performs when its probe returns $a$: same centre, same rows, same
+children.  The proof of Proposition~\ref{prop:front} appeals only to the
+centres being feasible and to the region shrinking, both of which hold
+verbatim.  Efficiency of the seeds is what makes the \emph{recorded} vectors
+non-dominated, and is required for that reason alone.
+\end{proof}
+
+\noindent
+So the heuristic decides how much of the front has to be \emph{discovered}, and
+nothing about what is returned.
+
+\subsection{Which heuristic, and why the verification is free}
+
+Two sources of efficient points were compared.
+
+The \textbf{augmented weighted Tchebychev program} is the natural candidate:
+its optima are efficient by construction, for any strictly positive weights and
+any positive augmentation, so its output needs no verification.  A
+\textbf{Pareto local search} with an archive proves nothing, so every member
+has to be put through the exact efficiency test.
+
+That verification looks like the deciding cost and is not, because of an
+accounting that holds only here: \textbf{the enumeration was going to pay the
+same efficiency test anyway}.  Every probe a seed removes was going to be
+followed by one.  The verification cancels, and the probe is the gain.  What a
+seed really costs is its share of the walk.
+
+\begin{table}[h]
+\centering
+\caption{The two sources, per efficient point.}
+\label{tab:sources}
+\begin{tabular}{lrrr}
+\toprule
+ & cost of one point & verification & front covered \\
+\midrule
+Tchebychev scalarisation & $20.90$\,ms & none needed & $33$--$100\%$ \\
+Pareto walk (whole archive) & $0.011$\,s total & one test each & $95\%$ median \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+And a scalarisation is not cheaper than the probe it replaces: one probe costs
+$9.48$\,ms and $0$ branch \& bound nodes, one scalarisation $20.90$\,ms and
+$21$ nodes, cheaper on only $7$ of $40$ instances.  The probe maximises a
+linear direction over $\Dset$ plus ordinary rows and usually needs no branching
+at all; the scalarisation minimises a \emph{maximum}, at the price of a
+continuous variable and $p$ rows, and it branches.
+
+Consistently with that arithmetic, seeding from the generator \emph{loses}, and
+loses \emph{more the more of the front it seeds}: with a wide weight grid it
+covers $100\%$ of the front and runs at $2.61\times$ the unseeded time.
+
+\subsection{The order in which seeds are handed over}
+\label{sec:order}
+
+Placing $k$ seeds was expected to remove $k$ probes.  In the median it does
+($+1.00$ over $152$ instances), but on $5$ of those $152$ the seeded run spent
+\emph{more}: the pre-split imposes a box structure the search would not have
+chosen, and a box it would have absorbed into a larger one now exists
+separately and must be probed.
+
+The probe maximises a fixed direction, so the search splits first around
+whatever scores highest on it.  Sorting the seeds by that same direction
+reproduces the structure the search would have built.
+
+\begin{table}[h]
+\centering
+\caption{Probes against the unseeded enumeration, by the order the seeds
+arrive.  Twelve instances, $n = 6 \dots 10$.}
+\label{tab:order}
+\begin{tabular}{lrr}
+\toprule
+order & probes & raised the count on \\
+\midrule
+archive order        & $0.89\times$ & $4$ of $12$ \\
+\textbf{probe order} & $\mathbf{0.70\times}$ & \textbf{none} \\
+reversed             & $0.94\times$ & $5$ of $12$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The reversed arm is what makes the direction causal rather than a coincidence
+of this sample.  In archive order the hybrid is \emph{slower} than the pure
+exact method, at $0.81\times$; in probe order it is $1.33\times$ faster.
+
+\subsection{The algorithm}
+\label{sec:pseudo}
+
+Algorithm~\ref{alg:hybrid} is the whole method.  Phases~1--3 are the heuristic
+contribution and cost no integer program beyond the verification;
+phases~4--6 are exact and carry the proof.
+
+\begin{algorithm}[h]
+\caption{\textsc{HybridCompleteSet}$(\Dset, \Z, \Phi)$ --- all of $\E$, and the
+optimum of $(P_E)$}
+\label{alg:hybrid}
+\begin{algorithmic}[1]
+\Statex \textbf{Phase 1 --- explore (heuristic, no guarantee)}
+  \State $A \gets \textsc{ParetoLocalSearch}(\Dset, \Z, \Phi)$
+         \Comment{archive of mutually non-dominated points}
+\Statex \textbf{Phase 2 --- verify and order}
+  \State $S \gets \emptyset$;\ \ $V \gets \emptyset$
+  \ForAll{$x \in A$}
+    \State $a \gets x$ \textbf{if} $x$ passes the exact efficiency test
+           \textbf{else} a dominator of $x$ that does
+    \If{$\Z(a) \notin V$} $V \gets V \cup \{\Z(a)\}$;\ $S \gets S \cup \{a\}$
+    \EndIf
+  \EndFor
+  \State sort $S$ by $\pi^{\top}a$ \textbf{decreasing}, where
+         $\pi = \sum_k c_k$ is the probe direction \label{line:order}
+\Statex \textbf{Phase 3 --- pre-split (no program at all)}
+  \State $\mathcal{B} \gets \{\,\text{the root box}\,\}$;\ \ $F \gets \emptyset$
+  \ForAll{$a \in S$ \textbf{in that order}}
+    \State $B \gets$ the unique box of $\mathcal{B}$ containing $a$
+           \Comment{none: $a$ is dominated by an earlier seed; skip}
+    \State $F \gets F \cup \{\Z(a)\}$;\ \
+           $\mathcal{B} \gets (\mathcal{B} \setminus \{B\}) \cup
+            \textsc{Split}(B, a)$ \Comment{by \eqref{eq:split}}
+  \EndFor
+\Statex \textbf{Phase 4--5 --- exact enumeration of what is left}
+  \While{$\mathcal{B} \neq \emptyset$}
+    \State pop $B$ from $\mathcal{B}$
+    \State $x \gets \arg\max \{\pi^{\top}x : x \in \Dset \cap B\}$
+           \Comment{the probe}
+    \If{infeasible} \textbf{continue} \Comment{$B$ is empty: drop it}
+    \EndIf
+    \State $a \gets x$ \textbf{if} efficient \textbf{else} a dominator that is
+    \State $F \gets F \cup \{\Z(a)\}$;\ \
+           $\mathcal{B} \gets (\mathcal{B} \setminus \{B\}) \cup
+            \textsc{Split}(B, a)$
+  \EndWhile
+  \Statex \Comment{$F$ is now the complete non-dominated set
+          (Proposition~\ref{prop:front}, unaffected by the seeding by
+          Proposition~\ref{prop:seedsound})}
+\Statex \textbf{Phase 6 --- slices}
+  \State $\E \gets \emptyset$
+  \ForAll{$v \in F$}
+    \State solve \eqref{eq:slice} for $r$ variables; enumerate the remaining
+           $n-r$ \Comment{Section~\ref{sec:elim}}
+    \State $\E \gets \E \cup \{\,x \in \Dset : \Z(x) = v \,\}$
+           \Comment{all efficient, by Theorem~\ref{thm:slice}}
+  \EndFor
+  \State \Return $\E$ and $\arg\max_{x \in \E} \Phi(x)$
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+Two lines carry the paper.  Line~\ref{line:order} is the ordering of
+Section~\ref{sec:order}: without it the method is \emph{slower} than the pure
+exact one.  And the loop of phase~6 pays no efficiency test, by
+Theorem~\ref{thm:slice}.
+
+\begin{figure}[h]
+\centering
+\fig{h-process}
+\caption{Process structure.  Only verified efficient points cross from the
+heuristic side to the exact side, and they cross in probe order.  Nothing
+crosses back: the heuristic never sees the exact phase's findings, which is why
+its cost is a one-off.}
+\label{fig:process}
+\end{figure}
+
+\section{Two worked examples, step by step}
+\label{sec:examples}
+
+Both are run by the implementation and the figures are emitted from that run;
+nothing below is drawn by hand.  In every figure a filled green square is an
+efficient point, a grey outline a dominated one, an orange ring a point the
+walk supplied, red shading the region a split removes, and blue dashed
+rectangles the boxes currently open.
+
+\subsection{Two variables}
+\label{sec:exA}
+
+\[
+  \Dset = \{\, x \in \Zint^{2}_{+} :\ -2x_1 + x_2 \leqslant 0,\ \
+  6x_1 + x_2 \leqslant 21,\ \ -2x_1 + 4x_2 \leqslant 6 \,\},
+\]
+\[
+  \Z(x) = (x_1 - 2x_2,\ -x_1 + 4x_2), \qquad
+  \Phi(x) = \frac{x_1 + x_2 - 1}{5x_1 + x_2 - 1} .
+\]
+There are 7 non-dominated vectors.  The pure enumeration spends \textbf{15
+probes}; the hybrid spends \textbf{8}.
+
+\paragraph{Step 0 --- the walk.}  The Pareto local search returns an archive of
+7 points.  Each is put through the exact efficiency test, all 7 pass, and their
+criterion vectors are distinct: the walk has found the \emph{entire} front
+before a single box exists.  It has proved nothing --- that is still ahead ---
+but nothing remains to be \emph{discovered}.
+
+\begin{center}\fig{ha-walk}\end{center}
+
+\paragraph{Steps 1--7 --- placing the seeds.}  The seeds are sorted by
+$\pi^{\top}x$ decreasing and placed one at a time.  Each step locates the
+unique open box containing the seed, deletes $\{\Z \leqslant \Z(a)\}$ from it
+(red), and replaces it by the $p = 2$ children (dashed).  \textbf{No integer
+program is solved in any of these steps.}
+
+\begin{center}
+\fig{ha-seed1}\quad\fig{ha-seed2}\\[4pt]
+\fig{ha-seed3}\quad\fig{ha-seed4}\\[4pt]
+\fig{ha-seed5}\quad\fig{ha-seed6}\\[4pt]
+\fig{ha-seed7}
+\end{center}
+
+\noindent
+Watch the open region shrink toward the staircase boundary of the front.  After
+step~7 the list holds 8 boxes, and every one of them lies strictly beyond the
+front.
+
+\paragraph{Steps 8--15 --- the exact phase, which finds nothing.}  Each of the
+8 remaining boxes is probed once.  All 8 come back infeasible, and the list
+empties, which is what \emph{proves} the front complete
+(Proposition~\ref{prop:front}).
+
+\begin{center}\fig{ha-left}\end{center}
+
+\noindent
+This is the hybrid in one picture: the heuristic did the \emph{finding}, at
+$0.011$\,s and 7 efficiency tests, and the exact method did the \emph{proving},
+at 8 probes instead of 15.  Neither phase can be dropped --- an archive without
+the box list proves nothing, and the box list without the archive pays to
+rediscover all 7 vectors.
+
+\paragraph{Step 16 --- slices, then $(P_E)$.}  Each of the 7 vectors is sliced
+by \eqref{eq:slice}.  Here every slice is a single point, so
+$|\E| = 7$, and $\max_{\E} \Phi = 5/17$ at $x = (3,3)$ --- the same answer the
+decision-space method returns.
+
+\subsection{Three variables}
+\label{sec:exB}
+
+\[
+  \Dset = \{\, x \in \Zint^{3}_{+} :\ x_j \leqslant 3,\ \
+  x_1 + x_2 + 2x_3 \leqslant 5,\ \ 2x_1 + 3x_2 + x_3 \leqslant 6 \,\},
+\]
+\[
+  \Z(x) = (4x_1 - x_2 + x_3,\ \ 2x_2 + 2x_3), \qquad
+  \Phi(x) = \frac{-2x_1 + 4x_2 - 3x_3 + 1}{x_1 + 2x_2 + x_3 + 1} .
+\]
+The criterion space is still two-dimensional --- $p = 2$ --- so the same
+picture works with $n = 3$, which is the point of showing it: \textbf{the
+method's cost is driven by $p$ and by $|F|$, not by $n$}.  There are 4
+non-dominated vectors; the pure enumeration spends 9 probes, the hybrid 5.
+
+\paragraph{Step 0 --- the walk.}  The archive holds 4 points, all verified
+efficient, with distinct vectors $(12,0)$, $(9,2)$, $(6,4)$ and $(1,6)$ ---
+again the whole front.
+
+\begin{center}\fig{hb-walk}\end{center}
+
+\paragraph{Steps 1--4 --- placing the seeds.}  In probe order the seeds are
+$(3,0,0)$, $(2,0,1)$, $(1,0,2)$, $(0,1,2)$, which is the front read from the
+$Z_1$ end downwards --- exactly the order the probe would have met them.
+
+\begin{center}
+\fig{hb-seed1}\quad\fig{hb-seed2}\\[4pt]
+\fig{hb-seed3}\quad\fig{hb-seed4}
+\end{center}
+
+\paragraph{Steps 5--9 --- the exact phase.}  Five boxes remain and all five
+probe infeasible.
+
+\begin{center}\fig{hb-left}\end{center}
+
+\paragraph{Step 10 --- slices.}  Note $x_3$ enters $\Phi$ but the pairing is
+still needed: by Remark~\ref{rem:notZ} a vector can carry several points with
+different $\Phi$, so the maximiser is taken \emph{on the slice} rather than
+taking whichever point the repair landed on.
+
+\subsection{What the two examples show that a table cannot}
+
+In both, the walk covers the front completely and the exact phase finds
+\emph{nothing new}.  That is the good case, and it is the common one --- the
+walk covers $95\%$ of the front in the median over the campaign of
+Section~\ref{sec:results}.  It also shows the ceiling: the exact phase still
+probes 8 and 5 boxes respectively to \emph{prove} emptiness, and no seed can
+remove those.  The hybrid removes the cost of discovery and leaves the cost of
+proof untouched, which is why its margin is $1.31\times$ and not $15/8$.
+
+\section{Computational results}
+\label{sec:results}
+
+All arithmetic is exact and rational, with no floating point anywhere, so every
+comparison is between two exactly solved problems.  Instances are drawn from a
+documented pseudo-random family; the statistic is the \emph{median of the
+per-instance ratios} with the interquartile range, never a ratio of totals,
+which would be decided by the single heaviest instance.
+
+\begin{table}[h]
+\centering
+\caption{The hybrid against the pure exact enumeration, 120 instances over
+eight configurations.  ``Cover'' is the share of the front the walk supplies.}
+\label{tab:hybrid}
+\begin{tabular}{lrrr}
+\toprule
+configuration & instances & cover & ratio \\
+\midrule
+$n=6$, $p=3$  & $20$ & $100\%$ & $1.26\times$ \\
+$n=7$, $p=3$  & $20$ & $100\%$ & $1.36\times$ \\
+$n=8$, $p=3$  & $20$ & $100\%$ & $\mathbf{1.59\times}$ \\
+$n=9$, $p=3$  & $20$ & $98\%$  & $1.45\times$ \\
+$n=10$, $p=3$ & $12$ & $91\%$  & $1.38\times$ \\
+$n=7$, $p=4$  & $20$ & $98\%$  & $1.33\times$ \\
+$n=12$, $p=3$ & $6$  & $78\%$  & $1.35\times$ \\
+$n=12$, $p=5$ & $2$  & $45\%$  & $1.14\times$ \\
+\midrule
+\textbf{all} & $\mathbf{120}$ & & $\mathbf{1.36\times}$, faster on $116$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The largest front measured here holds $302$ vectors.  A separate campaign of
+150 instances at $n = 6 \dots 9$ measured the front enumeration at
+$1.33\times$ and the complete set at $1.31\times$ with the probe count at
+$0.72\times$ and never worse --- the gap between $1.31\times$ and
+$1.36\times$ is the walk sizing of Section~\ref{sec:cover}, which those runs
+predate.  In all of them the answer is identical --- same front, same $\E$,
+same optimum of $(P_E)$ --- which the experiments assert rather than assume.
+
+\subsection{Fractional criteria}
+\label{sec:fracres}
+
+Everything above uses \emph{linear} criteria, which is a real gap in a paper
+about ratios: the Tchebychev comparison of Section~\ref{sec:hybrid} requires
+them, since $z^{*}_k - \Z_k(x)$ is not linear when $\Z_k$ is a ratio.  The
+Pareto walk has no such requirement, so the hybrid can be measured where the
+problem statement actually lives.
+
+\begin{table}[h]
+\centering
+\caption{Genuinely fractional criteria: every $\Z_k$ a ratio with a strictly
+positive denominator on $\Dset$.  Ten instances per row.}
+\label{tab:frac}
+\begin{tabular}{lrrr}
+\toprule
+configuration & $|F|$ & cover & ratio \\
+\midrule
+$n=5$, $p=2$ & $7$  & $100\%$ & $1.54\times$ \\
+$n=6$, $p=2$ & $2$  & $100\%$ & $1.41\times$ \\
+$n=6$, $p=3$ & $22$ & $100\%$ & $1.35\times$ \\
+$n=7$, $p=3$ & $36$ & $100\%$ & $1.25\times$ \\
+\midrule
+\textbf{all $40$} & & & $\mathbf{1.39\times}$, $[1.21,\ 1.63]$, faster on $34$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The hybrid pays on the fractional case at least as well as on the linear one,
+and the walk covers the front completely there.  Nothing in the construction
+distinguishes the two: the seeds are placed by \eqref{eq:split}, whose rows
+\eqref{eq:ek} are integer-valued for ratios as much as for linear criteria.
+
+\subsection{How much walking is enough}
+\label{sec:cover}
+
+The walk has one free parameter pair --- restarts and neighbour budget --- and
+the hybrid's whole cost advantage is that the walk is cheap next to the search.
+
+\begin{table}[h]
+\centering
+\caption{Sweeping the neighbour budget, 18 instances at $n = 7,8$.}
+\label{tab:budget}
+\begin{tabular}{rrrr}
+\toprule
+budget & walk & cover & ratio \\
+\midrule
+$250$    & $0.096$\,s & $45\%$  & $1.08\times$ \\
+$1000$   & $0.080$\,s & $82\%$  & $1.31\times$ \\
+$4000$   & $0.100$\,s & $100\%$ & $\mathbf{1.36\times}$ \\
+$16000$  & $0.100$\,s & $100\%$ & $1.35\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Coverage saturates and so does the gain; past saturation the walk terminates
+on its own, so more budget costs nothing and buys nothing.  That reading holds
+\emph{at this size} --- and generalising it is exactly the mistake the next
+subsection is about.
+
+\subsection{Five instance families, and a prediction that was wrong}
+\label{sec:families}
+
+Everything above comes from one pseudo-random generator, so the magnitudes
+could belong to it rather than to the method.  Four further families move the
+quantities the mechanism depends on, and move them a long way: \texttt{loose}
+raises $|\Dset|$ by an order of magnitude while leaving $|F|$ alone;
+\texttt{knapsack} uses two capacity rows with all coefficients positive, the
+shape most of the applied literature has; \texttt{conflicting} gives the
+criteria opposing signs, which makes $|F|$ large; \texttt{aligned} correlates
+them, which makes it small.
+
+\begin{table}[h]
+\centering
+\caption{The hybrid on five structurally different families, 15 instances per
+cell, 150 in all.  Identical front and identical optimum on every one.}
+\label{tab:families}
+\begin{tabular}{lrrrrrr}
+\toprule
+family & $n$ & $p$ & $|F|$ & cover & ratio & faster on \\
+\midrule
+\texttt{mixed}       & $7$ & $3$ & $8$   & $100\%$ & $\mathbf{1.37\times}$ & $13/15$ \\
+\texttt{mixed}       & $8$ & $4$ & $30$  & $97\%$  & $1.30\times$ & $15/15$ \\
+\texttt{loose}       & $7$ & $3$ & $9$   & $83\%$  & $1.29\times$ & $14/15$ \\
+\texttt{loose}       & $8$ & $4$ & $44$  & $86\%$  & $1.23\times$ & $14/15$ \\
+\texttt{knapsack}    & $7$ & $3$ & $12$  & $100\%$ & $1.33\times$ & $15/15$ \\
+\texttt{knapsack}    & $8$ & $4$ & $41$  & $90\%$  & $1.27\times$ & $14/15$ \\
+\texttt{conflicting} & $6$ & $3$ & $107$ & $100\%$ & $1.14\times$ & $13/15$ \\
+\texttt{conflicting} & $7$ & $3$ & $105$ & $93\%$  & $1.14\times$ & $13/15$ \\
+\texttt{aligned}     & $7$ & $3$ & $6$   & $100\%$ & $1.31\times$ & $12/15$ \\
+\texttt{aligned}     & $8$ & $4$ & $11$  & $84\%$  & $1.14\times$ & $13/15$ \\
+\midrule
+\textbf{all 150} & & & & & $\mathbf{1.23\times}$ & $\mathbf{136}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Every family pays, between $1.14\times$ and $1.37\times$ in the median, so the
+advantage is not an artefact of the generator it was found with.  That is the
+result this section was run for.
+
+\paragraph{The prediction it refutes.}  We expected \texttt{conflicting}, with
+$|F| \approx 107$, to be the family the hybrid liked \emph{most} --- a large
+front is much to discover, and discovery is what a seed removes --- and
+\texttt{aligned}, with $|F| = 6$, to be the one it liked least.  \textbf{The
+opposite holds}: \texttt{conflicting} is the worst of the five at
+$1.14\times$, and the margin narrows with $|F|$ \emph{within} every family too:
+$1.37 \to 1.30$, $1.29 \to 1.23$, $1.33 \to 1.27$, $1.31 \to 1.14$ as $|F|$
+grows from $8$ to $30$, $9$ to $44$, $12$ to $41$, $6$ to $11$.
+
+\paragraph{Why, and what bounds it.}  A seed removes \emph{one} probe, and the
+enumeration spends between $2.3$ and $7.5$ probes per vector --- the rest go to
+boxes that turn out empty, which no seed can remove.  So the \emph{probe-count}
+saving is capped at one over that figure, by construction, and it shrinks as
+the ratio grows.  Sweeping $p$ at $n = 7$ over 72 instances shows both:
+
+\begin{table}[h]
+\centering
+\caption{Twelve instances per row.  The probes-per-vector column is a
+deterministic count; the time column is not, and the machine's noise floor is
+roughly $\pm 30\%$ per instance.}
+\label{tab:psweep}
+\begin{tabular}{crrrrr}
+\toprule
+$p$ & $|F|$ & probes / vector & cover & probes kept & time \\
+\midrule
+$2$ & $4$  & $2.3$ & $100\%$ & ---     & $1.38\times$ \\
+$3$ & $8$  & $3.0$ & $100\%$ & $0.68$  & $1.48\times$ \\
+$4$ & $16$ & $4.0$ & $98\%$  & $0.75$  & $1.33\times$ \\
+$5$ & $30$ & $4.9$ & $99\%$  & $0.82$  & $1.21\times$ \\
+$6$ & $38$ & $6.4$ & $99\%$  & $0.87$  & $1.24\times$ \\
+$7$ & $54$ & $7.5$ & $100\%$ & ---     & $1.10\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The probe-count column is monotone and is the part that is certain: $32\%$ of
+the probes removed at $p=3$, $13\%$ at $p=6$.  \textbf{It does not, however,
+bound the time.}  A seed removes a probe that lands on a \emph{non-empty} box,
+which carries an efficiency test behind it, while the probes that remain are
+mostly on empty boxes and are refuted at once --- so the work removed is dearer
+than the average probe.  Measured, $1/(\text{probes kept})$ and the time ratio
+agree only loosely, and at $p = 6$ the time ratio exceeds it.  We therefore
+report the probe bound, which is exact, and decline to convert it into a
+ceiling on time, which the measurement does not support.
+
+What does grow with $|F|$ is the walk's cost: one efficiency test per archive
+member, so it grows with the front while the saving does not.  A large front
+buys no more and costs more, which is the ordering in
+Table~\ref{tab:families} --- and the same mechanism as the $n = 12$, $p = 5$
+case of Section~\ref{sec:collapse} reached from a different direction.
+
+\subsection{Where it fails, why, and the one line that fixes it}
+\label{sec:collapse}
+
+At $n = 12$ the hybrid degrades to $1.00\times$, and at $n = 12$, $p = 5$ with
+$|F| = 187$ to $0.97\times$.  Our first explanation was that the probe count
+outgrows $|F|$, so the share a seed can remove shrinks.  \textbf{The
+measurement refutes it}: probes per vector are flat across the whole range ---
+$2.4$, $2.7$, $2.7$, $2.8$, $2.8$, $3.0$, $3.9$, $5.2$ --- with no trend.
+
+What collapses is coverage, and the speed-up tracks it line for line:
+
+\begin{table}[h]
+\centering
+\caption{Coverage, the share of probes a seed removes, and the speed-up.}
+\label{tab:collapse}
+\begin{tabular}{lrrr}
+\toprule
+ & cover & probes saved & ratio \\
+\midrule
+$n=6$  & $87\%$ & $29\%$ & \\
+$n=9$  & $79\%$ & $27\%$ & \\
+$n=10$ & $65\%$ & $24\%$ & $1.19\times$ \\
+$n=12$, $p=3$ & $35\%$ & $9\%$ & $1.00\times$ \\
+$n=12$, $p=5$ & $12\%$ & $2\%$ & $0.97\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Nothing in the exact phase degraded.  A fixed budget of $8$ restarts and
+$4000$ neighbours is a fixed amount of work against a target that grows, and
+$4000$ was chosen at $n = 7,8$ and generalised.
+
+Widening the walk alone, touching nothing else, confirms the diagnosis and
+says which knob matters.
+
+\begin{table}[h]
+\centering
+\caption{Widening the walk on the two instances that failed.  Restarts are what
+move coverage; the walk's own time barely changes.}
+\label{tab:widen}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{$n=12$, $p=3$} & \multicolumn{2}{c}{$n=12$, $p=5$} \\
+restarts / budget & cover & ratio & cover & ratio \\
+\midrule
+$8$ / $4000$     & $35\%$ & $1.03\times$ & $12\%$ & $0.98\times$ \\
+$16$ / $20000$   & $95\%$ & $\mathbf{1.61\times}$ & $46\%$ & $\mathbf{1.20\times}$ \\
+$32$ / $60000$   & $95\%$ & $1.53\times$ & $93\%$ & $1.12\times$ \\
+$64$ / $150000$  & $95\%$ & $1.44\times$ & $89\%$ & $1.17\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+So the fix is one line --- the first round is sized to the instance, at
+$\lceil n/4 \rceil$ times the restarts --- and it is what
+Table~\ref{tab:hybrid} already uses.  \emph{Not} a second constant: replacing
+$4000$ by $20000$ would repeat the error that produced the collapse.
+
+\paragraph{And coverage is not the objective.}  The $p = 5$ column of
+Table~\ref{tab:widen} says something we did not expect and that bounds the
+whole idea: \textbf{$46\%$ coverage gives $1.20\times$ and $93\%$ gives
+$1.12\times$}.  Buying the last half of the front costs more walking than the
+probes it removes.
+
+A walk that restarts in doubling rounds until one finds nothing new makes that
+concrete.  It does exactly what it promises --- at $n=12$, $p=5$ it takes
+coverage from $45\%$ to $97\%$ --- and it is slower: $1.02\times$ against
+$1.14\times$ there, and a median $1.32\times$ against $1.36\times$ over the
+same 120 instances, winning 109 of them against 116.  The quantity to
+maximise is not how much of the front the heuristic finds but the balance
+between what finding it costs and what the seeds save, and those two part
+company as $p$ grows.
+
+\paragraph{A correction to our own reading.}  We first reported the collapse
+as ``$n=12$, $p=3$: $35\%$ coverage, $1.00\times$'' from \emph{one} instance.
+Over six seeds of that configuration the unmodified walk averages $78\%$
+coverage and $1.35\times$.  The collapse is real and severe where $|F|$ is
+large --- $45\%$ coverage at $|F| = 302$ --- but it is not as general as one
+instance made it look.
+
+\subsection{Two further comparisons}
+
+\paragraph{The margin on front enumeration tracks $|F|$, not $n$.}  Every
+vector is a cut, and in decision space a cut costs $p$ binaries and $p+1$
+rows, so a larger front means larger sub-problems there and nothing at all in
+criterion space.  Over 45 instances swept across constraint tightness:
+
+\begin{table}[h]
+\centering
+\caption{Criterion space against decision space on complete front enumeration.}
+\begin{tabular}{lrrr}
+\toprule
+$|F|$ & instances & ratio (median) & max \\
+\midrule
+$1$--$4$  & $26$ & $2.7\times$  & $9.8\times$ \\
+$5$--$12$ & $17$ & $7.5\times$  & $23.8\times$ \\
+$13+$     & $2$  & $31.4\times$ & $38.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Seed quality explains the choice of heuristic.}  On 30 paired
+instances, scoring a seed by the non-negative gap
+$(\Phi^{*}-\Phi(\text{seed}))/|\Phi^{*}|$:
+
+\begin{table}[h]
+\centering
+\caption{The two sources as seeds for $(P_E)$ itself.}
+\begin{tabular}{lrr}
+\toprule
+ & median gap & exactly optimal \\
+\midrule
+Pareto archive & $0.000$ & $24/30$ \\
+Tchebychev     & $0.170$ & $8/30$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The ordering is stable across every family tried; the magnitudes are not.
+
+For context, the underlying substitution of criterion space for decision space
+is worth the following on $(P_E)$ itself, thirty instances per row at $n=6$:
+
+\begin{table}[h]
+\centering
+\caption{Decision space against criterion space on $(P_E)$.}
+\label{tab:margin}
+\begin{tabular}{crrrr}
+\toprule
+$p$ & ratio (median) & IQR & sub-programs & b\&b nodes \\
+\midrule
+2 & $1.52\times$  & $[1.25,\ 1.91]$  & $1.72\times$ & $1.28\times$ \\
+3 & $2.69\times$  & $[1.87,\ 3.72]$  & $1.40\times$ & $1.79\times$ \\
+4 & $4.99\times$  & $[2.39,\ 11.62]$ & $1.19\times$ & $2.68\times$ \\
+5 & $7.93\times$  & $[3.61,\ 19.98]$ & $1.17\times$ & $3.16\times$ \\
+6 & $14.57\times$ & $[7.90,\ 25.17]$ & $\mathbf{1.02\times}$ & $\mathbf{5.37\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The last row is the cost model of Section~\ref{sec:cost} read off the
+measurement: at $p=6$ the two methods solve \emph{the same number} of
+sub-programs and one still takes $14.57\times$ as long, so the whole margin
+lies in the cost of a single sub-problem, whose branch \& bound explores
+$5.37\times$ the nodes because it carries $p$ binaries and $p+1$ big-$M$ rows
+per cut.
+
+\paragraph{Measurement discipline.}  The machine used has a noise floor of
+roughly $\pm 30\%$ per instance even at per-instance minima over five repeats,
+so a small effect cannot be resolved in seconds and no number of repeats fixes
+that.  Deterministic work counts --- sub-programs, branch \& bound nodes,
+simplex pivots --- are reported next to the times and are identical on every
+run and every machine.  Runs stopped by a time budget are reported as censored
+and excluded from medians rather than counted as their budget.
+
+\section{Negative results, and a wall}
+\label{sec:wall}
+
+We report these at the same length as the positive ones, because they delimit
+where hybridisation can help at all.
+
+\subsection{Four changes that remove a quarter of the sub-problems and buy
+nothing}
+
+\begin{table}[h]
+\centering
+\caption{Four attempts on the sub-problem count.}
+\label{tab:wall}
+\begin{tabular}{lrr}
+\toprule
+change & sub-problems removed & cost \\
+\midrule
+early exit on a hopeless bound     & $25\%$       & no measurable time \\
+free contradiction filter          & $24.8\%$     & $0.98\times$ pivots \\
+range filter (ideal, anti-ideal)   & $+11.3\%$    & $1.03\times$ pivots \\
+dominated-corner filter            & $8$--$23\%$  & $1.077\times$ pivots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+All four are exact and one-sided: they discard only boxes that provably hold
+nothing, so they can change the cost and not the answer.  Only the second is
+kept, and it is worth $2\%$.  After four attempts the reason is a property
+rather than an accident:
+
+\begin{quote}
+\textbf{In this search, removing sub-problems does not remove time, because the
+sub-problems that can be removed cheaply are the ones that were already cheap.}
+\end{quote}
+
+\noindent
+$73\%$ of all boxes are empty, and an empty box is refuted by the simplex
+almost at once: every probe in these families costs \emph{zero} branch \& bound
+nodes, because the relaxation is integral or infeasible at the root.  A filter
+that catches empty boxes is catching the cheapest work in the search.  The only
+change reported here that goes round this wall is Section~\ref{sec:elim},
+which attacks an \emph{exponent} rather than a count.
+
+\subsection{A single-program completeness certificate}
+
+After the walk seeds $95\%$ of the front, $93\%$ of the remaining boxes are
+empty and the enumeration is almost purely a \emph{proof of emptiness}.  But
+``is there a feasible point not dominated by any of the $k$ known ones?'' is
+\textbf{one} question, and the box list answers it by splitting it into
+hundreds.  Formulation \eqref{eq:cut} answers it in one integer program with
+$k$ cuts, built once and never iterated --- which removes exactly the growth
+that makes that formulation expensive in Section~\ref{sec:cost}.
+
+It is sound: $13$ of $30$ instances were proved complete by a single program,
+with no wrong verdict.  It is also $4.5\times$ slower in the median and
+$100\times$ slower at worst ($239$\,s against $1.95$\,s), because $k$ cuts mean
+$kp$ binaries in one model --- $88$ of them at $k = 22$, $p = 4$.
+
+This answers a question wider than an optimisation.  Criterion space is the
+better \emph{search} because the model never grows; the certificate tests
+whether it is also the better \emph{proof}, where there is no iteration and no
+growth at all.  \textbf{It is, by $4.5\times$}: answering many cheap questions
+beats answering one question with $88$ binaries.
+
+\subsection{What the failures have in common}
+
+Four hybridisations were attempted in this line of work.  Handing the exact
+search the unfinished work of the decision-space method ties it.  Seeding the
+optimisation search from the Tchebychev program never pays, because that
+program steers in criterion space relative to the ideal point and never looks
+at $\Phi$.  Seeding the \emph{enumeration} from the same program loses, because
+a scalarisation costs more than the probe it replaces.  Only the Pareto walk
+pays, and only in probe order.  The rule that survives all four:
+
+\begin{quote}
+A hybridisation pays only where the exact method has a mechanism the first
+phase can feed \textbf{more cheaply than the exact method feeds it itself}.
+\end{quote}
+
+\noindent
+The first three fail the second half of that test.  The fourth passes it
+because its verification is a test the exact method had already budgeted for.
+
+\section{Conclusion}
+
+Keeping the unexplored region in criterion space removes the growth that
+dominates decision-space methods for $(P_E)$, and the same substitution carries
+to complete enumeration of the non-dominated set.
+Theorem~\ref{thm:slice} then turns that enumeration into the complete efficient
+set at no efficiency test at all, and solving the slice equations rather than
+pruning on them makes the remaining enumeration $49\times$ cheaper.  On top of
+that, a Pareto local search whose verified archive is handed over in probe
+order reaches all of $\E$ at $1.31\times$ the pure exact method over $150$
+instances, with identical answers.
+
+The negative results are the boundary of the positive one.  A seed is worth
+what the exact method can do with it, and in an enumeration --- which has no
+bound to feed --- it is worth exactly the discovery it replaces, priced against
+what discovery would have cost.  That pricing is also what limits the idea:
+once the front is large enough that covering it costs more walking than the
+probes it saves, no amount of heuristic effort helps, and the honest
+instrument for deciding is the balance rather than the coverage.
+
+\paragraph{Limitations.}  What a seed can remove is bounded, and
+Section~\ref{sec:families} bounds it from measurement: a seed removes one
+probe, the enumeration spends $2.6$ to $6.4$ probes per vector, and the rest
+go to boxes that turn out empty and that no heuristic can remove.  That caps
+the probe saving at $32\%$ at $p=3$ and $13\%$ at $p=6$.  It does not cap the
+\emph{time}, since the probes a seed removes are the dearer ones, and we do not
+claim a time ceiling the measurement does not support.  Removing the remaining
+work would mean attacking the emptiness proof, on which
+Section~\ref{sec:wall} reports four failed attempts.
+
+The advantage also depends on the walk staying
+cheap next to the search, and Section~\ref{sec:collapse} shows where that
+stops: at $|F| = 302$ the walk covers $45\%$ of the front and the margin falls
+to $1.14\times$, with more walking making it worse rather than better.  We
+have no rule that says in advance how much walking an instance deserves; the
+instance-sized first round is a measured heuristic, not a bound.
+
+The instances span five families with $n \leqslant 12$ and
+$p \leqslant 6$; within that range the direction is stable while the magnitude
+varies by a factor of two between families, which is itself the honest measure
+of how far a single number should be carried.  The \emph{directions} reported here
+are explained by mechanisms that are themselves measured --- sub-program counts,
+node counts, pivot counts --- but the \emph{magnitudes} are properties of that
+family and should not be read as expected values elsewhere.  A full
+bibliographic review, including sources behind paywalls, remains to be done
+before any claim of novelty is made: what is stated above is what we measured,
+not what we believe to be new.
+
+\paragraph{Reproducibility.}  The implementation is pure Python with no
+third-party dependency, computes in exact rational arithmetic throughout, and
+carries $93$ tests.  Several check \emph{properties} rather than answers --- the
+split is a partition, the metaheuristic never hands over an inefficient point,
+a budgeted run never claims completeness --- since a method that silently lost
+efficient points would still agree with the optimum on favourable instances.
+Per-instance records of every experiment are stored so that each table can be
+rebuilt and re-checked without re-running it.
+
+\end{document}
