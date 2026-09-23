@@ -227,7 +227,12 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
     *filter_boxes* applies :func:`~lfp_efficient.criterion_space.looks_empty`
     before each probe, dropping the boxes arithmetic alone can settle.  It is
     exact and one-sided, so it changes what the search costs and nothing about
-    what it returns; it is a parameter so that the A/B can be run.
+    what it returns; it stays a parameter so that the A/B can be re-run.  On by
+    default because it is free and removes about a quarter of the probes --
+    which is worth $2\%$ of the simplex pivots, not $25\%$, for the reason
+    given with that function.  *use_range* adds the ideal-point test, which
+    catches more boxes and costs $2p$ programs to set up; measured at
+    $1.03\times$ the pivots, so it is off.
     """
     deadline = None if time_budget is None else monotonic() + time_budget
     positive = (denominator_stays_positive(problem.model, phi)

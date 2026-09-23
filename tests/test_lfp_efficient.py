@@ -32,7 +32,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            tchebychev_incumbent, efficient_dominator,
                            repair_to_efficient)
 from lfp_efficient.rational import F, fmt
-from lfp_efficient.criterion_space import _rows_for
+from lfp_efficient.criterion_space import _rows_for, looks_empty, split
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
@@ -1929,6 +1929,88 @@ def test_the_generated_hybrid_agrees_with_the_plain_enumeration():
         checked += 1
     return (f"{checked} instances, generated seeds all efficient, "
             "same front and same optimum")
+
+
+
+# --------------------------------------------------------------------------
+# the free box filter
+# --------------------------------------------------------------------------
+def test_the_free_filter_never_calls_a_live_box_empty():
+    """The one thing that would make the filter unsound, checked directly.
+
+    Every box the filter rejects is put to the probe anyway; a box the probe
+    finds feasible while the filter called it empty is a false positive, and
+    one of those silently loses part of the front.  Over the boxes below there
+    must be none.
+    """
+    from heapq import heappop, heappush
+
+    from lfp_efficient.criterion_space import Box
+    from lfp_efficient.milp import solve_linear_milp
+    from lfp_efficient.rational import ZERO
+    from lfp_efficient.simplex import OPTIMAL as LP_OK
+    from lfp_efficient.tchebychev import anti_ideal_point, ideal_point
+
+    rng = random.Random(60221)
+    boxes = caught = live = 0
+    for _ in range(12):
+        problem, _, _ = random_instance(rng)
+        ideal, anti = ideal_point(problem), anti_ideal_point(problem)
+        direction = [ZERO] * problem.n
+        for z in problem.criteria:
+            for j in range(problem.n):
+                direction[j] += F(z.U[j])
+        open_boxes, counter = [(0, Box())], 0
+        while open_boxes:
+            _, box = heappop(open_boxes)
+            boxes += 1
+            says_empty = looks_empty(problem, box, ideal, anti)
+            model = box.restricted(problem.model)
+            found = solve_linear_milp(
+                model, direction + [ZERO] * (model.n - problem.n))
+            really_empty = found.status != LP_OK
+            assert not (says_empty and not really_empty), (
+                "the filter called a box empty that holds a feasible point")
+            if says_empty:
+                caught += 1
+            if really_empty:
+                continue
+            live += 1
+            x = found.x[:problem.n]
+            outcome = test_efficiency(problem, x)
+            centre = (x if outcome.efficient
+                      else efficient_dominator(problem, outcome))
+            for child in split(problem, box, centre, None):
+                counter += 1
+                heappush(open_boxes, (counter, child))
+    assert caught, "the filter never fired: the check would be vacuous"
+    return (f"{boxes} boxes, {caught} called empty ({caught / boxes:.0%}), "
+            f"{live} live, no false positive")
+
+
+def test_the_filter_changes_the_cost_and_not_the_answer():
+    """All three settings must agree, vector for vector and value for value."""
+    rng = random.Random(8675309)
+    checked = saved = total = 0
+    for _ in range(12):
+        problem, phi, _ = random_instance(rng)
+        off = enumerate_front(problem, phi, filter_boxes=False)
+        free = enumerate_front(problem, phi, filter_boxes=True)
+        both = enumerate_front(problem, phi, filter_boxes=True, use_range=True)
+        for other in (free, both):
+            assert other.complete == off.complete
+            assert ({tuple(v) for v in other.vectors}
+                    == {tuple(v) for v in off.vectors}), "the front changed"
+            assert max(other.values) == max(off.values), "the optimum changed"
+            assert other.boxes == off.boxes, "the box structure changed"
+            assert other.probes <= off.probes, "the filter cost probes"
+        assert both.filtered >= free.filtered, "the range test caught less"
+        saved += off.probes - both.probes
+        total += off.probes
+        checked += 1
+    assert saved, "the filter removed no probe at all"
+    return (f"{checked} instances, three settings, one answer; "
+            f"{saved}/{total} probes removed ({saved / total:.0%})")
 
 
 # --------------------------------------------------------------------------

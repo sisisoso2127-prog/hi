@@ -278,6 +278,35 @@ def looks_empty(problem: MOILFP, box: Box,
     to be probed.  Measured over 1317 boxes it fires on 24.6% of them --
     33.6% of the ones that really are empty -- with zero false positives, which
     the test suite re-checks against the probe rather than trusting.
+
+    What it is worth, which is much less than that
+    ----------------------------------------------
+    Removing a quarter of the probes buys **2%**.  Over 72 instances at
+    ``n = 5..8`` and ``p = 3, 4``, against the same enumeration with the filter
+    off:
+
+        contradiction only (free)   0.98x simplex pivots, 0.99x time
+        + range (2p of setup)       1.03x pivots, 1.04x time -- a loss
+
+    The contradiction test is kept on: it is exact, it costs nothing, and the
+    $0.98\times$ is consistent across all six configurations ($0.97$--$0.99$),
+    which a pivot count can assert and a wall clock on this machine cannot.
+    The range test is off by default: the ``2p`` programs it needs cost more
+    than the $11.3\%$ of boxes it catches.
+
+    The reason the gain is $2\%$ and not $25\%$ is the same one this package
+    met once before, and meeting it twice makes it a property of the method
+    rather than an accident.  **The sub-problems you can cheaply prove
+    unnecessary are the ones that were already cheap.**  An empty box is
+    refuted by the simplex almost immediately -- every probe in this family
+    costs *zero* branch \& bound nodes, all 1416 of them, because the
+    relaxation is either integral or infeasible at the root.  The early exit of
+    :func:`optimize_in_criterion_space` removed 25% of the sub-problems and no
+    measurable time for exactly this reason; this filter removes 24.8% of the
+    probes and 2% of the pivots.
+
+    It is reported as $2\%$ rather than as $25\%$ because the second number is
+    the one a reader would misuse.
     """
     if not box.lo and not box.hi:
         return False
