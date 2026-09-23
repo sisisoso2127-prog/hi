@@ -1,0 +1,14 @@
+============================================================================
+L'INSTANCE DE sylva_crema.m, ENUMEREE PAR NOTRE CADRE
+============================================================================
+
+  denominateurs des criteres : [1, 1]  (tous a 1 : criteres lineaires)
+  coupes d'efficacite : 45 vecteurs, complet = True, 91 appels entiers
+  force brute         : 45 vecteurs
+  manquants : 0   en trop : 0
+
+OK -- le cas lineaire est traite comme un cas particulier du cadre fractionnaire.
+Il n'y a donc rien a porter depuis MATLAB : la seule piece
+qui distingue les deux cadres est la coupe, et elle est
+ecrite. Ce que le code MATLAB peut encore apporter est une
+VERIFICATION CROISEE, pas une fonctionnalite.
