@@ -50,7 +50,8 @@ from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
 from .rational import F, fmt
 from .front import Front, enumerate_front, in_box, pre_split
 from .generated import (GeneratedSeeds, generate_seeds,
-                        generated_front)
+                        generated_front, hybrid_complete_set, pareto_front,
+                        pareto_seeds, probe_order)
 from .complete import (CompleteSet, complete_efficient_set,
                        variable_bounds)
 from .subset import EfficientSubset, efficient_subset
@@ -84,6 +85,8 @@ __all__ = [
     "efficient_subset", "EfficientSubset",
     "enumerate_front", "Front", "pre_split", "in_box",
     "generated_front", "generate_seeds", "GeneratedSeeds",
+    "hybrid_complete_set", "pareto_front", "pareto_seeds",
+    "probe_order",
     "complete_efficient_set", "CompleteSet", "variable_bounds",
     "F", "fmt",
 ]

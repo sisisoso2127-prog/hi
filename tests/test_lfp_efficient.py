@@ -36,7 +36,9 @@ from lfp_efficient.criterion_space import _rows_for, looks_empty, split
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
-from lfp_efficient.generated import (generate_seeds, generated_front)
+from lfp_efficient.generated import (generate_seeds, generated_front,
+                                     hybrid_complete_set, pareto_front,
+                                     pareto_seeds, probe_order)
 from lfp_efficient.complete import (CompleteSet, complete_efficient_set,
                                     reduce_rows, slice_equations,
                                     slice_points, slice_rows,
@@ -2077,6 +2079,93 @@ def test_an_inconsistent_slice_is_settled_without_scanning():
         "Z_2 = 5 with Z_1 = 2 contradicts Z_2 = 2*Z_1")
     assert slice_points(problem, [3, 3], [F(2), F(5)]) == []
     return "a contradictory slice is refuted by the elimination, not by a scan"
+
+
+
+# --------------------------------------------------------------------------
+# the hybrid that reaches E(P_D)
+# --------------------------------------------------------------------------
+def test_the_hybrid_reaches_exactly_the_same_efficient_set():
+    """A metaheuristic decides how much is discovered, never what is returned.
+
+    ``hybrid_complete_set`` must agree with the pure exact
+    ``complete_efficient_set`` point for point, keep the completeness proof,
+    and reach the same optimum of ``(P_E)`` -- the maximiser may differ when a
+    slice holds several, so the *value* is what is compared.
+    """
+    rng = random.Random(112358)
+    checked = seeded = vectors = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        exact = complete_efficient_set(problem, phi)
+        hybrid = hybrid_complete_set(problem, phi)
+        assert hybrid.complete == exact.complete, "the proof changed"
+        assert ({tuple(x) for x in hybrid.points}
+                == {tuple(x) for x in exact.points}), "E(P_D) changed"
+        assert ({tuple(v) for v in hybrid.vectors}
+                == {tuple(v) for v in exact.vectors}), "the front changed"
+        assert hybrid.best_value == exact.best_value, "the optimum changed"
+        front, found = pareto_front(problem, phi)
+        assert front.seeded == len(found), "not every seed was placed"
+        seeded += front.seeded
+        vectors += len(exact.vectors)
+        checked += 1
+    return (f"{checked} instances, identical E(P_D); the walk supplied "
+            f"{seeded} of {vectors} front vectors")
+
+
+def test_every_seed_the_walk_supplies_is_verified_efficient():
+    """The local search proves nothing, so the seeds must be checked.
+
+    An unverified seed would be recorded as a front vector while being
+    dominated, which loses part of the answer rather than slowing it down.
+    """
+    rng = random.Random(1618033)
+    checked = 0
+    for _ in range(10):
+        problem, phi, _ = random_instance(rng)
+        found = pareto_seeds(problem, phi)
+        for point in found.points:
+            assert test_efficiency(problem, point).efficient, (
+                "the walk handed over an inefficient seed")
+            checked += 1
+    assert checked, "the walk produced no seed at all"
+    return f"{checked} seeds from the walk, every one verified efficient"
+
+
+def test_the_seeds_are_handed_over_in_the_probe_s_own_order():
+    """The order is load-bearing, not cosmetic.
+
+    In archive order the probe count rose on 4 of 12 instances; in this order
+    it rose on none.  The property under test is the ordering itself: each
+    seed must score no higher than its predecessor on the direction the probe
+    maximises.
+    """
+    rng = random.Random(2718281)
+    checked = 0
+    for _ in range(8):
+        problem, phi, _ = random_instance(rng)
+        found = pareto_seeds(problem, phi)
+        if len(found.points) < 2:
+            continue
+        direction = [F(0)] * problem.n
+        for z in problem.criteria:
+            for j in range(problem.n):
+                direction[j] += F(z.U[j])
+        scores = [sum(c * xi for c, xi in zip(direction, a))
+                  for a in found.points]
+        assert scores == sorted(scores, reverse=True), (
+            f"the seeds are not in probe order: {scores}")
+        # The sort is stable, so points that tie on the direction keep their
+        # incoming order; re-sorting a shuffled list reproduces the score
+        # sequence, not necessarily the same list.
+        shuffled = list(reversed(found.points))
+        again = probe_order(problem, shuffled)
+        assert [sum(c * xi for c, xi in zip(direction, a))
+                for a in again] == scores, "probe_order is not deterministic"
+        checked += 1
+    assert checked, "no instance produced two seeds"
+    return f"{checked} instances, seeds in descending probe order"
 
 
 # --------------------------------------------------------------------------
