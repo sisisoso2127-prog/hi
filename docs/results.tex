@@ -780,18 +780,26 @@ and in the chart the orange bar is below the blue one in four families and
 level with it in the fifth --- never above: the margin narrows as $|F|$ grows,
 within families as well as across them.
 
-\paragraph{The ceiling that explains it.}  A seed removes \emph{one} probe, and
-the enumeration spends $2.6$ to $4.5$ probes per vector --- the rest go to
-boxes that turn out empty, which no seed can touch.  So even at full coverage
-the probe saving is capped near a quarter to a third, exactly the $24$--$32\%$
-the campaign measures.
+\paragraph{What bounds it, and what does not.}  A seed removes \emph{one}
+probe, and the enumeration spends $2.3$ to $7.5$ probes per vector --- the rest
+go to boxes that turn out empty, which no seed can touch.  So the
+\emph{probe-count} saving is capped at one over that figure, and shrinks as it
+grows: sweeping $p$ at $n=7$ gives probes-per-vector $2.3$, $3.0$, $4.0$,
+$4.9$, $6.4$, $7.5$ and probes kept $0.68$, $0.75$, $0.82$, $0.87$ --- $32\%$
+removed at $p=3$ down to $13\%$ at $p=6$, over 72 instances with 68 faster.
 
 \begin{quote}
-\textbf{That is a hard ceiling of roughly $1.4\times$ on the whole idea, and it
-does not depend on $|F|$.}  What does depend on $|F|$ is the walk's cost, one
-efficiency test per archive member --- so a large front buys no more and costs
-more.
+That bound is exact and it is about \emph{counts}.  \textbf{It does not bound
+the time}, because a seed removes a probe on a non-empty box --- which carries
+an efficiency test behind it --- while the probes left behind are mostly on
+empty boxes and are refuted at once.  At $p=6$ the time ratio exceeds
+$1/(\text{probes kept})$.  An earlier draft here called it ``a hard ceiling of
+roughly $1.4\times$''; that is withdrawn.
 \end{quote}
+
+\noindent
+What does grow with $|F|$ is the walk's cost, one efficiency test per archive
+member --- so a large front buys no more and costs more.
 
 \section{Where the hybrid fails, and the line that fixes it}
 

@@ -1655,16 +1655,42 @@ holds.}  \texttt{conflicting} is the worst of the five, and the margin narrows
 with $|F|$ inside every family as well: $1.37 \to 1.30$, $1.29 \to 1.23$,
 $1.33 \to 1.27$, $1.31 \to 1.14$.
 
-\paragraph{The ceiling that explains it.}  A seed removes one probe, and the
-enumeration spends $2.6$ to $4.5$ probes \emph{per vector} --- the rest go to
-boxes that turn out empty, which no seed can touch.  So even at full coverage
-the probe saving is capped near a quarter to a third, which is what the
-campaign measures ($24$--$32\%$ wherever coverage is good).  \textbf{That is a
-hard ceiling of roughly $1.4\times$ on the whole idea, independent of $|F|$.}
+\paragraph{What bounds it, and what does not.}  A seed removes \emph{one}
+probe, and the enumeration spends $2.3$ to $7.5$ probes per vector --- the rest
+go to boxes that turn out empty, which no seed can touch.  So the
+\emph{probe-count} saving is capped at one over that figure, by construction,
+and shrinks as it grows.  Sweeping $p$ at $n=7$, twelve instances each:
+
+\begin{table}[h]
+\centering
+\caption{Probes per vector is a deterministic count; time is not.}
+\begin{tabular}{crrrr}
+\toprule
+$p$ & $|F|$ & probes / vector & probes kept & time \\
+\midrule
+$2$ & $4$  & $2.3$ & ---    & $1.38\times$ \\
+$3$ & $8$  & $3.0$ & $0.68$ & $1.48\times$ \\
+$4$ & $16$ & $4.0$ & $0.75$ & $1.33\times$ \\
+$5$ & $30$ & $4.9$ & $0.82$ & $1.21\times$ \\
+$6$ & $38$ & $6.4$ & $0.87$ & $1.24\times$ \\
+$7$ & $54$ & $7.5$ & ---    & $1.10\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The probe column is monotone and certain: $32\%$ removed at $p=3$, $13\%$ at
+$p=6$.  \textbf{It does not bound the time.}  A seed removes a probe on a
+\emph{non-empty} box, which carries an efficiency test behind it, while the
+probes left behind are mostly on empty boxes and are refuted at once --- so the
+work removed is dearer than the average probe.  Measured,
+$1/(\text{probes kept})$ and the time ratio agree only loosely and at $p=6$ the
+time ratio exceeds it.  An earlier draft of this note turned the probe bound
+into ``a hard ceiling of roughly $1.4\times$''; that is withdrawn.
+
 What does grow with $|F|$ is the walk's cost, one efficiency test per archive
-member.  A large front therefore buys no more and costs more --- the ordering
-in the table, and the same mechanism as Section~\ref{sec:cover} reached from
-the other direction.
+member.  A large front buys no more and costs more --- the ordering in the
+table, and the same mechanism as Section~\ref{sec:cover} from the other side.
 
 \subsection{Where the hybrid fails, and the line that fixes it}
 \label{sec:cover}

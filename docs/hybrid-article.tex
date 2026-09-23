@@ -715,18 +715,48 @@ $1.14\times$, and the margin narrows with $|F|$ \emph{within} every family too:
 $1.37 \to 1.30$, $1.29 \to 1.23$, $1.33 \to 1.27$, $1.31 \to 1.14$ as $|F|$
 grows from $8$ to $30$, $9$ to $44$, $12$ to $41$, $6$ to $11$.
 
-\paragraph{Why, and the ceiling it implies.}  A seed removes one probe, and the
-enumeration spends between $2.6$ and $4.5$ probes \emph{per vector} --- the
-rest go to boxes that turn out empty, which no seed can remove.  So even at
-$100\%$ coverage the probe saving is capped near a quarter to a third, which is
-what the campaign measures directly ($24$--$32\%$ where coverage is good).
-That puts a hard ceiling of roughly $1.4\times$ on the whole idea, and it is
-independent of $|F|$.  What does depend on $|F|$ is the walk's cost: it pays
-one efficiency test per archive member, so it grows with the front while the
-saving does not.  A large front therefore buys no more and costs more, which
-is exactly the ordering in the table --- and the same mechanism as the
-$n = 12$, $p = 5$ case of Section~\ref{sec:collapse}, reached from a different
-direction.
+\paragraph{Why, and what bounds it.}  A seed removes \emph{one} probe, and the
+enumeration spends between $2.3$ and $7.5$ probes per vector --- the rest go to
+boxes that turn out empty, which no seed can remove.  So the \emph{probe-count}
+saving is capped at one over that figure, by construction, and it shrinks as
+the ratio grows.  Sweeping $p$ at $n = 7$ over 72 instances shows both:
+
+\begin{table}[h]
+\centering
+\caption{Twelve instances per row.  The probes-per-vector column is a
+deterministic count; the time column is not, and the machine's noise floor is
+roughly $\pm 30\%$ per instance.}
+\label{tab:psweep}
+\begin{tabular}{crrrrr}
+\toprule
+$p$ & $|F|$ & probes / vector & cover & probes kept & time \\
+\midrule
+$2$ & $4$  & $2.3$ & $100\%$ & ---     & $1.38\times$ \\
+$3$ & $8$  & $3.0$ & $100\%$ & $0.68$  & $1.48\times$ \\
+$4$ & $16$ & $4.0$ & $98\%$  & $0.75$  & $1.33\times$ \\
+$5$ & $30$ & $4.9$ & $99\%$  & $0.82$  & $1.21\times$ \\
+$6$ & $38$ & $6.4$ & $99\%$  & $0.87$  & $1.24\times$ \\
+$7$ & $54$ & $7.5$ & $100\%$ & ---     & $1.10\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The probe-count column is monotone and is the part that is certain: $32\%$ of
+the probes removed at $p=3$, $13\%$ at $p=6$.  \textbf{It does not, however,
+bound the time.}  A seed removes a probe that lands on a \emph{non-empty} box,
+which carries an efficiency test behind it, while the probes that remain are
+mostly on empty boxes and are refuted at once --- so the work removed is dearer
+than the average probe.  Measured, $1/(\text{probes kept})$ and the time ratio
+agree only loosely, and at $p = 6$ the time ratio exceeds it.  We therefore
+report the probe bound, which is exact, and decline to convert it into a
+ceiling on time, which the measurement does not support.
+
+What does grow with $|F|$ is the walk's cost: one efficiency test per archive
+member, so it grows with the front while the saving does not.  A large front
+buys no more and costs more, which is the ordering in
+Table~\ref{tab:families} --- and the same mechanism as the $n = 12$, $p = 5$
+case of Section~\ref{sec:collapse} reached from a different direction.
 
 \subsection{Where it fails, why, and the one line that fixes it}
 \label{sec:collapse}
@@ -991,12 +1021,15 @@ once the front is large enough that covering it costs more walking than the
 probes it saves, no amount of heuristic effort helps, and the honest
 instrument for deciding is the balance rather than the coverage.
 
-\paragraph{Limitations.}  The method has a ceiling near $1.4\times$, and
-Section~\ref{sec:families} derives it from measurement rather than from
-optimism: a seed removes one probe, the enumeration spends $2.6$ to $4.5$
-probes per vector, and the rest go to boxes that turn out empty and that no
-heuristic can remove.  Going past that ceiling would mean attacking the
-emptiness proof, on which Section~\ref{sec:wall} reports four failed attempts.
+\paragraph{Limitations.}  What a seed can remove is bounded, and
+Section~\ref{sec:families} bounds it from measurement: a seed removes one
+probe, the enumeration spends $2.6$ to $6.4$ probes per vector, and the rest
+go to boxes that turn out empty and that no heuristic can remove.  That caps
+the probe saving at $32\%$ at $p=3$ and $13\%$ at $p=6$.  It does not cap the
+\emph{time}, since the probes a seed removes are the dearer ones, and we do not
+claim a time ceiling the measurement does not support.  Removing the remaining
+work would mean attacking the emptiness proof, on which
+Section~\ref{sec:wall} reports four failed attempts.
 
 The advantage also depends on the walk staying
 cheap next to the search, and Section~\ref{sec:collapse} shows where that

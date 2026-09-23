@@ -754,13 +754,24 @@ found with. **But it refutes a prediction we wrote down first:** we expected
 `aligned` the worst. The opposite holds, and the margin narrows with `|F|`
 inside every family too.
 
-**The ceiling that explains it.** A seed removes one probe; the enumeration
-spends 2.6–4.5 probes *per vector*, the rest on boxes that turn out empty and
-that no seed can touch. So even at 100% coverage the probe saving is capped
-near a quarter to a third — which is exactly the 24–32% measured — putting a
-**hard ceiling of about 1.4×** on the idea, independent of `|F|`. What grows
-with `|F|` is the walk's cost, one efficiency test per archive member. A large
-front buys no more and costs more.
+**What bounds it, and what doesn't.** A seed removes *one* probe; the
+enumeration spends 2.3–7.5 probes *per vector*, the rest on boxes that turn out
+empty and that no seed can touch. So the **probe-count** saving is capped at
+one over that figure, and shrinks as it grows — sweeping `p` at `n = 7`:
+
+| `p` | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---:|---:|---:|---:|---:|---:|
+| probes / vector | 2.3 | 3.0 | 4.0 | 4.9 | 6.4 | 7.5 |
+| probes kept | — | 0.68 | 0.75 | 0.82 | 0.87 | — |
+| time | 1.38× | 1.48× | 1.33× | 1.21× | 1.24× | 1.10× |
+
+32% of probes removed at `p=3`, 13% at `p=6`; 72 instances, faster on 68. **That bound does not bound the
+time**: a seed removes a probe on a *non-empty* box, which carries an
+efficiency test behind it, while the probes left behind are mostly on empty
+boxes and are refuted at once. At `p=6` the time ratio exceeds
+`1/(probes kept)`. An earlier version here called this "a hard ceiling of about
+1.4×" — **withdrawn**. What grows with `|F|` is the walk's cost, one efficiency
+test per archive member: a large front buys no more and costs more.
 
 **Where it fails, and the one line that fixes it.** At `n = 12` the margin falls
 to 1.00×, and at `n=12, p=5` to 0.97×. We first blamed the probe count
