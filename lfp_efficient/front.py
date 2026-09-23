@@ -162,7 +162,8 @@ def in_box(problem: MOILFP, box: Box, x) -> bool:
                for coeffs, rhs in box.rows)
 
 
-def pre_split(problem: MOILFP, seeds) -> Tuple[List[Box], List[List[Fraction]]]:
+def pre_split(problem: MOILFP, seeds,
+              root: Optional[Box] = None) -> Tuple[List[Box], List[List[Fraction]]]:
     """Split the root box around known efficient points, paying no programs.
 
     The split of Section~3 is *disjoint* and covers the box minus
@@ -181,7 +182,7 @@ def pre_split(problem: MOILFP, seeds) -> Tuple[List[Box], List[List[Fraction]]]:
     vector would not be on the front, and the output would be wrong rather
     than merely slow.
     """
-    boxes = [Box()]
+    boxes = [root if root is not None else Box()]
     recorded: List[List[Fraction]] = []
     seen = set()
     for a in seeds:
@@ -204,7 +205,8 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
                     time_budget: Optional[float] = None,
                     seeds: Optional[List[Sequence[Fraction]]] = None,
                     filter_boxes: bool = True,
-                    use_range: bool = False) -> Front:
+                    use_range: bool = False,
+                    drop_dominated: bool = False) -> Front:
     """Enumerate the whole non-dominated set, in criterion space.
 
     With *phi*, each vector is paired with the point maximising ``Phi`` on its
@@ -247,8 +249,10 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
             probe[j] += F(z.U[j])
 
     ideal = anti = None
-    if filter_boxes and use_range and has_linear_criteria(problem):
-        ideal, anti = ideal_point(problem), anti_ideal_point(problem)
+    if filter_boxes and (use_range or drop_dominated) and has_linear_criteria(problem):
+        ideal = ideal_point(problem)
+        if use_range:
+            anti = anti_ideal_point(problem)
 
     front = Front()
     counter = 0
@@ -279,8 +283,10 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
         else:                                   # Phi undefined on the slice
             front.points.append(list(centre))
 
+    root = Box(hi=list(ideal)) if ideal is not None else Box()
+
     if seeds:
-        boxes, recorded = pre_split(problem, seeds)
+        boxes, recorded = pre_split(problem, seeds, root)
         for a in recorded:
             record(a)
             front.seeded += 1
@@ -288,7 +294,7 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
             counter += 1
             heappush(open_boxes, (counter, box))
     else:
-        heappush(open_boxes, (0, Box()))
+        heappush(open_boxes, (0, root))
 
     while open_boxes:
         if front.boxes >= max_boxes:
@@ -302,6 +308,15 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
         if filter_boxes and looks_empty(problem, box, ideal, anti):
             front.filtered += 1
             continue                # settled by arithmetic: no program spent
+
+        if drop_dominated and box.hi and all(h is not None for h in box.hi):
+            # Every x here has Z(x) <= box.hi.  If a vector already recorded
+            # dominates that whole corner, this box holds nothing new -- so it
+            # is dropped outright, children and all, not merely left unprobed.
+            if any(all(v[k] >= box.hi[k] for k in range(problem.p))
+                   for v in front.vectors):
+                front.filtered += 1
+                continue
 
         model = box.restricted(problem.model)
         direction = probe + [ZERO] * (model.n - problem.n)
