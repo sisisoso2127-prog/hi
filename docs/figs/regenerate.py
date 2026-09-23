@@ -352,6 +352,21 @@ def main():
         "ratio", scale=5.5))
     write("r-campaign-work-legend", legend([
         ("sub-programs", "blue!55!black"), ("b\\&b nodes", "orange!80!black")]))
+    # five structurally different families, and the ceiling behind them
+    write("r-families", bars(
+        [("mixed", [1.37, 1.30]), ("loose", [1.29, 1.23]),
+         ("knapsack", [1.33, 1.27]), ("conflict", [1.14, 1.14]),
+         ("aligned", [1.31, 1.14])],
+        "ratio", scale=1.45))
+    write("r-families-legend", legend([("small $|F|$", "blue!55!black"),
+                                       ("large $|F|$", "orange!80!black")]))
+    # the coverage collapse, and what the speed-up does with it
+    write("r-cover", bars(
+        [("$n{=}6$", [87, 29]), ("$n{=}10$", [65, 24]),
+         ("$n{=}12$", [35, 9]), ("$p{=}5$", [12, 2])],
+        "\\% of front / probes", scale=90))
+    write("r-cover-legend", legend([("front covered", "blue!55!black"),
+                                    ("probes removed", "orange!80!black")]))
     write("r-campaign-front", bars(
         [("$|F|\\,1$--$4$", [2.7]), ("$|F|\\,5$--$12$", [7.5]),
          ("$|F|\\,13+$", [31.4])],

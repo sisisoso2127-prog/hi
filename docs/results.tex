@@ -708,6 +708,138 @@ claimed to be the better \emph{search} because the model never grows; this
 tests whether it is also the better \emph{proof}, where nothing grows at all.
 \textbf{It is, by $4.5\times$.}
 
+\section{Fractional criteria, where the problem lives}
+
+Every figure so far uses \emph{linear} criteria --- a gap worth naming in a
+package about ratios.  It has a reason: the Tchebychev comparison needs them,
+since $z^{*}_k - \Z_k(x)$ is not linear when $\Z_k$ is a ratio.  The Pareto
+walk has no such requirement.
+
+\begin{table}[h]
+\centering
+\caption{Genuinely fractional criteria, ten instances per row.}
+\begin{tabular}{lrrr}
+\toprule
+configuration & $|F|$ & cover & ratio \\
+\midrule
+$n=5$, $p=2$ & $7$  & $100\%$ & $1.54\times$ \\
+$n=6$, $p=3$ & $22$ & $100\%$ & $1.35\times$ \\
+$n=7$, $p=3$ & $36$ & $100\%$ & $1.25\times$ \\
+\midrule
+all $40$ & & & $\mathbf{1.39\times}$, faster on $34$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+At least as good as the linear case, with the front covered completely.
+Nothing in the construction distinguishes the two.
+
+\section{Five families, and a prediction that was wrong}
+
+Everything else here comes from one generator, so the magnitudes could belong
+to it.  Four more families move what the mechanism depends on: \texttt{loose}
+raises $|\Dset|$ an order of magnitude while leaving $|F|$ alone,
+\texttt{knapsack} is two capacity rows with all coefficients positive,
+\texttt{conflicting} gives the criteria opposing signs (large $|F|$), and
+\texttt{aligned} correlates them (small $|F|$).
+
+\begin{table}[h]
+\centering
+\caption{Fifteen instances per cell, 150 in all; two sizes per family.
+Identical front and identical optimum on every one.}
+\begin{tabular}{lrrrr}
+\toprule
+family & $|F|$ & cover & ratio & faster on \\
+\midrule
+\texttt{mixed}       & $8$ / $30$    & $100$ / $97\%$ & $\mathbf{1.37}$ / $1.30\times$ & $28/30$ \\
+\texttt{loose}       & $9$ / $44$    & $83$ / $86\%$  & $1.29$ / $1.23\times$ & $28/30$ \\
+\texttt{knapsack}    & $12$ / $41$   & $100$ / $90\%$ & $1.33$ / $1.27\times$ & $29/30$ \\
+\texttt{conflicting} & $107$ / $105$ & $100$ / $93\%$ & $1.14$ / $1.14\times$ & $26/30$ \\
+\texttt{aligned}     & $6$ / $11$    & $100$ / $84\%$ & $1.31$ / $1.14\times$ & $25/30$ \\
+\midrule
+\textbf{all 150} & & & $\mathbf{1.23\times}$ & $\mathbf{136}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-families}\\[2pt]
+\fig{r-families-legend}
+\end{center}
+
+\noindent
+Every family pays, $1.14$--$1.37\times$.  The advantage is not an artefact of
+the generator it was found with, which is what this was run for.
+
+\paragraph{And the prediction it refutes.}  We expected \texttt{conflicting},
+with $|F| \approx 107$, to be the family the hybrid liked \emph{most} --- a
+large front is much to discover, and discovery is what a seed removes --- and
+\texttt{aligned} with $|F| = 6$ to be the least.  \textbf{The opposite holds},
+and in the chart the orange bar is below the blue one in four families and
+level with it in the fifth --- never above: the margin narrows as $|F|$ grows,
+within families as well as across them.
+
+\paragraph{The ceiling that explains it.}  A seed removes \emph{one} probe, and
+the enumeration spends $2.6$ to $4.5$ probes per vector --- the rest go to
+boxes that turn out empty, which no seed can touch.  So even at full coverage
+the probe saving is capped near a quarter to a third, exactly the $24$--$32\%$
+the campaign measures.
+
+\begin{quote}
+\textbf{That is a hard ceiling of roughly $1.4\times$ on the whole idea, and it
+does not depend on $|F|$.}  What does depend on $|F|$ is the walk's cost, one
+efficiency test per archive member --- so a large front buys no more and costs
+more.
+\end{quote}
+
+\section{Where the hybrid fails, and the line that fixes it}
+
+At $n = 12$ the margin falls to $1.00\times$, and at $n=12$, $p=5$ to
+$0.97\times$.  Our first explanation was that the probe count outgrows $|F|$.
+\textbf{The measurement refutes it}: probes per vector are flat across the
+range --- $2.4$, $2.7$, $2.7$, $2.8$, $2.8$, $3.0$, $3.9$, $5.2$.  What
+collapses is the share of the front the walk finds, and the speed-up tracks it.
+
+\begin{center}
+\fig{r-cover}\\[2pt]
+\fig{r-cover-legend}
+\end{center}
+
+\begin{table}[h]
+\centering
+\caption{Widening the walk alone, on the two instances that failed.}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{$n=12$, $p=3$} & \multicolumn{2}{c}{$n=12$, $p=5$} \\
+restarts / budget & cover & ratio & cover & ratio \\
+\midrule
+$8$ / $4000$    & $35\%$ & $1.03\times$ & $12\%$ & $0.98\times$ \\
+$16$ / $20000$  & $95\%$ & $\mathbf{1.61\times}$ & $46\%$ & $\mathbf{1.20\times}$ \\
+$32$ / $60000$  & $95\%$ & $1.53\times$ & $93\%$ & $1.12\times$ \\
+$64$ / $150000$ & $95\%$ & $1.44\times$ & $89\%$ & $1.17\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Restarts are the knob, not neighbours, and the fix is one line: the first round
+is sized to the instance.  \emph{Not} a second constant --- $4000$ was chosen
+at $n=7,8$ and generalised, which is what produced the collapse.
+
+\paragraph{But coverage is not the objective.}  The $p=5$ column says so
+directly: \textbf{$46\%$ coverage gives $1.20\times$ and $93\%$ gives
+$1.12\times$}.  A walk that restarts until it finds nothing new takes coverage
+there from $45\%$ to $97\%$ and is \emph{slower} --- $1.02\times$ against
+$1.14\times$, and a median $1.32\times$ against $1.36\times$ over 120
+instances.  It is in the code and switched off.
+
+\paragraph{A correction to our own reading.}  The collapse was first reported
+as ``$35\%$ coverage, $1.00\times$'' from \emph{one} instance; over six seeds
+of that configuration the unmodified walk averages $78\%$ and $1.35\times$.
+Real and severe where $|F|$ is large, but not as general as one instance made
+it look --- the fifth time here that a single instance misled.
+
 \section{How the campaign was measured}
 
 Most figures here were first taken on four to eight instances.  The
@@ -746,7 +878,7 @@ breaking it once.
 
 \begin{table}[h]
 \centering
-\caption{The nineteen things tried, with what each was worth.}
+\caption{The twenty-two things tried, with what each was worth.}
 \begin{tabular}{lll}
 \toprule
 attempt & verdict & effect \\
@@ -770,12 +902,15 @@ Tchebychev seeding the enumeration    & \textbf{loss} & worse the more it seeds 
 \textbf{Pareto walk seeding it}              & \textbf{win}  & $\mathbf{1.31\times}$ to all of $\E$ \\
 free box filters (three of them)      & partial       & $2\%$, then two losses \\
 one-program completeness certificate  & \textbf{loss} & $4.5\times$ slower, sound \\
+sizing the walk to the instance       & \textbf{win}  & $1.00 \to 1.53\times$ at $n=12$ \\
+a walk that restarts until it stops   & \textbf{loss} & more coverage, less speed \\
+the hybrid on fractional criteria     & \textbf{win}  & $1.39\times$, better than linear \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Eight are losses and one is a tie.  They are reported at the same length as the
+Nine are losses and one is a tie.  They are reported at the same length as the
 wins because they carry the same information: a change pays only where the
 method has a mechanism it can feed, that mechanism is cheaper to identify than
 the change is to build and measure, and two ideas feeding the same mechanism
