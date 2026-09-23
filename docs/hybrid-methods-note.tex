@@ -108,6 +108,7 @@ throughout Section~\ref{sec:tcheb}: in an integer program unsupported efficient
 points are common, and no weighted sum reaches any of them.
 
 \section{Where the cost of the decision-space method comes from}
+\label{sec:cost}
 
 One iteration of the published method maximizes $\Phi$ over a truncated region
 $\Dset_l$, tests the maximizer $x_l$ for efficiency, banks the best $\Phi$ on
@@ -517,36 +518,78 @@ with an independent scan, and both are proved optimal everywhere.
 
 \begin{table}[h]
 \centering
-\caption{The margin against the number of criteria, $n = 6$, four instances
-each. All twenty agreed and were proved optimal on both sides.}
-\begin{tabular}{crrr}
+\caption{The margin against the number of criteria, $n = 6$, \textbf{thirty
+instances per row}.  The statistic is the median of the \emph{per-instance}
+ratios, with the interquartile range; a ratio of totals would be decided by the
+heaviest instance alone.}
+\label{tab:margin}
+\begin{tabular}{crrrrr}
 \toprule
-$p$ & decision space & criterion space & ratio \\
+$p$ & decision space & criterion space & ratio (median) & IQR & max \\
 \midrule
-2 & $0.61$ s   & $0.35$ s & $1.74\times$ \\
-3 & $1.02$ s   & $0.34$ s & $2.99\times$ \\
-4 & $4.21$ s   & $0.61$ s & $6.92\times$ \\
-5 & $112.77$ s & $1.09$ s & $103\times$ \\
-6 & $26.15$ s  & $1.08$ s & $24.3\times$ \\
+2 & $0.07$ s & $0.04$ s & $1.52\times$ & $[1.25,\ 1.91]$ & $6.0\times$ \\
+3 & $0.34$ s & $0.12$ s & $2.69\times$ & $[1.87,\ 3.72]$ & $10.1\times$ \\
+4 & $0.50$ s & $0.13$ s & $4.99\times$ & $[2.39,\ 11.62]$ & $76.3\times$ \\
+5 & $2.19$ s & $0.25$ s & $7.93\times$ & $[3.61,\ 19.98]$ & $33.8\times$ \\
+6 & $3.67$ s & $0.31$ s & $14.57\times$ & $[7.90,\ 25.17]$ & $65.7\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Two forces grow with $p$ and pull against each other: the split produces $p$
-children, so the list branches wider; but the non-dominated set grows too, so
-the decision-space method needs more cuts, and each cut costs it $p$ binaries
-and $p+1$ rows. The measurement settles which dominates, and it settles it
-against the prediction we made before running it. Branching multiplies a
-\emph{count} of cheap, fixed-size models; the binaries multiply the \emph{cost
-of one model}, and they accumulate. The worst case observed for the published
-method was $p = 5$ on six variables: $110.95$ s against $0.64$ s, a factor of
-$173$.
+\noindent
+The per-method columns are medians too.  Three instances of the 150 were
+stopped by a $45$ s budget --- one at $p=5$, two at $p=6$ --- and are excluded
+from the medians rather than counted as their budget.  That censoring is
+\emph{one-sided}: it can only make the decision-space method look better, so
+every margin here is a conservative one.  On every instance that finished, the
+two methods returned the same optimum, which the campaign asserts rather than
+assumes.
 
-\paragraph{On the magnitudes.} The direction is solid: the per-$p$ median
-ratios are $1.35$, $3.2$, $2.1$, $12.6$, $15.8$, and every instance agreed and
-was proved optimal. The totals are not stable estimates --- four instances per
-$p$ is few, and $110.95$ of the $112.77$ seconds at $p=5$ come from a single
-instance. The tables report what was measured, not expected values.
+\paragraph{The margin is monotone in $p$, and an earlier table said otherwise.}
+An earlier version of this section reported $1.74$, $2.99$, $6.92$, $103$ and
+$24.3$ from four instances per $p$, and the text went on to discuss why the
+curve turned over between $p=5$ and $p=6$.  \textbf{It does not turn over.}
+That $103\times$ was one instance contributing $110.95$ of $112.77$ seconds,
+and with thirty instances the progression is clean: $1.52$, $2.69$, $4.99$,
+$7.93$, $14.57$.  The old numbers were not wrong as measurements --- they are
+what those four instances did --- but they were quoted as a trend, and four
+runs cannot carry one.  The spread remains wide, which is why the IQR and the
+maximum are printed next to every median.
+
+\paragraph{The mechanism, measured rather than argued.}  Two forces grow with
+$p$ and pull against each other.  The split produces $p$ children, so the box
+list branches wider; but the non-dominated set grows too, so the
+decision-space method needs more cuts, and each cut costs it $p$ binaries and
+$p+1$ rows.  Counting the work separates them:
+
+\begin{table}[h]
+\centering
+\caption{Where the margin comes from.  Ratios are decision space over
+criterion space, medians over the same thirty instances per row.}
+\begin{tabular}{crrr}
+\toprule
+$p$ & sub-programs & b\&b nodes & time \\
+\midrule
+2 & $1.72\times$ & $1.28\times$ & $1.52\times$ \\
+3 & $1.40\times$ & $1.79\times$ & $2.69\times$ \\
+4 & $1.19\times$ & $2.68\times$ & $4.99\times$ \\
+5 & $1.17\times$ & $3.16\times$ & $7.93\times$ \\
+6 & $\mathbf{1.02\times}$ & $\mathbf{5.37\times}$ & $\mathbf{14.57\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+This is the cost model of Section~\ref{sec:cost} read straight off the
+measurement.  At $p = 6$ the two methods solve \textbf{the same number of
+sub-programs} --- $1.02\times$, a ratio that has fallen steadily from $1.72$ at
+$p=2$ --- and yet one takes $14.57\times$ as long.  The whole margin has moved
+into the \emph{cost of one sub-problem}: the branch \& bound inside it explores
+$5.37\times$ the nodes, because by then it carries $p$ binaries and $p+1$
+big-$M$ rows per cut and the box search still carries none.  The branching
+count that was supposed to work against the box list does not: it wins the
+sub-program count at small $p$ and gives it back as $p$ grows, while the other
+term compounds.
 
 \section{First hybridization: exact--exact}
 
@@ -654,6 +697,54 @@ It wins where the search is expensive and loses where there was nothing to win,
 which is what a nearly fixed first-phase cost predicts. The \emph{ceiling},
 measured by handing the search the true optimum for free, is $1.42\times$; at
 $1.25\times$ the heuristic realizes 88\% of it.
+
+\paragraph{The same verdict on thirty paired instances.}  Eighteen instances
+quoted as a total is the flaw of Section~\ref{sec:results} again, so the
+campaign re-ran it paired: on each of thirty instances at $n=6$, $p=4$, the
+same search is solved three times --- unseeded, Pareto-seeded,
+Tchebychev-seeded --- and the statistic is the median of the per-instance
+speed-ups.
+
+\begin{table}[h]
+\centering
+\caption{What a seed is worth, thirty paired instances at $n=6$, $p=4$.  The
+gap is $(\Phi^{*}-\Phi(\text{seed}))/|\Phi^{*}|$, zero exactly when the seed is
+optimal.}
+\label{tab:seeds}
+\begin{tabular}{lrrrr}
+\toprule
+seed & speed-up (median) & IQR & seed gap & exactly optimal \\
+\midrule
+Pareto archive & $1.10\times$ & $[1.02,\ 1.27]$ & $0.000$ & $24/30$ \\
+Tchebychev     & $1.02\times$ & $[1.00,\ 1.09]$ & $0.170$ & $8/30$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The \emph{ordering} is exactly what the smaller samples said, and it is the
+part that has held on every family tried: the Pareto seed is worth something,
+the Tchebychev seed is not.  Two things do change, and both are reported
+because they are corrections.
+
+First, \textbf{the Pareto seed is worth less than $1.25\times$ here}: its
+median is $1.10\times$ and its first quartile is $1.02\times$, so half the
+instances gain three percent or less.  The win is real --- both quartiles sit
+above $1$ and the seed is \emph{exactly optimal on 24 of 30} --- but it is
+small, and it is not uniform: the worst instance runs at $0.618\times$, a
+genuine loss, because the verification of Proposition~\ref{prop:seed} is paid
+whether or not the bound can use what it buys.
+
+Second, \textbf{the Tchebychev seed does not lose here; it does nothing}.
+Earlier families put it at $0.71$--$0.73\times$ and this note called it a loss.
+On thirty instances of this family it is $1.02\times$ with an IQR of
+$[1.00,\ 1.09]$ --- a wash.  The verdict that survives both samples is the
+weaker one: \emph{it never pays}.  Seed quality explains why, and that figure
+is the stable one across families: a median gap of $0.170$ against the Pareto
+seed's $0.000$, and exactly optimal on $8$ of $30$ against $24$ of $30$.  A
+generator that reaches unsupported points (Section~\ref{sec:tcheb}) is still
+not a generator that lands near the maximiser of a \emph{different} function.
+
 
 \section{The asymmetry: a seed is worth what the exact method can do with it}
 \label{sec:asymmetry}
@@ -957,6 +1048,51 @@ tracked the number of cuts rather than $n$ --- measured here independently, on
 a different task.  \emph{Four instances, and the spread is wide}: the mechanism
 explains it, but these are four runs and not a distribution.
 
+\paragraph{Forty-five instances, and the mechanism measured.}  The campaign
+re-ran this over a sweep that moves $|F|$ on purpose --- fifteen instances at
+each of three constraint tightnesses, $n=5$, $p=3$ --- so the claim that the
+margin tracks the size of the front is estimated rather than asserted.  Nothing
+was censored, and the two enumerations returned the same number of vectors on
+every instance.
+
+\begin{table}[h]
+\centering
+\caption{The front-enumeration margin against the size of the front, forty-five
+instances.  Medians of per-instance ratios.}
+\label{tab:frontsize}
+\begin{tabular}{lrrrr}
+\toprule
+$|F|$ & instances & ratio (median) & IQR & max \\
+\midrule
+$1$--$4$  & $26$ & $2.7\times$  & $[1.7,\ 3.9]$   & $9.8\times$ \\
+$5$--$12$ & $17$ & $7.5\times$  & $[5.2,\ 16.0]$  & $23.8\times$ \\
+$13+$     & $2$  & $31.4\times$ & $[24.9,\ 38.0]$ & $38.0\times$ \\
+\midrule
+all       & $45$ & $4.1\times$  & $[2.3,\ 7.6]$   & $38.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The margin roughly triples and then quadruples as the front grows, which is the
+mechanism and not a coincidence of scale: $|F|$ \emph{is} the number of cuts.
+The $13+$ row rests on two instances and is quoted as such --- this family at
+$n=5$ tops out near $|F| = 13$, and the $204\times$ instance above, with
+$|F| = 30$, lies outside it.  That instance is an observed extreme, not a
+typical case; the typical case on this family is the $4.1\times$ of the last
+row.
+
+\paragraph{A ratio that goes the other way, and why it does not contradict
+this.}  Counting branch \& bound nodes, criterion space explores \emph{more} of
+them --- the ratio is $0.29\times$, so about three and a half times as many ---
+and still finishes four times sooner.  Its nodes carry no binary and no
+big-$M$ row, so each is far cheaper: it wins by solving many easy programs
+instead of few hard ones.  The same count in Table~\ref{tab:margin} goes the
+other way at every $p$, because there the two methods solve nearly the same
+number of sub-programs and the decision-space ones are the harder.  Both
+readings say the cost lives in the size of a sub-problem, which is exactly what
+the substitution removes.
+
 \subsection{Is the baseline fair?  Where the decision-space time actually goes}
 \label{sec:probe}
 
@@ -1175,6 +1311,17 @@ completeness depended on an assumption about the coefficients.  Where ties do
 occur --- criteria that ignore a variable, repeated structure, any instance
 that is not generic --- the front alone silently returns a fraction of the
 answer, and the fraction can be under one percent.
+
+\paragraph{Thirty instances of the generic family, measured.}  The campaign
+confirms both halves of that reading on the family used everywhere else in this
+note ($n=5$, $p=3$).  The overhead of completing the front has a median of
+$24.6\%$, an interquartile range of $[21.2\%,\ 36.0\%]$ and a maximum of
+$73.7\%$ --- never a doubling, on any of the thirty.  And \textbf{exactly one
+of the thirty had a non-singleton slice}.  So on a generic instance the front
+really is the efficient set almost always, and the complete enumeration almost
+always buys only the proof of that.  The one instance in thirty is why the
+proof is worth buying: nothing about the front's own output says which of the
+two cases you are in.
 
 \paragraph{What is verified.}  The complete set is checked against exhaustive
 enumeration on two families, one generic and one built to force ties

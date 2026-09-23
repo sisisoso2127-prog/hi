@@ -362,13 +362,48 @@ margin widens with difficulty. It **widens with the number of criteria** too,
 which is where the gap becomes a different order of magnitude: at `p = 5` on
 six variables the paper's method took 110.95 s against **0.64 s**.
 
-| criteria | decision space | criterion space | |
+**Thirty instances per row**, `n = 6`. The statistic is the median of the
+*per-instance* ratios — a ratio of totals is decided by the single heaviest
+instance:
+
+| criteria | decision | criterion | ratio (median) | IQR | max |
+|---:|---:|---:|---:|---:|---:|
+| `p = 2` | 0.07 s | 0.04 s | 1.52× | [1.25, 1.91] | 6.0× |
+| `p = 3` | 0.34 s | 0.12 s | 2.69× | [1.87, 3.72] | 10.1× |
+| `p = 4` | 0.50 s | 0.13 s | 4.99× | [2.39, 11.62] | 76.3× |
+| `p = 5` | 2.19 s | 0.25 s | 7.93× | [3.61, 19.98] | 33.8× |
+| `p = 6` | 3.67 s | 0.31 s | **14.57×** | [7.90, 25.17] | 65.7× |
+
+Three of the 150 runs hit a 45 s budget (one at `p=5`, two at `p=6`) and are
+excluded rather than counted as their budget. That censoring is **one-sided** —
+it can only flatter the decision-space method — so these margins are
+conservative. Every instance that finished agreed on the optimum.
+
+**An earlier table here said the curve turned over. It does not.** Four
+instances per `p` gave 1.74, 2.99, 6.92, **103** and 24.3, and the text went on
+to explain the turn between `p=5` and `p=6`. There was nothing to explain: that
+103× was one instance supplying 110.95 of 112.77 seconds. With thirty instances
+the progression is monotone. The old numbers were not wrong as measurements —
+they are what those four instances did — but they were quoted as a trend, and
+four runs cannot carry one.
+
+**Where the margin comes from, counted.** Wall-clock cannot resolve a small
+effect on this machine, so the campaign counts deterministic work too:
+
+| `p` | sub-programs | b&b nodes | time |
 |---:|---:|---:|---:|
-| `p = 2` | 0.61 s | 0.35 s | 1.74× |
-| `p = 3` | 1.02 s | 0.34 s | 2.99× |
-| `p = 4` | 4.21 s | 0.61 s | 6.92× |
-| `p = 5` | 112.77 s | 1.09 s | **103×** |
-| `p = 6` | 26.15 s | 1.08 s | 24.3× |
+| 2 | 1.72× | 1.28× | 1.52× |
+| 3 | 1.40× | 1.79× | 2.69× |
+| 4 | 1.19× | 2.68× | 4.99× |
+| 5 | 1.17× | 3.16× | 7.93× |
+| **6** | **1.02×** | **5.37×** | **14.57×** |
+
+At `p = 6` the two methods solve **the same number of sub-programs** — 1.02×,
+down steadily from 1.72× at `p = 2` — and one still takes 14.57× as long. The
+entire margin has moved into the cost of *one* sub-problem: the branch & bound
+inside it explores 5.37× the nodes, because by then it carries `p` binaries and
+`p+1` big-M rows per cut while the box search carries none. That is the cost
+model read straight off the measurement.
 
 It supports fractional criteria too, and keeps the certified gap and
 `time_budget`. Both methods stay: this package is a reference implementation of
@@ -397,6 +432,26 @@ Pareto local search first and hands the box search a **verified efficient**
 incumbent. 9.50 s → 7.60 s over 18 instances (1.25×), reaching 1.56× on the
 heaviest and losing only where the exact search already took milliseconds. The
 ceiling, measured by handing over the true optimum for free, is 1.42×.
+
+**On thirty paired instances the win is smaller, and one verdict softens.**
+Each instance at `n=6, p=4` is solved three times; the statistic is the median
+of the per-instance speed-ups:
+
+| seed | speed-up (median) | IQR | seed gap | exactly optimal |
+|---|---:|---:|---:|---:|
+| Pareto archive | 1.10× | [1.02, 1.27] | 0.000 | 24/30 |
+| Tchebychev | 1.02× | [1.00, 1.09] | 0.170 | 8/30 |
+
+The **ordering** is what every sample has said and is the part that holds. Two
+things change. The Pareto seed is worth less than 1.25× here — median 1.10×,
+first quartile 1.02×, so half the instances gain three percent or less; the win
+is real (both quartiles above 1, exactly optimal on 24 of 30) but small, and
+the worst instance runs at **0.618×**, a genuine loss, because verification is
+paid whether or not the bound can use it. And the Tchebychev seed **does not
+lose here; it does nothing** — 1.02×, IQR [1.00, 1.09], a wash rather than the
+0.71× reported below. The verdict that survives both samples is the weaker one:
+*it never pays*. What is stable is the quality figure that explains it — a
+median gap of 0.170 against 0.000, and 8 of 30 exactly optimal against 24 of 30.
 
 The contrast is the interesting part: the same free optimum saves **zero
 iterations** in the paper's method, because what it cuts is decided by the
@@ -608,6 +663,37 @@ efficient points at once, taking the heaviest instance from 11 step-1 solves to
 never hard it only grows the model — the notes carry the losses alongside the
 win.
 
+## How the numbers were measured
+
+Most figures above were first taken on four to eight instances. The *direction*
+of each was argued from a mechanism, which is what made them worth reporting —
+but a total over four runs is not an estimate. `studies/campaign.py` re-measures
+four of the claims over **thirty instances per configuration**, in 751 seconds,
+and writes every per-instance record to `studies/campaign-results.json` so the
+tables can be rebuilt and re-checked without paying for the run again.
+
+```bash
+python studies/campaign.py --quick    # a pilot
+python studies/campaign.py            # the full campaign
+```
+
+- **The statistic is the median of the per-instance ratios**, with the IQR —
+  never a ratio of totals. A ratio of totals is decided by the single heaviest
+  instance, which is exactly how the 103× at `p = 5` came about.
+- **Deterministic work is counted next to the seconds**: sub-programs and
+  branch & bound nodes, identical on every run and every machine. This
+  machine's noise floor is ±30% per instance, so seconds alone cannot resolve a
+  small effect and no number of repeats fixes that.
+- **Censoring is reported, never hidden.** A run that spends its budget is
+  excluded from the medians and counted in the open; a row with more than half
+  its runs censored says so instead of quoting a number.
+- **Agreement is asserted, not assumed** — every experiment checks the two
+  methods return the same answer, not merely that one is faster.
+
+Nothing else ran on the machine during the campaign. A contaminated measurement
+is discarded rather than quoted — a rule adopted here only after breaking it
+once.
+
 ## Layout
 
 | Path | Contents |
@@ -615,7 +701,7 @@ win.
 | `lfp_efficient/` | the package — and its long-form notes in `README.md` |
 | `examples/` | the paper's example, larger instances, the scaling study, the fractional case, the complete efficient set |
 | `tests/` | the test suite, runnable with a bare interpreter |
-| `studies/` | earlier metaheuristic experiments kept for the record (these use NumPy) |
+| `studies/` | the measured campaign, and earlier metaheuristic experiments kept for the record |
 | `docs/` | the write-up: every method, every measurement, and every negative result |
 
 ## License

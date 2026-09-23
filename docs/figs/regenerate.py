@@ -243,6 +243,22 @@ def main():
         "extra time \\%", scale=100))
     write("r-complete-legend", legend([("small front (7)", "blue!55!black"),
                                        ("larger front (13)", "orange!80!black")]))
+    # the campaign: 30 instances per p, medians of per-instance ratios
+    write("r-campaign-margin", bars(
+        [("$p=2$", [1.52]), ("$p=3$", [2.69]), ("$p=4$", [4.99]),
+         ("$p=5$", [7.93]), ("$p=6$", [14.57])],
+        "median ratio", colors=["blue!55!black"], scale=16))
+    write("r-campaign-work", bars(
+        [("$p=2$", [1.72, 1.28]), ("$p=3$", [1.40, 1.79]),
+         ("$p=4$", [1.19, 2.68]), ("$p=5$", [1.17, 3.16]),
+         ("$p=6$", [1.02, 5.37])],
+        "ratio", scale=5.5))
+    write("r-campaign-work-legend", legend([
+        ("sub-programs", "blue!55!black"), ("b\\&b nodes", "orange!80!black")]))
+    write("r-campaign-front", bars(
+        [("$|F|\\,1$--$4$", [2.7]), ("$|F|\\,5$--$12$", [7.5]),
+         ("$|F|\\,13+$", [31.4])],
+        "median ratio", colors=["green!45!black"], scale=32))
     print("figures written to", OUT)
 
 
