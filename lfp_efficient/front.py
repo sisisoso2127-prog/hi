@@ -234,7 +234,21 @@ def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
     which is worth $2\%$ of the simplex pivots, not $25\%$, for the reason
     given with that function.  *use_range* adds the ideal-point test, which
     catches more boxes and costs $2p$ programs to set up; measured at
-    $1.03\times$ the pivots, so it is off.
+$1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
+    bound with the ideal point so that a box whose whole upper corner is
+    already dominated can be discarded outright, children and all; it catches
+    $5.4\%$ of the boxes and removes $8$--$23\%$ of the probes, and still
+    measures $1.077\times$ the pivots and $1.05\times$ the time over 60
+    instances, so it is off too.
+
+    Three filters, three times the same wall, and it is worth naming rather
+    than rediscovering: **in this search, removing sub-problems does not
+    remove time, because the ones that can be removed cheaply are the ones
+    that were already cheap.**  The early exit of
+    :func:`~lfp_efficient.criterion_space.optimize_in_criterion_space` met it
+    first, at $25\%$ of the sub-problems and no measurable time.  The only
+    change in this package that ever beat it attacked an *exponent* instead of
+    a count -- eliminating variables with the slice equations, at $49\times$.
     """
     deadline = None if time_budget is None else monotonic() + time_budget
     positive = (denominator_stays_positive(problem.model, phi)
