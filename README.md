@@ -306,7 +306,7 @@ do occur, the front alone silently returns a fraction of the answer.
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 92 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 93 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -717,6 +717,53 @@ pre-split was building a box structure the search would not have chosen:
 | reversed | 0.94× | 5 of 12 |
 
 The reversed arm is what makes the direction causal rather than a coincidence.
+
+**On fractional criteria — where the problem actually lives.** Everything above
+uses *linear* criteria, which is a gap worth naming in a package about ratios.
+It has a reason (the Tchebychev comparison needs them), but the Pareto walk
+doesn't:
+
+| | \|F\| | cover | ratio |
+|---|---:|---:|---:|
+| `n=5 p=2` | 7 | 100% | 1.54× |
+| `n=6 p=3` | 22 | 100% | 1.35× |
+| `n=7 p=3` | 36 | 100% | 1.25× |
+| **all 40** | | | **1.39×**, faster on 34 |
+
+At least as good as the linear case. Nothing in the construction distinguishes
+them — the `e_k` rows are integer-valued for ratios too.
+
+**Where it fails, and the one line that fixes it.** At `n = 12` the margin falls
+to 1.00×, and at `n=12, p=5` to 0.97×. We first blamed the probe count
+outgrowing `|F|`. **The measurement refutes that** — probes per vector are flat
+across the range (2.4, 2.7, 2.7, 2.8, 2.8, 3.0, 3.9, 5.2). What collapses is
+the share of the front the walk finds, and the speed-up tracks it line for line:
+
+| | cover | probes saved | ratio |
+|---|---:|---:|---:|
+| `n=6` | 87% | 29% | |
+| `n=10` | 65% | 24% | 1.19× |
+| `n=12 p=3` | 35% | 9% | 1.00× |
+| `n=12 p=5` | 12% | 2% | 0.97× |
+
+A fixed budget of 8 restarts and 4000 neighbours is fixed work against a
+growing target — and 4000 was chosen at `n=7,8` and generalised. Widening the
+walk alone takes `n=12` from 35% coverage and 1.03× to **95% and 1.61×**, and
+**restarts** are the knob, not neighbours. So the first round is sized to the
+instance, at `⌈n/4⌉` times the restarts. Over **120 instances** spanning
+`n = 6…12`: median **1.36×**, faster on **116**.
+
+**But coverage is not the objective.** On the `p=5` instance, **46% coverage
+gives 1.20× and 93% gives 1.12×** — buying the last half of the front costs
+more walking than the probes it removes. A walk that restarts in doubling
+rounds until one finds nothing new takes coverage there from 45% to 97% and is
+*slower*: 1.02× against 1.14×, and a median 1.32× against 1.36× over the same
+120, winning 109 against 116. It's in the code, switched off.
+
+*A correction to our own reading:* the collapse was first reported as "35%
+coverage, 1.00×" from **one** instance; over six seeds of that configuration
+the unmodified walk averages 78% and 1.35×. Real and severe where `|F|` is
+large (45% at `|F| = 302`) — but not as general as one instance made it look.
 
 ## Solving the slice equations: the largest gain in the package
 

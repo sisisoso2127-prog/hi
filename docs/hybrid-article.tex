@@ -570,23 +570,220 @@ which would be decided by the single heaviest instance.
 
 \begin{table}[h]
 \centering
-\caption{The hybrid against the pure exact methods.  Thirty instances at each
-of five configurations, $n = 6 \dots 9$, $p = 3,4$.}
+\caption{The hybrid against the pure exact enumeration, 120 instances over
+eight configurations.  ``Cover'' is the share of the front the walk supplies.}
 \label{tab:hybrid}
 \begin{tabular}{lrrr}
 \toprule
- & median & IQR & faster on \\
+configuration & instances & cover & ratio \\
 \midrule
-front enumeration        & $1.33\times$ & $[1.20,\ 1.51]$ & $139/150$ \\
-$\E$ complete            & $\mathbf{1.31\times}$ & $[1.17,\ 1.47]$ & $139/150$ \\
-probes                   & $0.72\times$ & $[0.67,\ 0.75]$ & \emph{never worse} \\
+$n=6$, $p=3$  & $20$ & $100\%$ & $1.26\times$ \\
+$n=7$, $p=3$  & $20$ & $100\%$ & $1.36\times$ \\
+$n=8$, $p=3$  & $20$ & $100\%$ & $\mathbf{1.59\times}$ \\
+$n=9$, $p=3$  & $20$ & $98\%$  & $1.45\times$ \\
+$n=10$, $p=3$ & $12$ & $91\%$  & $1.38\times$ \\
+$n=7$, $p=4$  & $20$ & $98\%$  & $1.33\times$ \\
+$n=12$, $p=3$ & $6$  & $78\%$  & $1.35\times$ \\
+$n=12$, $p=5$ & $2$  & $45\%$  & $1.14\times$ \\
+\midrule
+\textbf{all} & $\mathbf{120}$ & & $\mathbf{1.36\times}$, faster on $116$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-The answer is identical on every one of the $150$ --- same front, same $\E$,
-same optimum of $(P_E)$ --- which the experiment asserts rather than assumes.
+The largest front measured here holds $302$ vectors.  A separate campaign of
+150 instances at $n = 6 \dots 9$ measured the front enumeration at
+$1.33\times$ and the complete set at $1.31\times$ with the probe count at
+$0.72\times$ and never worse --- the gap between $1.31\times$ and
+$1.36\times$ is the walk sizing of Section~\ref{sec:cover}, which those runs
+predate.  In all of them the answer is identical --- same front, same $\E$,
+same optimum of $(P_E)$ --- which the experiments assert rather than assume.
+
+\subsection{Fractional criteria}
+\label{sec:fracres}
+
+Everything above uses \emph{linear} criteria, which is a real gap in a paper
+about ratios: the Tchebychev comparison of Section~\ref{sec:hybrid} requires
+them, since $z^{*}_k - \Z_k(x)$ is not linear when $\Z_k$ is a ratio.  The
+Pareto walk has no such requirement, so the hybrid can be measured where the
+problem statement actually lives.
+
+\begin{table}[h]
+\centering
+\caption{Genuinely fractional criteria: every $\Z_k$ a ratio with a strictly
+positive denominator on $\Dset$.  Ten instances per row.}
+\label{tab:frac}
+\begin{tabular}{lrrr}
+\toprule
+configuration & $|F|$ & cover & ratio \\
+\midrule
+$n=5$, $p=2$ & $7$  & $100\%$ & $1.54\times$ \\
+$n=6$, $p=2$ & $2$  & $100\%$ & $1.41\times$ \\
+$n=6$, $p=3$ & $22$ & $100\%$ & $1.35\times$ \\
+$n=7$, $p=3$ & $36$ & $100\%$ & $1.25\times$ \\
+\midrule
+\textbf{all $40$} & & & $\mathbf{1.39\times}$, $[1.21,\ 1.63]$, faster on $34$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The hybrid pays on the fractional case at least as well as on the linear one,
+and the walk covers the front completely there.  Nothing in the construction
+distinguishes the two: the seeds are placed by \eqref{eq:split}, whose rows
+\eqref{eq:ek} are integer-valued for ratios as much as for linear criteria.
+
+\subsection{How much walking is enough}
+\label{sec:cover}
+
+The walk has one free parameter pair --- restarts and neighbour budget --- and
+the hybrid's whole cost advantage is that the walk is cheap next to the search.
+
+\begin{table}[h]
+\centering
+\caption{Sweeping the neighbour budget, 18 instances at $n = 7,8$.}
+\label{tab:budget}
+\begin{tabular}{rrrr}
+\toprule
+budget & walk & cover & ratio \\
+\midrule
+$250$    & $0.096$\,s & $45\%$  & $1.08\times$ \\
+$1000$   & $0.080$\,s & $82\%$  & $1.31\times$ \\
+$4000$   & $0.100$\,s & $100\%$ & $\mathbf{1.36\times}$ \\
+$16000$  & $0.100$\,s & $100\%$ & $1.35\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Coverage saturates and so does the gain; past saturation the walk terminates
+on its own, so more budget costs nothing and buys nothing.  That reading holds
+\emph{at this size} --- and generalising it is exactly the mistake the next
+subsection is about.
+
+\subsection{Where it fails, why, and the one line that fixes it}
+\label{sec:collapse}
+
+At $n = 12$ the hybrid degrades to $1.00\times$, and at $n = 12$, $p = 5$ with
+$|F| = 187$ to $0.97\times$.  Our first explanation was that the probe count
+outgrows $|F|$, so the share a seed can remove shrinks.  \textbf{The
+measurement refutes it}: probes per vector are flat across the whole range ---
+$2.4$, $2.7$, $2.7$, $2.8$, $2.8$, $3.0$, $3.9$, $5.2$ --- with no trend.
+
+What collapses is coverage, and the speed-up tracks it line for line:
+
+\begin{table}[h]
+\centering
+\caption{Coverage, the share of probes a seed removes, and the speed-up.}
+\label{tab:collapse}
+\begin{tabular}{lrrr}
+\toprule
+ & cover & probes saved & ratio \\
+\midrule
+$n=6$  & $87\%$ & $29\%$ & \\
+$n=9$  & $79\%$ & $27\%$ & \\
+$n=10$ & $65\%$ & $24\%$ & $1.19\times$ \\
+$n=12$, $p=3$ & $35\%$ & $9\%$ & $1.00\times$ \\
+$n=12$, $p=5$ & $12\%$ & $2\%$ & $0.97\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Nothing in the exact phase degraded.  A fixed budget of $8$ restarts and
+$4000$ neighbours is a fixed amount of work against a target that grows, and
+$4000$ was chosen at $n = 7,8$ and generalised.
+
+Widening the walk alone, touching nothing else, confirms the diagnosis and
+says which knob matters.
+
+\begin{table}[h]
+\centering
+\caption{Widening the walk on the two instances that failed.  Restarts are what
+move coverage; the walk's own time barely changes.}
+\label{tab:widen}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{$n=12$, $p=3$} & \multicolumn{2}{c}{$n=12$, $p=5$} \\
+restarts / budget & cover & ratio & cover & ratio \\
+\midrule
+$8$ / $4000$     & $35\%$ & $1.03\times$ & $12\%$ & $0.98\times$ \\
+$16$ / $20000$   & $95\%$ & $\mathbf{1.61\times}$ & $46\%$ & $\mathbf{1.20\times}$ \\
+$32$ / $60000$   & $95\%$ & $1.53\times$ & $93\%$ & $1.12\times$ \\
+$64$ / $150000$  & $95\%$ & $1.44\times$ & $89\%$ & $1.17\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+So the fix is one line --- the first round is sized to the instance, at
+$\lceil n/4 \rceil$ times the restarts --- and it is what
+Table~\ref{tab:hybrid} already uses.  \emph{Not} a second constant: replacing
+$4000$ by $20000$ would repeat the error that produced the collapse.
+
+\paragraph{And coverage is not the objective.}  The $p = 5$ column of
+Table~\ref{tab:widen} says something we did not expect and that bounds the
+whole idea: \textbf{$46\%$ coverage gives $1.20\times$ and $93\%$ gives
+$1.12\times$}.  Buying the last half of the front costs more walking than the
+probes it removes.
+
+A walk that restarts in doubling rounds until one finds nothing new makes that
+concrete.  It does exactly what it promises --- at $n=12$, $p=5$ it takes
+coverage from $45\%$ to $97\%$ --- and it is slower: $1.02\times$ against
+$1.14\times$ there, and a median $1.32\times$ against $1.36\times$ over the
+same 120 instances, winning 109 of them against 116.  The quantity to
+maximise is not how much of the front the heuristic finds but the balance
+between what finding it costs and what the seeds save, and those two part
+company as $p$ grows.
+
+\paragraph{A correction to our own reading.}  We first reported the collapse
+as ``$n=12$, $p=3$: $35\%$ coverage, $1.00\times$'' from \emph{one} instance.
+Over six seeds of that configuration the unmodified walk averages $78\%$
+coverage and $1.35\times$.  The collapse is real and severe where $|F|$ is
+large --- $45\%$ coverage at $|F| = 302$ --- but it is not as general as one
+instance made it look.
+
+\subsection{Two further comparisons}
+
+\paragraph{The margin on front enumeration tracks $|F|$, not $n$.}  Every
+vector is a cut, and in decision space a cut costs $p$ binaries and $p+1$
+rows, so a larger front means larger sub-problems there and nothing at all in
+criterion space.  Over 45 instances swept across constraint tightness:
+
+\begin{table}[h]
+\centering
+\caption{Criterion space against decision space on complete front enumeration.}
+\begin{tabular}{lrrr}
+\toprule
+$|F|$ & instances & ratio (median) & max \\
+\midrule
+$1$--$4$  & $26$ & $2.7\times$  & $9.8\times$ \\
+$5$--$12$ & $17$ & $7.5\times$  & $23.8\times$ \\
+$13+$     & $2$  & $31.4\times$ & $38.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Seed quality explains the choice of heuristic.}  On 30 paired
+instances, scoring a seed by the non-negative gap
+$(\Phi^{*}-\Phi(\text{seed}))/|\Phi^{*}|$:
+
+\begin{table}[h]
+\centering
+\caption{The two sources as seeds for $(P_E)$ itself.}
+\begin{tabular}{lrr}
+\toprule
+ & median gap & exactly optimal \\
+\midrule
+Pareto archive & $0.000$ & $24/30$ \\
+Tchebychev     & $0.170$ & $8/30$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The ordering is stable across every family tried; the magnitudes are not.
 
 For context, the underlying substitution of criterion space for decision space
 is worth the following on $(P_E)$ itself, thirty instances per row at $n=6$:
@@ -723,9 +920,19 @@ instances, with identical answers.
 The negative results are the boundary of the positive one.  A seed is worth
 what the exact method can do with it, and in an enumeration --- which has no
 bound to feed --- it is worth exactly the discovery it replaces, priced against
-what discovery would have cost.
+what discovery would have cost.  That pricing is also what limits the idea:
+once the front is large enough that covering it costs more walking than the
+probes it saves, no amount of heuristic effort helps, and the honest
+instrument for deciding is the balance rather than the coverage.
 
-\paragraph{Limitations.}  The instances are drawn from one pseudo-random family
+\paragraph{Limitations.}  The hybrid's advantage depends on the walk staying
+cheap next to the search, and Section~\ref{sec:collapse} shows where that
+stops: at $|F| = 302$ the walk covers $45\%$ of the front and the margin falls
+to $1.14\times$, with more walking making it worse rather than better.  We
+have no rule that says in advance how much walking an instance deserves; the
+instance-sized first round is a measured heuristic, not a bound.
+
+The instances are drawn from one pseudo-random family
 with $n \leqslant 12$ and $p \leqslant 6$.  The \emph{directions} reported here
 are explained by mechanisms that are themselves measured --- sub-program counts,
 node counts, pivot counts --- but the \emph{magnitudes} are properties of that
@@ -736,7 +943,7 @@ not what we believe to be new.
 
 \paragraph{Reproducibility.}  The implementation is pure Python with no
 third-party dependency, computes in exact rational arithmetic throughout, and
-carries $92$ tests.  Several check \emph{properties} rather than answers --- the
+carries $93$ tests.  Several check \emph{properties} rather than answers --- the
 split is a partition, the metaheuristic never hands over an inefficient point,
 a budgeted run never claims completeness --- since a method that silently lost
 efficient points would still agree with the optimum on favourable instances.

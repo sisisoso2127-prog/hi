@@ -1583,6 +1583,72 @@ with the second half now doing the work: \emph{a hybridization pays only where
 the exact method has a mechanism the first phase can feed \textbf{more cheaply
 than the exact method feeds it itself}}.
 
+\subsection{On fractional criteria, where the problem actually lives}
+\label{sec:fracnote}
+
+Every figure above uses \emph{linear} criteria, which is a gap worth naming in
+a note about ratios.  It has a reason --- the Tchebychev comparison needs them,
+since $z^{*}_k - \Z_k(x)$ is not linear when $\Z_k$ is a ratio --- but the
+Pareto walk has no such requirement, so the hybrid can be measured where the
+problem statement lives.
+
+\begin{table}[h]
+\centering
+\caption{Genuinely fractional criteria, ten instances per row.}
+\begin{tabular}{lrrr}
+\toprule
+configuration & $|F|$ & cover & ratio \\
+\midrule
+$n=5$, $p=2$ & $7$  & $100\%$ & $1.54\times$ \\
+$n=6$, $p=3$ & $22$ & $100\%$ & $1.35\times$ \\
+$n=7$, $p=3$ & $36$ & $100\%$ & $1.25\times$ \\
+\midrule
+all $40$ & & & $\mathbf{1.39\times}$, faster on $34$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+At least as good as the linear case, with the walk covering the front
+completely.  Nothing in the construction distinguishes the two: the rows
+\eqref{eq:e} are integer-valued for ratios as much as for linear criteria.
+
+\subsection{Where the hybrid fails, and the line that fixes it}
+\label{sec:cover}
+
+At $n = 12$ the margin falls to $1.00\times$, and at $n=12$, $p=5$ to
+$0.97\times$.  We first blamed the probe count outgrowing $|F|$.  \textbf{The
+measurement refutes that}: probes per vector are flat across the range ---
+$2.4$, $2.7$, $2.7$, $2.8$, $2.8$, $3.0$, $3.9$, $5.2$.  What collapses is the
+share of the front the walk finds, and the speed-up tracks it line for line:
+$87\%$ at $n=6$, $79\%$ at $n=9$, $65\%$ at $n=10$, $35\%$ at $n=12$, $12\%$ at
+$n=12$, $p=5$.  A fixed budget of 8 restarts and 4000 neighbours is a fixed
+amount of work against a target that grows --- and $4000$ was chosen at
+$n=7,8$ and generalised.
+
+Widening the walk alone confirms it and names the knob: at $n=12$, going from
+8 to 16 restarts takes coverage from $35\%$ to $95\%$ and the ratio from
+$1.03\times$ to $1.61\times$, while the walk's own time barely moves.  So the
+first round is sized to the instance, at $\lceil n/4 \rceil$ times the
+restarts.  Over 120 instances spanning $n = 6 \dots 12$ that gives a median
+$\mathbf{1.36\times}$, faster on $116$.
+
+\paragraph{But coverage is not the objective, and that bounds the idea.}  On
+the same $p = 5$ instance, \textbf{$46\%$ coverage gives $1.20\times$ and
+$93\%$ gives $1.12\times$}: buying the last half of the front costs more
+walking than the probes it removes.  A walk that restarts in doubling rounds
+until one finds nothing new takes coverage there from $45\%$ to $97\%$ and is
+\emph{slower} --- $1.02\times$ against $1.14\times$, and a median
+$1.32\times$ against $1.36\times$ over the 120, winning 109 against 116.  It
+is kept in the code and switched off.
+
+\paragraph{A correction to our own reading.}  The collapse was first reported
+here as ``$35\%$ coverage, $1.00\times$'' from \emph{one} instance; over six
+seeds of that configuration the unmodified walk averages $78\%$ and
+$1.35\times$.  Severe where $|F|$ is large --- $45\%$ at $|F| = 302$ --- but
+not as general as one instance made it look.  That is the fifth time in this
+note that a single instance misled, which is why the campaign exists.
+
 \section{A wall met four times, and the one change that went round it}
 \label{sec:wall}
 
@@ -1755,7 +1821,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 92 tests. Several check
+exact rational arithmetic throughout, and carries 93 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
