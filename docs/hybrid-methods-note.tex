@@ -39,15 +39,24 @@ move the unexplored part of the problem into \emph{criterion} space, as a list
 of boxes: the truncation becomes a box subtraction, every sub-problem is the
 original feasible set plus a handful of ordinary linear rows, and the model
 never grows. On 35 instances this is faster on 34, by $5.05\times$ overall and
-$9.01\times$ on the heaviest, with the margin widening in $p$.
+$9.01\times$ on the heaviest. Re-measured on thirty instances per
+configuration, the margin widens monotonically in $p$: median ratios of
+$1.52\times$, $2.69\times$, $4.99\times$, $7.93\times$ and $14.57\times$ for
+$p = 2 \dots 6$. By $p = 6$ the two methods solve \emph{the same number} of
+sub-programs and one still takes $14.57\times$ as long, so the whole margin
+lies in the cost of a single sub-problem --- which is the cost model above,
+read off the measurement rather than argued.
 
 We then hybridize that exact search three ways and report what each is worth.
 Handing it the unfinished work of the published method (exact--exact)
 \emph{ties} it. Seeding it from a Pareto local search with an archive
-(exact--metaheuristic) gives $1.25\times$ against a measured ceiling of
-$1.42\times$. Seeding it from the augmented weighted Tchebychev program --- the
-scalarization the surrounding literature generates efficient points with ---
-\emph{loses} to not seeding at all, at $0.71\times$.
+(exact--metaheuristic) is the one hybridization that pays, though less than a
+first sample suggested: a median of $1.10\times$ over thirty paired instances,
+with the seed exactly optimal on $24$ of them. Seeding it from the augmented
+weighted Tchebychev program --- the scalarization the surrounding literature
+generates efficient points with --- \textbf{never pays}: $1.02\times$ on the
+same thirty, a wash, where a smaller sample had read $0.71\times$ and this note
+called it a loss.
 
 Two further changes sharpen the exact search without altering what it returns.
 Pruning the open list the moment its best bound cannot beat the incumbent
@@ -1385,11 +1394,11 @@ wrong row of the right profile overstated the gain by half.
 \toprule
 hybridization & verdict & effect \\
 \midrule
-decision space $\to$ criterion space & \textbf{win} & $5.05\times$, up to $173\times$ \\
+decision space $\to$ criterion space & \textbf{win} & $1.5\times$ at $p=2$ to $14.6\times$ at $p=6$ \\
 exact--exact handover ($s=1$)        & tie          & $8.47$ s vs $8.11$ s \\
 exact--exact handover ($s=3$)        & \textbf{loss} & $13.14$ s vs $8.47$ s \\
-exact--metaheuristic (Pareto archive) & \textbf{win} & $1.25\times$ of a $1.42\times$ ceiling \\
-exact--Tchebychev seed               & \textbf{loss} & $0.71\times$ \\
+exact--metaheuristic (Pareto archive) & \textbf{win} & $1.10\times$ median, $24/30$ seeds exact \\
+exact--Tchebychev seed               & \textbf{loss} & $1.02\times$: a wash, never pays \\
 Tchebychev as a generator            & \textbf{win} & reaches unsupported points \\
 incumbent seeding in decision space  & \textbf{loss} & zero iterations saved \\
 early exit on a hopeless bound       & partial      & 25\% fewer boxes, no time \\

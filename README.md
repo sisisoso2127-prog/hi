@@ -617,8 +617,10 @@ so — which is what the augmentation `rho` buys. Those are the numbers
 programs gives the same picture (216/369 against 135/369, 56 unsupported
 against 0, and again no inefficient optimum).
 
-**As a seed for the box search it loses, and the table says why.** Against the
-same 18 instances used for the metaheuristic above:
+**As a seed for the box search it never pays, and the table says why.** Against
+the same 18 instances used for the metaheuristic above — where it reads as a
+loss; on thirty paired instances it reads as a wash (1.02×), and *never pays*
+is the verdict that survives both:
 
 | seed | total | seed cost | exactly optimal |
 |---|---:|---:|---:|
