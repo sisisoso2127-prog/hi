@@ -1,0 +1,14 @@
+{
+ "n": 20,
+ "p": 3,
+ "corr": 0.0,
+ "coupes_vecteurs": 64,
+ "coupes_complet": false,
+ "coupes_motif": "reparation non terminee dans le budget",
+ "coupes_s": 1200.0,
+ "coupes_ilp": 190,
+ "brute_vecteurs": null,
+ "brute_s": 48.6,
+ "brute_erreur": "Plus de 2000000 points realisables : instance trop grande po",
+ "accord": false
+}

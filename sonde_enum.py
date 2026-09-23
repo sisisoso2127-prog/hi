@@ -84,7 +84,15 @@ def main() -> int:
             coupes_vecteurs=len(r.vecteurs), coupes_complet=r.complet,
             coupes_motif=r.motif, coupes_s=round(tc, 1), coupes_ilp=r.ilp,
             brute_vecteurs=nb, brute_s=round(tb, 1), brute_erreur=err,
-            accord=(nb is not None and r.complet and nb == len(r.vecteurs)),
+            # Trois etats et non deux. « desaccord » ne doit designer que
+            # le cas ou les DEUX methodes ont fini et ne s'accordent pas ;
+            # une enumeration interrompue rend un sous-ensemble, ce qui
+            # n'est pas une contradiction mais un budget epuise.
+            verdict=("accord" if (nb is not None and r.complet
+                                  and nb == len(r.vecteurs))
+                     else "desaccord" if (nb is not None and r.complet)
+                     else "coupes incompletes" if nb is not None
+                     else "aucune des deux n'a fini"),
         ), ensure_ascii=False, indent=1), encoding="utf-8")
         part.replace(cible)
         print(f"### {nom} : {len(r.vecteurs)} vecteurs, "
