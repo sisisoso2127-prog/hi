@@ -137,12 +137,25 @@ cuts, `p` binaries and `p+1` big-M rows per cut, the model growing all the way.
 That is the cost profile this whole package exists to avoid, and the same
 substitution works on enumeration:
 
-| | decision space | criterion space | |
-|---|---:|---:|---|
-| `n = 4`, 29 non-dominated vectors | 2.11 s | **0.32 s** | **6.68×** |
+| instance | \|front\| | criterion space | decision space | ratio |
+|---|---:|---:|---:|---:|
+| `n=4` | 9 | 0.12 s | 1.37 s | 11.4× |
+| **`n=5`** | **30** | **0.63 s** | **129.21 s** | **204×** |
+| `n=5` | 9 | 0.29 s | 0.81 s | 2.8× |
+| `n=6` | 6 | 0.08 s | 0.63 s | 8.0× |
 
-*One size only.* Enumerating the whole front in decision space gets slow fast,
-and larger `n` was not measured — that row is what was run, not a trend.
+**The ratio tracks the size of the front, not `n`.** Every vector is a cut, and
+in decision space every cut adds `p` binaries and `p+1` big-M rows — so a
+30-vector front leaves 90 binaries on the last sub-problem, while the
+criterion-space list never grows. The instance with the largest front is the
+one with the 204× gap; the two smallest fronts give 2.8× and 8.0×.
+
+That is the same mechanism as the optimisation comparison further up, where the
+margin tracked the number of cuts rather than `n` — measured independently
+here, on a different task.
+
+*Four instances, and the spread is wide.* The mechanism explains the spread,
+but these are four runs, not a distribution.
 
 **Why it is complete, and not merely large.** A non-dominated vector `v` leaves
 the unexplored region only through a split around a centre `a` with `v ≤ Z(a)`.

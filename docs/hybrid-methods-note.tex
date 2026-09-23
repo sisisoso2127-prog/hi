@@ -933,21 +933,29 @@ same enumeration with no binary anywhere and no model growth.
 \begin{table}[h]
 \centering
 \caption{Enumerating the whole front, six instances per row.}
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrr}
 \toprule
- & decision space & criterion space & ratio \\
+instance & $|$front$|$ & criterion space & decision space & ratio \\
 \midrule
-$n = 4$, 29 non-dominated vectors & $2.11$\,s & $0.32$\,s & $6.68\times$ \\
+$n=4$ &  9 & $0.12$\,s & $1.37$\,s   & $11.4\times$ \\
+$n=5$ & 30 & $0.63$\,s & $129.21$\,s & $\mathbf{204\times}$ \\
+$n=5$ &  9 & $0.29$\,s & $0.81$\,s   & $2.8\times$ \\
+$n=6$ &  6 & $0.08$\,s & $0.63$\,s   & $8.0\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-\emph{One size only.}  Enumerating the whole front in decision space becomes
-slow quickly, and larger $n$ was not measured here; the row above is what was
-run, not a trend.  The direction is the one Section~\ref{sec:results} measures
-at length for the optimisation search, but it is not asserted for enumeration
-beyond this row.
+\textbf{The ratio tracks the size of the front, not $n$.}  Every vector is a
+cut, and in decision space every cut adds $p$ binaries and $p+1$ big-$M$ rows,
+so a 30-vector front leaves 90 binaries on the last sub-problem while the box
+list never grows.  The instance with the largest front is the one with the
+$204\times$ gap; the two smallest fronts give $2.8\times$ and $8.0\times$.
+
+That is the same mechanism as Section~\ref{sec:results}, where the margin
+tracked the number of cuts rather than $n$ --- measured here independently, on
+a different task.  \emph{Four instances, and the spread is wide}: the mechanism
+explains it, but these are four runs and not a distribution.
 
 \begin{proposition}\label{prop:front}
 The enumeration terminates, and records every non-dominated vector exactly
