@@ -241,7 +241,7 @@ def probe_order(problem: MOILFP, points):
 
 def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
                  seeds: int = 8, budget: int = 4000,
-                 seed: int = 0, adaptive: bool = True,
+                 seed: int = 0, adaptive: bool = False,
                  patience: int = 0, max_rounds: int = 8) -> GeneratedSeeds:
     """Efficient points from a Pareto local search, verified and ordered.
 
@@ -263,13 +263,28 @@ def pareto_seeds(problem: MOILFP, phi: FractionalObjective,
     probe count per vector stays flat throughout (2.4--5.2), so the cause is
     the walk and not the search.
 
-    With *adaptive*, the walk is restarted with fresh random starts, each
-    round **twice the size of the last**, until a round contributes no
-    criterion vector the earlier rounds had not, plus *patience* rounds of
-    confirmation.  Doubling rather than repeating matters: seven identical
-    rounds reached 86% at ``n = 12`` and cost more than the exact search they
-    were meant to shorten, while doubling pays at most twice the cost of the
-    round that was the right size.  It then stops on its own where a
+The fix that works is one line: **the first round is sized to the
+    instance**, ``seeds * max(1, n//4)`` restarts.  Restarts are what the
+    measurement pointed at -- at ``n = 12``, 8 to 16 of them took coverage
+    from 35% to 95% while the walk's own time barely moved.  Over 120
+    instances at ``n = 6 \dots 12`` that gives a median $1.36\times$, faster
+    on 116 of 120.
+
+    Chasing coverage further does not work, which is the useful part
+    ----------------------------------------------------------------
+    With *adaptive*, the walk restarts in rounds that **double** in size until
+    one contributes no criterion vector the earlier rounds had not.  It does
+    what it says: coverage at ``n = 12, p = 5`` goes from 45% to 97%.  And it
+    is **slower** --- $1.02\times$ against the single scaled round's
+    $1.14\times$ on those instances, and a median $1.32\times$ against
+    $1.36\times$ over all 120, winning 109 of them against 116.
+
+    So coverage is not the objective, and this is the second time that
+    mattered: the balance between what the walk costs and what its seeds save
+    is.  At ``p = 5`` the walk is dear, and buying the last half of the front
+    costs more than the probes it removes --- visible directly in a widening
+    sweep, where 46% coverage gives $1.20\times$ and 93% gives $1.12\times$.
+    ``adaptive`` is therefore off by default and kept for the record.  It then stops on its own where a
     constant cannot: the walk sizes itself to the front rather than to the
     number 4000.  Restarts matter more than neighbours -- at ``n = 12`` raising
     the restarts from 8 to 16 took coverage from 35% to 95% while the walk's
