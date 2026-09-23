@@ -1,0 +1,14 @@
+{
+ "n": 10,
+ "p": 3,
+ "corr": 0.0,
+ "coupes_vecteurs": 70,
+ "coupes_complet": true,
+ "coupes_motif": "relache vide",
+ "coupes_s": 22.9,
+ "coupes_ilp": 152,
+ "brute_vecteurs": 70,
+ "brute_s": 1.8,
+ "brute_erreur": "",
+ "accord": true
+}
