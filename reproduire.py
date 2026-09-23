@@ -118,7 +118,7 @@ ENTREES: List[Entree] = [
 
     # -- arguments lus dans la legende, confrontation a faire ---------------
     Entree("bench_geom", "bench_geom.py", ["300", "3", "0"],
-           "tab:geom", "declare",
+           "tab:geom", "verifie",
            "plafond 300 (le defaut du banc est 900) et DECLENCHEUR "
            "DESACTIVE, comme la production"),
     Entree("bench_geom_declencheur", "bench_geom.py", ["300", "3"],
@@ -129,7 +129,12 @@ ENTREES: List[Entree] = [
            "tab:vivierstable", "verifie",
            "2 h 54 de calcul ; les deux moities concordent"),
     Entree("bench_vivier", "bench_vivier.py", ["300,900"],
-           "tab:alternance", "declare"),
+           "tab:alternance", "declare",
+           "joue en deux morceaux, 300 puis 900 : le second depasse trois "
+           "heures et les journaux se concatenent"),
+    Entree("molfp_enumere", "molfp_enumere.py", ["--valider", "8"],
+           "validation de l'enumeration de Z(E)", "verifie",
+           "8/8 contre la force brute"),
 
     # -- defauts, mapping non etabli ----------------------------------------
     Entree("bench_budget", "bench_budget.py", [],
