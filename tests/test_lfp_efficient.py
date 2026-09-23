@@ -34,7 +34,9 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for
 from lfp_efficient.subset import EfficientSubset, efficient_subset
-from lfp_efficient.front import Front, enumerate_front
+from lfp_efficient.front import (Front, enumerate_front, in_box,
+                                 pre_split)
+from lfp_efficient.generated import (generate_seeds, generated_front)
 from lfp_efficient.complete import (CompleteSet, complete_efficient_set,
                                     slice_rows, variable_bounds)
 from lfp_efficient.milp import solve_relaxation, warm_relaxation
@@ -1801,6 +1803,132 @@ def test_an_exhausted_budget_never_claims_a_complete_set():
     assert not capped.complete, "a point cap cannot prove a complete set"
     return (f"whole {len(whole.points)} points (proved); starved "
             f"{len(starved.points)}, capped {len(capped.points)}, neither claims it")
+
+
+
+# --------------------------------------------------------------------------
+# seeding the front enumeration from a generator
+# --------------------------------------------------------------------------
+def test_seeding_the_front_never_changes_the_front():
+    """A seed removes the cost of *finding* a vector, never the vector.
+
+    Seeded with points taken from its own unseeded answer, the enumeration must
+    return the same vectors, stay provably complete, and reach the same optimum
+    of ``(P_E)`` -- which it can only do if a seeded vector still pays for its
+    ``Q`` program.
+    """
+    rng = random.Random(24601)
+    checked = saved = costlier = 0
+    for _ in range(40):
+        problem, phi, _ = random_instance(rng)
+        plain = enumerate_front(problem, phi)
+        if len(plain.vectors) < 2:
+            continue
+        seeds = plain.points[::2]
+        seeded = enumerate_front(problem, phi, seeds=seeds)
+        assert seeded.complete, "a seeded run must still prove completeness"
+        assert ({tuple(v) for v in seeded.vectors}
+                == {tuple(v) for v in plain.vectors}), "the front changed"
+        assert max(seeded.values) == max(plain.values), "the optimum changed"
+        assert seeded.seeded == len(seeds), "not every seed was placed"
+        # Not an invariant: the pre-split imposes a box structure the search
+        # would not have chosen, and on a minority of instances that costs
+        # probes rather than saving them.  Over 152 instances it went the wrong
+        # way on 5.  What holds is the aggregate.
+        if seeded.probes > plain.probes:
+            costlier += 1
+        saved += plain.probes - seeded.probes
+        checked += 1
+    assert checked, "no instance had a front worth seeding"
+    assert saved > 0, f"seeding saved no probes in aggregate ({saved})"
+    assert costlier * 4 < checked, (
+        f"seeding cost probes on {costlier} of {checked} -- too many for a "
+        "minority effect")
+    return (f"{checked} instances, same front and same optimum, {saved} probes "
+            f"saved in aggregate, costlier on {costlier}")
+
+
+def test_a_seed_lands_in_exactly_one_box_of_the_split():
+    """The split is disjoint and covering, which is what makes ``pre_split`` sound.
+
+    A point whose vector has not been removed must satisfy the rows of exactly
+    one child -- not zero (the seed would be lost) and not two (it would be
+    split twice).
+    """
+    rng = random.Random(90210)
+    checked = 0
+    for _ in range(8):
+        problem, _, _ = random_instance(rng)
+        front = enumerate_front(problem)
+        if len(front.vectors) < 3:
+            continue
+        boxes, recorded = pre_split(problem, front.points[:2])
+        assert len(recorded) == 2
+        for point in front.points[2:]:
+            holders = [b for b in boxes if in_box(problem, b, point)]
+            assert len(holders) == 1, (
+                f"{point} lies in {len(holders)} boxes, not 1")
+            checked += 1
+    assert checked, "no instance produced enough vectors"
+    return f"{checked} points, each in exactly one box of the split"
+
+
+def test_duplicate_and_dominated_seeds_are_dropped_not_mishandled():
+    """Two seeds on the same slice, and a seed already removed by another.
+
+    A generator makes no promise that its points are distinct in criterion
+    space, so the same vector twice must place once; and a dominated point must
+    not be recorded as a front vector.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])      # x3 absent from Z
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)
+
+    twins = [[F(2), F(1), F(0)], [F(2), F(1), F(2)]]    # same Z, two points
+    assert problem.Z(twins[0]) == problem.Z(twins[1])
+    _, recorded = pre_split(problem, twins)
+    assert len(recorded) == 1, "the same vector was placed twice"
+
+    dominated = [F(0), F(0), F(0)]
+    boxes, recorded = pre_split(problem, [twins[0], dominated])
+    assert len(recorded) == 1, "a dominated seed was recorded as a front vector"
+
+    seeded = enumerate_front(problem, phi, seeds=twins)
+    plain = enumerate_front(problem, phi)
+    assert seeded.complete
+    assert ({tuple(v) for v in seeded.vectors}
+            == {tuple(v) for v in plain.vectors})
+    assert max(seeded.values) == max(plain.values)
+    return "duplicate placed once, dominated seed dropped, front unchanged"
+
+
+def test_the_generated_hybrid_agrees_with_the_plain_enumeration():
+    """The Tchebychev-seeded front against the unseeded one.
+
+    This is the hybrid the module was written to test.  It loses on cost --
+    that is recorded in ``lfp_efficient/generated.py`` -- but it must not lose
+    on the answer, and every point the generator supplies must be efficient by
+    its own guarantee, which is checked here rather than trusted.
+    """
+    rng = random.Random(13331)
+    checked = 0
+    for _ in range(8):
+        problem, phi, bounds = random_instance(rng)
+        seeds = generate_seeds(problem)
+        for point in seeds.points:
+            assert test_efficiency(problem, point).efficient, (
+                "the Tchebychev program returned an inefficient point")
+        front, again = generated_front(problem, phi)
+        plain = enumerate_front(problem, phi)
+        assert front.complete
+        assert ({tuple(v) for v in front.vectors}
+                == {tuple(v) for v in plain.vectors})
+        assert max(front.values) == max(plain.values)
+        assert front.seeded == len(seeds), "not every generated seed was used"
+        checked += 1
+    return (f"{checked} instances, generated seeds all efficient, "
+            "same front and same optimum")
 
 
 # --------------------------------------------------------------------------

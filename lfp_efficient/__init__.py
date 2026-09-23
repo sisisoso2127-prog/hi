@@ -46,7 +46,9 @@ from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
 from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
                     MOILP, Model)
 from .rational import F, fmt
-from .front import Front, enumerate_front
+from .front import Front, enumerate_front, in_box, pre_split
+from .generated import (GeneratedSeeds, generate_seeds,
+                        generated_front)
 from .complete import (CompleteSet, complete_efficient_set,
                        variable_bounds)
 from .subset import EfficientSubset, efficient_subset
@@ -75,7 +77,8 @@ __all__ = [
     "enumerate_nondominated", "maximize_by_full_enumeration", "FullEnumeration",
     "best_over_efficient_set_by_scan", "certify_optimum", "Certificate",
     "efficient_subset", "EfficientSubset",
-    "enumerate_front", "Front",
+    "enumerate_front", "Front", "pre_split", "in_box",
+    "generated_front", "generate_seeds", "GeneratedSeeds",
     "complete_efficient_set", "CompleteSet", "variable_bounds",
     "F", "fmt",
 ]
