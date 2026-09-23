@@ -851,6 +851,30 @@ def test_a_complete_front_is_not_the_whole_set_of_efficient_points():
             f"the front keeps {len(front.points)} and still finds the optimum")
 
 
+def test_the_two_exact_methods_agree_with_each_other():
+    """There are now two exact routes to ``(P_E)``: prune (stop as soon as the
+    rest cannot beat the incumbent) or enumerate (walk the whole front and take
+    the best).  They share the box machinery but not the reason they stop, so
+    agreeing is a real cross-check rather than a tautology.
+    """
+    rng = random.Random(161803)
+    agreed = 0
+    for _ in range(12):
+        problem, phi, _ = random_instance(rng)
+        pruned = optimize_in_criterion_space(problem, phi)
+        front = enumerate_front(problem, phi)
+        assert front.complete
+        if pruned.x is None:
+            assert not front.values
+            continue
+        assert pruned.proved_optimal
+        assert max(front.values) == pruned.value, (max(front.values),
+                                                   pruned.value)
+        agreed += 1
+    assert agreed >= 9, agreed
+    return f"{agreed} instances: pruning and enumeration reach the same optimum"
+
+
 def test_an_interrupted_enumeration_refuses_to_claim_completeness():
     """Stopped early, the front is a subset and must not pretend otherwise."""
     problem, phi = paper_problem()
