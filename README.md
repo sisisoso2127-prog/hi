@@ -178,8 +178,21 @@ slice**, which is what the plain vector enumeration cannot give you.
 
 That pairing has a consequence worth stating: **the largest value on the front
 is the optimum of `(P_E)`**. So this is a second, independent way to solve the
-problem — and `test_the_best_phi_on_the_front_is_the_optimum_of_pe` uses it as
-a cross-check on the main algorithm.
+problem — and the suite uses it as a cross-check on the main algorithm.
+
+**What the pruning is worth, measured.** Two exact routes now exist: *prune*
+(stop as soon as the rest cannot beat the incumbent) or *enumerate* (walk the
+whole front, take the best). They share the box machinery but not the reason
+they stop, so comparing them is meaningful:
+
+| | boxes | time |
+|---|---:|---:|
+| prune — `optimize_in_criterion_space` | 102 | **1.52 s** |
+| enumerate — `enumerate_front` | 215 | 2.96 s |
+
+Same optimum on all 8 instances. **1.94×** and half the sub-problems — and that
+is *less* than one might expect: enumerating the entire front costs only twice
+what finding the single best point costs.
 
 ## What is verified, and how
 

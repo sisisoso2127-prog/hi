@@ -1005,6 +1005,34 @@ this note: \textbf{the largest value on the front is the optimum of $(P_E)$.}
 The front enumeration is therefore a second, independent exact method for the
 problem, and the test suite uses it as a cross-check on the first.
 
+\subsection{What the pruning is worth}
+
+Two exact routes to $(P_E)$ now exist: \emph{prune} --- stop as soon as no open
+box can beat the incumbent --- or \emph{enumerate} the whole front and take the
+best value on it.  They share the box machinery but not the reason they stop,
+so the comparison measures the pruning itself.
+
+\begin{table}[h]
+\centering
+\caption{Solving $(P_E)$ by pruning against solving it by enumeration, eight
+instances at $n = 6, 7$.  Same optimum on every one.}
+\begin{tabular}{lrr}
+\toprule
+ & boxes & time \\
+\midrule
+prune (Algorithm~\ref{alg:box})      & $102$ & $1.52$\,s \\
+enumerate (Section~\ref{sec:front})  & $215$ & $2.96$\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+$1.94\times$, and half the sub-problems.  That is \emph{less} than one might
+expect: walking the entire front costs only twice what finding its single best
+point costs, which says the cutoff prunes a smaller share of the work than the
+ceiling experiments of Section~\ref{sec:asymmetry} might suggest --- those
+measure what a better \emph{incumbent} saves, not what having one at all does.
+
 \section{Three measurement lessons, and what they cost}
 
 We report these because the direction of a result is worth less than the
@@ -1104,7 +1132,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 73 tests. Several check
+exact rational arithmetic throughout, and carries 74 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
