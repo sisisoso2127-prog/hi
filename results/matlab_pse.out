@@ -1,0 +1,11 @@
+==============================================================================
+PORTAGE CONTRE FORCE BRUTE -- 6 instances binaires n=10, m=3
+==============================================================================
+  essai 0   pse   8   brute   8   manquants   0   non efficaces   0   OK
+  essai 1   pse   3   brute   3   manquants   0   non efficaces   0   OK
+  essai 2   pse   1   brute   1   manquants   0   non efficaces   0   OK
+  essai 3   pse   2   brute   2   manquants   0   non efficaces   0   OK
+  essai 4   pse   2   brute   2   manquants   0   non efficaces   0   OK
+  essai 5   pse   4   brute   4   manquants   0   non efficaces   0   OK
+
+OK partout
