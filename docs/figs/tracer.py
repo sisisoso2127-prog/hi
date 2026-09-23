@@ -113,3 +113,62 @@ def enumerate_points(problem, bounds):
         if not any(problem.dominates(y, x) for y in feasible):
             eff.append(x)
     return feasible, eff
+
+
+# --------------------------------------------------------------------------
+# the hybrid: what the walk finds, and what placing each seed does to the list
+# --------------------------------------------------------------------------
+def trace_seeding(problem, phi):
+    """Replay ``pre_split`` one seed at a time, recording the box list.
+
+    Nothing is invented here either: the seeds come from a real
+    ``pareto_seeds`` run, in the probe order the hybrid uses, and each step is
+    the same split the enumeration would have performed had its probe returned
+    that point.
+    """
+    from lfp_efficient.criterion_space import Box, split
+    from lfp_efficient.front import in_box
+    from lfp_efficient.generated import pareto_seeds
+
+    found = pareto_seeds(problem, phi)
+    boxes, steps, seen = [Box()], [], set()
+    for a in found.points:
+        key = tuple(problem.Z(a))
+        if key in seen:
+            continue
+        index = next((i for i, b in enumerate(boxes) if in_box(problem, b, a)),
+                     None)
+        if index is None:
+            continue
+        seen.add(key)
+        target = criterion_bounds(problem, boxes[index].rows)
+        box = boxes.pop(index)
+        boxes.extend(split(problem, box, a, None))
+        steps.append({
+            "centre": [int(c) for c in a],
+            "z": [int(c) for c in key],
+            "target": target,
+            "recorded": [list(v) for v in seen],
+            "boxes": [criterion_bounds(problem, b.rows) for b in boxes],
+        })
+    return found, steps
+
+
+def trace_after_seeding(problem, phi, seeds):
+    """The enumeration that follows the seeding: which boxes it still probes."""
+    import lfp_efficient.front as FR
+    from lfp_efficient import enumerate_front
+
+    popped = []
+    real_pop = FR.heappop
+
+    def pop(h):
+        item = real_pop(h)
+        popped.append(criterion_bounds(problem, item[1].rows))
+        return item
+    FR.heappop = pop
+    try:
+        front = enumerate_front(problem, phi, seeds=seeds)
+    finally:
+        FR.heappop = real_pop
+    return front, popped

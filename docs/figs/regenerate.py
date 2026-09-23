@@ -18,7 +18,8 @@ sys.path.insert(0, ROOT)
 
 from canvas import Axes, Canvas                                   # noqa: E402
 from lfp_efficient import (FractionalObjective, LE, MOILP, Model)  # noqa: E402
-from tracer import enumerate_points, trace                        # noqa: E402
+from tracer import (enumerate_points, trace, trace_after_seeding,  # noqa: E402
+                    trace_seeding)                                # noqa: E402
 
 OUT = HERE
 BOX, CUT, EFF, INC, PT = ("blue!60!black", "red!65!black",
@@ -122,6 +123,102 @@ def decision_3d(problem, feasible, efficient, opt, ub=3):
                 a.ring(X, Y, 5.0, INC, 1.0)
         a.text(ox + ub * step / 2, oy + ub * step + 15, f"$x_3={level}$", "c",
                "\\footnotesize")
+    return a
+
+
+# --------------------------------------------------------------------------
+# the hybrid, step by step
+# --------------------------------------------------------------------------
+def hybrid_figure(problem, feasible, efficient, step, xlim, ylim,
+                  xticks, yticks, walk=None):
+    """One seeding step: the box list after this seed is placed.
+
+    Green fills are efficient points, grey outlines dominated ones.  The orange
+    ring is the seed just placed; the red shading is the region its split
+    removes; the blue dashed rectangles are the boxes now open.  When *walk* is
+    given, every archive member is ringed instead -- that is the figure for the
+    heuristic phase, before any box exists.
+    """
+    a = Axes(205, 150, xlim, ylim, pad=30)
+    a.axes("$Z_1$", "$Z_2$", xticks, yticks)
+    if step is not None:
+        lo_b, hi_b = step["target"]
+        z = step["z"]
+        cut_hi = [min(z[k], hi_b[k]) if hi_b[k] is not None else z[k]
+                  for k in range(problem.p)]
+        a.box(lo_b, cut_hi, "red!35", "red!11")
+        for lo, hi in step["boxes"]:
+            a.box(lo, hi, CUT, None, dash=2)
+    eff = {tuple(x) for x in efficient}
+    for x in feasible:
+        z = problem.Z(x)
+        X, Y = a.X(z[0]), a.Y(z[1])
+        if not (a.pad - 2 <= X <= a.pad + a.iw + 2
+                and a.pad - 2 <= Y <= a.pad + a.ih + 2):
+            continue
+        a.dot(X, Y, 2.2, EFF) if tuple(x) in eff else a.ring(X, Y, 2.2, PT)
+    for point in (walk or []):
+        z = problem.Z(point)
+        a.ring(a.X(z[0]), a.Y(z[1]), 4.6, INC, 1.0)
+    if step is not None:
+        z = step["z"]
+        a.ring(a.X(z[0]), a.Y(z[1]), 5.8, INC, 1.0)
+    return a
+
+
+def empty_boxes_figure(problem, feasible, efficient, boxes, xlim, ylim,
+                       xticks, yticks):
+    """What the exact phase is left with: boxes that all turn out empty."""
+    a = Axes(205, 150, xlim, ylim, pad=30)
+    a.axes("$Z_1$", "$Z_2$", xticks, yticks)
+    for lo, hi in boxes:
+        a.box(lo, hi, CUT, None, dash=2)
+    eff = {tuple(x) for x in efficient}
+    for x in feasible:
+        z = problem.Z(x)
+        X, Y = a.X(z[0]), a.Y(z[1])
+        if not (a.pad - 2 <= X <= a.pad + a.iw + 2
+                and a.pad - 2 <= Y <= a.pad + a.ih + 2):
+            continue
+        a.dot(X, Y, 2.2, EFF) if tuple(x) in eff else a.ring(X, Y, 2.2, PT)
+    return a
+
+
+def process_diagram():
+    """The three phases and what crosses between them."""
+    a = Canvas(430, 168)
+    boxes = [
+        (8,   104, 118, 44, "blue!55!black",  "1. Pareto local search",
+         ["archive of candidates", "no proof, $0.011$\\,s"]),
+        (156, 104, 118, 44, "orange!80!black", "2. verify \\& order",
+         ["one efficiency test each", "sort by probe direction"]),
+        (304, 104, 118, 44, "green!45!black", "3. pre-split",
+         ["place each seed,", "no program at all"]),
+        (8,    14, 118, 44, "black!55",       "6. slices",
+         ["solve $\\Z(x)=v$,", "eliminate $r$ variables"]),
+        (156,  14, 118, 44, "black!55",       "5. exact enumeration",
+         ["probe what is left,", "prove the front complete"]),
+        (304,  14, 118, 44, "black!55",       "4. box list",
+         ["seeded region,", "the model never grows"]),
+    ]
+    for x, y, w, h, color, title, lines in boxes:
+        a.frame(x, y, w, h, color, 1.0)
+        a.text(x + w / 2, y + h - 11, title, "c", "\\footnotesize\\bfseries")
+        for i, line in enumerate(lines):
+            a.text(x + w / 2, y + h - 24 - 11 * i, line, "c")
+    for x1, x2, y in ((126, 156, 126), (274, 304, 126),
+                      (304, 274, 36), (156, 126, 36)):
+        a.seg(x1, y, x2, y, "black!65", 0.9)
+        d = 3 if x2 > x1 else -3
+        a.seg(x2, y, x2 - d, y + 3, "black!65", 0.9)
+        a.seg(x2, y, x2 - d, y - 3, "black!65", 0.9)
+    a.seg(363, 104, 363, 58, "black!65", 0.9)
+    a.seg(363, 58, 360, 62, "black!65", 0.9)
+    a.seg(363, 58, 366, 62, "black!65", 0.9)
+    a.text(214, 92, "verified efficient points, in probe order", "c")
+    a.text(371, 80, "boxes", "l")
+    a.text(289, 44, "$F$", "c")
+    a.text(141, 44, "$E(P_D)$", "c")
     return a
 
 
@@ -276,6 +373,29 @@ def main():
         "\\% removed / saved", scale=26))
     write("r-wall-legend", legend([("sub-problems removed", "blue!55!black"),
                                    ("time saved", "orange!80!black")]))
+    # ---- the hybrid, on both illustration instances -----------------------
+    for tag, build_inst, xlim, ylim, xt, yt in (
+            ("ha", instance_a, (-4, 4), (-4, 10), [-4, -2, 0, 2, 4],
+             [-4, -2, 0, 2, 4, 6, 8, 10]),
+            ("hb", instance_b, (0, 13), (0, 7), [0, 4, 8, 12],
+             [0, 2, 4, 6])):
+        problem, phi, bounds = build_inst()
+        feasible, efficient = enumerate_points(problem, bounds)
+        found, steps = trace_seeding(problem, phi)
+        write(f"{tag}-walk", hybrid_figure(problem, feasible, efficient, None,
+                                           xlim, ylim, xt, yt,
+                                           walk=found.points))
+        for i, step in enumerate(steps, 1):
+            write(f"{tag}-seed{i}",
+                  hybrid_figure(problem, feasible, efficient, step,
+                                xlim, ylim, xt, yt))
+        front, popped = trace_after_seeding(problem, phi, found.points)
+        write(f"{tag}-left",
+              empty_boxes_figure(problem, feasible, efficient, popped,
+                                 xlim, ylim, xt, yt))
+        print(f"  {tag}: {len(steps)} seeding steps, "
+              f"{len(popped)} boxes left to probe")
+    write("h-process", process_diagram())
     print("figures written to", OUT)
 
 

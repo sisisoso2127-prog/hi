@@ -363,6 +363,202 @@ The reversed arm is what makes the direction causal rather than a coincidence
 of this sample.  In archive order the hybrid is \emph{slower} than the pure
 exact method, at $0.81\times$; in probe order it is $1.33\times$ faster.
 
+\subsection{The algorithm}
+\label{sec:pseudo}
+
+Algorithm~\ref{alg:hybrid} is the whole method.  Phases~1--3 are the heuristic
+contribution and cost no integer program beyond the verification;
+phases~4--6 are exact and carry the proof.
+
+\begin{algorithm}[h]
+\caption{\textsc{HybridCompleteSet}$(\Dset, \Z, \Phi)$ --- all of $\E$, and the
+optimum of $(P_E)$}
+\label{alg:hybrid}
+\begin{algorithmic}[1]
+\Statex \textbf{Phase 1 --- explore (heuristic, no guarantee)}
+  \State $A \gets \textsc{ParetoLocalSearch}(\Dset, \Z, \Phi)$
+         \Comment{archive of mutually non-dominated points}
+\Statex \textbf{Phase 2 --- verify and order}
+  \State $S \gets \emptyset$;\ \ $V \gets \emptyset$
+  \ForAll{$x \in A$}
+    \State $a \gets x$ \textbf{if} $x$ passes the exact efficiency test
+           \textbf{else} a dominator of $x$ that does
+    \If{$\Z(a) \notin V$} $V \gets V \cup \{\Z(a)\}$;\ $S \gets S \cup \{a\}$
+    \EndIf
+  \EndFor
+  \State sort $S$ by $\pi^{\top}a$ \textbf{decreasing}, where
+         $\pi = \sum_k c_k$ is the probe direction \label{line:order}
+\Statex \textbf{Phase 3 --- pre-split (no program at all)}
+  \State $\mathcal{B} \gets \{\,\text{the root box}\,\}$;\ \ $F \gets \emptyset$
+  \ForAll{$a \in S$ \textbf{in that order}}
+    \State $B \gets$ the unique box of $\mathcal{B}$ containing $a$
+           \Comment{none: $a$ is dominated by an earlier seed; skip}
+    \State $F \gets F \cup \{\Z(a)\}$;\ \
+           $\mathcal{B} \gets (\mathcal{B} \setminus \{B\}) \cup
+            \textsc{Split}(B, a)$ \Comment{by \eqref{eq:split}}
+  \EndFor
+\Statex \textbf{Phase 4--5 --- exact enumeration of what is left}
+  \While{$\mathcal{B} \neq \emptyset$}
+    \State pop $B$ from $\mathcal{B}$
+    \State $x \gets \arg\max \{\pi^{\top}x : x \in \Dset \cap B\}$
+           \Comment{the probe}
+    \If{infeasible} \textbf{continue} \Comment{$B$ is empty: drop it}
+    \EndIf
+    \State $a \gets x$ \textbf{if} efficient \textbf{else} a dominator that is
+    \State $F \gets F \cup \{\Z(a)\}$;\ \
+           $\mathcal{B} \gets (\mathcal{B} \setminus \{B\}) \cup
+            \textsc{Split}(B, a)$
+  \EndWhile
+  \Statex \Comment{$F$ is now the complete non-dominated set
+          (Proposition~\ref{prop:front}, unaffected by the seeding by
+          Proposition~\ref{prop:seedsound})}
+\Statex \textbf{Phase 6 --- slices}
+  \State $\E \gets \emptyset$
+  \ForAll{$v \in F$}
+    \State solve \eqref{eq:slice} for $r$ variables; enumerate the remaining
+           $n-r$ \Comment{Section~\ref{sec:elim}}
+    \State $\E \gets \E \cup \{\,x \in \Dset : \Z(x) = v \,\}$
+           \Comment{all efficient, by Theorem~\ref{thm:slice}}
+  \EndFor
+  \State \Return $\E$ and $\arg\max_{x \in \E} \Phi(x)$
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+Two lines carry the paper.  Line~\ref{line:order} is the ordering of
+Section~\ref{sec:order}: without it the method is \emph{slower} than the pure
+exact one.  And the loop of phase~6 pays no efficiency test, by
+Theorem~\ref{thm:slice}.
+
+\begin{figure}[h]
+\centering
+\fig{h-process}
+\caption{Process structure.  Only verified efficient points cross from the
+heuristic side to the exact side, and they cross in probe order.  Nothing
+crosses back: the heuristic never sees the exact phase's findings, which is why
+its cost is a one-off.}
+\label{fig:process}
+\end{figure}
+
+\section{Two worked examples, step by step}
+\label{sec:examples}
+
+Both are run by the implementation and the figures are emitted from that run;
+nothing below is drawn by hand.  In every figure a filled green square is an
+efficient point, a grey outline a dominated one, an orange ring a point the
+walk supplied, red shading the region a split removes, and blue dashed
+rectangles the boxes currently open.
+
+\subsection{Two variables}
+\label{sec:exA}
+
+\[
+  \Dset = \{\, x \in \Zint^{2}_{+} :\ -2x_1 + x_2 \leqslant 0,\ \
+  6x_1 + x_2 \leqslant 21,\ \ -2x_1 + 4x_2 \leqslant 6 \,\},
+\]
+\[
+  \Z(x) = (x_1 - 2x_2,\ -x_1 + 4x_2), \qquad
+  \Phi(x) = \frac{x_1 + x_2 - 1}{5x_1 + x_2 - 1} .
+\]
+There are 7 non-dominated vectors.  The pure enumeration spends \textbf{15
+probes}; the hybrid spends \textbf{8}.
+
+\paragraph{Step 0 --- the walk.}  The Pareto local search returns an archive of
+7 points.  Each is put through the exact efficiency test, all 7 pass, and their
+criterion vectors are distinct: the walk has found the \emph{entire} front
+before a single box exists.  It has proved nothing --- that is still ahead ---
+but nothing remains to be \emph{discovered}.
+
+\begin{center}\fig{ha-walk}\end{center}
+
+\paragraph{Steps 1--7 --- placing the seeds.}  The seeds are sorted by
+$\pi^{\top}x$ decreasing and placed one at a time.  Each step locates the
+unique open box containing the seed, deletes $\{\Z \leqslant \Z(a)\}$ from it
+(red), and replaces it by the $p = 2$ children (dashed).  \textbf{No integer
+program is solved in any of these steps.}
+
+\begin{center}
+\fig{ha-seed1}\quad\fig{ha-seed2}\\[4pt]
+\fig{ha-seed3}\quad\fig{ha-seed4}\\[4pt]
+\fig{ha-seed5}\quad\fig{ha-seed6}\\[4pt]
+\fig{ha-seed7}
+\end{center}
+
+\noindent
+Watch the open region shrink toward the staircase boundary of the front.  After
+step~7 the list holds 8 boxes, and every one of them lies strictly beyond the
+front.
+
+\paragraph{Steps 8--15 --- the exact phase, which finds nothing.}  Each of the
+8 remaining boxes is probed once.  All 8 come back infeasible, and the list
+empties, which is what \emph{proves} the front complete
+(Proposition~\ref{prop:front}).
+
+\begin{center}\fig{ha-left}\end{center}
+
+\noindent
+This is the hybrid in one picture: the heuristic did the \emph{finding}, at
+$0.011$\,s and 7 efficiency tests, and the exact method did the \emph{proving},
+at 8 probes instead of 15.  Neither phase can be dropped --- an archive without
+the box list proves nothing, and the box list without the archive pays to
+rediscover all 7 vectors.
+
+\paragraph{Step 16 --- slices, then $(P_E)$.}  Each of the 7 vectors is sliced
+by \eqref{eq:slice}.  Here every slice is a single point, so
+$|\E| = 7$, and $\max_{\E} \Phi = 5/17$ at $x = (3,3)$ --- the same answer the
+decision-space method returns.
+
+\subsection{Three variables}
+\label{sec:exB}
+
+\[
+  \Dset = \{\, x \in \Zint^{3}_{+} :\ x_j \leqslant 3,\ \
+  x_1 + x_2 + 2x_3 \leqslant 5,\ \ 2x_1 + 3x_2 + x_3 \leqslant 6 \,\},
+\]
+\[
+  \Z(x) = (4x_1 - x_2 + x_3,\ \ 2x_2 + 2x_3), \qquad
+  \Phi(x) = \frac{-2x_1 + 4x_2 - 3x_3 + 1}{x_1 + 2x_2 + x_3 + 1} .
+\]
+The criterion space is still two-dimensional --- $p = 2$ --- so the same
+picture works with $n = 3$, which is the point of showing it: \textbf{the
+method's cost is driven by $p$ and by $|F|$, not by $n$}.  There are 4
+non-dominated vectors; the pure enumeration spends 9 probes, the hybrid 5.
+
+\paragraph{Step 0 --- the walk.}  The archive holds 4 points, all verified
+efficient, with distinct vectors $(12,0)$, $(9,2)$, $(6,4)$ and $(1,6)$ ---
+again the whole front.
+
+\begin{center}\fig{hb-walk}\end{center}
+
+\paragraph{Steps 1--4 --- placing the seeds.}  In probe order the seeds are
+$(3,0,0)$, $(2,0,1)$, $(1,0,2)$, $(0,1,2)$, which is the front read from the
+$Z_1$ end downwards --- exactly the order the probe would have met them.
+
+\begin{center}
+\fig{hb-seed1}\quad\fig{hb-seed2}\\[4pt]
+\fig{hb-seed3}\quad\fig{hb-seed4}
+\end{center}
+
+\paragraph{Steps 5--9 --- the exact phase.}  Five boxes remain and all five
+probe infeasible.
+
+\begin{center}\fig{hb-left}\end{center}
+
+\paragraph{Step 10 --- slices.}  Note $x_3$ enters $\Phi$ but the pairing is
+still needed: by Remark~\ref{rem:notZ} a vector can carry several points with
+different $\Phi$, so the maximiser is taken \emph{on the slice} rather than
+taking whichever point the repair landed on.
+
+\subsection{What the two examples show that a table cannot}
+
+In both, the walk covers the front completely and the exact phase finds
+\emph{nothing new}.  That is the good case, and it is the common one --- the
+walk covers $95\%$ of the front in the median over the campaign of
+Section~\ref{sec:results}.  It also shows the ceiling: the exact phase still
+probes 8 and 5 boxes respectively to \emph{prove} emptiness, and no seed can
+remove those.  The hybrid removes the cost of discovery and leaves the cost of
+proof untouched, which is why its margin is $1.31\times$ and not $15/8$.
+
 \section{Computational results}
 \label{sec:results}
 
