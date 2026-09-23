@@ -1,0 +1,19 @@
+    10 vecteurs   ILP   0.32 s   reparation   0.02 s   appels 32
+    20 vecteurs   ILP   1.00 s   reparation   0.07 s   appels 62
+    30 vecteurs   ILP   2.53 s   reparation   0.02 s   appels 91
+    40 vecteurs   ILP   3.58 s   reparation   0.00 s   appels 116
+    50 vecteurs   ILP   5.14 s   reparation   0.03 s   appels 140
+    60 vecteurs   ILP   5.07 s   reparation   0.01 s   appels 162
+    70 vecteurs   ILP   5.83 s   reparation   0.03 s   appels 183
+    80 vecteurs   ILP   5.59 s   reparation   0.01 s   appels 204
+    90 vecteurs   ILP   6.99 s   reparation   0.02 s   appels 224
+   100 vecteurs   ILP   8.30 s   reparation   0.01 s   appels 245
+   110 vecteurs   ILP   7.58 s   reparation   0.02 s   appels 266
+   120 vecteurs   ILP   8.68 s   reparation   0.01 s   appels 287
+reparation interrompue
+
+123 vecteurs en 602 s
+  premier quart   ILP moyen  0.957 s   reparation  0.038 s
+  dernier quart   ILP moyen  7.766 s   reparation  0.029 s
+
+[exited with code 0]
