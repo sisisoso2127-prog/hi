@@ -232,6 +232,17 @@ def main():
         "cuts", scale=10))
     write("r-probe-legend", legend([("maximise a direction", "blue!55!black"),
                                     ("zero objective", "orange!80!black")]))
+    # The complete efficient set against the front alone: what is recovered
+    # grows as 5^f while the extra time stays under one doubling.
+    write("r-complete-gain", bars(
+        [("$f=0$", [1]), ("$f=1$", [5]), ("$f=2$", [25]), ("$f=3$", [125])],
+        "$|E|/|$front$|$", colors=["green!45!black"], scale=125))
+    write("r-complete-cost", bars(
+        [("$f=0$", [24, 10]), ("$f=1$", [27, 13]),
+         ("$f=2$", [42, 24]), ("$f=3$", [90, 68])],
+        "extra time \\%", scale=100))
+    write("r-complete-legend", legend([("small front (7)", "blue!55!black"),
+                                       ("larger front (13)", "orange!80!black")]))
     print("figures written to", OUT)
 
 

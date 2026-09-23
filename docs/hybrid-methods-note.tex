@@ -1088,6 +1088,103 @@ point costs, which says the cutoff prunes a smaller share of the work than the
 ceiling experiments of Section~\ref{sec:asymmetry} might suggest --- those
 measure what a better \emph{incumbent} saves, not what having one at all does.
 
+\section{From the front to the complete efficient set}
+\label{sec:complete}
+
+Section~\ref{sec:front} proves its vector list complete and says, in the same
+breath, that the \emph{point} list is not: one vector is kept per slice.  That
+was the last honest gap in the chain, and closing it turns out to cost almost
+nothing, for a reason worth stating on its own.
+
+\begin{proposition}\label{prop:slice}
+If $v$ is non-dominated, then \emph{every} $x \in \Dset$ with $\Z(x) = v$ is
+efficient.
+\end{proposition}
+
+\begin{proof}
+Suppose some $y \in \Dset$ dominated such an $x$.  Then
+$\Z(y) \geqslant \Z(x) = v$ with at least one strict inequality, which says $v$
+is dominated --- against the hypothesis.  So no $y$ dominates $x$.
+\end{proof}
+
+\noindent
+Two consequences, and together they are the whole method.  First,
+\[
+  \E \;=\; \bigcup_{v \text{ non-dominated}}
+                \{\, x \in \Dset : \Z(x) = v \,\},
+\]
+so the complete front plus its slices \emph{is} the complete efficient set.
+Second, \textbf{not one efficiency test is paid on any slice point}: they are
+efficient by Proposition~\ref{prop:slice}, not by examination.  The expensive
+operation of this whole note --- the efficiency test of Section~\ref{sec:ecker} --- is
+simply not invoked.
+
+\paragraph{A slice is $\Dset$ plus $p$ equalities, and nothing more.}  Fixing
+$\Z(x) = v$ is linear in $x$ \emph{even for fractional criteria}: since
+$D_k(x) = d_k^{\top}x + b_k > 0$ on $\Dset$, the equation
+$(c_k^{\top}x + a_k)/(d_k^{\top}x + b_k) = v_k$ clears to
+\[
+  (c_k - v_k d_k)^{\top} x \;=\; v_k b_k - a_k ,
+\]
+with no sign condition to check and no case split.  So a slice carries no
+binary, no big-$M$, and nothing that grows from one slice to the next --- the
+same property the box search has, arrived at a second time.  The equalities are
+in fact the \emph{tightest} rows in the system, which is what makes the
+depth-first scan over them cheap.
+
+\paragraph{What it recovers, and what it costs.}  The family below fixes five
+variables that enter $\Z$ and adds $f$ further variables that enter only their
+own bound $0 \leqslant x_j \leqslant 4$.  Those are invisible to $\Z$, so every
+slice is a grid of $5^{f}$ points and the front keeps one of them.
+
+\begin{table}[h]
+\centering
+\caption{The complete efficient set against the front alone.  ``Overhead'' is
+the extra time over enumerating the front, bounding programs included.}
+\begin{tabular}{rrrrrrr}
+\toprule
+$f$ & $|$front$|$ & $|\E|$ & ratio & front & slices & overhead \\
+\midrule
+0 &  7 &     7 & $1\times$   & $0.110$\,s & $0.016$\,s & $24\%$ \\
+0 & 13 &    13 & $1\times$   & $0.247$\,s & $0.018$\,s & $10\%$ \\
+1 &  7 &    35 & $5\times$   & $0.114$\,s & $0.019$\,s & $27\%$ \\
+1 & 13 &    65 & $5\times$   & $0.240$\,s & $0.024$\,s & $13\%$ \\
+2 &  7 &   175 & $25\times$  & $0.117$\,s & $0.036$\,s & $42\%$ \\
+2 & 13 &   325 & $25\times$  & $0.246$\,s & $0.050$\,s & $24\%$ \\
+3 &  7 &   875 & $125\times$ & $0.128$\,s & $0.103$\,s & $90\%$ \\
+3 & 13 &  1625 & $125\times$ & $0.259$\,s & $0.167$\,s & $68\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+At $f = 3$ the front carries $0.8\%$ of the efficient set --- it is complete
+and it is missing $99.2\%$ of the points, which is exactly the distinction
+Section~\ref{sec:front} insisted on --- and recovering all $1625$ of them
+\textbf{never doubles the cost}.  The scan is output-sensitive: $0.167$\,s for
+$1625$ points is about $0.1$\,ms each, against the $7.68$\,ms an efficiency
+test costs, and there are no tests to pay.
+
+\paragraph{The honest reading, which is conditional.}  At $f = 0$ the front
+\emph{already was} the efficient set, and the $10$--$24\%$ buys only the proof
+of that.  On generic random instances this is the usual case: over $32$ of
+them, $476$ efficient points sat on $476$ distinct vectors.  So the value of
+this section is not a speed-up and is not uniform.  It is that the method now
+\emph{knows} which case it is in, instead of returning a point list whose
+completeness depended on an assumption about the coefficients.  Where ties do
+occur --- criteria that ignore a variable, repeated structure, any instance
+that is not generic --- the front alone silently returns a fraction of the
+answer, and the fraction can be under one percent.
+
+\paragraph{What is verified.}  The complete set is checked against exhaustive
+enumeration on two families, one generic and one built to force ties
+($24$ instances, exact match, $21$ non-singleton slices).
+Proposition~\ref{prop:slice} is checked directly rather than assumed: $74$
+points on non-dominated slices, every one efficient.  The front's own
+representative is checked to lie inside its slice.  And, as everywhere else in
+this note, an exhausted budget returns \texttt{complete = False} rather than a
+set that claims what it did not prove.
+
 \section{Three measurement lessons, and what they cost}
 
 We report these because the direction of a result is worth less than the
@@ -1153,13 +1250,15 @@ early exit \emph{on top of} the seed  & \textbf{loss} & 4\% fewer boxes: a subst
 skipping the redundant test          & \textbf{win} & 6\% fewer nodes, same search \\
 warm-starting a box from its parent  & \textbf{win} & 11\% fewer pivots, same search \\
 cutting on a remembered efficient point & \textbf{win} & 10\% fewer pivots, 15 fewer boxes \\
+zero-objective probe (a baseline check) & \textbf{loss} & $4$--$13\times$ slower, same cuts \\
+slices instead of an efficiency test    & \textbf{win} & the whole of $\E$, under $2\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Of the twelve, six are wins, four are losses, one is a tie and one pays in
-sub-problems but not in time. They are reported at the same length as the wins
+Of the fourteen, seven are wins, five are losses, one is a tie and one pays
+in sub-problems but not in time. They are reported at the same length as the wins
 because they carry the same information: a hybridization pays only where the
 exact method has a mechanism the first phase can feed, that mechanism is
 cheaper to identify than the hybrid is to build and measure, and two ideas
@@ -1187,7 +1286,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 74 tests. Several check
+exact rational arithmetic throughout, and carries 80 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 

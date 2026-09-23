@@ -35,6 +35,8 @@ from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import Front, enumerate_front
+from lfp_efficient.complete import (CompleteSet, complete_efficient_set,
+                                    slice_rows, variable_bounds)
 from lfp_efficient.milp import solve_relaxation, warm_relaxation
 from lfp_efficient.simplex import (INFEASIBLE, OPTIMAL as LP_OPTIMAL, STALLED,
                                    add_linear_row, restore_feasibility)
@@ -1614,6 +1616,191 @@ def test_ecker_kouada_does_not_transfer_to_ratios(seed=2024):
     longer = sum(1 for length in fractional if length > 1)
     return (f"linear: {len(linear)} chains, all length 1 | "
             f"fractional: {longer}/{len(fractional)} longer than 1")
+
+
+
+# --------------------------------------------------------------------------
+# the complete efficient set
+# --------------------------------------------------------------------------
+def test_complete_efficient_set_matches_exhaustive_enumeration():
+    """``complete_efficient_set`` against a brute-force scan, on two families.
+
+    The second family is built to make slices non-singleton -- criteria that
+    ignore the last two variables -- because generic random coefficients almost
+    never produce a tie, and a method that silently dropped tied points would
+    pass a test drawn only from the first family.
+    """
+    checked = tie_slices = extra = 0
+    for tie in (False, True):
+        for seed in range(12):
+            rnd = random.Random(9000 + seed)
+            n, p, ub = 4, 2 + seed % 2, 3
+            model = Model(n)
+            for i in range(n):
+                row = [0] * n
+                row[i] = 1
+                model.add(row, LE, ub)
+            for _ in range(3):
+                model.add([rnd.randint(1, 3) for _ in range(n)], LE,
+                          rnd.randint(4, 2 * n))
+            if tie:
+                criteria = [[rnd.randint(-2, 3) for _ in range(2)] + [0, 0]
+                            for _ in range(p)]
+            else:
+                criteria = [[rnd.randint(-3, 4) for _ in range(n)]
+                            for _ in range(p)]
+            problem = MOILP(model, criteria)
+            truth = {tuple(x)
+                     for x in enumerate_efficient_set(problem, [ub] * n).efficient}
+            if not truth:
+                continue
+            checked += 1
+            result = complete_efficient_set(problem)
+            assert result.complete, "the front emptied, so the set is proved"
+            got = {tuple(x) for x in result.points}
+            assert got == truth, (
+                f"tie={tie} seed={seed}: {len(truth - got)} missing, "
+                f"{len(got - truth)} spurious")
+            tie_slices += sum(1 for s in result.slices if len(s) > 1)
+            extra += len(truth) - len(enumerate_front(problem).points)
+    assert tie_slices, "no non-singleton slice appeared -- the tie family failed"
+    return (f"{checked} instances, exact match; {tie_slices} non-singleton "
+            f"slices; {extra} points the front alone would have missed")
+
+
+def test_every_point_of_a_non_dominated_slice_is_efficient():
+    """The proposition the module rests on, checked rather than assumed.
+
+    If ``v`` is non-dominated then every ``x`` with ``Z(x) = v`` is efficient,
+    so the slices need no efficiency test at all.  A counterexample here would
+    mean ``complete_efficient_set`` returns inefficient points.
+    """
+    tested = multi = 0
+    for seed in range(16):
+        rnd = random.Random(4400 + seed)
+        n, p, ub = 4, 2, 2
+        model = Model(n)
+        for i in range(n):
+            row = [0] * n
+            row[i] = 1
+            model.add(row, LE, ub)
+        for _ in range(3):
+            model.add([rnd.randint(1, 3) for _ in range(n)], LE,
+                      rnd.randint(3, 2 * n))
+        # criteria ignoring the last two variables: ties are forced
+        problem = MOILP(model, [[rnd.randint(-2, 3) for _ in range(2)] + [0, 0]
+                                for _ in range(p)])
+        enum = enumerate_efficient_set(problem, [ub] * n)
+        efficient = {tuple(x) for x in enum.efficient}
+        if not efficient:
+            continue
+        by_vector = {}
+        for x in enum.feasible:
+            by_vector.setdefault(tuple(problem.Z(x)), []).append(tuple(x))
+        for v in {tuple(problem.Z(x)) for x in efficient}:
+            members = by_vector[v]
+            if len(members) > 1:
+                multi += 1
+            for x in members:
+                tested += 1
+                assert x in efficient, (
+                    f"{x} lies on the non-dominated slice {v} and is not "
+                    "efficient -- the proposition is false")
+    assert multi, "no non-singleton slice: the check would be vacuous"
+    return (f"{tested} points on non-dominated slices, all efficient; "
+            f"{multi} slices held more than one")
+
+
+def test_the_complete_set_contains_the_front_and_answers_PE():
+    """Three agreements at once, on the instance built to separate them.
+
+    The front's own representative must sit in its slice; the complete set must
+    strictly contain the front's point list; and the best ``Phi`` over the
+    complete set must equal the optimum of ``(P_E)``.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)
+
+    front = enumerate_front(problem, phi)
+    result = complete_efficient_set(problem, phi)
+    truth = enumerate_efficient_set(problem, [2, 2, 2]).efficient
+
+    assert result.complete
+    assert {tuple(x) for x in result.points} == {tuple(x) for x in truth}
+    assert len(result.points) > len(front.points), "it must add points"
+    for v, x in zip(front.vectors, front.points):
+        assert tuple(x) in {tuple(y) for y in result.slice_of(v)}, (
+            "the front's representative left its own slice")
+    assert result.best_value == max(phi(x) for x in truth)
+    exact = optimize_in_criterion_space(problem, phi)
+    assert result.best_value == exact.value, "it must answer (P_E) too"
+    return (f"{len(result.points)} points on {len(result.vectors)} vectors; "
+            f"front keeps {len(front.points)}; both give Phi* = "
+            f"{fmt(result.best_value)}")
+
+
+def test_the_slice_equations_are_linear_for_fractional_criteria():
+    """``Z(x) = v`` clears to ``(c - v d)'x = v b - a``, which is linear in x.
+
+    Checked on genuinely fractional criteria: every feasible point satisfying
+    the rows must have criterion vector exactly ``v``, and every point with
+    that vector must satisfy them.
+    """
+    rng = random.Random(777)
+    checked = 0
+    for _ in range(8):
+        problem, _, bounds = random_moilfp(rng)
+        assert not has_linear_criteria(problem)
+        enum = enumerate_efficient_set(problem, bounds)
+        if not enum.efficient:
+            continue
+        v = problem.Z(enum.efficient[0])
+        rows = slice_rows(problem, v)
+        for x in enum.feasible:
+            on_slice = all(sum(c * xi for c, xi in zip(coeffs, x)) <= rhs
+                           for coeffs, rhs in rows)
+            assert on_slice == (problem.Z(x) == list(v)), (
+                f"the rows and Z disagree at {x}")
+            checked += 1
+    assert checked, "no fractional instance produced an efficient point"
+    return f"{checked} point/row agreements on fractional criteria"
+
+
+def test_variable_bounds_really_bound_the_feasible_set():
+    """The box the slice scan runs in must contain ``D``, or points are lost."""
+    rng = random.Random(31337)
+    checked = 0
+    for _ in range(8):
+        problem, _, bounds = random_moilfp(rng)
+        derived = variable_bounds(problem)
+        for x in enumerate_efficient_set(problem, bounds).feasible:
+            for j, value in enumerate(x):
+                assert value <= derived[j], (
+                    f"x_{j + 1} = {value} exceeds the derived bound "
+                    f"{derived[j]}")
+            checked += 1
+    return f"{checked} feasible points, all inside the derived box"
+
+
+def test_an_exhausted_budget_never_claims_a_complete_set():
+    """``complete`` is a proof, so a truncated run must not set it."""
+    model = (Model(3).add([1, 0, 0], LE, 3).add([0, 1, 0], LE, 3)
+             .add([0, 0, 1], LE, 3).add([1, 1, 2], LE, 5))
+    problem = MOILP(model, [[4, -1, 1], [0, 2, 2]])
+
+    whole = complete_efficient_set(problem)
+    assert whole.complete
+
+    starved = complete_efficient_set(problem, max_boxes=1)
+    assert not starved.complete, "one box cannot prove a complete set"
+    assert len(starved.points) <= len(whole.points)
+
+    capped = complete_efficient_set(problem, max_points=1)
+    assert not capped.complete, "a point cap cannot prove a complete set"
+    return (f"whole {len(whole.points)} points (proved); starved "
+            f"{len(starved.points)}, capped {len(capped.points)}, neither claims it")
 
 
 # --------------------------------------------------------------------------

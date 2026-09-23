@@ -330,11 +330,74 @@ incumbent arrives early enough that the hopeless tail barely forms.  Two ideas
 add only when they feed different mechanisms; two that feed the same one are
 one idea, measured twice.
 
+\section{The complete efficient set, for under one doubling}
+
+The front enumeration proves its \emph{vector} list complete and says, in the
+same breath, that the \emph{point} list is not: one point is kept per slice.
+Closing that gap turns out to be nearly free, for one reason:
+
+\begin{quote}
+If $v$ is non-dominated, \textbf{every} $x \in \Dset$ with $\Z(x) = v$ is
+efficient --- a $y$ dominating such an $x$ would give $\Z(y) \geqslant v$ with
+a strict inequality, making $v$ dominated.
+\end{quote}
+
+\noindent
+So $\E$ is exactly the union of the front's slices, and \textbf{no efficiency
+test is paid on any slice point}: the dearest operation in the package is not
+invoked at all.  A slice is $\Dset$ plus $p$ linear equalities --- linear even
+for fractional criteria, since $d^{\top}x + b > 0$ clears the ratio --- so
+there is no binary, no big-$M$, and no growth from one slice to the next.
+
+Below, five variables enter $\Z$ and $f$ further ones enter only their own
+bound $0 \leqslant x_j \leqslant 4$: invisible to $\Z$, so each slice is a grid
+of $5^{f}$ points that the front collapses to one.
+
+\begin{table}[h]
+\centering
+\caption{What the slices recover, and what they cost.}
+\begin{tabular}{rrrrrr}
+\toprule
+$f$ & $|$front$|$ & $|\E|$ & ratio & slices & extra time \\
+\midrule
+0 &  7 &     7 & $1\times$   & $0.016$\,s & $24\%$ \\
+0 & 13 &    13 & $1\times$   & $0.018$\,s & $10\%$ \\
+1 &  7 &    35 & $5\times$   & $0.019$\,s & $27\%$ \\
+1 & 13 &    65 & $5\times$   & $0.024$\,s & $13\%$ \\
+2 &  7 &   175 & $25\times$  & $0.036$\,s & $42\%$ \\
+2 & 13 &   325 & $25\times$  & $0.050$\,s & $24\%$ \\
+3 &  7 &   875 & $125\times$ & $0.103$\,s & $90\%$ \\
+3 & 13 &  1625 & $125\times$ & $0.167$\,s & $68\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-complete-gain}\\[6pt]
+\fig{r-complete-cost}\\[2pt]
+\fig{r-complete-legend}
+\end{center}
+
+\noindent
+The two charts are the finding: what is recovered multiplies by five at each
+step, and the extra time does not.  At $f = 3$ the front is \emph{complete and
+missing $99.2\%$ of the points}, and recovering all $1625$ of them never
+doubles the cost.  The scan is output-sensitive --- about $0.1$\,ms per point,
+against $7.68$\,ms for a single efficiency test, of which none are paid.
+
+\paragraph{The honest reading, which is conditional.}  At $f = 0$ the front
+\emph{already was} the efficient set, and the $10$--$24\%$ buys only the proof
+of that --- the usual case on generic instances, where $476$ efficient points
+sat on $476$ distinct vectors over $32$ of them.  This is not a speed-up and it
+is not uniform.  What it buys is that the method now \emph{knows} which case it
+is in, rather than returning a point list whose completeness rested on an
+assumption about the coefficients.
+
 \section{Every verdict, including the losses}
 
 \begin{table}[h]
 \centering
-\caption{The thirteen things tried, with what each was worth.}
+\caption{The fourteen things tried, with what each was worth.}
 \begin{tabular}{lll}
 \toprule
 attempt & verdict & effect \\
@@ -352,6 +415,7 @@ early exit on a hopeless bound       & partial       & 25\% fewer boxes, no meas
 early exit \emph{on top of} the seed & \textbf{loss} & 4\% rather than 25\%: a substitute \\
 warm start + remembered point        & \textbf{win}  & 20\% fewer pivots together \\
 zero-objective probe                 & \textbf{loss} & $4$--$13\times$ slower, cuts identical \\
+slices instead of an efficiency test  & \textbf{win}  & all of $\E$, under $2\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -366,7 +430,7 @@ are one idea counted twice.
 \section{How all of this is checked}
 
 Exact rational arithmetic throughout, no floating point anywhere, no
-third-party dependency, and 74 tests run on every commit.  Several check
+third-party dependency, and 80 tests run on every commit.  Several check
 \emph{properties} rather than answers, since a method that silently lost
 efficient points would still agree with the optimum on favourable instances:
 the split is a partition; the metaheuristic never hands over an inefficient

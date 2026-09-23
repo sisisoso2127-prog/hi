@@ -237,11 +237,76 @@ Same optimum on all 8 instances. **1.94×** and half the sub-problems — and th
 is *less* than one might expect: enumerating the entire front costs only twice
 what finding the single best point costs.
 
+## The last gap: the complete efficient set, not just the front
+
+`enumerate_front` proves its **vector** list complete, and says in the same
+breath that the **point** list is not — one point is kept per slice. That was
+the last honest gap, and it closes for almost nothing:
+
+```python
+from lfp_efficient import complete_efficient_set
+
+result = complete_efficient_set(problem, phi)
+print(result.report())
+```
+
+```
+6 efficient points on 2 non-dominated vectors -- the complete efficient set, proved
+  5 boxes settled, variable box (2, 2, 2)
+  largest slice 3 points, 2 of 2 vectors carry more than one
+  best Phi over E(P_D): 3/2 at (2, 1, 2)
+```
+
+**Why it is cheap.** If `v` is non-dominated then **every** `x` with `Z(x) = v`
+is efficient — because a `y` dominating such an `x` would give
+`Z(y) ≥ Z(x) = v` with a strict inequality, making `v` dominated. So
+
+```
+E(P_D) = union over non-dominated v of { x in D : Z(x) = v }
+```
+
+and **not one efficiency test is paid on any slice point.** The most expensive
+operation in the package is simply not invoked.
+
+**A slice is `D` plus `p` equalities.** Fixing `Z(x) = v` is linear in `x` even
+for *fractional* criteria: since `d'x + b > 0` on `D`, the equation
+`(c'x + a)/(d'x + b) = v_k` clears to `(c − v_k·d)'x = v_k·b − a`. No binary, no
+big-M, nothing that grows from one slice to the next — the same property the
+box search has, arrived at a second time.
+
+**What it recovers, and what it costs.** Five variables enter `Z`; `f` further
+variables enter only their own bound `0 ≤ x_j ≤ 4`, so they are invisible to
+`Z` and every slice is a grid of `5^f` points:
+
+| `f` | \|front\| | \|E(P_D)\| | ratio | front | slices | overhead |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 7 | 7 | 1× | 0.110 s | 0.016 s | 24% |
+| 0 | 13 | 13 | 1× | 0.247 s | 0.018 s | 10% |
+| 1 | 7 | 35 | 5× | 0.114 s | 0.019 s | 27% |
+| 1 | 13 | 65 | 5× | 0.240 s | 0.024 s | 13% |
+| 2 | 7 | 175 | 25× | 0.117 s | 0.036 s | 42% |
+| 2 | 13 | 325 | 25× | 0.246 s | 0.050 s | 24% |
+| **3** | **7** | **875** | **125×** | 0.128 s | 0.103 s | 90% |
+| **3** | **13** | **1625** | **125×** | 0.259 s | 0.167 s | 68% |
+
+At `f = 3` the front is **complete and missing 99.2% of the points** — exactly
+the distinction the section above insisted on — and recovering all 1625 of them
+**never doubles the cost**. The scan is output-sensitive: 0.1 ms per point,
+against 7.68 ms for one efficiency test, and there are no tests to pay.
+
+**The honest reading, which is conditional.** At `f = 0` the front *already was*
+the efficient set, and the 10–24% buys only the proof of that — which is the
+usual case on generic random instances (476 points on 476 vectors over 32 of
+them). This is not a speed-up and it is not uniform. What it buys is that the
+method now **knows** which case it is in, instead of returning a point list
+whose completeness rested on an assumption about the coefficients. Where ties
+do occur, the front alone silently returns a fraction of the answer.
+
 ## What is verified, and how
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 74 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 80 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -548,7 +613,7 @@ win.
 | Path | Contents |
 |---|---|
 | `lfp_efficient/` | the package — and its long-form notes in `README.md` |
-| `examples/` | the paper's example, larger instances, the scaling study, the fractional case |
+| `examples/` | the paper's example, larger instances, the scaling study, the fractional case, the complete efficient set |
 | `tests/` | the test suite, runnable with a bare interpreter |
 | `studies/` | earlier metaheuristic experiments kept for the record (these use NumPy) |
 | `docs/` | the write-up: every method, every measurement, and every negative result |

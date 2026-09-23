@@ -47,6 +47,8 @@ from .model import (EQ, GE, LE, Constraint, FractionalObjective, MOILFP,
                     MOILP, Model)
 from .rational import F, fmt
 from .front import Front, enumerate_front
+from .complete import (CompleteSet, complete_efficient_set,
+                       variable_bounds)
 from .subset import EfficientSubset, efficient_subset
 from .tchebychev import (augmented_tchebychev_efficient, ideal_point,
                          tchebychev_incumbent)
@@ -74,6 +76,7 @@ __all__ = [
     "best_over_efficient_set_by_scan", "certify_optimum", "Certificate",
     "efficient_subset", "EfficientSubset",
     "enumerate_front", "Front",
+    "complete_efficient_set", "CompleteSet", "variable_bounds",
     "F", "fmt",
 ]
 
