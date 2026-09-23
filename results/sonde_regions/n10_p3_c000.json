@@ -1,0 +1,15 @@
+{
+ "n": 10,
+ "p": 3,
+ "corr": 0.0,
+ "moteur": "regions",
+ "coupes_vecteurs": 70,
+ "coupes_complet": true,
+ "coupes_motif": "toutes regions closes",
+ "coupes_s": 8.0,
+ "coupes_ilp": 821,
+ "brute_vecteurs": 70,
+ "brute_s": 1.8,
+ "brute_erreur": "",
+ "verdict": "accord"
+}
