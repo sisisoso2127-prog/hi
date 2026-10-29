@@ -54,8 +54,10 @@ Usage :  python molfp_regions.py            comparaison avec les coupes
 
 from __future__ import annotations
 
+import json
 import sys
 import time
+from pathlib import Path
 from fractions import Fraction
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
@@ -107,10 +109,39 @@ def _poids(inst: MOILFP) -> np.ndarray:
     return w
 
 
+def _enc(L) -> list:
+    """Une region en JSON : None, ou [num, den, strict]."""
+    return [None if b is None else [b[0].numerator, b[0].denominator, b[1]]
+            for b in L]
+
+
+def _dec(l) -> tuple:
+    return tuple(None if b is None else (Fraction(b[0], b[1]), bool(b[2]))
+                 for b in l)
+
+
 def enumere_regions(inst: MOILFP,
                     ilp_budget: Optional[int] = None,
                     time_budget: float = 1e9,
-                    verbose: bool = False) -> Resultat:
+                    verbose: bool = False,
+                    reprise: Optional[Path] = None,
+                    tous_les: int = 25) -> Resultat:
+    """`reprise` : fichier de point de reprise.
+
+    Pourquoi. Ce conteneur a tue sept fois un calcul en cours, sans trace
+    ni message. Une enumeration de vingt-six minutes n'y survit pas de
+    facon fiable, et la perdre en entier a chaque fois rend la mesure
+    inatteignable -- non parce qu'elle est trop longue, mais parce qu'elle
+    est INDIVISIBLE. L'etat de ce schema se resume pourtant a trois
+    choses : les vecteurs trouves, la pile de regions a traiter, et les
+    regions deja closes. Les ecrire tous les `tous_les` tours rend
+    l'enumeration reprenable, et une mort ne coute plus que ces tours.
+
+    L'ecriture est atomique : un point de reprise a moitie ecrit serait
+    relu comme un etat valide et ferait rendre un Z(E) incomplet pour
+    complet -- la faute la plus couteuse possible ici, puisque le resultat
+    sert de verite terrain.
+    """
     t0 = time.time()
     reset_oracle_counter()
     if ilp_budget is not None:
@@ -126,8 +157,37 @@ def enumere_regions(inst: MOILFP,
     pile: List[Tuple[Borne, ...]] = [tuple([None] * inst.p)]
     n_regions = 0
 
+    if reprise is not None and reprise.exists():
+        d = json.loads(reprise.read_text(encoding="utf-8"))
+        vecteurs = [tuple(Fraction(a, b) for a, b in z) for z in d["vect"]]
+        vus = set(vecteurs)
+        pile = [_dec(L) for L in d["pile"]]
+        regions_vues = {_dec(L) for L in d["closes"]}
+        n_regions = int(d["n_regions"])
+        # les points x ne sont pas repris : seuls les vecteurs criteres
+        # servent de verite terrain, et les stocker couterait plus que
+        # ce qu'ils rendent ici.
+        if verbose:
+            print(f"  reprise : {len(vecteurs)} vecteurs, "
+                  f"{len(pile)} regions en attente", flush=True)
+
+    def sauver() -> None:
+        if reprise is None:
+            return
+        part = reprise.with_suffix(".part")
+        part.write_text(json.dumps(dict(
+            vect=[[[c.numerator, c.denominator] for c in z]
+                  for z in vecteurs],
+            pile=[_enc(L) for L in pile],
+            closes=[_enc(L) for L in regions_vues],
+            n_regions=n_regions)), encoding="utf-8")
+        part.replace(reprise)          # atomique
+
+    depuis_sauvegarde = 0
+
     while pile:
         if time.time() - t0 > time_budget:
+            sauver()
             return Resultat(vecteurs, points, False, "budget de temps",
                             ORACLE_CALLS["ilp"], n_regions,
                             time.time() - t0)
@@ -178,6 +238,13 @@ def enumere_regions(inst: MOILFP,
             if ancienne is None or zk >= ancienne[0]:
                 neuf[k] = (zk, True)
                 pile.append(tuple(neuf))
+
+        depuis_sauvegarde += 1
+        if depuis_sauvegarde >= tous_les:
+            sauver()
+            depuis_sauvegarde = 0
+
+    sauver()
     return Resultat(vecteurs, points, True, "toutes regions closes",
                     ORACLE_CALLS["ilp"], n_regions, time.time() - t0)
 

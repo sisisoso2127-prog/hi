@@ -74,7 +74,12 @@ def verite_terrain(spec: dict, delai: float) -> Optional[List[tuple]]:
 
     inst = generate(**spec)
     t0 = time.time()
-    r = enumere_regions(inst, time_budget=delai)
+    # Point de reprise : l'enumeration de n=14 demande une demi-heure, et
+    # ce conteneur a tue sept calculs en cours. Sans reprise, chaque mort
+    # la recommence a zero et la mesure reste hors d'atteinte -- non parce
+    # qu'elle est longue, mais parce qu'elle est indivisible.
+    r = enumere_regions(inst, time_budget=delai,
+                        reprise=CACHE / f"{_cle(spec)}.reprise.json")
     part = f.with_suffix(".part")
     part.write_text(json.dumps(dict(
         complet=r.complet, motif=r.motif, secondes=round(time.time() - t0, 1),
@@ -82,8 +87,10 @@ def verite_terrain(spec: dict, delai: float) -> Optional[List[tuple]]:
         vecteurs=[[float(c) for c in z] for z in r.vecteurs]),
         ensure_ascii=False), encoding="utf-8")
     part.replace(f)                     # ecriture atomique
-    return [tuple(float(c) for c in z) for z in r.vecteurs] if r.complet \
-        else None
+    if r.complet:
+        (CACHE / f"{_cle(spec)}.reprise.json").unlink(missing_ok=True)
+        return [tuple(float(c) for c in z) for z in r.vecteurs]
+    return None
 
 
 def main() -> int:
