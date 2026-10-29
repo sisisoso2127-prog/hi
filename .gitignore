@@ -7,3 +7,10 @@ doc/*.aux
 doc/*.log
 doc/*.out
 doc/*.toc
+
+# Points de reprise d'enumeration : etat de travail, pas resultat.
+# Ils changent toutes les 25 regions et sont SUPPRIMES des que
+# l'enumeration aboutit. Les commettre reviendrait a archiver un calcul
+# en cours comme s'il etait une mesure -- et a salir le depot a chaque
+# sauvegarde. Les Z(E) acheves, eux, sont commis : ce sont des resultats.
+results/cache_ZE/*.reprise.json
