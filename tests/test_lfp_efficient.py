@@ -786,7 +786,7 @@ def test_the_best_phi_on_the_front_is_the_optimum_of_pe():
             continue
         front = enumerate_front(problem, phi)
         assert front.complete
-        assert max(front.values) == best_value, (max(front.values), best_value)
+        assert front.best_value == best_value, (front.best_value, best_value)
         agreed += 1
     assert agreed >= 8, agreed
     return f"{agreed} instances: max Phi over the front == the optimum"
@@ -854,7 +854,7 @@ def test_a_complete_front_is_not_the_whole_set_of_efficient_points():
     assert {tuple(v) for v in front.vectors} == vectors, "the front is complete"
     assert len(front.points) < len(efficient), "and yet it misses points"
 
-    assert max(front.values) == max(phi(x) for x in efficient)
+    assert front.best_value == max(phi(x) for x in efficient)
     return (f"{len(efficient)} efficient points on {len(vectors)} vectors; "
             f"the front keeps {len(front.points)} and still finds the optimum")
 
@@ -876,7 +876,7 @@ def test_the_two_exact_methods_agree_with_each_other():
             assert not front.values
             continue
         assert pruned.proved_optimal
-        assert max(front.values) == pruned.value, (max(front.values),
+        assert front.best_value == pruned.value, (front.best_value,
                                                    pruned.value)
         agreed += 1
     assert agreed >= 9, agreed
@@ -1833,7 +1833,7 @@ def test_seeding_the_front_never_changes_the_front():
         assert seeded.complete, "a seeded run must still prove completeness"
         assert ({tuple(v) for v in seeded.vectors}
                 == {tuple(v) for v in plain.vectors}), "the front changed"
-        assert max(seeded.values) == max(plain.values), "the optimum changed"
+        assert seeded.best_value == plain.best_value, "the optimum changed"
         assert seeded.seeded == len(seeds), "not every seed was placed"
         # Not an invariant: the pre-split imposes a box structure the search
         # would not have chosen, and on a minority of instances that costs
@@ -1903,7 +1903,7 @@ def test_duplicate_and_dominated_seeds_are_dropped_not_mishandled():
     assert seeded.complete
     assert ({tuple(v) for v in seeded.vectors}
             == {tuple(v) for v in plain.vectors})
-    assert max(seeded.values) == max(plain.values)
+    assert seeded.best_value == plain.best_value
     return "duplicate placed once, dominated seed dropped, front unchanged"
 
 
@@ -1928,7 +1928,7 @@ def test_the_generated_hybrid_agrees_with_the_plain_enumeration():
         assert front.complete
         assert ({tuple(v) for v in front.vectors}
                 == {tuple(v) for v in plain.vectors})
-        assert max(front.values) == max(plain.values)
+        assert front.best_value == plain.best_value
         assert front.seeded == len(seeds), "not every generated seed was used"
         checked += 1
     return (f"{checked} instances, generated seeds all efficient, "
@@ -2005,7 +2005,7 @@ def test_the_filter_changes_the_cost_and_not_the_answer():
             assert other.complete == off.complete
             assert ({tuple(v) for v in other.vectors}
                     == {tuple(v) for v in off.vectors}), "the front changed"
-            assert max(other.values) == max(off.values), "the optimum changed"
+            assert other.best_value == off.best_value, "the optimum changed"
             assert other.boxes == off.boxes, "the box structure changed"
             assert other.probes <= off.probes, "the filter cost probes"
         assert both.filtered >= free.filtered, "the range test caught less"
@@ -2206,6 +2206,57 @@ def test_the_adaptive_walk_changes_the_cost_and_not_the_answer():
         checked += 1
     return (f"{checked} instances, {rounds} rounds in total, identical "
             f"E(P_D) both ways; more rounds found more vectors on {grew}")
+
+
+
+def test_the_front_stays_in_step_when_Phi_is_undefined_on_a_slice():
+    """``vectors``, ``points`` and ``values`` must stay index-aligned.
+
+    ``Phi`` has a denominator, and on some instances it vanishes on a whole
+    criterion slice: that vector belongs to the front and carries no value.
+    An earlier version appended the point and skipped the value, which left the
+    lists out of step -- ``report`` then indexed ``points`` with an index into
+    ``values`` and printed a point that does *not* attain the value beside it.
+    Found by random search in seven tries, so it is not a corner case.
+    """
+    rng = random.Random(7)
+    checked = undefined_slices = 0
+    for _ in range(4000):
+        n, ub = 3, 3
+        model = Model(n)
+        for j in range(n):
+            row = [0] * n
+            row[j] = 1
+            model.add(row, LE, ub)
+        model.add([rng.randint(1, 3) for _ in range(n)], LE, rng.randint(3, 6))
+        problem = MOILP(model, [[rng.randint(-2, 3) for _ in range(n)]
+                                for _ in range(2)])
+        # a denominator allowed to vanish on D, which is what provokes it
+        phi = FractionalObjective([rng.randint(-3, 3) for _ in range(n)],
+                                  [rng.randint(-2, 2) for _ in range(n)],
+                                  rng.randint(-2, 2), rng.randint(-2, 2))
+        try:
+            front = enumerate_front(problem, phi)
+        except Exception:                                       # noqa: BLE001
+            continue
+        checked += 1
+        assert len(front.values) == len(front.points) == len(front.vectors), (
+            f"lists out of step: {len(front.vectors)} vectors, "
+            f"{len(front.points)} points, {len(front.values)} values")
+        blanks = sum(1 for v in front.values if v is None)
+        undefined_slices += blanks
+        point, value = front.best()
+        if value is not None:
+            assert phi(point) == value, (
+                "the best point does not attain the best value")
+        if blanks and undefined_slices <= 40:
+            continue
+        if undefined_slices > 40 and checked > 200:
+            break
+    assert undefined_slices, (
+        "no slice left Phi undefined -- the check would be vacuous")
+    return (f"{checked} instances, lists in step throughout; "
+            f"{undefined_slices} slices left Phi undefined")
 
 
 # --------------------------------------------------------------------------

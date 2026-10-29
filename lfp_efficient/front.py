@@ -121,8 +121,16 @@ class Front:
     points: List[List[Fraction]] = field(default_factory=list)
     #: ``Phi`` at each point, when a ``Phi`` was given; the point is then the
     #: best one on its slice, so this is the most a decision maker can get
-    #: while standing on that vector of the front
-    values: List[Fraction] = field(default_factory=list)
+    #: while standing on that vector of the front.
+    #:
+    #: **Aligned with** :attr:`points` **and** :attr:`vectors`, with ``None``
+    #: where ``Phi`` is undefined on that slice -- its denominator vanishes
+    #: there, so the vector is on the front and carries no value.  An earlier
+    #: version skipped those instead of recording ``None``, which left the
+    #: three lists out of step and made :meth:`report` print a point that does
+    #: not attain the value beside it.  Use :meth:`best` rather than pairing by
+    #: index, and :attr:`best_value` rather than ``max(values)``.
+    values: List[Optional[Fraction]] = field(default_factory=list)
     #: boxes settled -- the unit of work, as in the optimisation search
     boxes: int = 0
     #: ``True`` when the list emptied, so the **front** is provably complete.
@@ -139,15 +147,37 @@ class Front:
     def __len__(self) -> int:
         return len(self.vectors)
 
+    def best(self) -> Tuple[Optional[List[Fraction]], Optional[Fraction]]:
+        """The maximiser of ``Phi`` over the front, and its value.
+
+        ``(None, None)`` when no ``Phi`` was given, or when it is undefined on
+        every slice.  This is the only sound way to get the pair: indexing
+        :attr:`points` with an index into the defined values is what the bug
+        noted on :attr:`values` was.
+        """
+        best_point = best_value = None
+        for point, value in zip(self.points, self.values):
+            if value is not None and (best_value is None or value > best_value):
+                best_point, best_value = point, value
+        return best_point, best_value
+
+    @property
+    def best_value(self) -> Optional[Fraction]:
+        """``max`` of the defined values, or ``None``."""
+        return self.best()[1]
+
     def report(self) -> str:
         head = (f"{len(self)} non-dominated vectors"
                 + (" -- the complete front, proved"
                    if self.complete else " -- INCOMPLETE (budget spent)"))
         lines = [head, f"  {self.boxes} boxes settled"]
-        if self.values:
-            best = max(range(len(self.values)), key=lambda i: self.values[i])
-            lines.append(f"  best Phi on the front: {self.values[best]} at "
-                         f"({', '.join(str(c) for c in self.points[best])})")
+        point, value = self.best()
+        if value is not None:
+            lines.append(f"  best Phi on the front: {value} at "
+                         f"({', '.join(str(c) for c in point)})")
+        undefined = sum(1 for v in self.values if v is None)
+        if undefined:
+            lines.append(f"  Phi undefined on {undefined} of the slices")
         return "\n".join(lines)
 
 
@@ -296,6 +326,7 @@ $1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
             front.values.append(best.objective)
         else:                                   # Phi undefined on the slice
             front.points.append(list(centre))
+            front.values.append(None)           # keep the lists in step
 
     root = Box(hi=list(ideal)) if ideal is not None else Box()
 

@@ -157,7 +157,7 @@ def main():
                 tb = time.perf_counter() - t
                 assert ({tuple(v) for v in a.vectors}
                         == {tuple(v) for v in b.vectors}), f"{name} {seed}"
-                assert max(a.values) == max(b.values), f"{name} {seed}"
+                assert a.best_value == b.best_value, f"{name} {seed}"
                 ratios.append(ta / tb)
                 cover.append(b.seeded / max(1, len(a.vectors)))
                 fronts.append(len(a.vectors))
