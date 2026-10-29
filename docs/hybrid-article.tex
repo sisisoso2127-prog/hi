@@ -63,8 +63,15 @@ because the negative results delimit where hybridisation can help at all.
 \end{equation}
 with $\Dset = \{x \in \Zint^{n}_{+} : Ax \leqslant b\}$ non-empty and bounded
 and every denominator $D_k(x) = d_k^{\top}x + b_k$ strictly positive on
-$\Dset$.  That last assumption is load-bearing twice over and the
-implementation now enforces it: the form \eqref{eq:ek} carries the sign of
+$\Dset$.  \textbf{Both assumptions are enforced}, because violating either
+fails silently rather than loudly.  An unbounded probe returns a status that
+is not \emph{optimal}, which the enumeration read as ``this box is empty'':
+on $\Dset = \{x \in \Zint^{2}_{+} : x_1 - x_2 \leqslant 0\}$, feasible and with
+efficient points, it returned an \emph{empty front marked complete}, and both
+optimisation searches reported \emph{infeasible}.  Since $x \geqslant 0$,
+boundedness is one integer program for the whole problem.
+
+The positive-denominator assumption is load-bearing twice over: the form \eqref{eq:ek} carries the sign of
 $\Z_k(x) - \Z_k(\bar x)$ only because both denominators are positive, and the
 big-$M$ of \eqref{eq:cut} is a valid bound only under the same condition.  A
 criterion violating it does not fail loudly --- on $\Z_1 = x_1/(x_1-1)$ over

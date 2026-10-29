@@ -26,7 +26,7 @@ from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
                    solve_milp)
 from .model import EQ, GE, LE, MOILFP, Model
 from .rational import F, ZERO, dot
-from .simplex import OPTIMAL
+from .simplex import OPTIMAL, UNBOUNDED
 
 
 # --------------------------------------------------------------------------
@@ -375,6 +375,34 @@ def best_with_same_criterion(region: Model, problem: MOILFP,
 # fraction of what step 1 of the algorithm costs.  Only *supported* efficient
 # points are reachable this way, which loses nothing here: whatever comes back
 # is efficient, and that is all a cut centre or a lower bound needs.
+
+def assert_bounded(problem: MOILFP) -> None:
+    """Check that ``D`` is bounded, or raise.
+
+    Every method here enumerates maxima, so an unbounded ``D`` has nothing to
+    enumerate -- and, worse, the failure is silent.  An unbounded probe returns
+    a status that is not ``optimal``, which the enumeration used to read as
+    ``this box is empty``: on ``D = {x in Z^2_+ : x_1 - x_2 <= 0}`` it returned
+    an **empty front marked complete**, and the two optimisation searches still
+    reported ``infeasible``, on a problem that is feasible with efficient
+    points.
+
+    Since ``x >= 0``, ``D`` is bounded exactly when ``max sum_j x_j`` is
+    finite, so this costs **one** integer program for the whole problem,
+    cached.
+    """
+    if getattr(problem, "_boundedness_checked", False):
+        return
+    result = solve_linear_milp(problem.model, [F(1)] * problem.n)
+    if result.status == UNBOUNDED:
+        raise ValueError(
+            "D is not bounded: sum of the variables has no maximum over it. "
+            "Every method here enumerates maxima, so a bounded feasible set "
+            "is required; add the missing upper bounds")
+    if result.status != OPTIMAL:
+        raise ValueError(f"D is empty or unusable ({result.status})")
+    problem._boundedness_checked = True
+
 
 def assert_denominators_positive(problem: MOILFP) -> None:
     """Check ``D_k(x) = d_k'x + b_k > 0`` on ``D``, or raise.

@@ -55,7 +55,7 @@ from fractions import Fraction
 from time import monotonic
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from .efficiency import assert_denominators_positive
+from .efficiency import assert_bounded, assert_denominators_positive
 from .enumeration import _fast_feasible_points
 from .front import Front, enumerate_front
 from .milp import OPTIMAL, solve_milp
@@ -318,6 +318,7 @@ def complete_efficient_set(problem: MOILFP,
     honours its own: an exhausted budget returns what has been found with
     ``complete = False``, never a set that claims more than it proved.
     """
+    assert_bounded(problem)
     assert_denominators_positive(problem)
     started = monotonic()
     if front is None:

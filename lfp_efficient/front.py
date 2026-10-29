@@ -101,13 +101,13 @@ from time import monotonic
 from typing import List, Optional, Sequence, Tuple
 
 from .criterion_space import Box, looks_empty, split
-from .efficiency import (assert_denominators_positive,
+from .efficiency import (assert_bounded, assert_denominators_positive,
                          best_with_same_criterion, efficient_dominator,
                          has_linear_criteria, test_efficiency)
 from .milp import denominator_stays_positive, solve_linear_milp
 from .model import FractionalObjective, MOILFP
 from .rational import F, ZERO
-from .simplex import OPTIMAL
+from .simplex import OPTIMAL, UNBOUNDED
 from .tchebychev import anti_ideal_point, ideal_point
 
 
@@ -281,6 +281,7 @@ $1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
     change in this package that ever beat it attacked an *exponent* instead of
     a count -- eliminating variables with the slice equations, at $49\times$.
     """
+    assert_bounded(problem)
     assert_denominators_positive(problem)   # or the proof below is vacuous
     deadline = None if time_budget is None else monotonic() + time_budget
     positive = (denominator_stays_positive(problem.model, phi)
@@ -369,6 +370,15 @@ $1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
         direction = probe + [ZERO] * (model.n - problem.n)
         found = solve_linear_milp(model, direction)
         front.probes += 1
+        if found.status == UNBOUNDED:
+            # Not an empty box -- an unbounded one, which means D is not
+            # bounded and the method's assumption is violated.  Treating this
+            # like infeasibility is what an earlier version did, and it
+            # returned an EMPTY front marked complete on a feasible problem.
+            raise ValueError(
+                "the probe is unbounded on this box, so D is not bounded; "
+                "the enumeration needs a bounded feasible set (every "
+                "criterion would otherwise have no maximum to enumerate)")
         if found.status != OPTIMAL:
             continue                            # the box holds nothing: drop it
 

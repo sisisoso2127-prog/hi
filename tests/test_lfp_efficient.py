@@ -31,7 +31,8 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            augmented_tchebychev_efficient, ideal_point,
                            tchebychev_incumbent, efficient_dominator,
                            repair_to_efficient)
-from lfp_efficient.efficiency import (assert_denominators_positive,
+from lfp_efficient.efficiency import (assert_bounded,
+                                      assert_denominators_positive,
                                       _e_lower_bound)
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for, looks_empty, split
@@ -2347,6 +2348,42 @@ def test_the_big_M_really_bounds_e_k_below():
     worst = max(slack)
     return (f"{checked} (criterion, centre) pairs, no violation; "
             f"slack is 0 at its tightest and {worst} at its loosest")
+
+
+
+def test_an_unbounded_feasible_set_raises_instead_of_reporting_nothing():
+    """The second assumption, and the worst silent failure found here.
+
+    An unbounded probe returns a status that is not ``optimal``, which the
+    enumeration read as *this box is empty*.  On
+    ``D = {x in Z^2_+ : x_1 - x_2 <= 0}`` -- feasible, with efficient points --
+    it returned an **empty front marked complete**, and both optimisation
+    searches reported ``infeasible``.  Nothing in the output hinted at it.
+    """
+    unbounded = Model(2).add([1, -1], LE, 0)        # x2 may grow for ever
+    problem = MOILP(unbounded, [[0, 1], [1, 0]])
+    phi = FractionalObjective([1, 1], [0, 0], 0, 1)
+    assert unbounded.is_feasible([F(0), F(0)]), "the instance must be feasible"
+
+    entries = (("assert_bounded", lambda: assert_bounded(problem)),
+               ("enumerate_front", lambda: enumerate_front(problem, phi)),
+               ("complete_efficient_set",
+                lambda: complete_efficient_set(problem, phi)),
+               ("optimize_in_criterion_space",
+                lambda: optimize_in_criterion_space(problem, phi)),
+               ("optimize_over_efficient_set",
+                lambda: optimize_over_efficient_set(problem, phi)))
+    for name, call in entries:
+        try:
+            call()
+        except ValueError:
+            continue
+        raise AssertionError(f"{name} accepted an unbounded D")
+
+    # and a bounded problem must still pass, at one program for the whole of it
+    bounded = Model(2).add([1, 0], LE, 3).add([0, 1], LE, 3)
+    assert_bounded(MOILP(bounded, [[1, 0], [0, 1]]))
+    return f"{len(entries)} entry points refuse an unbounded D; bounded still accepted"
 
 
 # --------------------------------------------------------------------------
