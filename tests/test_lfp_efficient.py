@@ -31,6 +31,8 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            augmented_tchebychev_efficient, ideal_point,
                            tchebychev_incumbent, efficient_dominator,
                            repair_to_efficient)
+from lfp_efficient.efficiency import (assert_denominators_positive,
+                                      _e_lower_bound)
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for, looks_empty, split
 from lfp_efficient.subset import EfficientSubset, efficient_subset
@@ -2257,6 +2259,94 @@ def test_the_front_stays_in_step_when_Phi_is_undefined_on_a_slice():
         "no slice left Phi undefined -- the check would be vacuous")
     return (f"{checked} instances, lists in step throughout; "
             f"{undefined_slices} slices left Phi undefined")
+
+
+
+def test_a_denominator_that_is_not_positive_raises_instead_of_lying():
+    """The assumption the whole method rests on, now enforced.
+
+    ``e_k`` carries the sign of ``Z_k(x) - Z_k(a)`` only because both
+    denominators are positive.  A criterion whose denominator changes sign
+    inverts comparisons, and the search then reports a front it has not got:
+    on ``Z_1 = x_1/(x_1-1)`` over ``0 <= x <= 3`` the enumeration used to
+    return a single vector with ``complete = True`` while ``(2,3)`` --
+    feasible, and dominating -- was missing.  The docstring claimed the
+    assumption was checked; it was not.
+    """
+    model = Model(2).add([1, 0], LE, 3).add([0, 1], LE, 3)
+    linear = FractionalObjective([0, 1], [0, 0], 0, 1)
+    phi = FractionalObjective([1, 1], [0, 0], 0, 1)
+
+    bad = [("changes sign", FractionalObjective([1, 0], [1, 0], 0, -1)),
+           ("vanishes",     FractionalObjective([1, 0], [1, 0], 0, -3)),
+           ("constant <= 0", FractionalObjective([1, 0], [0, 0], 0, -2))]
+    for label, criterion in bad:
+        problem = MOILFP(model, [criterion, linear])
+        for name, call in (("assert", lambda p=problem: assert_denominators_positive(p)),
+                           ("front", lambda p=problem: enumerate_front(p, phi)),
+                           ("complete", lambda p=problem: complete_efficient_set(p, phi)),
+                           ("optimise", lambda p=problem: optimize_in_criterion_space(p, phi))):
+            try:
+                call()
+            except ValueError:
+                continue
+            raise AssertionError(
+                f"{name} accepted a denominator that {label}")
+
+    good = [("positive affine", FractionalObjective([1, 0], [1, 0], 0, 2)),
+            ("decreasing but positive", FractionalObjective([1, 0], [-1, 0], 0, 5))]
+    for label, criterion in good:
+        problem = MOILFP(model, [criterion, linear])
+        assert_denominators_positive(problem)            # must not raise
+        front = enumerate_front(problem, phi)
+        assert front.complete, f"a valid instance ({label}) was refused"
+
+    # and a linear problem needs no program at all to pass
+    assert_denominators_positive(MOILP(model, [[1, 0], [0, 1]]))
+    return (f"{len(bad)} violating criteria refused by all four entry points, "
+            f"{len(good)} valid ones accepted")
+
+
+
+def test_the_big_M_really_bounds_e_k_below():
+    """The step the decision-space baseline rests on, checked numerically.
+
+    Equation (5) makes ``y_k = 0`` leave its row vacuous only if ``M_k`` is a
+    genuine lower bound on ``e_k`` over the region.  Too large an ``M_k``
+    silently removes feasible points -- the baseline would then return a wrong
+    answer *and* run fast, which is the worst way for a comparison to be
+    wrong.  So every claim about the margin depends on this.
+
+    The bound is also checked for *tightness*, because a loose big-M makes the
+    baseline slower and the comparison flattering: a factor of ten was once
+    lost to deriving it from a relaxation instead.
+    """
+    rng = random.Random(4242)
+    checked = violations = 0
+    slack = []
+    for generate in (lambda: random_instance(rng), lambda: random_moilfp(rng)):
+        for _ in range(8):
+            problem, _, bounds = generate()
+            feasible = enumerate_efficient_set(problem, bounds).feasible
+            if not feasible:
+                continue
+            for centre in feasible[:5]:
+                for k in range(problem.p):
+                    bound = _e_lower_bound(problem, k, centre)
+                    coeffs, const = problem.e_row(k, centre)
+                    least = min(sum(c * xi for c, xi in zip(coeffs, x)) + const
+                                for x in feasible)
+                    checked += 1
+                    if least < bound:
+                        violations += 1
+                    slack.append(least - bound)
+    assert checked, "no instance produced a feasible point"
+    assert not violations, (
+        f"{violations} of {checked} big-M values are NOT lower bounds on e_k "
+        "-- the decision-space baseline would cut off feasible points")
+    worst = max(slack)
+    return (f"{checked} (criterion, centre) pairs, no violation; "
+            f"slack is 0 at its tightest and {worst} at its loosest")
 
 
 # --------------------------------------------------------------------------

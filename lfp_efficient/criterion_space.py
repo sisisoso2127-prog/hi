@@ -175,7 +175,7 @@ from time import monotonic
 from typing import List, Optional, Sequence, Tuple
 
 from .algorithm import IterationLog, Solution
-from .efficiency import (best_with_same_criterion, efficient_dominator,
+from .efficiency import (assert_denominators_positive,best_with_same_criterion, efficient_dominator,
                          test_efficiency)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
                    solve_fractional_milp)
@@ -384,6 +384,7 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
     The returned :class:`~lfp_efficient.Solution` carries the same fields as
     the shipped method's, so the two are interchangeable at the call site.
     """
+    assert_denominators_positive(problem)
     deadline = None if time_budget is None else monotonic() + time_budget
     positive_denominator = denominator_stays_positive(problem.model, phi)
 

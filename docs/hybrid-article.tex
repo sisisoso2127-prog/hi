@@ -63,7 +63,15 @@ because the negative results delimit where hybridisation can help at all.
 \end{equation}
 with $\Dset = \{x \in \Zint^{n}_{+} : Ax \leqslant b\}$ non-empty and bounded
 and every denominator $D_k(x) = d_k^{\top}x + b_k$ strictly positive on
-$\Dset$.  A point $x \in \Dset$ is \emph{efficient} when no $y \in \Dset$
+$\Dset$.  That last assumption is load-bearing twice over and the
+implementation now enforces it: the form \eqref{eq:ek} carries the sign of
+$\Z_k(x) - \Z_k(\bar x)$ only because both denominators are positive, and the
+big-$M$ of \eqref{eq:cut} is a valid bound only under the same condition.  A
+criterion violating it does not fail loudly --- on $\Z_1 = x_1/(x_1-1)$ over
+$0 \leqslant x \leqslant 3$ the enumeration returns a single vector and reports
+it \emph{complete} while a feasible point dominates it --- so the entry points
+verify it in one integer program per genuinely fractional criterion, and none
+at all for linear ones.  A point $x \in \Dset$ is \emph{efficient} when no $y \in \Dset$
 satisfies $\Z(y) \geqslant \Z(x)$ with at least one strict inequality; $\E$
 denotes the set of efficient points and $F = \Z(\E)$ the non-dominated set.
 Linear criteria are the degenerate case $d_k = 0$, $b_k = 1$.

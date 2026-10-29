@@ -101,7 +101,8 @@ from time import monotonic
 from typing import List, Optional, Sequence, Tuple
 
 from .criterion_space import Box, looks_empty, split
-from .efficiency import (best_with_same_criterion, efficient_dominator,
+from .efficiency import (assert_denominators_positive,
+                         best_with_same_criterion, efficient_dominator,
                          has_linear_criteria, test_efficiency)
 from .milp import denominator_stays_positive, solve_linear_milp
 from .model import FractionalObjective, MOILFP
@@ -280,6 +281,7 @@ $1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
     change in this package that ever beat it attacked an *exponent* instead of
     a count -- eliminating variables with the slice equations, at $49\times$.
     """
+    assert_denominators_positive(problem)   # or the proof below is vacuous
     deadline = None if time_budget is None else monotonic() + time_budget
     positive = (denominator_stays_positive(problem.model, phi)
                 if phi is not None else False)
