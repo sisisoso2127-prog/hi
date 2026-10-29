@@ -231,6 +231,37 @@ def pre_split(problem: MOILFP, seeds,
     return boxes, recorded
 
 
+def _assert_mutually_non_dominated(problem: MOILFP, vectors) -> None:
+    """A front's vectors dominate none of each other.  Free, and it catches
+    the one way a caller can corrupt the answer.
+
+    :func:`pre_split` places the seeds it is given; it cannot afford to test
+    them, since testing a seed costs exactly the program the seed was there to
+    save.  So a seed that is *not* efficient is recorded as a front vector, and
+    the run still reports ``complete``: on the paper's instance, seeding the
+    dominated point ``(0,0)`` returns eight vectors where the front has seven,
+    with ``(0,0)`` among them.
+
+    A dominated seed is always caught here.  Its dominator ``b`` is efficient,
+    so no centre can remove ``b`` -- removing it would need a feasible point
+    dominating it -- and ``b`` is therefore recorded too, which makes the pair
+    visible to this scan.  The cost is ``O(|F|^2 p)`` of arithmetic and no
+    program at all.
+    """
+    for i, v in enumerate(vectors):
+        for j, w in enumerate(vectors):
+            if i == j:
+                continue
+            if (all(wk >= vk for wk, vk in zip(w, v))
+                    and any(wk > vk for wk, vk in zip(w, v))):
+                raise ValueError(
+                    f"the recorded front is not an antichain: {list(v)} is "
+                    f"dominated by {list(w)}.  A seed that is not efficient "
+                    "was handed over -- pre_split places seeds without "
+                    "testing them, so they must come from a source that "
+                    "guarantees efficiency")
+
+
 def enumerate_front(problem: MOILFP, phi: Optional[FractionalObjective] = None,
                     max_boxes: int = 200_000,
                     time_budget: Optional[float] = None,
@@ -392,5 +423,7 @@ $1.03\times$ the pivots, so it is off.  *drop_dominated* seeds the upper
             counter += 1
             heappush(open_boxes, (counter, child))
 
+    if seeds:
+        _assert_mutually_non_dominated(problem, front.vectors)
     front.complete = True
     return front

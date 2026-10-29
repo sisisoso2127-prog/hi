@@ -2386,6 +2386,49 @@ def test_an_unbounded_feasible_set_raises_instead_of_reporting_nothing():
     return f"{len(entries)} entry points refuse an unbounded D; bounded still accepted"
 
 
+
+def test_a_seed_that_is_not_efficient_is_caught_rather_than_recorded():
+    """``pre_split`` cannot afford to test its seeds, so the front checks itself.
+
+    Testing a seed costs exactly the integer program the seed exists to save,
+    so seeds are placed on trust.  A dominated one is then recorded as a front
+    vector and the run still reports ``complete``: on the paper's instance,
+    seeding ``(0,0)`` returned eight vectors where the front has seven.
+
+    The guard is free -- a front's vectors are an antichain by definition, and
+    a dominated seed's dominator is efficient, so no centre can remove it and
+    it is recorded too, which makes the pair visible to a pairwise scan.
+    """
+    model = (Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21)
+             .add([-2, 4], LE, 6))
+    problem = MOILP(model, [[1, -2], [-1, 4]])
+    phi = FractionalObjective([1, 1], [5, 1], -1, -1)
+
+    enum = enumerate_efficient_set(problem, [6, 12])
+    efficient = {tuple(x) for x in enum.efficient}
+    dominated = [x for x in enum.feasible if tuple(x) not in efficient]
+    assert dominated, "the instance must have a dominated point to seed"
+
+    clean = enumerate_front(problem, phi)
+    for bad in dominated[:4]:
+        try:
+            enumerate_front(problem, phi, seeds=[bad])
+        except ValueError:
+            continue
+        raise AssertionError(
+            f"a dominated seed {[int(c) for c in bad]} was recorded as a "
+            "front vector")
+
+    # efficient seeds, including every one of them, must still go through
+    for take in (1, 3, len(enum.efficient)):
+        seeded = enumerate_front(problem, phi, seeds=enum.efficient[:take])
+        assert seeded.complete
+        assert ({tuple(v) for v in seeded.vectors}
+                == {tuple(v) for v in clean.vectors}), "the front changed"
+    return (f"{len(dominated[:4])} dominated seeds refused, "
+            f"{len(enum.efficient)} efficient ones accepted")
+
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the
