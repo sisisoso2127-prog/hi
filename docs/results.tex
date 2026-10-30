@@ -927,7 +927,7 @@ are one idea counted twice.
 \section{How all of this is checked}
 
 Exact rational arithmetic throughout, no floating point anywhere, no
-third-party dependency, and 93 tests run on every commit.  Several check
+third-party dependency, and 103 tests run on every commit.  Several check
 \emph{properties} rather than answers, since a method that silently lost
 efficient points would still agree with the optimum on favourable instances:
 the split is a partition; the metaheuristic never hands over an inefficient
@@ -938,5 +938,46 @@ optimality.
 Answers are cross-checked three ways: against the decision-space method,
 against exhaustive enumeration on small instances, and against a
 $\Phi$-ordered scan on instances up to $34635$ feasible points.
+
+\subsection{The references were audited, and nothing here moved}
+
+Every margin in this document is a ratio against one of those three reference
+methods, so the margins are worth exactly what the references are.  We audited
+them and found eleven places in the implementation where a stated hypothesis
+was never tested.  All eleven are fixed and carry regression tests.  Two were
+in the validation apparatus itself and so bear directly on the numbers above.
+
+The completeness certificate searches for challengers inside a variable box it
+is handed.  A box smaller than $\Dset$ hides them, and the certificate then
+returned \emph{valid} on a point that is not optimal --- with the box $[1,1]$
+it certified a point at $\Phi = 1/9$ while the true optimum is $5/17$.  Worse,
+the same defect sat in the two reference oracles.  Handed a box smaller than
+$\Dset$ neither failed nor warned: they answered confidently about the
+efficient set of a \emph{different} feasible set, under the names $\E$ and
+``the exact optimum of $(P_E)$''.  On $x_1 + x_2 \leqslant 6$,
+$x_1 - x_2 \leqslant 2$, whose efficient set holds five points and whose
+optimum is $2/5$, the box $[1,1]$ gave one point reported as $\E$ and $1/3$
+reported as the exact optimum.  A clipped oracle does not produce a wrong
+answer; it produces a wrong \emph{standard}, and a method measured against it
+looks correct precisely when it agrees with the clipping.
+
+Three observations establish that no number in this document was affected, and
+we state them as observations because the point of the audit is not to assume
+such things.  First, every figure here was produced by passing the box the
+model derives for itself, never a hand-written one.  Second, the oracles now
+refuse a box that does not enclose $\Dset$, and with that check active the
+suite passes $103/103$ and the four examples that use the oracles all run
+clean --- which is the evidence that none of the roughly $45$ boxes written by
+hand across the tests and examples was ever clipping $\Dset$.  Third, the
+scaling study still certifies every instance from $n = 10$ to $n = 20$ after
+the certificate was guarded, so the guard did not invalidate the study that
+rests on it.  The margins stand as reported: $1.36\times$ to the complete
+efficient set, with all eleven guards active.
+
+The guards are permanent rather than a debug mode, because they are cheap:
+boundedness is one integer program for the whole problem, the denominators one
+per genuinely fractional criterion and none for linear ones, and the variable
+box $n$ programs cached on the problem.  Against the sub-problem counts of this
+document they are invisible.
 
 \end{document}

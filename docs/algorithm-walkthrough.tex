@@ -335,7 +335,69 @@ seed & an efficient seed keeps the answer & seeded and unseeded runs agree and
 \end{table}
 
 \noindent
-Sixty-four tests in all, run on every commit, in exact rational arithmetic with
-no floating point anywhere and no third-party dependency.
+That table pins what each line \emph{does}.  It says nothing about the
+hypotheses under which the lines are entitled to do it, and that turned out to
+be the gap: an audit found eleven places where a hypothesis stated in the
+text was never tested in the code.  The pattern is worth stating here, because
+it is a pattern about pseudocode.
+
+Every flag in the implementation that claimed something had been \emph{proved}
+was computed from control flow.  Line~\ref{ln:exit} is the clearest case: the
+box list running empty was reported as ``the front is complete'', which is
+sound exactly when $\Dset$ is bounded and every $D_k$ is positive on it.
+Neither was established.  The pseudocode is not wrong --- those are its stated
+hypotheses --- but ``the loop finished'' and ``the hypotheses hold'' are
+different propositions, and the implementation returned the first while
+reporting the second.  Both failures are silent: on a feasible, unbounded
+$\Dset$ the enumeration returned an \emph{empty front marked complete}, and
+on a criterion whose denominator changes sign it returned one vector as the
+whole front while a feasible point dominated it.
+
+Table~\ref{tab:guards} lists what now enforces each hypothesis before the
+algorithm starts.  They are cheap enough to leave on permanently.
+
+\begin{table}[h]
+\centering
+\caption{The hypotheses, and what establishes them.  Each was previously
+assumed; each failure was silent.}
+\label{tab:guards}
+\begin{tabular}{p{5.2cm}p{4.6cm}p{4.4cm}}
+\toprule
+hypothesis & enforced by & cost \\
+\midrule
+$\Dset$ bounded & one integer program, $\max \sum_j x_j$ & one program per
+  problem \\
+$D_k(x) > 0$ on $\Dset$ & one program per criterion, minimising $D_k$ & nothing
+  for a linear criterion \\
+a given variable box encloses $\Dset$ & $n$ programs, compared against the box
+  & $n$ programs, cached on the problem \\
+a given seed is efficient & the exact test of \S\ref{sec:test} & the test the
+  seed needed anyway \\
+a given incumbent is feasible and realises its value & feasibility of the
+  model, then $\Phi$ recomputed & arithmetic only \\
+the returned point is efficient & the exact test, on exit & one test per run \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The second half of the pattern is the more general lesson.  Every parameter
+added to the implementation in order to \emph{save} work --- a precomputed
+variable box, a precomputed front, a set of seeds, an incumbent and its value
+--- is a way for a caller to supply a hypothesis without proving it.  Each was
+introduced as an optimisation and each quietly became a trust assumption.  A
+caller passing a variable box is asserting that it contains $\Dset$, and
+nothing downstream can detect a box that does not: every routine receiving one
+searches it honestly and reports a complete-looking answer about a feasible set
+that is not $\Dset$.
+
+All eleven were caught by asking, for each hypothesis stated in the text, which
+line of code establishes it.  Eleven times the answer was none.  None would
+have been caught by checking that the method gets the right answer on valid
+input, which is what the suite did for its first 93 tests.
+
+103 tests in all, run on every commit, in exact rational arithmetic with
+no floating point anywhere and no third-party dependency.  Ten of them feed
+deliberately invalid input and require a refusal.
 
 \end{document}

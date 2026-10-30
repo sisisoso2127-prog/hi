@@ -103,6 +103,7 @@ results and two corrected measurement errors are reported alongside the wins.
 \tableofcontents
 
 \section{Problem}
+\label{sec:problem}
 
 Let
 \begin{equation}
@@ -1838,6 +1839,181 @@ $18.4$\,ms per call, the dearest operation in the search, but what the shortcut
 removes is the repair's test at $7.68$\,ms, the cheap kind. Reasoning from the
 wrong row of the right profile overstated the gain by half.
 
+\section{A fourth lesson, and the largest: a method is not its proof}
+\label{sec:audit}
+
+The three lessons above are about measuring. This one is about what was being
+measured, and it is the reason the section exists rather than a footnote: we
+audited the implementation against its own stated hypotheses and found
+\emph{eleven} places where a hypothesis asserted in this note was never tested
+in the code. All eleven are fixed and carry regression tests, and no measured
+result moved. We report them at this length because the pattern behind them
+generalises past this method, and because a reader entitled to doubt the ratios
+in Sections~\ref{sec:meta}--\ref{sec:families} is entitled to know how they
+were defended.
+
+\subsection{The pattern, in two halves}
+
+\paragraph{A proof's conclusion computed from control flow.}
+Every flag in the implementation claiming something had been \emph{proved} was
+computed from the shape of the loop --- it finished, no sub-problem remained
+--- and not from the hypotheses the proof needs. ``The box list is empty'' was
+reported as ``the front is complete'', which is sound exactly when $\Dset$ is
+bounded and every $D_k$ is strictly positive on it. Those two facts are stated
+in Section~\ref{sec:problem} as assumptions and were, until the audit, assumed
+in the strict sense: nothing established them. The same substitution had
+appeared independently in the front enumeration, in both optimisation
+searches, in the completeness certificate of
+Section~\ref{sec:wall}, and in the two reference oracles.
+
+Neither failure is loud. On $\Dset = \{x \in \Zint^2_+ : x_1 - x_2 \leqslant
+0\}$ --- feasible, with efficient points, but unbounded --- the enumeration
+returned an \emph{empty front marked complete} and both searches reported
+\emph{infeasible}. On $\Z_1 = x_1/(x_1 - 1)$ over $0 \leqslant x \leqslant 3$,
+whose denominator changes sign, it returned a single vector as the whole front
+while a feasible point dominates it.
+
+\paragraph{Every saving was a trust assumption.}
+This is the half that generalises. Each parameter added to the API in order to
+\emph{avoid recomputation} --- a precomputed variable box, a precomputed front,
+a set of seeds, an incumbent together with its value --- is a way for a caller
+to supply a hypothesis without proving it. Each was introduced as an
+optimisation; each silently became an assumption the code depended on. A caller
+passing a variable box is asserting that the box contains $\Dset$, and nothing
+downstream can detect a box that does not, because every routine that receives
+one searches it honestly and reports a complete-looking answer about a feasible
+set that is not $\Dset$.
+
+The practical form of the lesson: a parameter that lets the caller skip work
+the callee would otherwise do is a parameter that lets the caller skip a
+\emph{proof} the callee would otherwise have. The two are the same parameter,
+and we added five of them without noticing.
+
+\paragraph{Why the tests could not see any of it.}
+All $93$ tests then in the suite fed \emph{valid} input. They established that
+the method computes the right answer when its hypotheses hold --- which was
+never the question --- and they could not establish that anything enforced
+them. A suite of that shape is blind to this entire class by construction, and
+the blindness is invisible from inside it: every test passes, on every commit,
+for years. The suite now holds $103$ tests, and the ten added all feed
+deliberately invalid input and require a refusal.
+
+\subsection{The eleven}
+
+Table~\ref{tab:audit} lists them. Findings~10 and~11 are the two that sit in
+the validation apparatus rather than in the method, and they are the serious
+ones.
+
+Finding~10 is in the completeness certificate of Section~\ref{sec:wall}, which
+searches $\{x \in \Dset : \Phi(x) > \text{value}\}$ inside a caller-supplied
+box. A box smaller than $\Dset$ hides challengers, and the certificate then
+returns \emph{valid} on a point that is not optimal: with the box $[1,1]$ it
+certified an efficient point at $\Phi = 1/9$ while the true optimum is $5/17$.
+That is the worst location in the package for such a defect, because the
+certificate is what validates answers past the size at which brute force
+reaches --- a false proof is not a wrong answer but a wrong \emph{check} on
+other answers.
+
+Finding~11 is the same defect one level further out, in the two reference
+oracles themselves, which between them are called from about $45$ sites across
+the tests and the examples, each passing a box written by hand. Handed a box
+smaller than $\Dset$ neither failed nor returned less with a warning: they
+answered confidently about the efficient set of a different feasible set, under
+the names $\E$ and ``the exact optimum of $(P_E)$''. On
+$x_1 + x_2 \leqslant 6$, $x_1 - x_2 \leqslant 2$, whose efficient set holds
+five points and whose optimum is $2/5$, the box $[1,1]$ yielded one efficient
+point reported as $\E$, and $1/3$ reported as the exact optimum. A clipped
+oracle does not produce a wrong answer; it produces a wrong \emph{standard},
+and a method measured against it looks correct precisely when it agrees with
+the clipping. Every ratio in this note is a ratio against one of these.
+
+\begin{table}[h]
+\centering
+\caption{The eleven findings. ``Silent'' is meant literally: none raised, none
+returned a warning, and none was detectable by any caller downstream.}
+\label{tab:audit}
+\small
+\begin{tabular}{rp{0.45\textwidth}p{0.31\textwidth}}
+\toprule
+ & hypothesis never established & silent consequence \\
+\midrule
+1 & $\Dset$ bounded & empty front marked \emph{complete}; both searches
+    reported \emph{infeasible} \\
+2 & $D_k(x) > 0$ on $\Dset$ & one vector returned as the whole front while a
+    feasible point dominates it \\
+3 & a front handed in belongs to this problem & a foreign front completed into
+    a point set called $\E$ \\
+4 & the variable box contains $\Dset$ (slice enumeration) & clipped slices lose
+    efficient points \\
+5 & $\Phi$ is defined on every slice & the point list and the value list fell
+    out of step \\
+6 & a handed-over incumbent is feasible & the search started below a bound no
+    point can reach \\
+7 & a handed-over incumbent's value is its own $\Phi$ & the search pruned
+    against a bound no point realises \\
+8 & seeds are efficient & inefficient points entered the box list unprobed,
+    against Proposition~\ref{prop:seed} \\
+9 & the returned point is efficient when state was handed over & an
+    inefficient point returned as the answer to $(P_E)$ \\
+10 & the certificate's box contains $\Dset$ & a suboptimal point certified
+    \emph{proved} \\
+11 & the reference oracles' box contains $\Dset$ & $\E$ and $\max \Phi$
+    redefined; agreement with them became uninformative \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What the audit did not find, and how we know}
+
+The mathematics survived unchanged. The four propositions the method rests on
+were re-derived and re-tested: the slice characterisation of
+Section~\ref{sec:complete}, the completeness of the front enumeration, the
+disjointness of the $p$-way split (Proposition~\ref{prop:split}), and the
+validity of the big-$M$ in \eqref{eq:cut}. The last was additionally checked
+numerically on $220$ point pairs with no violation and with the bound exactly
+attained, which is what makes it the smallest valid choice rather than merely a
+safe one. All eleven findings were in the \emph{enforcement} of hypotheses and
+none in the reasoning that uses them.
+
+Three observations, stated as observations because the discipline of the audit
+is not to assume exactly this kind of thing:
+
+\begin{itemize}
+\itemsep2pt
+\item Every figure in this note was produced by passing the box the model
+      derives for itself, never a hand-written one, so none of them was
+      affected.
+\item With the finding-11 check active the suite passes $103/103$ and the four
+      examples that use the oracles all run clean. That is the evidence --- not
+      the assumption --- that none of the roughly $45$ boxes written by hand
+      across the tests and examples was ever clipping $\Dset$, and that the two
+      boxes used for the worked examples ($[6,12]$ and $[3,3,3]$, against
+      derived bounds $[3,3]$ and $[3,2,2]$) are valid enclosures. The trap sat
+      in the API and never in a reported measurement.
+\item The scaling study still certifies every instance from $n = 10$ to
+      $n = 20$ after finding~10 was closed, so the guard did not invalidate the
+      study that rests on the certificate.
+\end{itemize}
+
+\noindent
+The guards are permanent rather than a debug mode, because the cost is a fixed
+charge per problem and not per sub-problem: boundedness is one integer program
+for the whole problem; the denominators one program per \emph{genuinely
+fractional} criterion and none at all for a linear one; the variable box $n$
+programs, cached on the problem, so every entry point can afford to re-ask;
+verifying a seed is the exact test Proposition~\ref{prop:seed} already required
+before the seed could be trusted. Against the sub-problem counts reported
+throughout this note they do not register.
+
+\begin{remark}
+The honest reading is the one in this section's title. Each of the eleven was a
+place where the implementation claimed a proof's conclusion while skipping its
+premise, and none would have been caught by testing that the method gets the
+right answer on valid input. They were caught by asking, for each hypothesis
+stated in this note, which line of code establishes it. Eleven times the answer
+was none.
+\end{remark}
+
 \section{Summary of what was and was not gained}
 
 \begin{table}[h]
@@ -1900,7 +2076,7 @@ paywalls, remains to be done before any such claim is made.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 93 tests. Several check
+exact rational arithmetic throughout, and carries 103 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -1947,6 +2123,34 @@ points would still agree with the optimum on favourable instances:
 \item The unsupported-reach claim --- on the reference instance, the three
       unsupported efficient points are all reached by \eqref{eq:tcheb} while no
       positive weighted sum reaches any.
+\end{itemize}
+
+\noindent
+The ninety-three tests that predate the audit, the ones listed above among
+them, all feed \emph{valid} input --- which is the limitation
+Section~\ref{sec:audit} is about: together they establish that the method is
+correct when its hypotheses hold, and none of them can establish that anything
+enforces them. Ten further tests were added for that, and they are of the
+opposite shape --- each feeds input that violates a stated hypothesis and
+requires the call to refuse rather than answer:
+
+\begin{itemize}
+\itemsep2pt
+\item An unbounded $\Dset$ and a sign-changing denominator are each checked to
+      raise at every exact entry point, rather than to return the empty
+      complete front and the dominated single-vector front they used to.
+\item A variable box that does not enclose $\Dset$ is checked to be refused by
+      the slice enumeration, by the completeness certificate and by \emph{both
+      reference oracles} --- four separate routines that each took it on trust
+      --- with the valid box checked to still give $|\E| = 5$ and
+      $\Phi^{*} = 2/5$ on the same instance.
+\item A front belonging to another problem, an infeasible incumbent, an
+      incumbent whose stated value is not its own $\Phi$, and an inefficient
+      seed are each checked to be refused; and the optimisation is checked, on
+      exit, to re-test the point it returns whenever state was handed in.
+\item A slice on which $\Phi$ is undefined is checked to leave the point list
+      and the value list in step, over $201$ instances, $53$ of which produce
+      such a slice.
 \end{itemize}
 
 \noindent
