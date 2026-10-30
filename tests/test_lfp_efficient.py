@@ -36,6 +36,7 @@ from lfp_efficient.efficiency import (assert_bounded,
                                       _e_lower_bound)
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for, looks_empty, split
+from lfp_efficient.complete import box_shortfall, variable_bounds
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
@@ -2597,6 +2598,60 @@ def test_the_certificate_refuses_a_box_that_hides_challengers():
     return (f"3 clipped boxes refused; the true box proves {fmt(phi(best))} "
             f"and still rejects {fmt(phi(worse))}")
 
+
+def test_the_two_reference_oracles_refuse_a_box_that_clips_D():
+    """The reference methods themselves could be made to redefine the truth.
+
+    ``enumerate_efficient_set`` and ``best_over_efficient_set_by_scan`` are
+    what the suite and the examples compare every algorithm *against*.  Both
+    took a variable box on trust.  Handed a box smaller than ``D`` they did
+    not fail and did not return less-with-a-warning: they answered confidently
+    about the efficient set of a *different* feasible set, under the names
+    ``E(P_D)`` and "the exact optimum of ``(P_E)``".
+
+    Measured before the guard, on ``x_1 + x_2 <= 6``, ``x_1 - x_2 <= 2`` whose
+    efficient set holds five points and whose optimum is ``2/5``::
+
+        enumerate_efficient_set(problem, [1, 1])          -> 1 point, "E(P_D)"
+        best_over_efficient_set_by_scan(problem, phi, …)  -> 2/5 became 1/3
+
+    That is the same defect as in ``certify_optimum``, one level worse: a
+    clipped oracle does not give a wrong answer, it gives a wrong *standard*,
+    and a method measured against it looks correct precisely when it agrees.
+
+    Running the suite with this check in place passed 102/102, which is the
+    evidence that no box hand-written in these tests or in ``examples/`` was
+    ever clipping ``D``: the trap sat in the API, not in the shipped results.
+    """
+    model = Model(2).add([1, 1], LE, 6).add([1, -1], LE, 2)
+    problem = MOILP(model, [[1, 0], [0, 1]])
+    phi = FractionalObjective([1, 1], [2, 3], 0, 1)
+
+    # the truth, from the box the model derives for itself
+    true_box = variable_bounds(problem)
+    truth = enumerate_efficient_set(problem, true_box).efficient
+    _, best_value, _, _ = best_over_efficient_set_by_scan(problem, phi, true_box)
+    assert len(truth) == 5 and best_value == Fraction(2, 5), (len(truth), best_value)
+
+    for box in ([1, 1], [0, 0], [4, 4], [6, 5]):
+        narrow = box_shortfall(problem, box)
+        assert narrow, f"box {box} should be detected as clipping D"
+        for call in (lambda: enumerate_efficient_set(problem, box),
+                     lambda: best_over_efficient_set_by_scan(problem, phi, box)):
+            try:
+                call()
+            except ValueError as exc:
+                assert "does not contain D" in str(exc), exc
+            else:
+                raise AssertionError(f"box {box} was accepted as an enclosure")
+
+    # and a box at least as large as D is still accepted, answer unchanged
+    for box in (true_box, [b + 3 for b in true_box]):
+        assert box_shortfall(problem, box) == []
+        assert len(enumerate_efficient_set(problem, box).efficient) == 5
+        assert best_over_efficient_set_by_scan(problem, phi, box)[1] == Fraction(2, 5)
+    return (f"4 clipped boxes refused by both oracles, "
+            f"true box {true_box} keeps |E| = 5 and Phi* = 2/5")
 
 # --------------------------------------------------------------------------
 def main():

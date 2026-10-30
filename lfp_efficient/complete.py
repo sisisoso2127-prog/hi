@@ -92,6 +92,35 @@ def variable_bounds(problem: MOILFP) -> List[int]:
     return bounds
 
 
+def box_shortfall(problem: MOILFP, bounds: Sequence[int]):
+    """Variables whose true reach on ``D`` exceeds the box: ``(j, reach, allowed)``.
+
+    A box smaller than ``D`` is the single most dangerous argument in this
+    package, because nothing downstream can detect it: every routine that takes
+    a box searches it honestly and reports a complete-looking answer about a
+    feasible set that is not ``D``.  Four separate routines were caught doing
+    exactly that.  An empty list means the box is a valid enclosure.
+
+    ``variable_bounds`` caches on the problem, so asking costs nothing after
+    the first call and every entry point can afford to ask.
+    """
+    true_bounds = variable_bounds(problem)
+    return [(j, true_bounds[j], bounds[j])
+            for j in range(problem.n) if bounds[j] < true_bounds[j]]
+
+
+def assert_box_contains(problem: MOILFP, bounds: Sequence[int],
+                        consequence: str) -> None:
+    """Raise unless ``bounds`` encloses ``D``, naming what the clipping costs."""
+    narrow = box_shortfall(problem, bounds)
+    if narrow:
+        raise ValueError(
+            "the supplied variable box does not contain D: "
+            + ", ".join(f"x_{j + 1} reaches {r} but the box allows {a}"
+                        for j, r, a in narrow)
+            + ".  " + consequence)
+
+
 def slice_equations(problem: MOILFP, v: Sequence[Fraction]):
     """``Z(x) = v`` as ``p`` equations ``(c_k - v_k d_k)'x = v_k b_k - a_k``.
 
@@ -368,14 +397,8 @@ def complete_efficient_set(problem: MOILFP,
         # ``[2, 2, 1]`` where ``[2, 2, 2]`` is right returned 4 points of 6
         # and called them the whole set.  Checking costs nothing after the
         # first call, since variable_bounds caches on the problem.
-        true_bounds = variable_bounds(problem)
-        narrow = [j for j in range(problem.n) if bounds[j] < true_bounds[j]]
-        if narrow:
-            raise ValueError(
-                "the supplied variable box does not contain D: "
-                + ", ".join(f"x_{j + 1} reaches {true_bounds[j]} but the box "
-                            f"allows {bounds[j]}" for j in narrow)
-                + ".  Slices clipped by it lose efficient points silently")
+        assert_box_contains(problem, bounds,
+                            "Slices clipped by it lose efficient points silently")
         result.bounds = list(bounds)
 
     truncated = False
