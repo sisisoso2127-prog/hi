@@ -2562,6 +2562,42 @@ def test_unsound_handed_over_state_cannot_claim_a_proved_optimum():
     return (f"3 unsound handovers refused, 4 honest ones proved {fmt(optimum)}")
 
 
+
+def test_the_certificate_refuses_a_box_that_hides_challengers():
+    """The independent proof could be made to certify a suboptimal point.
+
+    ``certify_optimum`` searches ``{x in D : Phi(x) > value}`` inside the box
+    it is handed.  A box smaller than ``D`` hides challengers, and the
+    certificate then comes back **valid** on a point that is not optimal:
+    with ``bounds=[1,1]`` it certified the efficient point ``(2,0)`` at
+    ``Phi = 1/9`` while the optimum is ``5/17`` at ``(3,3)``.
+
+    This is the worst place in the package for such a hole, since the
+    certificate is what validates answers past the size where brute force
+    reaches -- a false proof would not merely be a wrong answer but a wrong
+    *check* on other answers.
+    """
+    model = (Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21)
+             .add([-2, 4], LE, 6))
+    problem = MOILP(model, [[1, -2], [-1, 4]])
+    phi = FractionalObjective([1, 1], [5, 1], -1, -1)
+    enum = enumerate_efficient_set(problem, [6, 12])
+    best = max(enum.efficient, key=phi)
+    worse = min(enum.efficient, key=phi)
+    assert phi(worse) < phi(best), "need two efficient points of unequal Phi"
+
+    for box in ([1, 1], [0, 0], [2, 2]):
+        verdict = certify_optimum(problem, phi, worse, phi(worse), box)
+        assert not verdict.valid, (
+            f"box {box} certified the suboptimal {[int(c) for c in worse]}")
+
+    # the true box still proves the true optimum, and still refuses the other
+    assert certify_optimum(problem, phi, best, phi(best), [6, 12]).valid
+    assert not certify_optimum(problem, phi, worse, phi(worse), [6, 12]).valid
+    return (f"3 clipped boxes refused; the true box proves {fmt(phi(best))} "
+            f"and still rejects {fmt(phi(worse))}")
+
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the

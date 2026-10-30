@@ -277,7 +277,22 @@ def certify_optimum(problem: MOILFP, phi, x_opt: Sequence[Fraction],
     """
     from .efficiency import efficient_dominator, test_efficiency
 
+    from .complete import variable_bounds
+
     x_opt = list(x_opt)
+    # The challengers are searched inside this box, so a box smaller than D
+    # hides them and the certificate comes back "proved" on a point that is
+    # not optimal.  Measured before this guard: bounds [1,1] certified the
+    # efficient point (2,0) at Phi = 1/9 while the optimum is 5/17 at (3,3).
+    # variable_bounds caches on the problem, so re-asking costs nothing.
+    true_bounds = variable_bounds(problem)
+    narrow = [j for j in range(problem.n) if bounds[j] < true_bounds[j]]
+    if narrow:
+        return Certificate(False, reason=(
+            "the search box does not contain D ("
+            + ", ".join(f"x_{j + 1} reaches {true_bounds[j]}, box allows "
+                        f"{bounds[j]}" for j in narrow)
+            + "), so challengers outside it were never looked at"))
     if not problem.model.is_feasible(x_opt):
         return Certificate(False, reason="the claimed point is not feasible")
     if phi(x_opt) != value:
