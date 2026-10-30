@@ -299,6 +299,32 @@ class CompleteSet:
         return "\n".join(lines)
 
 
+def _assert_front_belongs(problem: MOILFP, front) -> None:
+    """A front handed in must be this problem's.  Free, and exact.
+
+    ``front=`` exists so the front and the slices can be timed apart, or a
+    front reused.  Nothing tied it to the problem: handing over a front built
+    for a *different* criterion matrix returned ``|E| = 0`` with
+    ``complete = True``, on an instance with six efficient points -- the
+    slices simply found nothing, since no feasible point attains a foreign
+    vector.
+
+    Each recorded point must be feasible here and attain its own vector under
+    *this* problem's ``Z``.  That is arithmetic over ``|F|`` points and no
+    program at all.
+    """
+    for index, (vector, point) in enumerate(zip(front.vectors, front.points)):
+        if not problem.model.is_feasible(point):
+            raise ValueError(
+                f"the front handed in does not belong to this problem: its "
+                f"point {index + 1} is not feasible here")
+        if problem.Z(point) != list(vector):
+            raise ValueError(
+                f"the front handed in does not belong to this problem: its "
+                f"point {index + 1} has Z = {problem.Z(point)} here, not the "
+                f"{list(vector)} recorded with it")
+
+
 def complete_efficient_set(problem: MOILFP,
                            phi: Optional[FractionalObjective] = None,
                            *,
@@ -325,6 +351,8 @@ def complete_efficient_set(problem: MOILFP,
     assert_bounded(problem)
     assert_denominators_positive(problem)
     started = monotonic()
+    if front is not None:
+        _assert_front_belongs(problem, front)
     if front is None:
         front = enumerate_front(problem, None, max_boxes=max_boxes,
                                 time_budget=time_budget)

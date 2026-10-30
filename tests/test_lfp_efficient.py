@@ -2465,6 +2465,49 @@ def test_a_variable_box_too_small_for_D_is_refused():
             "four clipped ones refused")
 
 
+
+def test_a_front_from_another_problem_is_refused():
+    """``front=`` was untied to the problem, and a foreign one emptied E(P_D).
+
+    The parameter exists so the front and the slices can be timed apart, or a
+    front reused.  Handing over a front built for a different criterion matrix
+    returned ``|E| = 0`` with ``complete = True`` on an instance with six
+    efficient points: no feasible point attains a foreign vector, so every
+    slice came back empty and the run called that the whole set.
+
+    The guard is arithmetic over the front's own points -- each must be
+    feasible here and attain its recorded vector under *this* ``Z``.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    mine = MOILP(model, [[1, 0, 0], [0, 1, 0]])
+    other = MOILP(model, [[0, 1, 0], [1, 0, 1]])      # same D, other criteria
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)
+    truth = {tuple(x) for x in
+             enumerate_efficient_set(mine, [2, 2, 2]).efficient}
+    assert len(truth) == 6, len(truth)
+
+    try:
+        complete_efficient_set(mine, phi, front=enumerate_front(other, phi))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("a front from another problem was accepted")
+
+    own = enumerate_front(mine, phi)
+    result = complete_efficient_set(mine, phi, front=own)
+    assert result.complete
+    assert {tuple(x) for x in result.points} == truth, "the answer changed"
+
+    # a front stopped by a budget must still pass the guard and stay incomplete
+    partial = enumerate_front(mine, phi, max_boxes=1)
+    assert not partial.complete
+    starved = complete_efficient_set(mine, phi, front=partial)
+    assert not starved.complete, "an incomplete front must not claim the set"
+    return ("a foreign front refused, the problem's own accepted, "
+            "a budgeted one accepted and still incomplete")
+
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the
