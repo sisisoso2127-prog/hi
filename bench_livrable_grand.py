@@ -86,6 +86,14 @@ def verite_terrain(spec: dict, delai: float) -> Optional[List[tuple]]:
         ilp=r.ilp, regions=r.regions,
         vecteurs=[[float(c) for c in z] for z in r.vecteurs]),
         ensure_ascii=False), encoding="utf-8")
+    if not r.complet:
+        # NE PAS ecrire le cache. `verite_terrain` rend None des que le
+        # fichier existe, sans relancer : y consigner un echec de budget
+        # bloquerait DEFINITIVEMENT toute reprise de cette instance. Le
+        # point de reprise, lui, garde l'etat et la prochaine tentative
+        # repart de la.
+        part.unlink(missing_ok=True)
+        return None
     part.replace(f)                     # ecriture atomique
     if r.complet:
         (CACHE / f"{_cle(spec)}.reprise.json").unlink(missing_ok=True)
