@@ -2508,6 +2508,60 @@ def test_a_front_from_another_problem_is_refused():
             "a budgeted one accepted and still incomplete")
 
 
+
+def test_unsound_handed_over_state_cannot_claim_a_proved_optimum():
+    """The worst failures found in this audit, both through ``incumbent``.
+
+    ``optimize_in_criterion_space`` accepts an incumbent so the exact--exact
+    hybrid can hand over its work.  Nothing checked it, and the search prunes
+    every box whose bound cannot beat the incumbent -- so a wrong incumbent
+    prunes away the optimum and the run reports what it was given as
+    **proved optimal**.  Measured before the guards, on an instance whose
+    optimum is ``5/17``:
+
+        incumbent_value = 99          -> value 99,  proved_optimal True
+        incumbent = the dominated (0,0) -> value 1, proved_optimal True
+
+    Two guards.  ``Phi(incumbent) == incumbent_value`` is free and kills the
+    first outright.  For the second, the corruption always surfaces the same
+    way -- the point returned is not efficient -- so the answer is tested once,
+    and only on the path that accepted outside state.
+    """
+    model = (Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21)
+             .add([-2, 4], LE, 6))
+    problem = MOILP(model, [[1, -2], [-1, 4]])
+    phi = FractionalObjective([1, 1], [5, 1], -1, -1)
+    enum = enumerate_efficient_set(problem, [6, 12])
+    efficient = {tuple(x) for x in enum.efficient}
+    optimum = max(phi(x) for x in enum.efficient)
+    dominated = next(x for x in enum.feasible if tuple(x) not in efficient)
+    assert phi(dominated) > optimum, (
+        "the dominated point must beat the optimum on Phi, or the test is weak")
+
+    unsound = (("value nothing attains",
+                dict(incumbent=enum.efficient[0], incumbent_value=F(99))),
+               ("a dominated incumbent",
+                dict(incumbent=dominated, incumbent_value=phi(dominated))),
+               ("an infeasible incumbent",
+                dict(incumbent=[F(9), F(9)], incumbent_value=F(0))))
+    for label, kwargs in unsound:
+        try:
+            optimize_in_criterion_space(problem, phi, **kwargs)
+        except ValueError:
+            continue
+        raise AssertionError(f"{label} was accepted and could claim a proof")
+
+    # an honest handover, and the plain run, must agree with the truth
+    for point in enum.efficient[:4]:
+        handed = optimize_in_criterion_space(problem, phi, incumbent=point,
+                                             incumbent_value=phi(point))
+        assert handed.proved_optimal and handed.value == optimum, (
+            f"an honest handover from {[int(c) for c in point]} was refused "
+            "or changed the answer")
+    assert optimize_in_criterion_space(problem, phi).value == optimum
+    return (f"3 unsound handovers refused, 4 honest ones proved {fmt(optimum)}")
+
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the

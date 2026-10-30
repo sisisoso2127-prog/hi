@@ -389,6 +389,22 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
     deadline = None if time_budget is None else monotonic() + time_budget
     positive_denominator = denominator_stays_positive(problem.model, phi)
 
+    handed_over = (incumbent is not None or initial_boxes is not None
+                   or bool(explored_points))
+    if incumbent is not None:
+        # Free checks, and the first catches the worst way this can go wrong:
+        # an incumbent_value no point attains prunes every box that could
+        # beat it, and the run then reports that value as PROVED OPTIMAL.
+        # Measured before the guard: value 99 on an instance whose optimum is
+        # 5/17, status optimal, proved_optimal True.
+        if not problem.model.is_feasible(incumbent):
+            raise ValueError("the incumbent handed in is not feasible")
+        if incumbent_value is not None and phi(incumbent) != incumbent_value:
+            raise ValueError(
+                f"the incumbent value handed in is {incumbent_value}, but Phi "
+                f"at that point is {phi(incumbent)}; a value nothing attains "
+                "prunes away the optimum and the run still calls itself proved")
+
     phi_opt: Optional[Fraction] = incumbent_value
     x_opt: Optional[List[Fraction]] = list(incumbent) if incumbent else None
     explored: List[List[Fraction]] = [list(p) for p in (explored_points or [])]
@@ -418,6 +434,19 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
         return max(candidates) if candidates else phi_opt
 
     def finish(status: str, proved: bool) -> Solution:
+        if proved and handed_over and x_opt is not None:
+            # State handed in from outside can only corrupt the answer through
+            # the incumbent, and the corruption always shows the same way: the
+            # point returned is not efficient.  Seeding the dominated (0,0)
+            # returned its Phi = 1 as the proved optimum of an instance whose
+            # optimum is 5/17.  One efficiency test, and only on the path that
+            # accepted outside state.
+            if not test_efficiency(problem, x_opt).efficient:
+                raise ValueError(
+                    "the search returned a point that is not efficient, so "
+                    "the state handed in was unsound: an incumbent that is "
+                    "not efficient prunes the boxes that hold the real "
+                    "optimum")
         sol = Solution(status, x_opt, phi_opt, explored, logs, [],
                        upper_bound=phi_opt if proved else certified_bound(),
                        initial_gap=initial_gap, proved_optimal=proved)
