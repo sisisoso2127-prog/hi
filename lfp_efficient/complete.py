@@ -75,6 +75,9 @@ def variable_bounds(problem: MOILFP) -> List[int]:
     comes back unbounded is a violated assumption and is reported as such
     rather than silently truncated.
     """
+    cached = getattr(problem, "_variable_bounds", None)
+    if cached is not None:
+        return list(cached)
     bounds: List[int] = []
     for j in range(problem.n):
         objective = [F(0)] * problem.n
@@ -85,6 +88,7 @@ def variable_bounds(problem: MOILFP) -> List[int]:
                 f"x_{j + 1} is not bounded above on D ({res.status}); "
                 "the complete enumeration needs a bounded feasible set")
         bounds.append(int(res.objective))
+    problem._variable_bounds = list(bounds)   # the entry points re-ask freely
     return bounds
 
 
@@ -328,7 +332,23 @@ def complete_efficient_set(problem: MOILFP,
                  else time_budget - (monotonic() - started))
 
     result = CompleteSet(boxes=front.boxes)
-    result.bounds = list(bounds) if bounds is not None else variable_bounds(problem)
+    if bounds is None:
+        result.bounds = variable_bounds(problem)
+    else:
+        # A box smaller than D loses efficient points from every slice it
+        # clips, and the run still reports ``complete``: supplying
+        # ``[2, 2, 1]`` where ``[2, 2, 2]`` is right returned 4 points of 6
+        # and called them the whole set.  Checking costs nothing after the
+        # first call, since variable_bounds caches on the problem.
+        true_bounds = variable_bounds(problem)
+        narrow = [j for j in range(problem.n) if bounds[j] < true_bounds[j]]
+        if narrow:
+            raise ValueError(
+                "the supplied variable box does not contain D: "
+                + ", ".join(f"x_{j + 1} reaches {true_bounds[j]} but the box "
+                            f"allows {bounds[j]}" for j in narrow)
+                + ".  Slices clipped by it lose efficient points silently")
+        result.bounds = list(bounds)
 
     truncated = False
     for v in front.vectors:

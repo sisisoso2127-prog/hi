@@ -2429,6 +2429,42 @@ def test_a_seed_that_is_not_efficient_is_caught_rather_than_recorded():
             f"{len(enum.efficient)} efficient ones accepted")
 
 
+
+def test_a_variable_box_too_small_for_D_is_refused():
+    """``bounds=`` clipped the answer and still called it complete.
+
+    The parameter exists so a caller can reuse bounds instead of paying ``n``
+    programs again.  A box smaller than ``D`` clips every slice it touches, so
+    efficient points vanish -- and ``complete`` stayed ``True``: on the tie
+    instance, ``[2,2,1]`` returned 4 points of 6 and ``[2,2,0]`` returned 2.
+    Checking is free after the first call, since ``variable_bounds`` caches on
+    the problem.
+    """
+    model = (Model(3).add([1, 0, 0], LE, 2).add([0, 1, 0], LE, 2)
+             .add([0, 0, 1], LE, 2).add([1, 1, 0], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])
+    phi = FractionalObjective([1, 1, 3], [1, 1, 1], 0, 1)
+    truth = {tuple(x) for x in
+             enumerate_efficient_set(problem, [2, 2, 2]).efficient}
+
+    right = variable_bounds(problem)
+    assert right == [2, 2, 2], right
+    for box in (right, [b + 1 for b in right]):          # exact and generous
+        result = complete_efficient_set(problem, phi, bounds=box)
+        assert result.complete
+        assert {tuple(x) for x in result.points} == truth, (
+            f"box {box} changed the answer")
+
+    for box in ([2, 2, 1], [2, 2, 0], [1, 2, 2], [0, 0, 0]):
+        try:
+            complete_efficient_set(problem, phi, bounds=box)
+        except ValueError:
+            continue
+        raise AssertionError(f"the clipped box {box} was accepted")
+    return (f"true box {right}; two containing boxes accepted, "
+            "four clipped ones refused")
+
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the
