@@ -1,0 +1,162 @@
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : deja fait, passe
+### n12_p3_c000 : deja fait, passe
+### n14_p3_c000 : deja fait, passe
+### n16_p3_c000 : deja fait, passe
+### n20_p3_c000 : debut
+### n20_p3_c000 : 860 vecteurs, complet=True, 1324.2 s | brute --
+### n10_p4_c000 : debut
+### n10_p4_c000 : 194 vecteurs, complet=True, 130.7 s | brute 194
+### n12_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : deja fait, passe
+### n12_p3_c000 : deja fait, passe
+### n14_p3_c000 : deja fait, passe
+### n16_p3_c000 : deja fait, passe
+### n20_p3_c000 : deja fait, passe
+### n10_p4_c000 : deja fait, passe
+### n12_p4_c000 : debut
+### n12_p4_c000 : 526 vecteurs, complet=False, 1500.2 s | brute 1874
+### n20_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : reprise (1500 s deja depensees sur 9000)
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : reprise (1500 s deja depensees sur 9000)
+### n12_p4_c000 : 609 vecteurs, complet=False, 1500.0 s | brute 1874
+### n20_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : reprise (3000 s deja depensees sur 9000)
+### n12_p4_c000 : brute reprise de l'enregistrement (1874)
+### n12_p4_c000 : 671 vecteurs, complet=False, 1500.0 s | brute 1874
+### n20_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : reprise (4500 s deja depensees sur 9000)
+### n12_p4_c000 : brute reprise de l'enregistrement (1874)
+### n12_p4_c000 : 704 vecteurs, complet=False, 1500.1 s | brute 1874
+### n20_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : reprise (6000 s deja depensees sur 9000)
+### n12_p4_c000 : brute reprise de l'enregistrement (1874)
+### n12_p4_c000 : 874 vecteurs, complet=False, 1500.1 s | brute 1874
+### n20_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : reprise (7500 s deja depensees sur 9000)
+### n12_p4_c000 : brute reprise de l'enregistrement (1874)
+### n12_p4_c000 : 916 vecteurs, complet=False, 1500.7 s | brute 1874
+### n20_p4_c000 : debut
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : debut
+### n20_p4_c000 : 533 vecteurs, complet=False, 1500.8 s | brute --
+### PASSE TERMINEE, RESTENT : n20_p4
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : reprise (1501 s deja depensees sur 9000)
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : reprise (1501 s deja depensees sur 9000)
+### n20_p4_c000 : brute reprise de l'enregistrement (hors de portee)
+### n20_p4_c000 : 635 vecteurs, complet=False, 1501.1 s | brute --
+### PASSE TERMINEE, RESTENT : n20_p4
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : reprise (3002 s deja depensees sur 9000)
+### n20_p4_c000 : brute reprise de l'enregistrement (hors de portee)
+### n20_p4_c000 : 690 vecteurs, complet=False, 1500.2 s | brute --
+### PASSE TERMINEE, RESTENT : n20_p4
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : reprise (4502 s deja depensees sur 9000)
+### n20_p4_c000 : brute reprise de l'enregistrement (hors de portee)
+### n20_p4_c000 : 733 vecteurs, complet=False, 1501.6 s | brute --
+### PASSE TERMINEE, RESTENT : n20_p4
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : reprise (6004 s deja depensees sur 9000)
+### n20_p4_c000 : brute reprise de l'enregistrement (hors de portee)
+### n20_p4_c000 : 768 vecteurs, complet=False, 1501.7 s | brute --
+### PASSE TERMINEE, RESTENT : n20_p4
+### moteur : regions   delai 1500 s
+### n10_p3_c000 : clos, passe
+### n12_p3_c000 : clos, passe
+### n14_p3_c000 : clos, passe
+### n16_p3_c000 : clos, passe
+### n20_p3_c000 : clos, passe
+### n10_p4_c000 : clos, passe
+### n12_p4_c000 : hors de portee de 9000 s cumulees (916 vecteurs), passe
+### n20_p4_c000 : reprise (7505 s deja depensees sur 9000)
+### n20_p4_c000 : brute reprise de l'enregistrement (hors de portee)
+### n20_p4_c000 : 806 vecteurs, complet=False, 1502.7 s | brute --
+### TOUS LES CAS CLOS OU HORS DE PORTEE

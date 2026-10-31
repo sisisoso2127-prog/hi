@@ -3060,11 +3060,19 @@ petit ensemble de compromis bien placés.
 
 Une réserve subsiste et elle est nette : $n=20$, $p=4$ est hors de portée
 des \emph{deux} méthodes -- force brute au-delà de ses deux millions de
-points réalisables, régions arrêtées à $\horsPorteeVect{}$ vecteurs pour
-$\horsPorteeIlp{}$ appels \ILP\ sans clore. Nous n'avons aucune vérité
-terrain là où $n$ et $p$ sont \emph{simultanément} grands, et les sept
-lignes font varier l'un ou l'autre, jamais les deux : rien ici ne permet de
-l'extrapoler.
+points réalisables, régions arrêtées à $\horsPorteeVect{}$ vecteurs en
+$\horsPorteeSec{}$~s de budget cumulé, pour plus de $\horsPorteeIlp{}$
+appels \ILP, sans clore. Suivi dose par dose, cet échec a une forme : le
+coût marginal d'un vecteur passe de $134$ appels \ILP\ à environ mille,
+conformément à la loi structurelle de la méthode, puis \emph{se stabilise}
+-- les trois dernières doses rapportent $+43$, $+35$ et
+$+\horsPorteeGain{}$ vecteurs pour $\horsPorteeCout{}$ appels par vecteur.
+La progression redevient linéaire en temps, de sorte qu'un budget dix fois
+plus grand livrerait quelques centaines de vecteurs supplémentaires sans
+pour autant clore : $|Z(E)|$ étant inconnu ici, nous ignorons de combien
+nous en sommes loin. Nous n'avons donc aucune vérité terrain là où $n$ et
+$p$ sont \emph{simultanément} grands, et les sept lignes font varier l'un
+ou l'autre, jamais les deux : rien ici ne permet de l'extrapoler.
 
 % ============================================================================
 \section{Usage en aide à la décision}

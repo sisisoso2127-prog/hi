@@ -55,8 +55,14 @@
 \newcommand{\grandIlp}{31\,998}       % appels ILP de l'enumeration a n=20 p=3
 \newcommand{\grandSecondes}{1\,325}   % secondes de l'enumeration a n=20 p=3
 % Le cas hors de portee des DEUX methodes, qui borne ce que nous savons.
-\newcommand{\horsPorteeVect}{533}     % vecteurs atteints a n=20 p=4
-\newcommand{\horsPorteeIlp}{71\,448}  % appels ILP y depenses
+\newcommand{\horsPorteeVect}{806}     % vecteurs atteints a n=20 p=4
+\newcommand{\horsPorteeSec}{9\,008}   % secondes cumulees depensees, six doses
+% Borne INFERIEURE : les compteurs de deux des six doses ont ete ecrases
+% par les reprises, donc le total exact n'est pas connu. Voir
+% results/sonde_regions/n20_p4_trajectoire.txt.
+\newcommand{\horsPorteeIlp}{194\,951} % appels ILP, borne inferieure
+\newcommand{\horsPorteeGain}{38}      % vecteurs gagnes par dose sur le plateau
+\newcommand{\horsPorteeCout}{1\,080}  % appels ILP par vecteur sur le plateau
 % Le regime ou les regions perdent contre la force brute.
 \newcommand{\bruteSecondes}{86{,}8}   % force brute a n=12 p=4
 \newcommand{\regionsEchec}{916}       % vecteurs des regions au meme endroit

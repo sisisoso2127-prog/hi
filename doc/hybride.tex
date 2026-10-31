@@ -6083,9 +6083,28 @@ que demande un problème où $f$ désigne la partie du front qui intéresse.
 \begin{remark}[la réserve qui subsiste, et elle est nette]
 $n=20$, $p=4$ est hors de portée des \emph{deux} méthodes : la force brute
 dépasse ses deux millions de points réalisables, et la décomposition en
-régions y a atteint $\horsPorteeVect{}$ vecteurs pour $\horsPorteeIlp{}$
-appels ILP sans clore. Nous n'avons donc aucune vérité terrain là où $n$ et
-$p$ sont \emph{simultanément} grands, et rien dans ce tableau ne permet de
+régions y a atteint $\horsPorteeVect{}$ vecteurs en $\horsPorteeSec{}$~s de
+budget cumulé, pour plus de $\horsPorteeIlp{}$ appels ILP, sans clore.
+
+Le détail de cet échec en dit plus long que son constat, et nous l'avons
+conservé dose par dose\footnote{Fichier
+\texttt{results/sonde\_regions/n20\_p4\_trajectoire.txt} du dépôt. Les
+compteurs d'appels de deux des six doses ont été écrasés par les reprises :
+le nombre ci-dessus est donc une borne inférieure, et le fichier le dit.}.
+Le coût marginal d'un vecteur s'effondre d'abord -- de $134$ appels ILP par
+vecteur sur la première dose à environ mille sur la quatrième, ce qui est
+exactement la loi structurelle de la méthode, chaque vecteur trouvé
+engendrant $p$ régions nouvelles. Puis il \emph{se stabilise} : les trois
+dernières doses, à durée égale, rapportent $+43$, $+35$ et
+$+\horsPorteeGain{}$ vecteurs pour un coût plat d'environ
+$\horsPorteeCout{}$ appels par vecteur. La progression redevient donc
+linéaire en temps, et un budget dix fois plus grand apporterait de l'ordre
+de quatre cents vecteurs de plus -- non pas une poignée.
+
+Cela n'autorise pourtant aucune borne sur le temps qui manque, car
+$|Z(E)|$ est inconnu ici : nous ne savons pas de \emph{combien} de vecteurs
+nous sommes loin. Nous n'avons donc aucune vérité terrain là où $n$ et $p$
+sont \emph{simultanément} grands, et rien dans ce tableau ne permet de
 l'extrapoler : les sept lignes font varier l'un ou l'autre, jamais les deux.
 C'est la frontière de ce que nous savons mesurer, et nous préférons l'écrire
 que la combler par analogie.
