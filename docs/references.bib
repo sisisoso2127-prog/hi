@@ -1,0 +1,161 @@
+% ---------------------------------------------------------------------------
+% references.bib -- a STARTING POINT, not a finished bibliography.
+%
+% Every entry here was assembled from search results, abstracts and publisher
+% listings.  NO FULL TEXT WAS READ: the environment this was prepared in could
+% not reach arxiv.org, link.springer.com, sciencedirect.com or
+% optimization-online.org.  Entries carrying a "VERIFY" comment have a field
+% that was not confirmed, and fields that could not be found at all are left
+% out rather than invented -- an invented page range is worse than a missing
+% one, because it looks checkable.
+%
+% Before submission: open each one, confirm author list, year, volume and
+% pages, and add the DOI.  The two marked CRITICAL bear directly on what this
+% work may and may not claim as new.
+% ---------------------------------------------------------------------------
+
+% ===== CRITICAL: read these two before any claim of novelty =================
+
+% Generates the efficient set for a neighbouring problem class.  If its
+% mechanism is slice-based, the complete-set result here is not new.
+@article{generating2021,
+  author  = {TODO: author list not confirmed by search},
+  title   = {Generating the efficient set of multiobjective integer linear
+             plus linear fractional programming problems},
+  journal = {Annals of Operations Research},
+  volume  = {296},
+  pages   = {735--753},
+  year    = {2021},
+  note    = {CRITICAL -- VERIFY authors}
+}
+
+% Criterion-space decomposition for optimising over an efficient set, with a
+% LINEAR secondary objective.  This is the prior art the box search rests on.
+@article{boland2017,
+  author  = {Boland, Natashia and Charkhgard, Hadi and Savelsbergh, Martin},
+  title   = {A new method for optimizing a linear function over the efficient
+             set of a multiobjective integer program},
+  journal = {European Journal of Operational Research},
+  year    = {2017},
+  note    = {CRITICAL -- VERIFY volume and pages}
+}
+
+% ===== The fractional-objective line: all decision space ===================
+
+@article{drici2018,
+  author  = {Drici, Wassila and Ouail, Fatma Zohra and Moula{\"\i}, Mustapha},
+  title   = {Optimizing a linear fractional function over the integer
+             efficient set},
+  journal = {Annals of Operations Research},
+  year    = {2018},
+  doi     = {10.1007/s10479-017-2691-0},
+  note    = {VERIFY author list, volume and pages}
+}
+
+@article{rairo2015,
+  author  = {TODO: author list not confirmed by search},
+  title   = {A linear fractional optimization over an integer efficient set},
+  journal = {RAIRO-Operations Research},
+  year    = {2015},
+  note    = {VERIFY -- article ro140036, issue 2}
+}
+
+@misc{ouail2019,
+  author       = {Ouail, Fatma Zohra and Chergui, Mohamed El-Amine},
+  title        = {Hyperbolic optimization over the integer efficient set of
+                  {MOILFP}},
+  howpublished = {arXiv:1907.02036},
+  year         = {2019},
+  note         = {VERIFY author list}
+}
+
+@misc{chaiblaine2020,
+  author       = {Chaiblaine, Yacine and Moula{\"\i}, Mustapha and
+                  Cherfaoui, Youcef},
+  title        = {An exact method for optimizing two linear fractional
+                  functions over the efficient set of a multiobjective integer
+                  linear fractional program},
+  howpublished = {arXiv:2003.05364},
+  year         = {2020},
+  note         = {VERIFY author list.  The two-decision-function problem,
+                  solved in decision space with branch and bound plus cuts}
+}
+
+@article{quadratic2021,
+  author  = {TODO: author list not confirmed by search},
+  title   = {Quadratic optimization over a discrete {P}areto set of a
+             multi-objective linear fractional program},
+  journal = {Optimization},
+  volume  = {70},
+  number  = {7},
+  year    = {2021},
+  note    = {VERIFY authors and pages}
+}
+
+@article{younsiabbaci2025,
+  author  = {Younsi-Abbaci, Leila},
+  title   = {Optimizing a linear fractional function over an integer
+             efficient set},
+  journal = {Reliability: Theory \& Applications},
+  year    = {2025},
+  note    = {The paper this implementation follows.  VERIFY: the repository
+             README records ``No 4 (40), Vol. 11, March 2025'', whose volume
+             and year do not obviously agree -- check the issue}
+}
+
+% ===== Bi-objective criterion-space precursors =============================
+
+@article{balancedbox,
+  author  = {Boland, Natashia and Charkhgard, Hadi and Savelsbergh, Martin},
+  title   = {A criterion space search algorithm for biobjective integer
+             programming: The balanced box method},
+  journal = {INFORMS Journal on Computing},
+  note    = {VERIFY year, volume and pages}
+}
+
+@article{trianglesplitting,
+  author  = {Boland, Natashia and Charkhgard, Hadi and Savelsbergh, Martin},
+  title   = {The triangle splitting method for biobjective mixed integer
+             programming},
+  note    = {VERIFY venue, year and pages}
+}
+
+% ===== Enumerating the whole non-dominated set =============================
+
+@article{lokman2013,
+  author  = {Lokman, Banu and K{\"o}ksalan, Murat},
+  title   = {Finding all nondominated points of multi-objective integer
+             programs},
+  journal = {Journal of Global Optimization},
+  year    = {2013},
+  note    = {VERIFY volume and pages}
+}
+
+@article{ozlen2009,
+  author  = {{\"O}zlen, Melih and Azizo{\u{g}}lu, Meral},
+  title   = {Multi-objective integer programming: A general approach for
+             generating all non-dominated solutions},
+  journal = {European Journal of Operational Research},
+  year    = {2009},
+  note    = {VERIFY volume and pages}
+}
+
+% ===== Classical results the method uses ===================================
+% These two were NOT returned by the literature search; they are the standard
+% attributions for the cut and the efficiency test as used in the text, and
+% they need checking against the originals more carefully than the rest.
+
+@article{sylvacrema,
+  author  = {Sylva, John and Crema, Alejandro},
+  title   = {A method for finding the set of non-dominated vectors for
+             multiple objective integer linear programs},
+  journal = {European Journal of Operational Research},
+  note    = {VERIFY everything -- not confirmed by search}
+}
+
+@article{eckerkouada,
+  author  = {Ecker, J. G. and Kouada, I. A.},
+  title   = {Finding efficient points for linear multiple objective programs},
+  journal = {Mathematical Programming},
+  note    = {VERIFY everything -- not confirmed by search}
+}

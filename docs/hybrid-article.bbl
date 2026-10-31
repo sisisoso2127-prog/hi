@@ -1,0 +1,99 @@
+\begin{thebibliography}{10}
+
+\bibitem{rairo2015}
+TODO: author list not confirmed~by search.
+\newblock A linear fractional optimization over an integer efficient set.
+\newblock {\em RAIRO-Operations Research}, 2015.
+\newblock VERIFY -- article ro140036, issue 2.
+
+\bibitem{generating2021}
+TODO: author list not confirmed~by search.
+\newblock Generating the efficient set of multiobjective integer linear plus
+  linear fractional programming problems.
+\newblock {\em Annals of Operations Research}, 296:735--753, 2021.
+\newblock CRITICAL -- VERIFY authors.
+
+\bibitem{quadratic2021}
+TODO: author list not confirmed~by search.
+\newblock Quadratic optimization over a discrete {P}areto set of a
+  multi-objective linear fractional program.
+\newblock {\em Optimization}, 70(7), 2021.
+\newblock VERIFY authors and pages.
+
+\bibitem{balancedbox}
+Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
+\newblock A criterion space search algorithm for biobjective integer
+  programming: The balanced box method.
+\newblock {\em INFORMS Journal on Computing}.
+\newblock VERIFY year, volume and pages.
+
+\bibitem{trianglesplitting}
+Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
+\newblock The triangle splitting method for biobjective mixed integer
+  programming.
+\newblock VERIFY venue, year and pages.
+
+\bibitem{boland2017}
+Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
+\newblock A new method for optimizing a linear function over the efficient set
+  of a multiobjective integer program.
+\newblock {\em European Journal of Operational Research}, 2017.
+\newblock CRITICAL -- VERIFY volume and pages.
+
+\bibitem{chaiblaine2020}
+Yacine Chaiblaine, Mustapha Moula{\"\i}, and Youcef Cherfaoui.
+\newblock An exact method for optimizing two linear fractional functions over
+  the efficient set of a multiobjective integer linear fractional program.
+\newblock arXiv:2003.05364, 2020.
+\newblock VERIFY author list. The two-decision-function problem, solved in
+  decision space with branch and bound plus cuts.
+
+\bibitem{drici2018}
+Wassila Drici, Fatma~Zohra Ouail, and Mustapha Moula{\"\i}.
+\newblock Optimizing a linear fractional function over the integer efficient
+  set.
+\newblock {\em Annals of Operations Research}, 2018.
+\newblock VERIFY author list, volume and pages.
+
+\bibitem{eckerkouada}
+J.~G. Ecker and I.~A. Kouada.
+\newblock Finding efficient points for linear multiple objective programs.
+\newblock {\em Mathematical Programming}.
+\newblock VERIFY everything -- not confirmed by search.
+
+\bibitem{lokman2013}
+Banu Lokman and Murat K{\"o}ksalan.
+\newblock Finding all nondominated points of multi-objective integer programs.
+\newblock {\em Journal of Global Optimization}, 2013.
+\newblock VERIFY volume and pages.
+
+\bibitem{ouail2019}
+Fatma~Zohra Ouail and Mohamed El-Amine Chergui.
+\newblock Hyperbolic optimization over the integer efficient set of {MOILFP}.
+\newblock arXiv:1907.02036, 2019.
+\newblock VERIFY author list.
+
+\bibitem{ozlen2009}
+Melih {\"O}zlen and Meral Azizo{\u{g}}lu.
+\newblock Multi-objective integer programming: A general approach for
+  generating all non-dominated solutions.
+\newblock {\em European Journal of Operational Research}, 2009.
+\newblock VERIFY volume and pages.
+
+\bibitem{sylvacrema}
+John Sylva and Alejandro Crema.
+\newblock A method for finding the set of non-dominated vectors for multiple
+  objective integer linear programs.
+\newblock {\em European Journal of Operational Research}.
+\newblock VERIFY everything -- not confirmed by search.
+
+\bibitem{younsiabbaci2025}
+Leila Younsi-Abbaci.
+\newblock Optimizing a linear fractional function over an integer efficient
+  set.
+\newblock {\em Reliability: Theory \& Applications}, 2025.
+\newblock The paper this implementation follows. VERIFY: the repository README
+  records ``No 4 (40), Vol. 11, March 2025'', whose volume and year do not
+  obviously agree -- check the issue.
+
+\end{thebibliography}

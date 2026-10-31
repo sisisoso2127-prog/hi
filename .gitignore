@@ -18,3 +18,9 @@ docs/*.aux
 docs/*.log
 docs/*.out
 docs/*.toc
+
+# LaTeX intermediates
+*.aux
+*.blg
+*.out
+*.toc
