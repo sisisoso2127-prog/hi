@@ -70,6 +70,8 @@ def main() -> int:
     SORTIE = RACINE / "results" / ("sonde_regions" if regions
                                    else "sonde_enum")
     SORTIE.mkdir(parents=True, exist_ok=True)
+    CACHE = RACINE / "results" / "cache_ZE"
+
     print(f"### moteur : {'regions' if regions else 'coupes'}   "
           f"delai {delai:.0f} s", flush=True)
 
@@ -121,6 +123,32 @@ def main() -> int:
         # ferait repartir une enumeration deja consignee.
         if regions and r.complet:
             (SORTIE / f"{nom}.reprise.json").unlink(missing_ok=True)
+
+        # LES VECTEURS, PAS SEULEMENT LEUR NOMBRE. La sonde ne consignait
+        # que len(r.vecteurs) : elle repondait a sa propre question -- la
+        # portee -- et jetait ce qu'une enumeration de vingt minutes avait
+        # coute. Or le tableau des indicateurs se lit CONTRE ces vecteurs.
+        # Sans eux, la meme enumeration devait etre refaite par un second
+        # banc. Nous ecrivons donc le resultat complet dans le cache
+        # partage, sous la cle que bench_livrable_grand.py attend, et le
+        # banc des indicateurs le retrouvera sans rien recalculer.
+        if r.complet:
+            m = max(3, n // 2 + 1)
+            CACHE.mkdir(parents=True, exist_ok=True)
+            cle = CACHE / (f"n{n}_m{m}_p{p}_s1_c{int(corr * 100):03d}.json")
+            if not cle.exists():
+                tmp = cle.with_suffix(".part")
+                tmp.write_text(json.dumps(dict(
+                    complet=True, ilp=r.ilp, motif=r.motif,
+                    regions=r.regions, secondes=round(tc, 1),
+                    # float() explicite : les composantes sont des
+                    # Fraction, que json refuse de serialiser. C'est le
+                    # format exact que lit bench_livrable_grand.py.
+                    vecteurs=[[float(c) for c in z] for z in r.vecteurs],
+                ), ensure_ascii=False), encoding="utf-8")
+                tmp.replace(cle)
+                print(f"### {nom} : Z(E) ecrit dans le cache partage "
+                      f"({cle.name})", flush=True)
         print(f"### {nom} : {len(r.vecteurs)} vecteurs, "
               f"complet={r.complet}, {tc:.1f} s "
               f"| brute {nb if nb is not None else '--'}", flush=True)

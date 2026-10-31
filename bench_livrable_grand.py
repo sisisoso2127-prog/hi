@@ -53,10 +53,24 @@ CACHE = RACINE / "results" / "cache_ZE"
 # les tailles que la force brute n'atteint pas, plus deux temoins qu'elle
 # atteint : sans eux, rien ne dirait que la nouvelle source de verite
 # terrain s'accorde avec l'ancienne.
+# Les quatre premieres lignes sont a p=3 : elles mesurent l'ajout de
+# VARIABLES. Les trois suivantes ajoutent un CRITERE, parce que c'est la
+# reserve inscrite au tableau tab:livrableC -- le pire ecart epsilon+ de
+# l'etude est sur une ligne p=4, et rien ne permettait de dire si l'ajout
+# d'un critere degrade le livrable comme l'ajout d'une variable ne le
+# degrade pas. Les deux dimensions ne se compensent pas.
+#
+# m = n // 2 + 1 partout, soit la formule de sonde_enum.py : les deux
+# bancs designent ainsi la MEME instance, et le Z(E) enumere par l'un
+# sert a l'autre sans etre recalcule.
 LOT = [dict(n=10, m=6, p=3, seed=1, rhs_scale=1.0, corr=0.00),
        dict(n=12, m=7, p=3, seed=1, rhs_scale=1.0, corr=0.00),
        dict(n=14, m=8, p=3, seed=1, rhs_scale=1.0, corr=0.00),
-       dict(n=16, m=9, p=3, seed=1, rhs_scale=1.0, corr=0.00)]
+       dict(n=16, m=9, p=3, seed=1, rhs_scale=1.0, corr=0.00),
+       dict(n=20, m=11, p=3, seed=1, rhs_scale=1.0, corr=0.00),
+       dict(n=10, m=6, p=4, seed=1, rhs_scale=1.0, corr=0.00),
+       dict(n=12, m=7, p=4, seed=1, rhs_scale=1.0, corr=0.00),
+       dict(n=20, m=11, p=4, seed=1, rhs_scale=1.0, corr=0.00)]
 
 
 def _cle(spec: dict) -> str:
