@@ -1,0 +1,15 @@
+{
+ "n": 12,
+ "p": 4,
+ "corr": 0.0,
+ "moteur": "regions",
+ "coupes_vecteurs": 526,
+ "coupes_complet": false,
+ "coupes_motif": "budget de temps",
+ "coupes_s": 1500.2,
+ "coupes_ilp": 39482,
+ "brute_vecteurs": 1874,
+ "brute_s": 84.5,
+ "brute_erreur": "",
+ "verdict": "moteur incomplet, brute a fini"
+}

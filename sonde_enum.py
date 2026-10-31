@@ -25,7 +25,7 @@ fichier le consigne comme tel, avec le nombre de vecteurs deja enumeres,
 qui reste un sous-ensemble correct de Z(E).
 
 Usage :  python sonde_enum.py [delai_s]            moteur a coupes
-         python sonde_enum.py [delai_s] --regions  moteur a regions
+         python sonde_enum.py [dose_s] [total_s] --regions
 """
 
 from __future__ import annotations
@@ -66,6 +66,12 @@ def main() -> int:
     regions = "--regions" in sys.argv
     argv = [a for a in sys.argv[1:] if not a.startswith("--")]
     delai = float(argv[0]) if argv else 1200.0
+    # Budget TOTAL par instance, cumule sur les doses. La dose est ce
+    # qu'une tentative peut depenser avant d'etre tuee ; le total est ce
+    # qu'on accepte de depenser avant de declarer l'instance hors de
+    # portee. Les confondre, c'est appeler « hors de portee » ce qui n'a
+    # eu qu'une seule dose.
+    total = float(argv[1]) if len(argv) > 1 else 6.0 * delai
     moteur = enumere_regions if regions else enumere
     SORTIE = RACINE / "results" / ("sonde_regions" if regions
                                    else "sonde_enum")
@@ -78,10 +84,36 @@ def main() -> int:
     for n, p, corr in CAS:
         nom = f"n{n}_p{p}_c{int(corr * 100):03d}"
         cible = SORTIE / f"{nom}.json"
+
+        # UN ENREGISTREMENT N'EST FINAL QUE S'IL EST CLOS. La regle etait
+        # « le fichier existe, donc passe », et elle contredisait la
+        # reprise ajoutee le meme jour : une instance arretee par la dose
+        # laissait a la fois un resultat incomplet ET un point de reprise
+        # de plusieurs mega-octets, puis etait sautee pour toujours. Le
+        # point de reprise n'etait plus jamais relu et l'instance ne
+        # pouvait plus etre close, quel que soit le nombre de doses --
+        # exactement le defaut corrige dans verite_terrain, laisse ici.
+        #
+        # Deux etats sont donc finals, et un seul ne l'est pas : une
+        # enumeration close, ou un cumul de temps qui atteint le budget
+        # TOTAL declare -- auquel cas « hors de portee » est une reponse
+        # mesuree et non un abandon arbitraire. Entre les deux, on reprend.
+        deja = 0.0
         if cible.exists():
-            print(f"### {nom} : deja fait, passe", flush=True)
-            continue
-        print(f"### {nom} : debut", flush=True)
+            d = json.loads(cible.read_text(encoding="utf-8"))
+            deja = float(d.get("secondes_cumulees", d.get("coupes_s", 0.0)))
+            if d.get("coupes_complet"):
+                print(f"### {nom} : clos, passe", flush=True)
+                continue
+            if deja >= total:
+                print(f"### {nom} : hors de portee de {total:.0f} s "
+                      f"cumulees ({d['coupes_vecteurs']} vecteurs), passe",
+                      flush=True)
+                continue
+            print(f"### {nom} : reprise ({deja:.0f} s deja depensees sur "
+                  f"{total:.0f})", flush=True)
+        else:
+            print(f"### {nom} : debut", flush=True)
 
         inst = generate(n=n, m=max(3, n // 2 + 1), p=p, seed=1,
                         rhs_scale=1.0, corr=corr)
@@ -107,6 +139,13 @@ def main() -> int:
             moteur=("regions" if regions else "coupes"),
             coupes_vecteurs=len(r.vecteurs), coupes_complet=r.complet,
             coupes_motif=r.motif, coupes_s=round(tc, 1), coupes_ilp=r.ilp,
+            # Le cumul, et non la seule derniere dose : c'est lui qui
+            # decide si « hors de portee » est dit, et il doit etre
+            # lisible dans le fichier pour que l'affirmation soit
+            # verifiable sans relire ce code.
+            secondes_cumulees=round(deja + tc, 1),
+            doses=int(json.loads(cible.read_text(encoding="utf-8"))
+                      .get("doses", 1) + 1) if cible.exists() else 1,
             brute_vecteurs=nb, brute_s=round(tb, 1), brute_erreur=err,
             # QUATRE etats, et l'oubli du quatrieme etait un faux
             # rapport. L'ancienne cascade tombait dans « aucune des deux
@@ -161,7 +200,25 @@ def main() -> int:
         print(f"### {nom} : {len(r.vecteurs)} vecteurs, "
               f"complet={r.complet}, {tc:.1f} s "
               f"| brute {nb if nb is not None else '--'}", flush=True)
-    print("### TOUS LES CAS TRAITES")
+    # DEUX MARQUEURS, parce qu'une passe terminee n'est pas un sondage
+    # fini. La boucle appelante s'arrete sur le marqueur ; s'il ne
+    # distinguait pas les deux, elle rendrait la main apres UNE dose par
+    # instance et le budget total declare ne servirait a rien.
+    restants = []
+    for n, p, corr in CAS:
+        c = SORTIE / f"n{n}_p{p}_c{int(corr * 100):03d}.json"
+        if not c.exists():
+            restants.append(f"n{n}_p{p}")
+            continue
+        d = json.loads(c.read_text(encoding="utf-8"))
+        if (not d.get("coupes_complet")
+                and float(d.get("secondes_cumulees",
+                                d.get("coupes_s", 0.0))) < total):
+            restants.append(f"n{n}_p{p}")
+    if restants:
+        print(f"### PASSE TERMINEE, RESTENT : {' '.join(restants)}")
+    else:
+        print("### TOUS LES CAS CLOS OU HORS DE PORTEE")
     return 0
 
 
