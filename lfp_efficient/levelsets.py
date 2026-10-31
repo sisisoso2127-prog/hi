@@ -114,15 +114,41 @@ The premise is the problem class as that title states it; the inference from
 there is the algebra above.  Confirming it still needs the paper itself, which
 could not be reached from the environment this was written in.
 
-What this does **not** extend
------------------------------
-The front enumeration of :mod:`lfp_efficient.front` is a different matter and
-is **not** generalised here.  Its box search needs ``Z_k(x) > Z_k(a)`` to be a
-linear constraint, which is what the integer-valued ``e_k`` provides for ratios
-and does not provide for the wider class.  So for a criterion in the wider
-class the front must be obtained some other way; given the front, the
-completion below is exact.  Saying otherwise would be the kind of unchecked
-claim the audit of this package exists to prevent.
+The other half of the method, and why its reach is smaller
+----------------------------------------------------------
+Everything above is about *completing* a front into ``E(P_D)``.  The front
+enumeration of :mod:`lfp_efficient.front` is a separate question with a
+separate answer, and the two do not coincide.
+
+Its box search splits at a centre ``a`` into ``Z_k(x) > Z_k(a)`` and
+``Z_k(x) <= Z_k(a)``.  For each child to be one ordinary linear program, both
+sides must be half-spaces.  So:
+
+    **The front enumeration reaches exactly the criteria whose sublevel sets
+    ``{x : Z(x) <= t}`` are half-spaces.**
+
+That is strictly tighter than the slice condition, and the gap is not a
+technicality --- it is the reason this package is a *MOILFP* method:
+
+* a half-space sublevel set has a hyperplane boundary, so this class sits
+  inside the one-hyperplane case, which half one showed is exactly linear
+  fractional;
+* ``|c'x + a| / (d'x + b)`` fails it: its sublevel set is a *slab*, the
+  intersection of two half-spaces, whose complement is not convex;
+* ``max`` of ratios fails it too: the sublevel set is an intersection of ``m``
+  half-spaces, a polyhedron, and the complement is a *union* --- which is
+  exactly what a single split cannot express.
+
+Checked on a 49-point grid rather than argued: a ratio and a linear form have
+half-space sublevel sets at every level, ``|ratio|`` and ``max``-of-ratios do
+not.
+
+So the asymmetry is now characterised on both sides.  **The slice reaches
+finite unions of polyhedra; the front reaches half-space sublevel sets, which
+is essentially the fractional case.**  For a criterion between the two --- and
+``max`` of ratios is one --- the front must be obtained some other way, and the
+completion is then exact.  Claiming the front generalises too would be the kind
+of unchecked statement the audit of this package exists to prevent.
 """
 
 from fractions import Fraction

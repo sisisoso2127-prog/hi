@@ -3048,6 +3048,55 @@ def test_a_minimax_criterion_is_reached_by_unions_of_polyhedra():
     return (f"|front|={len(front)}, |E(P_D)|={len(truth)} rebuilt exactly for a "
             f"max-of-ratios criterion; slices carry {sizes}")
 
+def test_the_front_search_reaches_less_than_the_slice_does():
+    """The two halves of the method have different reaches, and both are
+    characterised.
+
+    The box search splits at a centre into ``Z(x) > Z(a)`` and
+    ``Z(x) <= Z(a)``; for each child to be one linear program, both sides must
+    be half-spaces.  So the front reaches exactly the criteria whose sublevel
+    sets are half-spaces --- strictly tighter than the slice's condition, which
+    allows a finite union of polyhedra.
+
+    That gap is why this is a MOILFP method: a ratio and a linear form pass,
+    while ``|ratio|`` gives a slab (two half-spaces, non-convex complement) and
+    ``max`` of ratios gives a polyhedron whose complement is a union.
+    """
+    import itertools
+    grid = [(Fraction(i), Fraction(j))
+            for i, j in itertools.product(range(7), repeat=2)]
+
+    def is_halfspace(inside, universe):
+        outside = [x for x in universe if x not in inside]
+        if not inside or not outside:
+            return True
+        for a1 in range(-6, 7):
+            for a2 in range(-6, 7):
+                if a1 == 0 and a2 == 0:
+                    continue
+                lo = max(a1 * x[0] + a2 * x[1] for x in inside)
+                hi = min(a1 * x[0] + a2 * x[1] for x in outside)
+                if lo < hi:
+                    return True
+        return False
+
+    def reachable(Z):
+        return all(is_halfspace([x for x in grid if Z(x) <= t], grid)
+                   for t in sorted({Z(x) for x in grid}))
+
+    ratio = lambda x: Fraction(x[0] - 2 * x[1] + 1, x[0] + x[1] + 3)
+    linear = lambda x: Fraction(x[0] + x[1])
+    absratio = lambda x: Fraction(abs(x[0] - 2 * x[1] + 1), x[0] + x[1] + 3)
+    maxratio = lambda x: max(Fraction(x[0] - x[1] + 2, x[0] + x[1] + 3),
+                             Fraction(x[1] + 1, 2 * x[0] + x[1] + 4))
+
+    assert reachable(ratio), "a ratio must be reachable by the front search"
+    assert reachable(linear), "a linear form must be reachable"
+    assert not reachable(absratio), "|ratio| has a slab sublevel set"
+    assert not reachable(maxratio), "max of ratios has a polyhedral one"
+    return ("front search reaches the ratio and the linear form, and provably "
+            "not |ratio| or max-of-ratios, which the slice does reach")
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the

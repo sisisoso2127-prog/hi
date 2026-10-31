@@ -466,6 +466,37 @@ enumeration needs is not a \emph{shape} but \emph{finitely many linear
 systems}.  What it cannot absorb is \textbf{curvature} --- which is exactly
 what the two unreachable rows of Table~\ref{tab:map} have.
 
+\paragraph{The other half of the method reaches less, and that is why this is a
+MOILFP method.}
+Everything above concerns \emph{completing} a front into $\E$.  The front
+enumeration itself is a separate question with a separate answer, and they do
+not coincide.  Its box search splits at a centre $a$ into $Z_k(x) > Z_k(a)$ and
+$Z_k(x) \leqslant Z_k(a)$; for each child to be one ordinary linear program,
+\emph{both} sides must be half-spaces.  So
+
+\begin{quote}
+the front enumeration reaches exactly the criteria whose sublevel sets
+$\{x : Z(x) \leqslant t\}$ are \textbf{half-spaces},
+\end{quote}
+
+\noindent
+which is strictly tighter than the slice condition.  A half-space sublevel set
+has a hyperplane boundary, so this class sits inside the one-hyperplane case
+--- exactly linear fractional.  And the two criteria the slice gained fail it
+for visible reasons: $|c^{\top}x + a|/(d^{\top}x + b)$ has a \emph{slab} for a
+sublevel set, the intersection of two half-spaces, whose complement is not
+convex; $\max$ of ratios has a polyhedron, whose complement is a \emph{union},
+which is exactly what a single split cannot express.  Checked on a $49$-point
+grid rather than argued: the ratio and the linear form pass at every level, the
+other two fail.
+
+\textbf{So the asymmetry is characterised on both sides.}  The slice reaches
+finite unions of polyhedra; the front reaches half-space sublevel sets, which
+is essentially the fractional case.  A criterion between the two --- $\max$ of
+ratios is one --- can have its efficient set completed exactly here, but its
+front must come from somewhere else.  That is the honest shape of the method:
+not one reach, but two, and the smaller one is what names it.
+
 \subsection{The characterisation as a map of the neighbouring literature}
 \label{sec:map}
 
