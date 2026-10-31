@@ -79,10 +79,33 @@ def filter_(data):
     return "\n".join(out)
 
 
+def order(data):
+    o = data.get("order")
+    if not o:
+        raise SystemExit("no order experiment in campaign-results.json")
+    kept = len(o["records"])
+    out = []
+    for name, label in (("archive", "archive order"),
+                        ("probe", "\\textbf{probe order}"),
+                        ("reversed", "reversed (control)")):
+        st = o[f"{name}_probes"]
+        if st is None:
+            continue
+        med = (f"$\\mathbf{{{st['median']:.2f}}}\\times$" if name == "probe"
+               else f"${st['median']:.2f}\\times$")
+        raised = o[f"{name}_raised"]
+        rz = (f"\\textbf{{none}}" if raised == 0 else f"{raised} of {kept}")
+        out.append(f"{label} & {med} & $[{st['q1']:.2f},\\ {st['q3']:.2f}]$ "
+                   f"& {rz} \\\\")
+    out.append(f"% {kept} instances, {o['censored']} censored")
+    return "\n".join(out)
+
+
 def main():
     which = sys.argv[1] if len(sys.argv) > 1 else "breakeven"
     data = json.loads(RESULTS.read_text())
-    print({"breakeven": breakeven, "filter": filter_}[which](data))
+    print({"breakeven": breakeven, "filter": filter_,
+       "order": order}[which](data))
 
 
 if __name__ == "__main__":

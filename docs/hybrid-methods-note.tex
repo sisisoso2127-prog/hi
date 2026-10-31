@@ -1553,9 +1553,9 @@ points need no verification, and it has no cheap way to produce them.
 \subsection{The order is the whole difference}
 \label{sec:order}
 
-Handed over in archive order the hybrid \emph{lost}, at $0.81\times$, and the
-probe count went \emph{up} on 4 of 12 instances: the pre-split was building a
-box structure the search would not have chosen.  The probe maximises a fixed
+Handed over in archive order the hybrid gives back a third of its gain, and
+the probe count goes \emph{up} on some instances: the pre-split builds a box
+structure the search would not have chosen.  The probe maximises a fixed
 linear direction, so the search splits first around whatever scores highest on
 it.  Sorting the seeds by that same direction reproduces that structure
 instead of fighting it.
@@ -1563,21 +1563,35 @@ instead of fighting it.
 \begin{table}[h]
 \centering
 \caption{Probes against the unseeded search, by the order the seeds are handed
-over.}
-\begin{tabular}{lrr}
+over.  Twenty-seven instances, none censored; the probe count is deterministic,
+so the noise floor does not enter.  Each arm is checked to return the same
+front as the unseeded run, so no ordering can buy probes by losing vectors.
+Generated from the campaign's JSON.}
+\begin{tabular}{lrll}
 \toprule
-order & probes & raised the count on \\
+order & probes vs unseeded & IQR & raised the count on \\
 \midrule
-archive order        & $0.89\times$ & 4 of 12 \\
-\textbf{probe order} & $\mathbf{0.70\times}$ & \textbf{none} \\
-reversed             & $0.94\times$ & 5 of 12 \\
+archive order & $0.83\times$ & $[0.74,\ 0.92]$ & 2 of 27 \\
+\textbf{probe order} & $\mathbf{0.69}\times$ & $[0.67,\ 0.75]$ & \textbf{none} \\
+reversed (control) & $0.90\times$ & $[0.83,\ 1.05]$ & 9 of 27 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-The reversed arm is what makes the direction causal rather than a coincidence.
-\textbf{A $1.33\times$ win was sitting behind a sort.}
+\textbf{The reversed arm is what makes the direction causal rather than a
+coincidence}, and at thirty instances it argues the point more sharply than
+the twelve it was first measured on.  Reversed order is \emph{equally sorted};
+it differs from probe order only in direction.  Yet probe order never raises
+the probe count on any of the twenty-seven instances, while reversed raises it
+on nine of them --- a third --- and its median sits with archive order rather
+than with probe order.  So what the seeding exploits is the search's own
+direction, not the tidiness of a sorted list.
+
+\textbf{A win was sitting behind a sort}, and it is a large one: $0.69\times$
+the probes against $0.83\times$, so roughly two fifths of what the ordering
+buys would be lost by handing the same seeds over the way the archive produces
+them --- which is what a straightforward implementation does.
 
 \subsection{What it is worth, on 150 instances}
 

@@ -577,23 +577,35 @@ reproduces the structure the search would have built.
 \begin{table}[h]
 \centering
 \caption{Probes against the unseeded enumeration, by the order the seeds
-arrive.  Twelve instances, $n = 6 \dots 10$.}
+arrive.  Twenty-seven instances, none censored; the probe count is
+deterministic, and every arm is checked to return the same front, so no
+ordering can buy probes by losing vectors.  Generated from the campaign's
+JSON.}
 \label{tab:order}
-\begin{tabular}{lrr}
+\begin{tabular}{lrll}
 \toprule
-order & probes & raised the count on \\
+order & probes vs unseeded & IQR & raised the count on \\
 \midrule
-archive order        & $0.89\times$ & $4$ of $12$ \\
-\textbf{probe order} & $\mathbf{0.70\times}$ & \textbf{none} \\
-reversed             & $0.94\times$ & $5$ of $12$ \\
+archive order & $0.83\times$ & $[0.74,\ 0.92]$ & 2 of 27 \\
+\textbf{probe order} & $\mathbf{0.69}\times$ & $[0.67,\ 0.75]$ & \textbf{none} \\
+reversed (control) & $0.90\times$ & $[0.83,\ 1.05]$ & 9 of 27 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-The reversed arm is what makes the direction causal rather than a coincidence
-of this sample.  In archive order the hybrid is \emph{slower} than the pure
-exact method, at $0.81\times$; in probe order it is $1.33\times$ faster.
+\textbf{The reversed arm is what makes the direction causal rather than a
+coincidence of this sample.}  Reversed order is \emph{equally sorted} and
+differs from probe order only in direction --- yet probe order raises the probe
+count on none of the twenty-seven instances, while reversed raises it on nine,
+and its median sits with archive order rather than with probe order.  What the
+seeding exploits is therefore the search's own direction, and not the
+tidiness of a sorted list.
+
+The gap is large enough to decide the hybrid: $0.69\times$ the probes against
+$0.83\times$, so roughly two fifths of what the ordering buys is lost by
+handing the same seeds over the way the archive produces them --- which is
+exactly what a straightforward implementation does.
 
 \subsection{The algorithm}
 \label{sec:pseudo}
