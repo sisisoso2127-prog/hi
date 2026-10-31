@@ -13,6 +13,11 @@
             pdftitle={ملخص البحث},pdflang={ar}}
 
 \newcommand{\lr}[1]{\textenglish{#1}}
+% bidi reorders multi-digit runs, so section 10 printed as "01";
+% force an LTR embedding on every auto-generated number.
+\renewcommand{\thesection}{\LR{\arabic{section}}}
+\renewcommand{\thesubsection}{\LR{\arabic{section}.\arabic{subsection}}}
+\renewcommand{\thetable}{\LR{\arabic{table}}}
 \newcommand{\D}{\lr{$D$}}
 \newcommand{\E}{\lr{$E(P_D)$}}
 
@@ -335,14 +340,56 @@ E(P_D) = \bigl\{\, x \in D \;:\; Z(x) = v
       يُحرّك رقماً، وأثبت بالملاحظة أنّ النتائج المنشورة سليمة.
 \end{enumerate}
 
+\section{موقع العمل من الأدبيات}
+
+جزءان من هذا البناء \textbf{ليسا جديدين، ولا نَدّعيهما}:
+
+\begin{itemize}[leftmargin=1.6em,itemsep=2pt]
+\item \textbf{تفكيك فضاء المعايير إلى صناديق}: راسخٌ عند
+      \lr{Boland, Charkhgard \& Savelsbergh} في \lr{EJOR} سنة \lr{2017}،
+      يعملون في فضاء المعايير كامل البُعد ويفكّكونه في كل دورة --- وهو بنيوياً
+      طريقتنا بهدفٍ ثانويٍّ \textbf{خطّي}. وطرق \lr{balanced box}
+      و\lr{boxed line} و\lr{triangle splitting} هي سوابقها ثنائية الهدف.
+\item \textbf{نمط التهجين ميتاهيريستي--مضبوط}: له تصنيفٌ معروف، و«شغّل
+      ميتاهيريستي لتقريب جبهة \lr{Pareto} ثم دع الطريقة المضبوطة تُنقّحها» هو
+      بالضبط مخطّطنا.
+\end{itemize}
+
+\noindent
+وما لا يبدو أنّ الأدبيات الكسرية تفعله هو \textbf{العمل في فضاء المعايير}.
+فتعظيم دالّةٍ خطّيةٍ كسريةٍ فوق مجموعةٍ كفؤةٍ صحيحة له أدبياتٌ مستمرّة ---
+\lr{Drici, Ouail \& Moula\"i} في \lr{Annals of OR 2018}، وورقة
+\lr{RAIRO-OR 2015}، و\lr{Ouail \& Chergui}، و\lr{Chaiblaine, Moula\"i \&
+Cherfaoui}، وورقة \lr{Optimization 2021} للأهداف التربيعية، وأعمال
+\lr{Younsi-Abbaci \& Moula\"i} العشوائية والفترية \lr{(2021--2023)} ---
+و\textbf{كلّها تبحث في فضاء القرار} بالتفريع والتحديد أو القطوع.
+
+فالذي يبقى غيرَ مطروقٍ على ما يبدو \textbf{أضيقُ من الطريقة}: هو
+\textbf{التوليفة} نفسها، ومعها ما يجعل النقل مضبوطاً لا تقريبياً --- الصيغة
+\lr{$e_k$} الصحيحة القيمة التي تُبدِل تقديرَ أصغر خطوةٍ بـ\lr{$e_k \geqslant 1$}
+بالضبط، ونتائج الشريحة.
+
+\paragraph{وحَدّان يجب ذكرهما.}
+\textbf{لم يُقرأ أيُّ نصٍّ كاملٍ من هذه القائمة}: جُمِعت من المستخلصات
+والفهارس، والبيئة التي أُنجز فيها العمل لا تصل إلى \lr{arxiv.org} ولا
+\lr{springer} ولا \lr{sciencedirect}. فطريقةٌ يسمّيها مستخلصُها «تفريعاً
+وتحديداً» قد تفعل في فضاء المعايير ما لا يذكره المستخلص. \textbf{وورقةٌ واحدة
+تمسّ نتيجة المجموعة الكاملة مباشرةً ويجب قراءتها قبل وصفها بالجِدّة}:
+\lr{``Generating the efficient set of multi-objective integer linear plus
+linear fractional programming problems''}، \lr{Annals of Operations Research}
+مجلد \lr{\textbf{296}} \lr{(2021)}، \lr{pp.~735--753}.
+
+\textbf{وهذا بيانٌ عمّا وجدنا وما لم نجد، لا ادّعاءُ جِدّة.}
+
 \section{ما بقي}
 
 \begin{itemize}[leftmargin=1.6em,itemsep=2pt]
 \item ملء \lr{\texttt{\textbackslash author\{\}}} في الوثائق الخمس، واسم صاحب
       الرخصة.
 \item قائمة المراجع في المقالة: لم أختلقها، فهي عليك.
-\item قراءة ورقة \lr{Annals of OR 2017} وورقة \lr{MOILFP 2020} قبل أيّ
-      ادّعاءٍ بالجِدّة --- فالادّعاء بالجِدّة دون قراءتهما غير مسؤول.
+\item قراءة النصوص الكاملة للأوراق المذكورة في القسم السابق، وأوّلها ورقة
+      \lr{Annals of OR 296 (2021)} وورقة \lr{EJOR 2017} --- فهما أخطر
+      ورقتين على أيّ ادّعاءٍ بالجِدّة، ولا يمكن الوصول إليهما من هنا.
 \item دمج طلب الدمج وحذف الفرع (ممنوعٌ من جهة الوكيل، خطأ \lr{403}).
 \end{itemize}
 

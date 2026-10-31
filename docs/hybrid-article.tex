@@ -1203,14 +1203,46 @@ varies by a factor of two between families, which is itself the honest measure
 of how far a single number should be carried.  The \emph{directions} reported here
 are explained by mechanisms that are themselves measured --- sub-program counts,
 node counts, pivot counts --- but the \emph{magnitudes} are properties of that
-family and should not be read as expected values elsewhere.  A full
-bibliographic review, including sources behind paywalls, remains to be done
-before any claim of novelty is made: what is stated above is what we measured,
-not what we believe to be new.
+family and should not be read as expected values elsewhere.
+
+\paragraph{Where this sits in the literature.}
+Two parts of this construction are prior art and are not claimed here.
+Criterion-space decomposition for optimising over an efficient set is
+established: Boland, Charkhgard and Savelsbergh (EJOR, 2017) work in the
+full-dimensional criterion space and decompose it at each iteration, which is
+structurally Section~\ref{sec:box} with a \emph{linear} secondary objective,
+and their balanced box, boxed line and triangle splitting methods are the
+bi-objective precursors.  Metaheuristic--exact hybridisation likewise has a
+known taxonomy, in which ``run a metaheuristic to approximate the Pareto set,
+then let an exact method refine it'' is exactly the scheme of
+Section~\ref{sec:hybrid}.
+
+What the fractional literature does \emph{not} appear to do is work in
+criterion space.  Optimising a linear fractional function over an integer
+efficient set has a sustained literature --- Drici, Ouail and Moula\"i (Annals
+of OR, 2018), a 2015 RAIRO-OR paper, Ouail and Chergui (arXiv:1907.02036),
+Chaiblaine, Moula\"i and Cherfaoui (arXiv:2003.05364), a 2021 Optimization
+paper on quadratic objectives, and the stochastic and interval-coefficient
+variants of Younsi-Abbaci and Moula\"i (2021--2023) --- and all of them search
+decision space with branch and bound or cutting planes.  So what is plausibly
+unaddressed is narrower than the method: the \emph{combination}, together with
+what makes the transfer exact rather than approximate --- the integer-valued
+$e_k$ of \eqref{eq:ek}, which replaces an estimated minimal step by
+$e_k \geqslant 1$ exactly, and the slice results of Section~\ref{sec:complete}.
+
+\textbf{This is a statement about what we did and did not find, not a claim of
+novelty}, and two limits are worth naming.  No full text in that list has been
+read; it was assembled from abstracts and listings, so a method an abstract
+calls ``branch and bound'' may do something in criterion space the abstract
+does not mention.  And one paper bears directly on the complete-set result of
+Section~\ref{sec:complete} and must be read before it is called new:
+\emph{Generating the efficient set of multi-objective integer linear plus
+linear fractional programming problems}, Annals of Operations Research
+\textbf{296} (2021), pp.~735--753.
 
 \paragraph{Reproducibility.}  The implementation is pure Python with no
 third-party dependency, computes in exact rational arithmetic throughout, and
-carries $93$ tests.  Several check \emph{properties} rather than answers --- the
+carries $103$ tests.  Several check \emph{properties} rather than answers --- the
 split is a partition, the metaheuristic never hands over an inefficient point,
 a budgeted run never claims completeness --- since a method that silently lost
 efficient points would still agree with the optimum on favourable instances.

@@ -2055,23 +2055,94 @@ cheaper to identify than the hybrid is to build and measure, and two ideas
 feeding the same mechanism are one idea counted twice.
 
 \section{Prior work, and what remains to be checked}
+\label{sec:prior}
 
-Criterion-space search for optimizing a function over the efficient set of a
-multi-objective integer program is an established family, and the surveys
-report it as currently more effective than decision-space search. Those methods
-are for \emph{linear} objectives. The literature on a linear \emph{fractional}
-objective over an integer efficient set --- including the branch-and-cut
-methods this note compares against, and the extensions to fractional criteria
-and to quadratic objectives --- works in decision space. The augmented weighted
-Tchebychev program of Section~\ref{sec:tcheb} is standard and is used here
-exactly as the references use it; nothing about it is claimed as new. The
-combination treated in Section~\ref{sec:box} appears not to have been
-addressed, for the reason given in Remark~\ref{rem:notZ}: $\Phi$ is a function
-of $x$ and not of $\Z(x)$, so the transfer is not immediate.
+An earlier draft of this section said only that the combination ``appears not
+to have been addressed''. That was too vague to be checkable, so the relevant
+literature is named here, together with a precise statement of how much of this
+work it already covers --- which is more than the earlier wording implied.
 
-\textbf{This is a statement about what we did not find, not a claim of
-novelty.} A proper bibliographic review, including the sources behind
-paywalls, remains to be done before any such claim is made.
+\paragraph{The fractional problem is a well-worked niche, and it is
+decision-space.}
+Optimising a linear fractional function over the integer efficient set has a
+sustained literature, largely from Moula\"i and collaborators:
+
+\begin{itemize}\itemsep2pt
+\item Drici, Ouail and Moula\"i, \emph{Optimizing a linear fractional function
+      over the integer efficient set}, Annals of Operations Research (2018) ---
+      branch-and-cut with continuous linear fractional programming.
+\item \emph{A linear fractional optimization over an integer efficient set},
+      RAIRO-Operations Research (2015) --- iteratively added constraints
+      cutting away unwanted points.
+\item Ouail and Chergui, \emph{Hyperbolic optimization over the integer
+      efficient set of MOILFP}, arXiv:1907.02036 --- branch and bound.
+\item Chaiblaine, Moula\"i and Cherfaoui, \emph{An exact method for optimizing
+      two linear fractional functions over the efficient set of a MOILFP},
+      arXiv:2003.05364 --- branch and bound with cutting planes.
+\item \emph{Quadratic optimization over a discrete Pareto set of a
+      multi-objective linear fractional program}, Optimization \textbf{70}(7)
+      (2021).
+\item Younsi-Abbaci and Moula\"i (2021--2023) --- stochastic and
+      interval-coefficient variants under chance constraints.
+\end{itemize}
+
+\noindent
+Every one of these searches \emph{decision} space. That part of the earlier
+claim holds.
+
+\paragraph{But criterion-space decomposition is not new, and that bounds the
+claim here.}
+Boland, Charkhgard and Savelsbergh, \emph{A new method for optimizing a linear
+function over the efficient set of a multiobjective integer program}, European
+Journal of Operational Research (2017), works in the full-dimensional criterion
+space and decomposes it at each iteration after locating an unknown
+non-dominated point. Structurally that is the method of
+Section~\ref{sec:box} with a \emph{linear} secondary objective. The same group's
+balanced box, boxed line and triangle splitting methods are the bi-objective
+precursors. \textbf{So the box decomposition itself is prior art and is not
+claimed here}; what this note adds to it is the fractional secondary objective,
+which is not a cosmetic change for the reason in
+Remark~\ref{rem:notZ} --- $\Phi$ is a function of $x$ and not of $\Z(x)$ --- and
+the devices that make the transfer exact rather than approximate: the
+integer-valued $e_k$ of \eqref{eq:e}, which by \eqref{eq:exact} turns a strict
+inequality between ratios into $e_k \geqslant 1$ with no estimated minimal step, and the slice
+results of Sections~\ref{sec:complete} and~\ref{sec:elim}.
+
+\paragraph{The hybrid pattern is also established.}
+Metaheuristic--exact hybrids for multi-objective integer programming have a
+known taxonomy, and ``metaheuristic-based upper bound generation'' --- run a
+multi-objective metaheuristic to approximate the Pareto set, then let an exact
+method refine it --- is exactly the scheme of Section~\ref{sec:meta}. The
+pattern is not new. What this note contributes about it is negative and
+specific, and we have not found it stated elsewhere: that the same seeds, in
+the order the archive produces them, make the hybrid \emph{slower}, and that
+the gain is governed by the order of hand-over rather than by seed quality
+(Section~\ref{sec:order}).
+
+\paragraph{One paper that bears directly on the complete-set claim.}
+\emph{Generating the efficient set of multi-objective integer linear plus
+linear fractional programming problems}, Annals of Operations Research
+\textbf{296} (2021), pp.~735--753, generates the efficient set for a
+neighbouring problem class. It must be read before anything in
+Section~\ref{sec:complete} is described as new.
+
+\paragraph{How this list was assembled, and what it is not.}
+From abstracts, publisher listings and bibliographies. \textbf{No full text in
+this list has been read}: the environment this work was done in cannot reach
+arxiv.org, link.springer.com, sciencedirect.com or optimization-online.org, and
+several of the items are behind paywalls in any case. Two consequences, and
+they are limits on us rather than on the literature. A method described in an
+abstract as ``branch and bound'' may do something in criterion space that the
+abstract does not say. And the Annals of Operations Research 2021 paper above
+may already cover ground claimed here.
+
+\textbf{So this section states what we did and did not find, and it is not a
+claim of novelty.} What survives as plausibly unaddressed is narrower than the
+method: the \emph{combination} of a criterion-space box search with a
+fractional secondary objective over an integer efficient set, together with the
+exactness devices listed above. Establishing even that requires reading the
+full texts, starting with the Annals of Operations Research 2021 paper and the
+EJOR 2017 one.
 
 \section{Reproducibility}
 
