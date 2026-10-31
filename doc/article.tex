@@ -2994,6 +2994,54 @@ elle n'a pas d'opérateur de suppression -- mais les trois budgets sont trois
 exécutions distinctes, donc trois trajectoires. Sur un front de six points,
 elles n'ont aucune raison de coïncider.
 
+\paragraph{Au-delà de l'énumérable.}
+Les huit lignes ci-dessus ont $|S|$ de $1\,130$ à $5\,275$ : $Z(\Ecal)$ s'y
+obtient en filtrant $S$. C'est une limite du protocole et non du sujet. Le
+tableau~\ref{tab:livrablegrand} la lève, la vérité terrain y étant produite
+par décomposition en régions -- chaque vecteur efficace découpe l'espace
+restant en sous-régions disjointes, posées comme des programmes entiers de
+taille constante -- avec arrêt sur \emph{toutes régions closes}. Le
+certificat tient donc par épuisement et non par budget : à $n=16$,
+\grandRegions{} régions closes, \grandIlp{} appels \ILP. Les cardinaux sont
+exacts, pas des minorants.
+
+\begin{table}[H]
+\centering
+\caption{L'archive contre $Z(\Ecal)$ \emph{énuméré par régions}, budget de
+$180$ appels \ILP. Instances non énumérables ($|S|$ non calculé). Pureté
+$1$ et $z^\ast\in\Acal$ sur les quatre lignes.\ \conf{1}{1}{1}}
+\label{tab:livrablegrand}
+\begin{tabular}{rrrrrrrr}
+\toprule
+$n$ & $p$ & corr & $|Z(\Ecal)|$ & $|Z(\Acal)|$ &
+card\,\% & $HV$\,\% & $\varepsilon^+$\\
+\midrule
+$10$ & $3$ & $0{,}00$ & $70$  & $12$ & $17{,}1$ & $85{,}1$ & $0{,}374$\\
+$12$ & $3$ & $0{,}00$ & $202$ & $27$ & $13{,}4$ & $76{,}5$ & $0{,}374$\\
+$14$ & $3$ & $0{,}00$ & $591$ & $22$ & $3{,}7$  & $79{,}3$ & $0{,}144$\\
+$16$ & $3$ & $0{,}00$ & $811$ & $25$ & $3{,}1$  & $80{,}2$ & $0{,}215$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Trois faits, dont le deuxième corrige la lecture naturelle du précédent.
+La pureté tient quand le front est multiplié par onze
+(\puretePtsGrand{} points de plus, \puretePtsTotal{} au total). La
+couverture s'effondre à $\grandCardMin{}\,\%$ sans que l'archive recule --
+elle passe de $12$ à $25$ points ; c'est le dénominateur qui croît, et
+l'énoncé exact est que l'archive croît et que le front croît plus vite.
+Enfin ce qui est rendu ne se dégrade pas : $HV$ reste entre
+$\grandHVMin{}\,\%$ et $\grandHVMax{}\,\%$, le rapport $HV/\text{card}$
+monte de $5{,}0$ à $\grandFacteurMax{}$, et le pire $\varepsilon^+$ des
+quatre lignes est atteint sur le \emph{plus petit} front. La méthode ne se
+dégrade donc pas avec la dimension : elle change de nature de livrable, d'un
+échantillon représentatif vers un petit ensemble de compromis bien placés.
+Une réserve, car elle borne la portée : les quatre instances sont toutes à
+$p=3$, et le pire $\varepsilon^+$ de l'étude reste celui de la ligne $p=4$
+du tableau~\ref{tab:livrable}. Nous avons mesuré l'ajout de variables, pas
+l'ajout de critères.
+
 % ============================================================================
 \section{Usage en aide à la décision}
 \label{sec:aide}

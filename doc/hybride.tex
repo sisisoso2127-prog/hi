@@ -5964,6 +5964,94 @@ trajectoires n'ont aucune raison de coïncider. C'est une limite du
 protocole autant qu'un résultat, et nous l'écrivons ainsi plutôt que de
 retirer la ligne.
 
+\subsection{La même mesure au-delà de l'énumérable}
+\label{sec:livrablegrand}
+
+Tout ce qui précède est mesuré sur des instances dont $S$ se parcourt
+exhaustivement : $|S|$ y va de $1\,130$ à $5\,275$, et $Z(E)$ s'obtient en
+filtrant cette liste. C'est une contrainte du protocole, pas du sujet, et
+elle plafonne les conclusions à des fronts de quelques dizaines de vecteurs.
+Nous la levons ici.
+
+La vérité terrain des quatre instances qui suivent n'est pas obtenue par
+parcours de $S$ -- il est hors d'atteinte -- mais par \emph{décomposition en
+régions} : chaque vecteur efficace trouvé découpe l'espace restant en
+sous-régions disjointes où un critère est strictement amélioré, chacune
+posée comme un programme entier de taille constante. L'énumération s'arrête
+quand toutes les régions sont closes, et c'est ce qui donne au résultat sa
+valeur : le certificat tient \emph{par épuisement et non par budget}. À
+$n=16$, \grandRegions{} régions closes et \grandIlp{} appels ILP. Les quatre
+cardinaux $|Z(E)|$ du tableau~\ref{tab:livrableC} sont donc des cardinaux
+exacts, pas des minorants.
+
+\begin{table}[H]
+\centering
+\caption{L'archive mesurée contre $Z(E)$ \emph{énuméré par régions}, budget
+de $180$ appels ILP. Instances non énumérables : $|S|$ n'y est pas calculé,
+et la colonne disparaît. Les quatre lignes sont certifiées par épuisement
+(toutes régions closes).\ \conf{1}{1}{1}}
+\label{tab:livrableC}
+\begin{tabular}{rrrrrrrrc}
+\toprule
+$n$ & $p$ & corr & $|Z(E)|$ & $|Z(\mathcal{A})|$ &
+card\,\% & couv\,\% & $HV$\,\% & $\varepsilon^+$\\
+\midrule
+$10$ & $3$ & $0{,}00$ & $70$  & $12$ & $17{,}1$ & $17{,}1$ & $85{,}1$ & $0{,}374$\\
+$12$ & $3$ & $0{,}00$ & $202$ & $27$ & $13{,}4$ & $13{,}4$ & $76{,}5$ & $0{,}374$\\
+$14$ & $3$ & $0{,}00$ & $591$ & $22$ & $3{,}7$  & $3{,}7$  & $79{,}3$ & $0{,}144$\\
+$16$ & $3$ & $0{,}00$ & $811$ & $25$ & $3{,}1$  & $3{,}1$  & $80{,}2$ & $0{,}215$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+La pureté vaut $1$ et $z^\ast$ appartient à l'archive sur les quatre lignes ;
+nous ne leur donnons pas de colonne pour ne pas en faire quatre fois la même.
+Trois lectures, dont la deuxième corrige ce que la section précédente
+laissait croire.
+
+\paragraph{La pureté tient quand le front se multiplie par onze.}
+De $|Z(E)|=70$ à $|Z(E)|=\grandZEmax{}$, aucun vecteur faussement annoncé
+efficace : \puretePtsGrand{} points de plus, soit \puretePtsTotal{} au total
+sur l'ensemble des instances mesurées. C'est la seule propriété de la
+méthode que nous présentons comme garantie par construction plutôt que par
+mesure, et c'est donc celle où une mesure contredisante coûterait le plus
+cher. Elle ne l'est pas. Les colonnes \textsc{card} et \textsc{couv}
+restent par ailleurs identiques, ce qui rejoue la
+proposition~\ref{prop:couv} sur des fronts vingt fois plus épais que ceux
+qui l'avaient d'abord constatée.
+
+\paragraph{La couverture s'effondre, mais ce n'est pas l'archive qui recule.}
+Elle passe de $17{,}1\,\%$ à $\grandCardMin{}\,\%$. L'archive, elle, ne
+diminue pas : $12$ points à $n=10$, $25$ à $n=16$. C'est le dénominateur qui
+est multiplié par onze. L'énoncé exact est donc : \emph{l'archive croît, le
+front croît plus vite}. Le dire comme une dégradation de l'archive serait
+inexact, et le dire comme un succès le serait tout autant -- un décideur à
+qui l'on remet $25$ compromis sur $811$ ne reçoit pas le front.
+
+\paragraph{Mais ce qui est rendu ne se dégrade pas.}
+L'hypervolume ne suit pas la cardinalité : il reste entre
+$\grandHVMin{}\,\%$ et $\grandHVMax{}\,\%$ sur les quatre lignes, et le
+rapport $HV/\text{card}$ monte de $5{,}0$ à $\grandFacteurMax{}$. Le
+$\varepsilon^+$ ne se dégrade pas davantage : son pire cas ici est
+$\grandEpsMax{}$, à $n=10$, c'est-à-dire sur le \emph{plus petit} front des
+quatre, et il vaut $\grandEpsMin{}$ là où $|Z(E)|=591$. La lecture à retenir
+n'est donc pas que la méthode se dégrade avec la dimension, mais qu'elle
+\emph{change de nature de livrable} : d'un échantillon quantitativement
+représentatif du front elle devient un petit ensemble de compromis bien
+placés. Ce qui est exactement ce que demande un problème où $f$ désigne la
+partie du front qui intéresse.
+
+\begin{remark}[ce que ces quatre lignes ne disent pas]
+Le $\varepsilon^+$ le plus mauvais de tout le mémoire reste celui de la
+ligne $n=7$, $p=4$ du tableau~\ref{tab:livrableA} ($0{,}503$), et les quatre
+instances nouvelles sont toutes à $p=3$. Il serait donc faux de lire le
+tableau~\ref{tab:livrableC} comme démentant le diagnostic de la
+section précédente : il montre que l'ajout de \emph{variables} ne dégrade
+pas le décalage, non que l'ajout de \emph{critères} ne le dégrade pas. Les
+deux dimensions ne se compensent pas et nous n'avons mesuré que la première.
+\end{remark}
+
 \subsection{Ce que cette section permet d'affirmer}
 
 \begin{enumerate}
