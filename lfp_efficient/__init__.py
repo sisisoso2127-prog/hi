@@ -52,8 +52,11 @@ from .front import Front, enumerate_front, in_box, pre_split
 from .generated import (GeneratedSeeds, generate_seeds,
                         generated_front, hybrid_complete_set, pareto_front,
                         pareto_seeds, probe_order)
-from .complete import (CompleteSet, complete_efficient_set,
-                       variable_bounds)
+from .complete import (CompleteSet, assert_box_contains, box_shortfall,
+                       complete_efficient_set, variable_bounds)
+from .over import (NondominatedOverEfficientSet, OverEfficientSet,
+                   maximize_over_efficient_set,
+                   nondominated_over_efficient_set)
 from .subset import EfficientSubset, efficient_subset
 from .tchebychev import (anti_ideal_point,
                          augmented_tchebychev_efficient, ideal_point,
@@ -88,6 +91,9 @@ __all__ = [
     "hybrid_complete_set", "pareto_front", "pareto_seeds",
     "probe_order",
     "complete_efficient_set", "CompleteSet", "variable_bounds",
+    "box_shortfall", "assert_box_contains",
+    "maximize_over_efficient_set", "nondominated_over_efficient_set",
+    "OverEfficientSet", "NondominatedOverEfficientSet",
     "F", "fmt",
 ]
 

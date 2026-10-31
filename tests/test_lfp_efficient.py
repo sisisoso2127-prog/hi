@@ -37,6 +37,8 @@ from lfp_efficient.efficiency import (assert_bounded,
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for, looks_empty, split
 from lfp_efficient.complete import box_shortfall, variable_bounds
+from lfp_efficient.over import (maximize_over_efficient_set,
+                                nondominated_over_efficient_set)
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
@@ -2652,6 +2654,122 @@ def test_the_two_reference_oracles_refuse_a_box_that_clips_D():
         assert best_over_efficient_set_by_scan(problem, phi, box)[1] == Fraction(2, 5)
     return (f"4 clipped boxes refused by both oracles, "
             f"true box {true_box} keeps |E| = 5 and Phi* = 2/5")
+
+def test_any_computable_objective_is_exact_over_the_complete_set():
+    """The widening the criterion-space route buys, checked against truth.
+
+    A decision-space branch-and-cut for a linear fractional ``Phi`` derives its
+    cuts and bounds from the ratio form.  Handed a *sum* of two ratios it does
+    not degrade, it stops applying.  Once ``E(P_D)`` is explicit and proved
+    complete, ``Phi`` needs no structure at all: the optimum of a function over
+    a finite explicit set is decided by evaluation.
+
+    Each case below is checked against an independent brute-force maximisation
+    over the reference efficient set, not against the method that produced it.
+    """
+    model = (Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21)
+             .add([-2, 4], LE, 6))
+    problem = MOILP(model, [[1, -2], [-1, 4]])
+    result = complete_efficient_set(problem)
+    assert result.complete
+    truth = enumerate_efficient_set(problem, variable_bounds(problem)).efficient
+    assert {tuple(p) for p in result.points} == {tuple(p) for p in truth}
+
+    p1 = FractionalObjective([1, 1], [5, 1], -1, -1)
+    p2 = FractionalObjective([2, -1], [1, 3], 0, 2)
+    cases = [
+        ("one ratio", lambda x: p1(x)),
+        ("sum of ratios", lambda x: p1(x) + p2(x)),
+        ("max of ratios", lambda x: max(p1(x), p2(x))),
+        ("product of ratios", lambda x: p1(x) * p2(x)),
+        ("ratio of quadratics", lambda x: (x[0] * x[0] + 1) / (x[1] * x[1] + 1)),
+        ("piecewise black box", lambda x: p1(x) if x[0] <= 2 else -p2(x)),
+    ]
+    for name, f in cases:
+        got = maximize_over_efficient_set(result, f)
+        best = max(f(x) for x in truth)
+        assert got.value == best, (name, got.value, best)
+        assert f(got.x) == best, name
+        # every tie is reported, which matters because Phi is a function of x
+        assert len(got.argoptima) == sum(1 for x in truth if f(x) == best), name
+        # and minimising is the same scan
+        low = maximize_over_efficient_set(result, f, minimize=True)
+        assert low.value == min(f(x) for x in truth), name
+    return f"{len(cases)} objective shapes, all exact against brute force"
+
+
+def test_several_decision_functions_at_once_match_brute_force():
+    """Two linear fractional functions over ``E(P_D)`` --- a problem that in
+    decision space needs its own branch and bound with cutting planes --- is a
+    dominance filter here, and the cost does not depend on how many functions
+    are asked for or on what they are."""
+    model = (Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21)
+             .add([-2, 4], LE, 6))
+    problem = MOILP(model, [[1, -2], [-1, 4]])
+    result = complete_efficient_set(problem)
+    truth = enumerate_efficient_set(problem, variable_bounds(problem)).efficient
+    p1 = FractionalObjective([1, 1], [5, 1], -1, -1)
+    p2 = FractionalObjective([2, -1], [1, 3], 0, 2)
+
+    nd = nondominated_over_efficient_set(result, [p1, p2])
+    expected = set()
+    for x in truth:
+        v = (p1(x), p2(x))
+        if not any((p1(y), p2(y)) != v and p1(y) >= v[0] and p2(y) >= v[1]
+                   for y in truth):
+            expected.add(tuple(x))
+    assert {tuple(p) for p in nd.points} == expected, (nd.points, expected)
+    assert 0 < len(nd) < len(truth), "the filter must actually filter"
+
+    # a sense per function, and a mixed pair of unlike functions
+    flipped = nondominated_over_efficient_set(result, [p1, p2],
+                                              minimize=[False, True])
+    assert len(flipped) >= 1
+    mixed = nondominated_over_efficient_set(
+        result, [p1, lambda x: x[0] * x[0] - x[1]])
+    assert len(mixed) >= 1
+    for bad in ([], ):
+        try:
+            nondominated_over_efficient_set(result, bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("no decision functions was accepted")
+    return (f"{len(nd)} non-dominated of {nd.scanned} efficient points, "
+            f"exactly the brute-force answer")
+
+
+def test_the_queries_refuse_an_incomplete_efficient_set():
+    """The audit's eleventh finding, in the one place it could reappear.
+
+    A budget-truncated ``CompleteSet`` still holds genuine efficient points, so
+    a maximum over it is still a number --- just not the answer to the question
+    asked, and nothing downstream could tell the difference.  So it is refused
+    rather than answered.
+    """
+    model = (Model(2).add([-2, 1], LE, 0).add([6, 1], LE, 21)
+             .add([-2, 4], LE, 6))
+    problem = MOILP(model, [[1, -2], [-1, 4]])
+    phi = FractionalObjective([1, 1], [5, 1], -1, -1)
+
+    whole = complete_efficient_set(problem)
+    assert whole.complete
+    truncated = complete_efficient_set(problem, max_boxes=1)
+    assert not truncated.complete, "need a set that is not proved complete"
+
+    for call in (lambda: maximize_over_efficient_set(truncated, phi),
+                 lambda: nondominated_over_efficient_set(truncated, [phi])):
+        try:
+            call()
+        except ValueError as exc:
+            assert "not proved complete" in str(exc), exc
+        else:
+            raise AssertionError("an unproved efficient set was accepted")
+
+    # the proved one answers, and agrees with the package's own optimiser
+    assert maximize_over_efficient_set(whole, phi).value == \
+        optimize_over_efficient_set(problem, phi).value
+    return "truncated sets refused by both queries; the proved one agrees"
 
 # --------------------------------------------------------------------------
 def main():
