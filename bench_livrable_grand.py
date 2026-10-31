@@ -73,6 +73,13 @@ LOT = [dict(n=10, m=6, p=3, seed=1, rhs_scale=1.0, corr=0.00),
        dict(n=20, m=11, p=4, seed=1, rhs_scale=1.0, corr=0.00)]
 
 
+# Provenance de chaque Z(E), remplie par verite_terrain et lue a
+# l'impression. Un dictionnaire plutot qu'un retour supplementaire :
+# verite_terrain rend None pour « pas de verite terrain », et lui faire
+# rendre un couple obligerait chaque appelant a le defaire.
+PROV: dict = {}
+
+
 def _cle(spec: dict) -> str:
     return (f"n{spec['n']}_m{spec['m']}_p{spec['p']}_s{spec['seed']}"
             f"_c{int(spec['corr'] * 100):03d}")
@@ -84,7 +91,15 @@ def verite_terrain(spec: dict, delai: float) -> Optional[List[tuple]]:
     f = CACHE / f"{_cle(spec)}.json"
     if f.exists():
         d = json.loads(f.read_text(encoding="utf-8"))
-        return [tuple(v) for v in d["vecteurs"]] if d["complet"] else None
+        if not d["complet"]:
+            return None
+        # La provenance voyage avec les vecteurs. Deux methodes exactes
+        # remplissent ce cache -- regions et force brute -- et un tableau
+        # qui annonce l'une en imprimant l'autre est faux meme quand tous
+        # ses nombres sont justes.
+        PROV[_cle(spec)] = ("brute" if d.get("methode") == "force brute"
+                            else "regions")
+        return [tuple(v) for v in d["vecteurs"]]
 
     inst = generate(**spec)
     t0 = time.time()
@@ -110,6 +125,7 @@ def verite_terrain(spec: dict, delai: float) -> Optional[List[tuple]]:
         return None
     part.replace(f)                     # ecriture atomique
     if r.complet:
+        PROV[_cle(spec)] = "regions"
         (CACHE / f"{_cle(spec)}.reprise.json").unlink(missing_ok=True)
         return [tuple(float(c) for c in z) for z in r.vecteurs]
     return None
@@ -120,11 +136,12 @@ def main() -> int:
     delai = float(sys.argv[2]) if len(sys.argv) > 2 else 3600.0
 
     print("=" * 96)
-    print("L'ARCHIVE CONTRE Z(E) ENUMERE PAR REGIONS -- "
+    print("L'ARCHIVE CONTRE Z(E) ENUMERE EXACTEMENT -- "
           f"plafond ILP {cap}")
     print("=" * 96)
     print(f"\n{'instance':<18}{'|Z(E)|':>8}{'|Z(A)|':>8}{'purete':>9}"
-          f"{'card %':>9}{'couv %':>9}{'HV %':>9}{'eps+':>9}{'z* in A':>9}")
+          f"{'card %':>9}{'couv %':>9}{'HV %':>9}{'eps+':>9}{'z* in A':>9}"
+          f"{'Z(E) par':>11}")
     print("-" * 96)
 
     for spec in LOT:
@@ -152,9 +169,18 @@ def main() -> int:
         print(f"{etiq:<18}{ind['nE']:>8}{ind['nA']:>8}"
               f"{ind['purete']:>9.3f}{100 * ind['card']:>9.1f}"
               f"{100 * ind['couverture']:>9.1f}{100 * ind['hv']:>9.1f}"
-              f"{ind['eps']:>9.3f}{dans:>9}", flush=True)
+              f"{ind['eps']:>9.3f}{dans:>9}"
+              f"{PROV.get(_cle(spec), '?'):>11}", flush=True)
 
     print("-" * 96)
+    print("La colonne « Z(E) par » dit QUELLE methode exacte a produit la")
+    print("verite terrain : force brute quand S est parcourable, regions")
+    print("quand il ne l'est pas. Ce n'est pas une inconsistance du")
+    print("protocole mais la regle -- sur un front epais relativement a S,")
+    print("chaque vecteur engendre p regions et leur nombre explose, tandis")
+    print("que la force brute, elle, ne depend que de |S|. Les deux rendent")
+    print("un Z(E) exact ; seul le cout differe.")
+    print("")
     print("« z* in A » verifie que le vecteur critere de l'incumbent est")
     print("EFFICACE -- c'est-a-dire present dans Z(E). C'est le controle")
     print("qui tombe en premier si l'archive ment sur son contenu.")
