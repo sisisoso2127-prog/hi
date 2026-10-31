@@ -742,6 +742,25 @@ documented pseudo-random family; the statistic is the \emph{median of the
 per-instance ratios} with the interquartile range, never a ratio of totals,
 which would be decided by the single heaviest instance.
 
+\paragraph{What the baseline is.}
+The decision-space side of every comparison below is \textbf{our own
+reimplementation} of the published method, not the authors' code, and the
+instances are ours, not their published benchmarks.  Both sides share the same
+simplex, the same exact rational arithmetic, the same branch-and-bound and the
+same machine, and the reimplementation follows the printed algorithm step for
+step, with the two places where that pseudo-code is internally inconsistent
+corrected and the corrections documented.  The comparison therefore
+\emph{isolates the algorithmic difference}, which is a cleaner question than
+code against code --- that would also measure language, solver backend and
+engineering effort.  The price is that \textbf{absolute seconds carry no
+information outside this implementation}: pure Python over exact rationals is
+far slower than any production solver, equally on both sides, so only the
+ratios transfer and only ratios are quoted.  A comparison against the authors'
+own implementations on their own benchmarks has \emph{not} been done and is not
+claimed; until it is, every margin here reads ``this algorithm beats that
+algorithm when both are implemented the same way'', not ``this work beats those
+papers''.
+
 \begin{table}[h]
 \centering
 \caption{The hybrid against the pure exact enumeration, 120 instances over

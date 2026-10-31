@@ -1121,6 +1121,32 @@ readings say the cost lives in the size of a sub-problem, which is exactly what
 the substitution removes.
 
 \subsection{Is the baseline fair?  Where the decision-space time actually goes}
+
+\paragraph{What the baseline is, and what the margin is therefore worth.}
+The decision-space side of every comparison in this document is \textbf{our own
+reimplementation} of the published method, not the authors' code, and the
+instances are ours, not their published benchmarks.  That has to be said
+plainly, because it changes what the numbers mean.
+
+Both sides share the same simplex, the same exact rational arithmetic, the same
+branch-and-bound, the same machine and the same instances; the reimplementation
+follows the printed algorithm step for step, with the two places where the
+printed pseudo-code is internally inconsistent corrected and the corrections
+documented.  So the comparison \emph{isolates the algorithmic difference},
+which is arguably a cleaner question than code against code --- that would also
+measure language, solver backend and engineering effort, none of which is the
+subject here.
+
+The price of that choice is that \textbf{absolute seconds carry no information
+outside this implementation}.  Pure Python over exact rationals with a
+hand-written simplex is far slower than any production solver, on both sides
+equally.  Only the \emph{ratios} transfer, and only the ratios are quoted.
+
+What has \emph{not} been done, and is not claimed: a comparison against the
+authors' own implementations, on their own benchmark instances.  Until that is
+done, the correct reading of every margin here is ``this algorithm beats that
+algorithm when both are implemented the same way'', and not ``this work beats
+those papers''.
 \label{sec:probe}
 
 A $204\times$ margin invites the suspicion that the loser was handicapped, so
