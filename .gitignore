@@ -14,3 +14,4 @@ doc/*.toc
 # en cours comme s'il etait une mesure -- et a salir le depot a chaque
 # sauvegarde. Les Z(E) acheves, eux, sont commis : ce sont des resultats.
 results/cache_ZE/*.reprise.json
+results/sonde_regions/*.reprise.json

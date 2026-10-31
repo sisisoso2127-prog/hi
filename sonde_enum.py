@@ -84,7 +84,16 @@ def main() -> int:
         inst = generate(n=n, m=max(3, n // 2 + 1), p=p, seed=1,
                         rhs_scale=1.0, corr=corr)
         t0 = time.time()
-        r = moteur(inst, time_budget=delai)
+        # POINT DE REPRISE pour le moteur a regions. Sans lui, une
+        # instance de vingt minutes tuee par un redemarrage de conteneur
+        # repart de zero -- et c'est exactement ce qui avait rendu n=14
+        # inatteignable avant que la reprise existe. Le moteur a coupes
+        # n'en a pas, donc on ne lui en passe pas.
+        if regions:
+            r = moteur(inst, time_budget=delai,
+                       reprise=SORTIE / f"{nom}.reprise.json")
+        else:
+            r = moteur(inst, time_budget=delai)
         tc = time.time() - t0
         nb, tb, err = brute(inst, delai)
 
@@ -108,6 +117,10 @@ def main() -> int:
                      else "aucune des deux n'a fini"),
         ), ensure_ascii=False, indent=1), encoding="utf-8")
         part.replace(cible)
+        # Le point de reprise ne survit pas au resultat : le garder
+        # ferait repartir une enumeration deja consignee.
+        if regions and r.complet:
+            (SORTIE / f"{nom}.reprise.json").unlink(missing_ok=True)
         print(f"### {nom} : {len(r.vecteurs)} vecteurs, "
               f"complet={r.complet}, {tc:.1f} s "
               f"| brute {nb if nb is not None else '--'}", flush=True)
