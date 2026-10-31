@@ -1,0 +1,37 @@
+Trajectoire dose par dose de l'enumeration par regions sur n=20, p=4
+=====================================================================
+
+Instance : n=20, m=11, p=4, correlation 0.00, graine 1.
+Moteur   : decomposition en regions, dose de 1500 s, budget cumule 9000 s.
+Source   : lignes "### n20_p4_c000 : ... vecteurs" du journal de sonde_enum.py.
+
+Ce fichier existe parce que le releve JSON ne conserve que la derniere
+dose : il est reecrit a chaque reprise. La trajectoire, elle, est le
+resultat -- elle montre POURQUOI le cas ne clot pas, ce qu'un simple
+"budget epuise" ne dit pas.
+
+ dose   vecteurs   gain   appels ILP de la dose   duree
+    1        533   +533                   71 448   1500.8 s
+    2        635   +102                        -   1501.1 s
+    3        690    +55                        -   1500.2 s
+    4        733    +43                   43 264   1501.6 s
+    5        768    +35                   39 153   1501.7 s
+
+Les appels ILP des doses 2 et 3 ne sont pas connus : le releve avait deja
+ete reecrit quand je l'ai relu. Ils ne sont pas reconstitues ici.
+
+Lecture
+-------
+A duree constante, le gain en vecteurs s'effondre d'environ la moitie a
+chaque dose, et le debit d'appels ILP baisse avec lui (71 448 a 39 153
+pour le meme temps). C'est la loi structurelle de la methode : chaque
+vecteur trouve engendre p nouvelles regions, donc la pile croit plus vite
+que le moteur ne la vide, et le cout marginal d'un vecteur augmente sans
+borne utile.
+
+La consequence est une limite de methode, non une limite de patience : un
+budget plusieurs fois plus grand n'apporterait qu'une poignee de vecteurs
+supplementaires. La force brute, de son cote, est hors jeu des le depart
+sur cette taille (plus de 2 000 000 de points realisables). Rien n'est
+donc connu lorsque n et p sont grands SIMULTANEMENT, et c'est la reserve
+que les documents doivent enoncer.
