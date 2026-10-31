@@ -18,6 +18,8 @@
 \renewcommand{\thesection}{\LR{\arabic{section}}}
 \renewcommand{\thesubsection}{\LR{\arabic{section}.\arabic{subsection}}}
 \renewcommand{\thetable}{\LR{\arabic{table}}}
+% page numbers reverse too: page 10 printed as "01".
+\renewcommand{\thepage}{\LR{\arabic{page}}}
 \newcommand{\D}{\lr{$D$}}
 \newcommand{\E}{\lr{$E(P_D)$}}
 
@@ -526,6 +528,57 @@ Z(x) = c^{\top}x + \frac{p^{\top}x + \alpha}{q^{\top}x + \beta}
 والنمو \textbf{متّسقٌ} مع كونه لوغاريتمياً في \lr{$|E(P_D)|$}، وهو ما تقترحه
 النتيجة الكلاسيكية في حجم المجموعة غير المُهيمَن عليها --- \textbf{لكنّ أربع
 فئاتٍ على شبكةٍ خشنة لا تُثبت ذلك، ولا يُدَّعى هنا.}
+
+\subsection{النظرية خريطةً للأدبيات المجاورة}
+
+بتطبيق الشرط على الأصناف المذكورة لاحقاً، يفرزها --- والفرز \textbf{حسابٌ لا
+حُكم}: انظر إلى \textbf{المعايير} لا إلى الطريقة.
+
+\begin{table}[h]
+\centering
+\caption{الأصناف المنشورة المجاورة مقابل شرط الوصول. ما يحسم الصفّ هو
+\textbf{المعايير}؛ أمّا دالّة القرار فغير مقيّدةٍ في الجانب الموصول.}
+\small
+\begin{tabular}{llll}
+\toprule
+\textarabic{الصنف المنشور} & \textarabic{المعايير}
+  & \textarabic{مجموعات المستوى} & \textarabic{موصول} \\
+\midrule
+\textarabic{كسريةٌ فوق \E\ لبرنامج \lr{MOILP}} & \textarabic{خطّية}
+  & \textarabic{مستويات} & \textarabic{\textbf{نعم}} \\
+\textarabic{زائديةٌ فوق \E\ لبرنامج \lr{MOILFP}} & \textarabic{نِسَب}
+  & \textarabic{مستويات} & \textarabic{\textbf{نعم}} \\
+\textarabic{دالّتان كسريتان فوق \E} & \textarabic{نِسَب}
+  & \textarabic{مستويات} & \textarabic{\textbf{نعم}} \\
+\textarabic{تربيعيةٌ فوق جبهة \lr{MOILFP}} & \textarabic{نِسَب}
+  & \textarabic{مستويات} & \textarabic{\textbf{نعم}} \\
+\midrule
+\textarabic{خطّي \emph{+} خطّي كسري} & \textarabic{مجاميع}
+  & \textarabic{\textbf{مخروطات}} & \textarabic{\textbf{لا}} \\
+\textarabic{ثنائيُّ الهدف فوق \E\ لبرنامجٍ تربيعي} & \textarabic{تربيعية}
+  & \textarabic{\textbf{أسطح تربيعية}} & \textarabic{\textbf{لا}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{والجانب الموصول ينهار في واحد.} فالأربعة لا تختلف إلّا في
+\textbf{دالّة القرار} --- نسبةٌ واحدة، نسبتان، تربيعية --- ودالّةُ القرار
+\textbf{مجّانية} متى صارت \E\ صريحة. فأربع مسائل منشورة هي \textbf{أربعة
+استعلامات على حسابٍ واحد}، وتفحص مجموعة الاختبارات ذلك على مجموعةٍ كفؤةٍ من
+\lr{$48$} نقطة: التربيعية ومُرشِّح النسبتين والنسبة المفردة، كلّها مُجابةٌ
+بالضبط من \E\ واحدة، مقابل القوة الغاشمة، و\textbf{بلا برنامجٍ صحيحٍ واحد}
+على أيٍّ من الثلاثة.
+
+\textbf{وشيئان ليس هذا إيّاهما.} ليس ادّعاء أداء: تلك الطرق \textbf{لا تبني
+\E\ أصلاً} فلا يمسّها حجمها، وهذا الطريق مُقيَّدٌ بها. وليس قراءةً لتلك
+الأوراق --- الصفوف هي أصناف المسائل كما تذكرها عناوينها، وعمود
+«\textarabic{موصول}» يحسمه \textbf{الجبر وحده}.
+
+ونفعُه أضيقُ وأمتن: يقول \textbf{سلفاً} أيَّ المسائل المجاورة يمكن توجيه هذه
+الآلة إليها وأيَّها \textbf{لا يمكن برهاناً} --- والصفّان غير الموصولين
+كذلك \textbf{للسبب نفسه}: معيارٌ هو مجموعٌ أو جداءٌ له مجموعات مستوًى
+\textbf{منحنية}، والانحناء هو بالضبط ما لا يستطيع تعدادُ الشريحة ابتلاعه.
 
 \subsection{نقطة التعادل، ومتى يكون هذا الخيار خاطئاً}
 

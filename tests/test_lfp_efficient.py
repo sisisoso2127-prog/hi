@@ -2930,6 +2930,71 @@ def test_linear_plus_linear_fractional_falls_outside_the_reachable_class():
     return ("linear-plus-linear-fractional has conic level sets (three "
             "non-collinear points on one level); the pure ratio does not")
 
+def test_three_published_problem_statements_are_one_computation():
+    """What the reachable side of the characterisation collapses into.
+
+    The characterisation sorts neighbouring published classes by whether their
+    criteria have affine level sets.  Everything on the reachable side shares a
+    consequence: once ``E(P_D)`` is built, the *decision* function is free, so
+    problems that are separate papers there are separate queries here.
+
+    Three statements, each solved exactly from one ``E(P_D)`` and each checked
+    against brute force over the reference efficient set:
+
+      1. a quadratic over the discrete Pareto set of a MOILFP;
+      2. two linear fractional functions over the efficient set;
+      3. one linear fractional function over the integer efficient set.
+
+    This is a statement about the problems, not a performance claim.  Those
+    methods never build ``E(P_D)`` and are untouched by its size, while this
+    route is bounded by it --- which is exactly the trade recorded elsewhere.
+    """
+    import itertools
+    model = (Model(3).add([1, 1, 0], LE, 6).add([1, -1, 0], LE, 2)
+             .add([0, 0, 1], LE, 3))
+    problem = MOILFP(model, [FractionalObjective([1, 0, 0], [0, 1, 0], 1, 2),
+                             FractionalObjective([0, 1, 0], [1, 0, 0], 0, 3)])
+    result = complete_efficient_set(problem)
+    assert result.complete
+    bounds = variable_bounds(problem)
+
+    feasible = [[Fraction(c) for c in t]
+                for t in itertools.product(*(range(b + 1) for b in bounds))
+                if model.is_feasible([Fraction(c) for c in t])]
+
+    def dom(y, x):
+        zy, zx = problem.Z(y), problem.Z(x)
+        return (all(b >= a for a, b in zip(zx, zy))
+                and any(b > a for a, b in zip(zx, zy)))
+
+    truth = [x for x in feasible if not any(dom(y, x) for y in feasible)]
+    assert {tuple(p) for p in result.points} == {tuple(x) for x in truth}
+
+    # 1 -- a quadratic decision function
+    def quad(x):
+        return x[0] * x[0] - 2 * x[1] * x[1] + 3 * x[2]
+    assert maximize_over_efficient_set(result, quad).value == \
+        max(quad(x) for x in truth)
+
+    # 2 -- two linear fractional functions at once
+    p1 = FractionalObjective([1, 1, 0], [5, 1, 0], -1, -1)
+    p2 = FractionalObjective([2, -1, 1], [1, 3, 0], 0, 2)
+    nd = nondominated_over_efficient_set(result, [p1, p2])
+    expected = set()
+    for x in truth:
+        v = (p1(x), p2(x))
+        if not any((p1(y), p2(y)) != v and p1(y) >= v[0] and p2(y) >= v[1]
+                   for y in truth):
+            expected.add(tuple(x))
+    assert {tuple(q) for q in nd.points} == expected
+
+    # 3 -- the classical single linear fractional case
+    assert maximize_over_efficient_set(result, p1).value == \
+        max(p1(x) for x in truth)
+
+    return (f"3 published problem statements answered from one E(P_D) of "
+            f"{len(result.points)} points, each matching brute force")
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the

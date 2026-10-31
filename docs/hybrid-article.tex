@@ -439,6 +439,64 @@ the reason in Remark~\ref{rem:notZ}: $\Phi$ is a function of $x$ and not of
 $\Z(x)$, so several efficient points may attain the optimum while carrying
 different criterion vectors.
 
+\subsection{The characterisation as a map of the neighbouring literature}
+\label{sec:map}
+
+Applied to the classes named in Section~\ref{sec:prior}, the condition sorts
+them, and the sorting is a computation rather than a judgement: look at the
+criteria, not at the method.
+
+\begin{table}[h]
+\centering
+\caption{Neighbouring published classes against the reachable condition.  What
+decides a row is the \emph{criteria}: the decision function is unconstrained on
+the reachable side.}
+\label{tab:map}
+\small
+\begin{tabular}{p{0.40\textwidth}p{0.20\textwidth}p{0.14\textwidth}l}
+\toprule
+published class & criteria & level sets & reachable \\
+\midrule
+linear fractional $\Phi$ over $\E$ of a MOILP
+  & linear & hyperplanes & \textbf{yes} \\
+hyperbolic optimisation over $\E$ of a MOILFP
+  & ratios & hyperplanes & \textbf{yes} \\
+two linear fractional functions over $\E$ of a MOILFP
+  & ratios & hyperplanes & \textbf{yes} \\
+quadratic over the discrete Pareto set of a MOILFP
+  & ratios & hyperplanes & \textbf{yes} \\
+\midrule
+linear \emph{plus} linear fractional (Cherfaoui \& Moula\"i)
+  & sums & \textbf{conics} & \textbf{no} \\
+bi-objective over $\E$ of an integer \emph{quadratic} program
+  & quadratic & \textbf{quadrics} & \textbf{no} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The reachable side collapses.  Those four differ only in their \emph{decision}
+function --- one ratio, two ratios, a quadratic --- and by
+Theorem~\ref{thm:admissible} the decision function is free once $\E$ is
+explicit.  So four separate problem statements are four queries against one
+computation, which the test suite checks on a $48$-point efficient set: the
+quadratic, the two-ratio filter and the single ratio all answered exactly from
+one $\E$, against brute force, with \emph{no} integer program spent on any of
+the three.
+
+Two things this is not.  It is not a performance claim: those methods never
+build $\E$ and are untouched by its size, while this route is bounded by it,
+which is the trade recorded in Section~\ref{sec:admissible} and not softened
+here.  And it is not a reading of those papers --- the rows are the problem
+classes as their titles and abstracts state them, and the \emph{reachable}
+column is then decided by the algebra of Section~\ref{sec:admissible} alone.
+
+What the map is good for is narrower and firmer: it says in advance which
+neighbouring problems this machinery can be pointed at and which it provably
+cannot, and the two unreachable rows are unreachable for the same reason --- a
+criterion that is a sum or a product has curved level sets, and curvature is
+exactly what the slice enumeration cannot absorb.
+
 \subsection{What it costs, and when it is the wrong choice}
 
 This is a trade and not a free lunch, so the break-even is measured rather than
@@ -1494,7 +1552,7 @@ are explained by mechanisms that are themselves measured --- sub-program counts,
 node counts, pivot counts --- but the \emph{magnitudes} are properties of that
 family and should not be read as expected values elsewhere.
 
-\paragraph{Where this sits in the literature.}
+\paragraph{Where this sits in the literature.}\label{sec:prior}
 Two parts of this construction are prior art and are not claimed here.
 Criterion-space decomposition for optimising over an efficient set is
 established: Boland, Charkhgard and Savelsbergh (EJOR, 2017) work in the
