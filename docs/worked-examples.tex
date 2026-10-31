@@ -203,4 +203,20 @@ B & 3 & 15 & 4 & 4 & $-1/5$ \\
   points among 629 feasible ones.
 \end{enumerate}
 
+\paragraph{A note on the boxes used here.}
+The figures above show $\Dset$ and $\E$ in full, which means both examples had
+to be enumerated inside a variable box: $[6,12]$ for A and $[3,3,3]$ for B.
+Those two numbers were written by hand, and a box smaller than $\Dset$ would
+have produced figures that are internally consistent and wrong --- fewer
+feasible points, a smaller efficient set, and a $\Phi^{*}$ that is merely the
+best of what survived the clipping. Nothing in a picture reveals that.
+
+So they were checked rather than trusted, against the bounds the two models
+derive for themselves, which are $[3,3]$ for A and $[3,2,2]$ for B. Both
+hand-written boxes strictly contain those, so both enclose $\Dset$ and the
+figures show the whole of it. The routines that do this enumeration now refuse
+a box that fails the same check; the reasoning, and the eleven places where
+this class of unchecked hypothesis was found, are in the correctness section of
+the main note.
+
 \end{document}

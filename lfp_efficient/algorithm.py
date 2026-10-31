@@ -57,7 +57,9 @@ from fractions import Fraction
 from typing import Callable, List, Optional, Sequence
 
 from .edges import EdgeCandidate, clean_tableau_at, explore_edges
-from .efficiency import (add_dominance_cut, best_with_same_criterion,
+from .efficiency import (add_dominance_cut, assert_bounded,
+                         assert_denominators_positive,
+                         best_with_same_criterion,
                          has_linear_criteria, lower_bounds, efficient_dominator,
                          spread_weights, test_efficiency, weighted_sum_efficient)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
@@ -278,6 +280,8 @@ def optimize_over_efficient_set(problem: MOILFP, phi: FractionalObjective,
     So it is insurance for the heavy tail, not a general speed-up, and that is
     why it is off unless asked for.
     """
+    assert_bounded(problem)
+    assert_denominators_positive(problem)
     if batch_cuts_after is not None and not has_linear_criteria(problem):
         raise ValueError(
             "batch_cuts_after needs linear criteria: it generates its extra "

@@ -18,7 +18,8 @@ sys.path.insert(0, ROOT)
 
 from canvas import Axes, Canvas                                   # noqa: E402
 from lfp_efficient import (FractionalObjective, LE, MOILP, Model)  # noqa: E402
-from tracer import enumerate_points, trace                        # noqa: E402
+from tracer import (enumerate_points, trace, trace_after_seeding,  # noqa: E402
+                    trace_seeding)                                # noqa: E402
 
 OUT = HERE
 BOX, CUT, EFF, INC, PT = ("blue!60!black", "red!65!black",
@@ -126,6 +127,102 @@ def decision_3d(problem, feasible, efficient, opt, ub=3):
 
 
 # --------------------------------------------------------------------------
+# the hybrid, step by step
+# --------------------------------------------------------------------------
+def hybrid_figure(problem, feasible, efficient, step, xlim, ylim,
+                  xticks, yticks, walk=None):
+    """One seeding step: the box list after this seed is placed.
+
+    Green fills are efficient points, grey outlines dominated ones.  The orange
+    ring is the seed just placed; the red shading is the region its split
+    removes; the blue dashed rectangles are the boxes now open.  When *walk* is
+    given, every archive member is ringed instead -- that is the figure for the
+    heuristic phase, before any box exists.
+    """
+    a = Axes(205, 150, xlim, ylim, pad=30)
+    a.axes("$Z_1$", "$Z_2$", xticks, yticks)
+    if step is not None:
+        lo_b, hi_b = step["target"]
+        z = step["z"]
+        cut_hi = [min(z[k], hi_b[k]) if hi_b[k] is not None else z[k]
+                  for k in range(problem.p)]
+        a.box(lo_b, cut_hi, "red!35", "red!11")
+        for lo, hi in step["boxes"]:
+            a.box(lo, hi, CUT, None, dash=2)
+    eff = {tuple(x) for x in efficient}
+    for x in feasible:
+        z = problem.Z(x)
+        X, Y = a.X(z[0]), a.Y(z[1])
+        if not (a.pad - 2 <= X <= a.pad + a.iw + 2
+                and a.pad - 2 <= Y <= a.pad + a.ih + 2):
+            continue
+        a.dot(X, Y, 2.2, EFF) if tuple(x) in eff else a.ring(X, Y, 2.2, PT)
+    for point in (walk or []):
+        z = problem.Z(point)
+        a.ring(a.X(z[0]), a.Y(z[1]), 4.6, INC, 1.0)
+    if step is not None:
+        z = step["z"]
+        a.ring(a.X(z[0]), a.Y(z[1]), 5.8, INC, 1.0)
+    return a
+
+
+def empty_boxes_figure(problem, feasible, efficient, boxes, xlim, ylim,
+                       xticks, yticks):
+    """What the exact phase is left with: boxes that all turn out empty."""
+    a = Axes(205, 150, xlim, ylim, pad=30)
+    a.axes("$Z_1$", "$Z_2$", xticks, yticks)
+    for lo, hi in boxes:
+        a.box(lo, hi, CUT, None, dash=2)
+    eff = {tuple(x) for x in efficient}
+    for x in feasible:
+        z = problem.Z(x)
+        X, Y = a.X(z[0]), a.Y(z[1])
+        if not (a.pad - 2 <= X <= a.pad + a.iw + 2
+                and a.pad - 2 <= Y <= a.pad + a.ih + 2):
+            continue
+        a.dot(X, Y, 2.2, EFF) if tuple(x) in eff else a.ring(X, Y, 2.2, PT)
+    return a
+
+
+def process_diagram():
+    """The three phases and what crosses between them."""
+    a = Canvas(430, 168)
+    boxes = [
+        (8,   104, 118, 44, "blue!55!black",  "1. Pareto local search",
+         ["archive of candidates", "no proof, $0.011$\\,s"]),
+        (156, 104, 118, 44, "orange!80!black", "2. verify \\& order",
+         ["one efficiency test each", "sort by probe direction"]),
+        (304, 104, 118, 44, "green!45!black", "3. pre-split",
+         ["place each seed,", "no program at all"]),
+        (8,    14, 118, 44, "black!55",       "6. slices",
+         ["solve $\\Z(x)=v$,", "eliminate $r$ variables"]),
+        (156,  14, 118, 44, "black!55",       "5. exact enumeration",
+         ["probe what is left,", "prove the front complete"]),
+        (304,  14, 118, 44, "black!55",       "4. box list",
+         ["seeded region,", "the model never grows"]),
+    ]
+    for x, y, w, h, color, title, lines in boxes:
+        a.frame(x, y, w, h, color, 1.0)
+        a.text(x + w / 2, y + h - 11, title, "c", "\\footnotesize\\bfseries")
+        for i, line in enumerate(lines):
+            a.text(x + w / 2, y + h - 24 - 11 * i, line, "c")
+    for x1, x2, y in ((126, 156, 126), (274, 304, 126),
+                      (304, 274, 36), (156, 126, 36)):
+        a.seg(x1, y, x2, y, "black!65", 0.9)
+        d = 3 if x2 > x1 else -3
+        a.seg(x2, y, x2 - d, y + 3, "black!65", 0.9)
+        a.seg(x2, y, x2 - d, y - 3, "black!65", 0.9)
+    a.seg(363, 104, 363, 58, "black!65", 0.9)
+    a.seg(363, 58, 360, 62, "black!65", 0.9)
+    a.seg(363, 58, 366, 62, "black!65", 0.9)
+    a.text(214, 92, "verified efficient points, in probe order", "c")
+    a.text(371, 80, "boxes", "l")
+    a.text(289, 44, "$F$", "c")
+    a.text(141, 44, "$E(P_D)$", "c")
+    return a
+
+
+# --------------------------------------------------------------------------
 # result charts
 # --------------------------------------------------------------------------
 def bars(rows, ylabel, width=250, height=130, colors=None, scale=None):
@@ -223,6 +320,97 @@ def main():
         "of 175 / of 54", scale=175))
     write("r-reach-legend", legend([("weighted sum", "blue!55!black"),
                                     ("Tchebychev", "orange!80!black")]))
+    # The probe's direction: cuts are unchanged, the branch & bound is not.
+    write("r-probe-nodes", bars(
+        [("$n=4$", [658, 1397]), ("$n=5$", [372, 2105])],
+        "b\\&b nodes", scale=2105))
+    write("r-probe-cuts", bars(
+        [("$n=4$", [9, 9]), ("$n=5$", [9, 9])],
+        "cuts", scale=10))
+    write("r-probe-legend", legend([("maximise a direction", "blue!55!black"),
+                                    ("zero objective", "orange!80!black")]))
+    # The complete efficient set against the front alone: what is recovered
+    # grows as 5^f while the extra time stays under one doubling.
+    write("r-complete-gain", bars(
+        [("$f=0$", [1]), ("$f=1$", [5]), ("$f=2$", [25]), ("$f=3$", [125])],
+        "$|E|/|$front$|$", colors=["green!45!black"], scale=125))
+    write("r-complete-cost", bars(
+        [("$f=0$", [24, 10]), ("$f=1$", [27, 13]),
+         ("$f=2$", [42, 24]), ("$f=3$", [90, 68])],
+        "extra time \\%", scale=100))
+    write("r-complete-legend", legend([("small front (7)", "blue!55!black"),
+                                       ("larger front (13)", "orange!80!black")]))
+    # the campaign: 30 instances per p, medians of per-instance ratios
+    write("r-campaign-margin", bars(
+        [("$p=2$", [1.52]), ("$p=3$", [2.69]), ("$p=4$", [4.99]),
+         ("$p=5$", [7.93]), ("$p=6$", [14.57])],
+        "median ratio", colors=["blue!55!black"], scale=16))
+    write("r-campaign-work", bars(
+        [("$p=2$", [1.72, 1.28]), ("$p=3$", [1.40, 1.79]),
+         ("$p=4$", [1.19, 2.68]), ("$p=5$", [1.17, 3.16]),
+         ("$p=6$", [1.02, 5.37])],
+        "ratio", scale=5.5))
+    write("r-campaign-work-legend", legend([
+        ("sub-programs", "blue!55!black"), ("b\\&b nodes", "orange!80!black")]))
+    # five structurally different families, and the ceiling behind them
+    write("r-families", bars(
+        [("mixed", [1.37, 1.30]), ("loose", [1.29, 1.23]),
+         ("knapsack", [1.33, 1.27]), ("conflict", [1.14, 1.14]),
+         ("aligned", [1.31, 1.14])],
+        "ratio", scale=1.45))
+    write("r-families-legend", legend([("small $|F|$", "blue!55!black"),
+                                       ("large $|F|$", "orange!80!black")]))
+    # the coverage collapse, and what the speed-up does with it
+    write("r-cover", bars(
+        [("$n{=}6$", [87, 29]), ("$n{=}10$", [65, 24]),
+         ("$n{=}12$", [35, 9]), ("$p{=}5$", [12, 2])],
+        "\\% of front / probes", scale=90))
+    write("r-cover-legend", legend([("front covered", "blue!55!black"),
+                                    ("probes removed", "orange!80!black")]))
+    write("r-campaign-front", bars(
+        [("$|F|\\,1$--$4$", [2.7]), ("$|F|\\,5$--$12$", [7.5]),
+         ("$|F|\\,13+$", [31.4])],
+        "median ratio", colors=["green!45!black"], scale=32))
+    # the hybrid that pays, and the order it needed
+    write("r-hybrid", bars(
+        [("front", [1.33]), ("$E(P_D)$", [1.31]), ("probes", [0.72])],
+        "ratio", colors=["green!45!black"], scale=1.5))
+    write("r-order", bars(
+        [("archive", [0.89]), ("probe order", [0.70]), ("reversed", [0.94])],
+        "probes", colors=["orange!80!black"], scale=1.0))
+    # four attempts on the sub-problem count, and the one that went round it
+    # Three of the four COST time; a bar chart cannot draw a negative saving,
+    # so they are drawn at zero and the caption says so. The point is the gap
+    # between the two series, which is the whole finding.
+    write("r-wall", bars(
+        [("early exit", [25, 0]), ("contradiction", [24.8, 2]),
+         ("range", [11.3, 0]), ("dominated", [15, 0])],
+        "\\% removed / saved", scale=26))
+    write("r-wall-legend", legend([("sub-problems removed", "blue!55!black"),
+                                   ("time saved", "orange!80!black")]))
+    # ---- the hybrid, on both illustration instances -----------------------
+    for tag, build_inst, xlim, ylim, xt, yt in (
+            ("ha", instance_a, (-4, 4), (-4, 10), [-4, -2, 0, 2, 4],
+             [-4, -2, 0, 2, 4, 6, 8, 10]),
+            ("hb", instance_b, (0, 13), (0, 7), [0, 4, 8, 12],
+             [0, 2, 4, 6])):
+        problem, phi, bounds = build_inst()
+        feasible, efficient = enumerate_points(problem, bounds)
+        found, steps = trace_seeding(problem, phi)
+        write(f"{tag}-walk", hybrid_figure(problem, feasible, efficient, None,
+                                           xlim, ylim, xt, yt,
+                                           walk=found.points))
+        for i, step in enumerate(steps, 1):
+            write(f"{tag}-seed{i}",
+                  hybrid_figure(problem, feasible, efficient, step,
+                                xlim, ylim, xt, yt))
+        front, popped = trace_after_seeding(problem, phi, found.points)
+        write(f"{tag}-left",
+              empty_boxes_figure(problem, feasible, efficient, popped,
+                                 xlim, ylim, xt, yt))
+        print(f"  {tag}: {len(steps)} seeding steps, "
+              f"{len(popped)} boxes left to probe")
+    write("h-process", process_diagram())
     print("figures written to", OUT)
 
 

@@ -147,10 +147,21 @@ class MOILFP:
     All criteria are maximised; a criterion to be minimised is passed with the
     sign of its numerator flipped.
 
-    Assumption, checked on construction of the algorithm's sub-problems: each
-    ``D_k(x) = d_k'x + b_k`` stays **strictly positive** on ``D``.  Without it
-    the ratio is not even continuous on the feasible set and the sign argument
-    that the whole method rests on fails.
+    Assumption: each ``D_k(x) = d_k'x + b_k`` stays **strictly positive** on
+    ``D``.  Without it the ratio is not even continuous on the feasible set and
+    the sign argument the whole method rests on fails.
+
+    It is **not** checked here, and this docstring used to claim it was
+    ``checked on construction of the algorithm's sub-problems'', which was
+    false.  Violating it does not raise: it produces a confidently wrong
+    answer.  On ``Z_1 = x_1/(x_1-1)`` over ``0 <= x <= 3``, whose denominator
+    changes sign, the front enumeration returns a single vector and reports
+    ``complete``, while a feasible point dominates it.
+
+    Call :func:`~lfp_efficient.efficiency.assert_denominators_positive` to turn
+    that into an error.  The exact entry points call it for you, once per
+    problem; it costs one integer program per *genuinely fractional* criterion
+    and nothing at all for linear ones.
 
     The data of every criterion is scaled to integers at construction (a
     criterion's numerator and denominator are multiplied by the same factor, so

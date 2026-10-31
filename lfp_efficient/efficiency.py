@@ -26,7 +26,7 @@ from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
                    solve_milp)
 from .model import EQ, GE, LE, MOILFP, Model
 from .rational import F, ZERO, dot
-from .simplex import OPTIMAL
+from .simplex import OPTIMAL, UNBOUNDED
 
 
 # --------------------------------------------------------------------------
@@ -375,6 +375,78 @@ def best_with_same_criterion(region: Model, problem: MOILFP,
 # fraction of what step 1 of the algorithm costs.  Only *supported* efficient
 # points are reachable this way, which loses nothing here: whatever comes back
 # is efficient, and that is all a cut centre or a lower bound needs.
+
+def assert_bounded(problem: MOILFP) -> None:
+    """Check that ``D`` is bounded, or raise.
+
+    Every method here enumerates maxima, so an unbounded ``D`` has nothing to
+    enumerate -- and, worse, the failure is silent.  An unbounded probe returns
+    a status that is not ``optimal``, which the enumeration used to read as
+    ``this box is empty``: on ``D = {x in Z^2_+ : x_1 - x_2 <= 0}`` it returned
+    an **empty front marked complete**, and the two optimisation searches still
+    reported ``infeasible``, on a problem that is feasible with efficient
+    points.
+
+    Since ``x >= 0``, ``D`` is bounded exactly when ``max sum_j x_j`` is
+    finite, so this costs **one** integer program for the whole problem,
+    cached.
+    """
+    if getattr(problem, "_boundedness_checked", False):
+        return
+    result = solve_linear_milp(problem.model, [F(1)] * problem.n)
+    if result.status == UNBOUNDED:
+        raise ValueError(
+            "D is not bounded: sum of the variables has no maximum over it. "
+            "Every method here enumerates maxima, so a bounded feasible set "
+            "is required; add the missing upper bounds")
+    if result.status != OPTIMAL:
+        raise ValueError(f"D is empty or unusable ({result.status})")
+    problem._boundedness_checked = True
+
+
+def assert_denominators_positive(problem: MOILFP) -> None:
+    """Check ``D_k(x) = d_k'x + b_k > 0`` on ``D``, or raise.
+
+    The whole method rests on this.  ``e_k`` of Theorem 4 carries the sign of
+    ``Z_k(x) - Z_k(a)`` only because both denominators are positive, so a
+    criterion whose denominator changes sign silently inverts a comparison --
+    and the search then reports a front it has not got.  Measured on
+    ``Z_1 = x_1/(x_1-1)`` over ``0 <= x <= 3``: the enumeration returns one
+    vector, sets ``complete``, and a feasible point dominates it.
+
+    The check is exact and costs **one integer program per genuinely
+    fractional criterion**.  A linear criterion has ``d_k = 0`` and
+    ``b_k = 1``, so its denominator is the constant 1 and it is skipped --
+    which is why the usual case pays nothing.  The verdict is cached on the
+    problem, so the entry points can call this freely.
+    """
+    if getattr(problem, "_denominators_checked", False):
+        return
+    for k, z in enumerate(problem.criteria):
+        if all(c == 0 for c in z.V):              # constant denominator
+            if Fraction(z.beta) <= 0:
+                raise ValueError(
+                    f"criterion {k + 1} has the constant denominator "
+                    f"{z.beta}, which is not strictly positive")
+            continue
+        # minimise d_k'x over D, which is where b_k + d_k'x is smallest.
+        # solve_linear_milp MAXIMISES, so the minimum is reached by maximising
+        # the negated row and negating the answer back -- getting that backwards
+        # made the first draft of this check reject valid instances.
+        result = solve_linear_milp(problem.model,
+                                   [-Fraction(c) for c in z.V])
+        if result.status != OPTIMAL:
+            raise ValueError(
+                f"the denominator of criterion {k + 1} has no minimum over D "
+                f"({result.status}); D must be non-empty and bounded")
+        least = -result.objective + Fraction(z.beta)
+        if least <= 0:
+            raise ValueError(
+                f"the denominator of criterion {k + 1} reaches {least} on D, "
+                "but the method needs it strictly positive everywhere; "
+                "see MOILFP's docstring")
+    problem._denominators_checked = True
+
 
 def has_linear_criteria(problem: MOILFP) -> bool:
     """True when every criterion is a ratio with a constant denominator.

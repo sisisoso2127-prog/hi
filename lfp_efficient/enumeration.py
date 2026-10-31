@@ -39,7 +39,20 @@ def enumerate_efficient_set(problem: MOILFP, bounds: Sequence[int]) -> Enumerati
 
     A point ``x0`` is efficient when no feasible ``x1`` satisfies
     ``C x1 >= C x0`` with at least one strict inequality (Definition 1).
+
+    The box must enclose ``D``, and that is checked.  It is this routine the
+    test suite and the examples use as the *reference* for ``E(P_D)``, so a box
+    that clips ``D`` does not merely return less -- it redefines the truth
+    every other method is compared against, and the comparison still looks
+    like agreement.  Measured before the guard: on ``x_1 + x_2 <= 6``,
+    ``x_1 - x_2 <= 2`` with box ``[1, 1]`` it reported one efficient point
+    where ``E(P_D)`` holds five, and called it ``E(P_D)``.
     """
+    from .complete import assert_box_contains
+    assert_box_contains(problem, bounds,
+                        "What it returns would be the efficient set of the "
+                        "clipped problem, reported as E(P_D)")
+
     result = Enumeration()
     for combo in product(*(range(b + 1) for b in bounds)):
         x = [F(v) for v in combo]
@@ -195,7 +208,19 @@ def best_over_efficient_set_by_scan(problem: MOILFP, phi, bounds: Sequence[int])
     practical reference for instances where enumerating ``E(P_D)`` -- let alone
     the ``|D|^2`` pairwise comparisons -- would be out of reach.
     Returns ``(x, value, n_feasible, n_tested)``.
+
+    The box must enclose ``D``, and that is checked: the scan is only a proof
+    of optimality over the points it ranks, and a clipped box both hides
+    better points and removes the dominators that disqualify the ones it
+    keeps.  Measured before the guard: box ``[1, 1]`` on the instance above
+    returned ``1/3`` as the exact optimum of ``(P_E)``; the true value is
+    ``2/5``.
     """
+    from .complete import assert_box_contains
+    assert_box_contains(problem, bounds,
+                        "The scan would rank only the points it keeps and "
+                        "report the best of them as the optimum of (P_E)")
+
     raw = _fast_feasible_points(problem, bounds)
 
     # Z_k(x) >= Z_k(y)  <=>  N_k(x) D_k(y) >= N_k(y) D_k(x)  (denominators > 0),
@@ -277,7 +302,21 @@ def certify_optimum(problem: MOILFP, phi, x_opt: Sequence[Fraction],
     """
     from .efficiency import efficient_dominator, test_efficiency
 
+    from .complete import box_shortfall
+
     x_opt = list(x_opt)
+    # The challengers are searched inside this box, so a box smaller than D
+    # hides them and the certificate comes back "proved" on a point that is
+    # not optimal.  Measured before this guard: bounds [1,1] certified the
+    # efficient point (2,0) at Phi = 1/9 while the optimum is 5/17 at (3,3).
+    # variable_bounds caches on the problem, so re-asking costs nothing.
+    narrow = box_shortfall(problem, bounds)
+    if narrow:
+        return Certificate(False, reason=(
+            "the search box does not contain D ("
+            + ", ".join(f"x_{j + 1} reaches {r}, box allows {a}"
+                        for j, r, a in narrow)
+            + "), so challengers outside it were never looked at"))
     if not problem.model.is_feasible(x_opt):
         return Certificate(False, reason="the claimed point is not feasible")
     if phi(x_opt) != value:
