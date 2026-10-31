@@ -706,6 +706,108 @@ def _report_order(results, out):
                "than sortedness.")
 
 
+def _kendall_tau(order, reference):
+    """Rank correlation between a hand-over order and the probe's own order."""
+    pos = {tuple(int(c) for c in x): i for i, x in enumerate(reference)}
+    r = [pos[tuple(int(c) for c in x)] for x in order]
+    con = dis = 0
+    for i in range(len(r)):
+        for j in range(i + 1, len(r)):
+            if r[i] < r[j]:
+                con += 1
+            elif r[i] > r[j]:
+                dis += 1
+    return (con - dis) / (con + dis) if con + dis else 0.0
+
+
+def _correlation(pairs):
+    """Pearson r on the raw pairs -- never on binned medians, which inflate it."""
+    if len(pairs) < 3:
+        return None
+    xs = [a for a, _ in pairs]
+    ys = [b for _, b in pairs]
+    mx, my = statistics.mean(xs), statistics.mean(ys)
+    num = sum((x - mx) * (y - my) for x, y in pairs)
+    den = (sum((x - mx) ** 2 for x in xs) * sum((y - my) ** 2 for y in ys)) ** 0.5
+    return num / den if den else None
+
+
+def experiment_order_mechanism(instances, budget, n=6, p=3, shuffles=6):
+    """Does agreement with the probe direction *predict* the gain?
+
+    Experiment 7 shows three named orders behaving differently.  This asks the
+    sharper question: is the gain a function of a quantity computable *before*
+    running anything --- the Kendall tau between the hand-over order and the
+    probe's own order?
+
+    Many orders per instance (probe, reversed, archive, and shuffles) give a
+    spread of tau, and each is paired with its probe count against the unseeded
+    search.  Every ordering is also checked to return the same front, so none
+    can buy probes by losing vectors.
+
+    The correlation is reported on the **raw pairs**.  Binning them and
+    correlating the band medians gave -0.98 on the same data against -0.52 raw:
+    averaging away the within-band spread nearly doubles the figure, and
+    quoting that would be the error this campaign exists to prevent.
+    """
+    from lfp_efficient.front import enumerate_front
+    from lfp_efficient.generated import pareto_seeds
+
+    pairs, bands = [], {}
+    edges = [(-1.01, -0.6), (-0.6, -0.2), (-0.2, 0.2),
+             (0.2, 0.6), (0.6, 0.99), (0.99, 1.01)]
+    for seed in range(instances):
+        problem, phi, _ = build(seed, n, p)
+        base, _, _, _ = timed(enumerate_front, problem, phi,
+                              time_budget=budget)
+        if not base.complete:
+            continue
+        gen = pareto_seeds(problem, phi, seeds=8, seed=seed)
+        pts = list(gen.points)
+        if len(pts) < 4:
+            continue
+        rnd = random.Random(seed)
+        orders = [list(pts), list(reversed(pts)), list(gen.archive_order)]
+        for _ in range(shuffles):
+            q = list(pts)
+            rnd.shuffle(q)
+            orders.append(q)
+        for q in orders:
+            front, _, _, _ = timed(enumerate_front, problem, phi,
+                                   time_budget=budget, seeds=q)
+            if not front.complete or len(front.vectors) != len(base.vectors):
+                continue
+            pairs.append((_kendall_tau(q, pts), front.probes / base.probes))
+        print(f"    seed={seed:2d}: {len(orders)} orders", flush=True)
+
+    for lo, hi in edges:
+        vals = [r for t, r in pairs if lo <= t < hi]
+        if len(vals) >= 3:
+            bands[f"{lo:.1f}..{hi:.1f}"] = {"n": len(vals),
+                                            "median": statistics.median(vals)}
+    return {"instances": instances, "n": n, "p": p, "pairs": len(pairs),
+            "bands": bands, "r_raw": _correlation(pairs)}
+
+
+def _report_order_mechanism(results, out):
+    m = results["order_mechanism"]
+    out.append(f"\n=== 7b. does agreement with the probe direction predict "
+               f"the gain? ===")
+    out.append(f"{m['pairs']} (tau, probe-ratio) pairs from {m['instances']} "
+               f"instances at n={m['n']}, p={m['p']}")
+    out.append(f"{'tau band':>14} {'n':>5} {'probe ratio (median)':>22}")
+    out.append("-" * 44)
+    for band, st in m["bands"].items():
+        out.append(f"{band:>14} {st['n']:>5} {st['median']:>21.3f}")
+    out.append("-" * 44)
+    r = m["r_raw"]
+    out.append(f"Pearson r on the RAW pairs: {r:+.3f}"
+               if r is not None else "too few pairs to correlate")
+    out.append("the band medians are monotone, but r is moderate: tau predicts "
+               "the\ndirection and the trend, not the gain on a given "
+               "instance.")
+
+
 def _report_breakeven(results, out):
     out.append("\n=== 5. break-even: decision functions before building "
                "E(P_D) pays ===")
@@ -822,6 +924,8 @@ def report(results):
         _report_filter(results, out)
     if "order" in results:
         _report_order(results, out)
+    if "order_mechanism" in results:
+        _report_order_mechanism(results, out)
     return "\n".join(out)
 
 
@@ -834,14 +938,16 @@ def main():
                         help="a pilot run: few instances, small p")
     parser.add_argument("--only", action="append", default=None,
                         choices=["margin", "seeds", "front", "complete", "breakeven",
-                                 "filter", "order"])
+                                 "filter", "order",
+                                 "mechanism"])
     args = parser.parse_args()
 
     instances = 5 if args.quick else args.instances
     budget = 10.0 if args.quick else args.budget
     ps = [2, 3, 4] if args.quick else [2, 3, 4, 5, 6]
     wanted = args.only or ["margin", "seeds", "front", "complete",
-                           "breakeven", "filter", "order"]
+                           "breakeven", "filter", "order",
+                           "mechanism"]
 
     print(f"campaign: {instances} instances per configuration, "
           f"{budget:.0f}s budget per run")
@@ -853,26 +959,30 @@ def main():
     started = time.perf_counter()
 
     if "margin" in wanted:
-        print("  [1/7] the margin, per p")
+        print("  [1/8] the margin, per p")
         results["margin"] = experiment_margin(instances, budget, ps)
     if "seeds" in wanted:
-        print("  [2/7] what a seed is worth")
+        print("  [2/8] what a seed is worth")
         results["seeds"] = experiment_seeds(instances, budget)
     if "front" in wanted:
-        print("  [3/7] enumerating the front")
+        print("  [3/8] enumerating the front")
         results["front"] = experiment_front(max(8, instances // 2), budget)
     if "complete" in wanted:
-        print("  [4/7] completing the front")
+        print("  [4/8] completing the front")
         results["complete"] = experiment_complete(instances, budget)
     if "breakeven" in wanted:
-        print("  [5/7] how many decision functions before E(P_D) pays")
+        print("  [5/8] how many decision functions before E(P_D) pays")
         results["breakeven"] = experiment_breakeven(instances, budget)
     if "filter" in wanted:
-        print("  [6/7] several decision functions at once")
+        print("  [6/8] several decision functions at once")
         results["filter"] = experiment_filter(instances, budget)
     if "order" in wanted:
-        print("  [7/7] the order the seeds are handed over")
+        print("  [7/8] the order the seeds are handed over")
         results["order"] = experiment_order(instances, budget)
+    if "mechanism" in wanted:
+        print("  [8/8] does the probe direction predict the gain")
+        results["order_mechanism"] = experiment_order_mechanism(
+            instances, budget)
 
     results["meta"]["seconds"] = time.perf_counter() - started
     OUT.write_text(json.dumps(results, indent=1, default=str))

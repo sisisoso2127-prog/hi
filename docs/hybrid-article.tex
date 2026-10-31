@@ -764,6 +764,49 @@ $0.83\times$, so roughly two fifths of what the ordering buys is lost by
 handing the same seeds over the way the archive produces them --- which is
 exactly what a straightforward implementation does.
 
+\paragraph{And the direction predicts the gain, up to a point.}
+The three arms show that \emph{which} order is used matters.  The sharper
+question is whether the gain is a function of something computable \emph{before}
+anything is run --- namely the Kendall rank correlation $\tau$ between the
+hand-over order and the probe's own order.  Many orders per instance (probe,
+reversed, archive, and shuffles) give a spread of $\tau$, each paired with its
+probe count against the unseeded search, and each checked to return the same
+front.
+
+\begin{table}[h]
+\centering
+\caption{Probe count against the unseeded search, by agreement with the probe
+direction.  $144$ pairs from $22$ instances at $n=6$, $p=3$.}
+\label{tab:tau}
+\begin{tabular}{lrr}
+\toprule
+$\tau$ band & pairs & probe ratio (median) \\
+\midrule
+$[-1.0,\ -0.6)$ & $22$ & $0.916$ \\
+$[-0.6,\ -0.2)$ & $23$ & $0.889$ \\
+$[-0.2,\ \ 0.2)$ & $50$ & $0.811$ \\
+$[\ 0.2,\ \ 0.6)$ & $26$ & $0.751$ \\
+$[\ 0.6,\ \ 1.0)$ & $6$ & $0.736$ \\
+$\tau = 1$ (probe order) & $17$ & $\mathbf{0.667}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The medians are monotone across every band, which is the mechanism: the gain
+tracks \emph{agreement with the search's own direction}, and the three named
+arms are three points on that curve rather than three separate facts.
+
+\textbf{But the raw correlation is $r = -0.52$, not the $-0.98$ the table
+invites.}  Correlating the six band medians gives $-0.98$ on exactly this data;
+averaging away the within-band spread nearly doubles the figure.  The honest
+number is the one on the $144$ raw pairs, and it says $\tau$ predicts the
+\emph{direction and the trend} and not the gain on a given instance --- about a
+quarter of the variance.  We record the inflated figure here rather than
+quietly not computing it, because binning before correlating is an easy way to
+turn a moderate relationship into a spectacular one, and this project has
+withdrawn two numbers already for being quoted past their evidence.
+
 \subsection{The algorithm}
 \label{sec:pseudo}
 
