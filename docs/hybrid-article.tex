@@ -31,7 +31,7 @@ strictly larger than the last.  We keep the unexplored part of the problem in
 subtraction, every sub-problem is $\Dset$ plus a handful of ordinary linear
 rows, and the model never grows.
 
-Three results follow.  First, a characterisation that makes the complete
+Four results follow.  First, a characterisation that makes the complete
 efficient set cheap: \textbf{if $v$ is non-dominated then every $x \in \Dset$
 with $\Z(x) = v$ is efficient}, so $\E$ is exactly the union of the slices of
 the non-dominated set and \emph{no efficiency test is paid on any slice point}.
@@ -40,7 +40,17 @@ criteria as much as for linear ones; solving those equations eliminates $r$
 variables before enumeration begins and is worth a median $49\times$ over
 scanning with them as pruning rows.  Third, a hybridisation that pays: a Pareto
 local search supplies verified efficient points which are placed in the box
-list without a probe.  It reaches the whole of $\E$ at $1.36\times$ the pure
+list without a probe.  Fourth, and it is what the first three are for: an
+explicit $\E$ admits \emph{any computable} decision function, where the
+decision-space methods need a ratio form to build their cuts from.  A sum of
+ratios, a maximum of ratios, or several decision functions at once --- each its
+own problem in that literature --- cost here exactly what one ratio costs.  The
+break-even against solving one decision function at a time is a measured median
+of $13$ functions, with a range of three orders of magnitude; for a single
+linear fractional $\Phi$ the decision-space method is often the better buy, and
+the break-even is $1$ only outside the class it accepts.
+
+The hybrid reaches the whole of $\E$ at $1.36\times$ the pure
 exact method over 120 instances spanning $n = 6 \dots 12$, faster on 116, at
 $1.39\times$ on genuinely fractional criteria, and between $1.14\times$ and
 $1.37\times$ on each of five structurally different instance families, with
@@ -264,6 +274,142 @@ extra integer program per vector.  That pairing has a consequence worth
 stating: \textbf{the largest value on the front is the optimum of $(P_E)$}, so
 the enumeration is a second, independent exact method for $(P_E)$ and serves as
 a cross-check on the first.
+
+\section{What an explicit \texorpdfstring{$\E$}{E(P\_D)} buys: the admissible
+decision function}
+\label{sec:admissible}
+
+The previous section delivers $\E$ itself rather than an optimum, and that
+changes what $\Phi$ has to be.  The point is easiest to see as a contrast
+between what each route needs:
+
+\begin{quote}
+A decision-space method needs \emph{structure in $\Phi$} and nothing of $\E$;
+this route needs \emph{$\E$} and nothing of $\Phi$.
+\end{quote}
+
+\noindent
+A branch-and-cut for a linear fractional $\Phi$ derives its cuts, its bounds
+and its Dinkelbach-style sub-problems from the ratio form.  Replace $\Phi$ by a
+\emph{sum} of two ratios and the method does not degrade --- it stops applying,
+because there is no ratio to linearise.  Over a finite, explicit, certified
+$\E$, that case costs exactly what one ratio costs, since the optimum of a
+function over a finite explicit set is settled by evaluation and not by
+structure.
+
+\begin{theorem}[Admissible class]\label{thm:admissible}
+Let $\E$ be known and proved complete.  Then for \emph{any} function $f$
+defined on $\Dset$,
+\[
+  \max\{ f(x) : x \in \E \}
+\]
+is computed exactly by evaluating $f$ on $\E$, together with the full set of
+maximisers.  No linearity, monotonicity, continuity, differentiability or ratio
+form is required of $f$.
+\end{theorem}
+
+\noindent
+The proof is the finiteness of $\E$ and nothing else, which is exactly why the
+statement is worth making: the content is not in the theorem but in having paid
+for $\E$ in Section~\ref{sec:complete} at a price that makes paying worthwhile.
+Table~\ref{tab:admissible} reports six shapes of $f$ checked against
+independent brute-force maximisation; the first is the classical case and the
+other five are outside the class any of the decision-space fractional methods
+accepts.
+
+\begin{table}[h]
+\centering
+\caption{Six decision functions on the published instance, each exact against a
+brute-force maximisation over the reference efficient set.  $\Phi_1,\Phi_2$ are
+linear fractional.}
+\label{tab:admissible}
+\begin{tabular}{llr}
+\toprule
+decision function & admitted by decision-space branch-and-cut? & optimum \\
+\midrule
+$\Phi_1$                        & yes --- the classical case & $5/17$ \\
+$\Phi_1 + \Phi_2$               & no & $47/35$ \\
+$\max(\Phi_1,\Phi_2)$           & no & $6/5$ \\
+$\Phi_1 \cdot \Phi_2$           & no & $6/35$ \\
+$(x_1^2+1)/(x_2^2+1)$           & no & $10$ \\
+piecewise / black box           & no & $3/11$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Several decision functions at once}
+
+The same explicitness answers a harder question for free.  Optimising
+\emph{two} linear fractional functions over an integer efficient set is its own
+problem in the literature, needing its own branch and bound with cutting
+planes.  Here it is a dominance filter over a set already in hand:
+
+\[
+  \bigl\{\, x \in \E \;:\; \text{no } y \in \E \text{ has }
+  (\Phi_1,\dots,\Phi_m)(y) \geqslant (\Phi_1,\dots,\Phi_m)(x)
+  \text{ with one strict} \,\bigr\}
+\]
+
+\noindent
+and the cost does not depend on $m$, nor on what the $\Phi_i$ are: $m$ ratios,
+one ratio and one quadratic, or ten black boxes cost the same scan.  On the
+published instance the two-ratio filter keeps $4$ of the $7$ efficient points,
+exactly the brute-force answer.
+
+Ties are reported rather than resolved arbitrarily, which the single-answer
+interface of the decision-space methods cannot do and which matters here for
+the reason in Remark~\ref{rem:notZ}: $\Phi$ is a function of $x$ and not of
+$\Z(x)$, so several efficient points may attain the optimum while carrying
+different criterion vectors.
+
+\subsection{What it costs, and when it is the wrong choice}
+
+This is a trade and not a free lunch, so the break-even is measured rather than
+asserted.  Against the honest alternative --- running the exact method of
+Section~\ref{sec:pseudo} once per decision function --- building $\E$ first
+pays only after enough questions are asked of it.
+
+\begin{table}[h]
+\centering
+\caption{How many decision functions before building $\E$ pays.  Eight
+instances with conflicting criteria; ``break-even'' is
+$\text{build} / (\text{one exact run} - \text{one scan})$.}
+\label{tab:breakeven}
+\begin{tabular}{lrrrr}
+\toprule
+instance & $|\E|$ & build $\E$ & one scan & break-even \\
+\midrule
+$n=6$, $p=3$  & $52$  & $1.10$\,s & $0.0015$\,s & $\mathbf{0.9}$ \\
+$n=6$, $p=3$  & $64$  & $2.05$\,s & $0.0018$\,s & $1.6$ \\
+$n=5$, $p=3$  & $17$  & $0.18$\,s & $0.0004$\,s & $2.2$ \\
+$n=7$, $p=3$  & $90$  & $2.36$\,s & $0.0029$\,s & $11.3$ \\
+$n=5$, $p=3$  & $72$  & $1.18$\,s & $0.0018$\,s & $13.8$ \\
+$n=4$, $p=3$  & $25$  & $0.19$\,s & $0.0005$\,s & $19.0$ \\
+$n=6$, $p=4$  & $105$ & $3.13$\,s & $0.0031$\,s & $70.4$ \\
+$n=4$, $p=3$  & $58$  & $0.77$\,s & $0.0013$\,s & $2117$ \\
+\midrule
+\textbf{median} & & & & $\mathbf{13}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The median is $13$ decision functions and the range spans three orders of
+magnitude, so this is a \emph{direction and not a prediction} --- the same
+discipline applied to every other magnitude in this paper.  The spread is
+driven by how expensive one exact run happens to be on that instance, which
+varies by a factor of $600$ across these eight and is not known in advance.
+
+Two consequences, and the first is the unflattering one.  \textbf{For a single
+linear fractional $\Phi$, the decision-space method is often the better buy},
+and nothing here contradicts that: it never builds $\E$ and so is untouched by
+its size, while this route builds $\E$ and is bounded by it.  The two fail on
+different instances --- on a structureless $f$, and on an $\E$ too large to
+enumerate --- which is why they belong side by side rather than ranked.
+
+The second does not depend on the measurement at all.  For any $f$ outside the
+linear fractional class, the break-even is $1$, because there is no competitor
+to amortise against.
 
 \section{The hybridisation}
 \label{sec:hybrid}
@@ -1228,7 +1374,11 @@ decision space with branch and bound or cutting planes.  So what is plausibly
 unaddressed is narrower than the method: the \emph{combination}, together with
 what makes the transfer exact rather than approximate --- the integer-valued
 $e_k$ of \eqref{eq:ek}, which replaces an estimated minimal step by
-$e_k \geqslant 1$ exactly, and the slice results of Section~\ref{sec:complete}.
+$e_k \geqslant 1$ exactly, and the slice results of Section~\ref{sec:complete}
+--- and what that combination then buys, which is the admissible class of
+Section~\ref{sec:admissible}.  That last point is the one we would defend
+first, because it does not rest on being the fastest at anything: it is a
+statement about which problems can be posed at all.
 
 \textbf{This is a statement about what we did and did not find, not a claim of
 novelty}, and two limits are worth naming.  No full text in that list has been

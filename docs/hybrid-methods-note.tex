@@ -1729,6 +1729,129 @@ $1.35\times$.  Severe where $|F|$ is large --- $45\%$ at $|F| = 302$ --- but
 not as general as one instance made it look.  That is the fifth time in this
 note that a single instance misled, which is why the campaign exists.
 
+\section{The admissible decision function, and what the combination buys}
+\label{sec:admissible}
+
+Everything before this section is machinery for reaching $\E$.  This one is
+what the machinery is \emph{for}, and it is the part of the combination we
+would defend first, because it does not rest on being fastest at anything: it
+is a statement about which problems can be posed at all.
+
+\subsection{The contrast}
+
+\begin{quote}
+A decision-space method needs \emph{structure in $\Phi$} and nothing of $\E$;
+this route needs \emph{$\E$} and nothing of $\Phi$.
+\end{quote}
+
+\noindent
+Every method in the fractional literature of Section~\ref{sec:prior} builds its
+cuts, its bounds and its sub-problems out of the ratio form of $\Phi$.  That is
+not incidental, it is the mechanism.  Replace $\Phi$ by a sum of two ratios and
+such a method does not lose efficiency --- it stops applying, because there is
+no single ratio to linearise or to feed a Dinkelbach step.
+
+\begin{proposition}[Admissible class]\label{prop:admissible}
+Let $\E$ be known and proved complete.  For \emph{any} function $f$ defined on
+$\Dset$, $\max\{f(x) : x \in \E\}$ and the full set of its maximisers are
+computed exactly by evaluating $f$ on $\E$.  No linearity, monotonicity,
+continuity, differentiability or ratio form is required.
+\end{proposition}
+
+\noindent
+The proof is the finiteness of $\E$ and nothing more.  We state it anyway
+because the content is not in the proposition --- it is in having paid for
+$\E$ in Section~\ref{sec:complete} at a price that makes paying worth it, and
+the proposition is what that price buys.  It is also the reason the slice
+results and the hybrid matter beyond their own margins: they are what make the
+hypothesis of this proposition affordable.
+
+\begin{table}[h]
+\centering
+\caption{Six shapes of decision function on the published instance, each
+checked against an independent brute-force maximisation over the reference
+efficient set.  $\Phi_1,\Phi_2$ are linear fractional.}
+\begin{tabular}{llr}
+\toprule
+decision function & admitted by decision-space branch-and-cut? & optimum \\
+\midrule
+$\Phi_1$                        & yes --- the classical case & $5/17$ \\
+$\Phi_1 + \Phi_2$               & no & $47/35$ \\
+$\max(\Phi_1,\Phi_2)$           & no & $6/5$ \\
+$\Phi_1 \cdot \Phi_2$           & no & $6/35$ \\
+$(x_1^2+1)/(x_2^2+1)$           & no & $10$ \\
+piecewise / black box           & no & $3/11$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Several decision functions at once}
+
+Optimising \emph{two} linear fractional functions over an integer efficient set
+is its own problem in that literature, with its own branch and bound and its
+own cutting planes.  Here it is a dominance filter over a set already in hand,
+and the cost depends neither on how many functions are asked for nor on what
+they are: $m$ ratios, one ratio and one quadratic, or ten black boxes cost the
+same scan.  On the published instance the two-ratio filter keeps $4$ of the $7$
+efficient points, exactly the brute-force answer.
+
+Ties are reported rather than resolved arbitrarily, which the single-answer
+interface of the decision-space methods cannot do.  It matters here for the
+reason in Remark~\ref{rem:notZ}: $\Phi$ is a function of $x$, not of $\Z(x)$.
+Several efficient points can therefore attain the optimum while carrying
+different criterion vectors, and a decision maker shown only one of them has
+been shown less than the truth.
+
+\subsection{The break-even, and when this is the wrong choice}
+
+A trade, not a free lunch, so it is measured.  The honest alternative is to run
+the exact method of Algorithm~\ref{alg:box} once per decision function.
+
+\begin{table}[h]
+\centering
+\caption{How many decision functions before building $\E$ pays.  Eight
+instances with conflicting criteria; break-even is
+$\text{build} / (\text{one exact run} - \text{one scan})$.}
+\begin{tabular}{lrrrr}
+\toprule
+instance & $|\E|$ & build $\E$ & one scan & break-even \\
+\midrule
+$n=6$, $p=3$  & $52$  & $1.10$\,s & $0.0015$\,s & $\mathbf{0.9}$ \\
+$n=6$, $p=3$  & $64$  & $2.05$\,s & $0.0018$\,s & $1.6$ \\
+$n=5$, $p=3$  & $17$  & $0.18$\,s & $0.0004$\,s & $2.2$ \\
+$n=7$, $p=3$  & $90$  & $2.36$\,s & $0.0029$\,s & $11.3$ \\
+$n=5$, $p=3$  & $72$  & $1.18$\,s & $0.0018$\,s & $13.8$ \\
+$n=4$, $p=3$  & $25$  & $0.19$\,s & $0.0005$\,s & $19.0$ \\
+$n=6$, $p=4$  & $105$ & $3.13$\,s & $0.0031$\,s & $70.4$ \\
+$n=4$, $p=3$  & $58$  & $0.77$\,s & $0.0013$\,s & $2117$ \\
+\midrule
+\textbf{median} & & & & $\mathbf{13}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Median $13$, range across three orders of magnitude.  By the discipline of
+Section~\ref{sec:audit} that makes it a \emph{direction and not a prediction}:
+the spread is driven by how expensive one exact run happens to be on the
+instance, which varies by a factor of $600$ across these eight and is not known
+beforehand.  Quoting the median alone would be the same error this note
+records making five times.
+
+\paragraph{The unflattering half, stated first.}
+For a single linear fractional $\Phi$ the decision-space method is often the
+better buy, and two rows above are below break-even at one function.  It never
+builds $\E$ and is therefore untouched by its size; this route builds $\E$ and
+is bounded by it.  They fail on different instances --- on a structureless $f$,
+and on an $\E$ too large to enumerate --- which is why they belong side by side
+rather than ranked, and why the wall of Section~\ref{sec:wall} limits this
+result exactly as it limits the others.
+
+\paragraph{The half that does not depend on the measurement.}
+For any $f$ outside the linear fractional class the break-even is $1$, because
+there is no competitor to amortise against.  That is not a speed claim and no
+timing can overturn it.
+
 \section{A wall met four times, and the one change that went round it}
 \label{sec:wall}
 
