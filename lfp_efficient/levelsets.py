@@ -56,8 +56,30 @@ That class is strictly larger than linear fractional.  ``Z(x) =
 the pair of hyperplanes ``c'x + a = +-v (d'x + b)``.  So are integer powers of
 a ratio, and sign-split forms generally.
 
-What the characterisation predicts about a neighbouring published class
-----------------------------------------------------------------------
+Half three: and not even affine pieces
+--------------------------------------
+The same argument runs once more.  ``points_satisfying`` takes a conjunction of
+equations *and* ``a'x <= b`` inequalities, and an inequality costs it nothing
+extra -- it goes through the same substitution as the model's own rows.  So the
+pieces of the union need only be **polyhedra**:
+
+    **It is enough that, for each level ``v``, the set ``{x : Z(x) = v}`` is a
+    finite union of polyhedra, computable from ``v``.**
+
+That reaches a criterion type the affine version does not.  For a maximum of
+ratios, ``max_i Z_i(x) = v`` holds exactly when some ``Z_j(x) = v`` and every
+other ``Z_i(x) <= v``, so each branch is one equation together with ``m - 1``
+inequalities -- a polyhedron, not an affine subspace.  Minimax criteria are the
+same construction with the inequalities reversed, and
+:func:`max_of_ratios_branches` builds either.
+
+The three widenings are the same observation applied three times: what the
+slice enumeration needs is not a shape but *finitely many linear systems*.
+What it cannot absorb is curvature, which is what
+Half four below is about.
+
+Half four: what the characterisation predicts about a published class
+---------------------------------------------------------------------
 The limit above is not only about this package.  It is sharp enough to say
 which *published* problem classes the slice machinery cannot reach, and one of
 them sits directly next door.
@@ -112,7 +134,7 @@ from .model import MOILFP
 from .rational import F
 
 __all__ = ["level_set_branches_fractional", "generalized_slice_points",
-           "abs_ratio_branches"]
+           "abs_ratio_branches", "max_of_ratios_branches"]
 
 
 def level_set_branches_fractional(problem: MOILFP, k: int, v: Fraction):
@@ -139,6 +161,17 @@ def abs_ratio_branches(c: Sequence, a, d: Sequence, b, n: int):
     return branches
 
 
+def _as_branch(piece):
+    """Accept a branch as ``(coeffs, rhs)`` or as ``(equations, inequalities)``."""
+    if (len(piece) == 2 and piece[0] and isinstance(piece[0][0], (list, tuple))
+            and not isinstance(piece[0], tuple)):
+        return list(piece[0]), list(piece[1])
+    eqs, ines = piece
+    if isinstance(eqs, (list, tuple)) and eqs and isinstance(eqs[0], (list, tuple)):
+        return list(eqs), list(ines)
+    return [(eqs, ines)], []
+
+
 def generalized_slice_points(problem: MOILFP, bounds: Sequence[int],
                              v: Sequence[Fraction],
                              branch_fns: Sequence[Callable]) -> List[tuple]:
@@ -153,11 +186,47 @@ def generalized_slice_points(problem: MOILFP, bounds: Sequence[int],
     Points are deduplicated: two branches may intersect, and a point on the
     intersection belongs to the slice once.
     """
-    per_criterion = [list(branch_fns[k](v[k])) for k in range(len(branch_fns))]
+    per_criterion = [[_as_branch(b) for b in branch_fns[k](v[k])]
+                     for k in range(len(branch_fns))]
     seen, out = set(), []
     for combo in product(*per_criterion):
-        for pt in points_satisfying(problem, bounds, list(combo)):
+        eqs, ines = [], []
+        for e, i in combo:
+            eqs.extend(e)
+            ines.extend(i)
+        for pt in points_satisfying(problem, bounds, eqs, ines):
             if pt not in seen:
                 seen.add(pt)
                 out.append(pt)
     return out
+
+
+def max_of_ratios_branches(ratios, n: int):
+    """``max_i (c_i'x + a_i)/(d_i'x + b_i)`` -- a union of **polyhedra**.
+
+    ``max_i Z_i(x) = v`` holds exactly when some ``Z_j(x) = v`` and every other
+    ``Z_i(x) <= v``.  Each branch is therefore one equation together with
+    ``len(ratios) - 1`` inequalities, which is a polyhedron rather than an
+    affine subspace --- the second widening of the class, past the
+    union-of-hyperplanes case that ``|c'x+a|/(d'x+b)`` needed.
+
+    *ratios* is a sequence of ``(c, a, d, b)`` with ``d'x + b > 0`` on ``D``,
+    so clearing a denominator preserves the direction of ``<=``.  A minimax
+    criterion is the same construction with the inequalities reversed.
+    """
+    def branches(v: Fraction):
+        out = []
+        for j, (cj, aj, dj, bj) in enumerate(ratios):
+            eq = ([F(cj[t]) - v * F(dj[t]) for t in range(n)],
+                  v * F(bj) - F(aj))
+            ines = []
+            for i, (ci, ai, di, bi) in enumerate(ratios):
+                if i == j:
+                    continue
+                # (c_i'x + a_i)/(d_i'x + b_i) <= v   <=>
+                # (c_i - v d_i)'x <= v b_i - a_i     (denominator > 0)
+                ines.append(([F(ci[t]) - v * F(di[t]) for t in range(n)],
+                             v * F(bi) - F(ai)))
+            out.append(([eq], ines))
+        return out
+    return branches

@@ -40,7 +40,8 @@ from lfp_efficient.complete import box_shortfall, variable_bounds
 from lfp_efficient.over import (maximize_over_efficient_set,
                                 nondominated_over_efficient_set)
 from lfp_efficient.levelsets import (abs_ratio_branches,
-                                     generalized_slice_points)
+                                     generalized_slice_points,
+                                     max_of_ratios_branches)
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
@@ -2994,6 +2995,58 @@ def test_three_published_problem_statements_are_one_computation():
 
     return (f"3 published problem statements answered from one E(P_D) of "
             f"{len(result.points)} points, each matching brute force")
+
+def test_a_minimax_criterion_is_reached_by_unions_of_polyhedra():
+    """The widening applied once more: pieces need not be affine.
+
+    ``points_satisfying`` takes inequalities alongside equations at no extra
+    cost, so the pieces of the union can be **polyhedra**.  That reaches a
+    criterion the affine version does not: for a maximum of ratios,
+    ``max_i Z_i(x) = v`` holds exactly when some ``Z_j(x) = v`` and every other
+    ``Z_i(x) <= v``, so a branch is one equation plus ``m - 1`` inequalities.
+    """
+    import itertools
+    model = (Model(3).add([1, 1, 0], LE, 6).add([1, -1, 0], LE, 2)
+             .add([0, 0, 1], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])
+    bounds = variable_bounds(problem)
+    C1, A1 = [1, 0, 0], 0
+    ratios = [([1, -1, 0], 2, [1, 1, 0], 3), ([0, 1, 0], 1, [2, 1, 0], 4)]
+
+    def rat(c, a, d, b, x):
+        return Fraction(sum(c[j] * x[j] for j in range(3)) + a,
+                        sum(d[j] * x[j] for j in range(3)) + b)
+
+    def Z(x):
+        return (Fraction(sum(C1[j] * x[j] for j in range(3)) + A1),
+                max(rat(*r, x) for r in ratios))
+
+    feasible = [tuple(Fraction(c) for c in t)
+                for t in itertools.product(*(range(b + 1) for b in bounds))
+                if model.is_feasible([Fraction(c) for c in t])]
+
+    def dom(y, x):
+        zy, zx = Z(y), Z(x)
+        return (all(b >= a for a, b in zip(zx, zy))
+                and any(b > a for a, b in zip(zx, zy)))
+
+    truth = [x for x in feasible if not any(dom(y, x) for y in feasible)]
+    front = sorted({Z(x) for x in truth})
+    sizes = [sum(1 for x in truth if Z(x) == v) for v in front]
+    assert max(sizes) > 1, "a singleton-slice instance would test nothing"
+
+    branch_fns = [lambda v: [([([Fraction(c) for c in C1], v - A1)], [])],
+                  max_of_ratios_branches(ratios, 3)]
+    rebuilt = set()
+    for v in front:
+        for pt in generalized_slice_points(problem, bounds, list(v), branch_fns):
+            rebuilt.add(tuple(Fraction(c) for c in pt))
+
+    assert rebuilt == {tuple(x) for x in truth}, (len(rebuilt), len(truth))
+    for x in rebuilt:
+        assert not any(dom(y, list(x)) for y in feasible), x
+    return (f"|front|={len(front)}, |E(P_D)|={len(truth)} rebuilt exactly for a "
+            f"max-of-ratios criterion; slices carry {sizes}")
 
 # --------------------------------------------------------------------------
 def main():

@@ -439,6 +439,33 @@ the reason in Remark~\ref{rem:notZ}: $\Phi$ is a function of $x$ and not of
 $\Z(x)$, so several efficient points may attain the optimum while carrying
 different criterion vectors.
 
+\paragraph{And the pieces need not be affine.}
+The same argument runs once more.  The slice enumerator takes a conjunction of
+equations \emph{and} $a^{\top}x \leqslant b$ inequalities at no extra cost ---
+an inequality goes through the same substitution as the model's own rows --- so
+the pieces of the union need only be \textbf{polyhedra}:
+
+\begin{quote}
+It is enough that, for each level $v$, the set $\{x : Z(x) = v\}$ is a finite
+union of \emph{polyhedra}, computable from $v$.
+\end{quote}
+
+\noindent
+That reaches a criterion type the affine version does not.  For a maximum of
+ratios, $\max_i Z_i(x) = v$ holds exactly when some $Z_j(x) = v$ and every
+other $Z_i(x) \leqslant v$, so each branch is one equation together with $m-1$
+inequalities --- a polyhedron, not an affine subspace.  Minimax criteria are
+the same construction with the inequalities reversed.  Checked, not asserted:
+on a three-variable instance whose third variable enters no criterion, a
+$\max$-of-two-ratios criterion gives a front of $3$ vectors over $12$ efficient
+points with every slice carrying $4$, and the slice machinery rebuilds all $12$
+exactly and re-verifies each one efficient against brute force.
+
+The three widenings are one observation applied three times: what the slice
+enumeration needs is not a \emph{shape} but \emph{finitely many linear
+systems}.  What it cannot absorb is \textbf{curvature} --- which is exactly
+what the two unreachable rows of Table~\ref{tab:map} have.
+
 \subsection{The characterisation as a map of the neighbouring literature}
 \label{sec:map}
 

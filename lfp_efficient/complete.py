@@ -179,8 +179,14 @@ def reduce_rows(equations, n: int):
 
 
 def points_satisfying(problem: MOILFP, bounds: Sequence[int],
-                      equations) -> List[tuple]:
+                      equations, inequalities=()) -> List[tuple]:
     """Integer points of ``D`` with ``Z(x) = v``, by elimination then scan.
+
+    Takes a conjunction of linear *equations* and, optionally, linear
+    ``a'x <= b`` *inequalities*.  The inequalities are what let a level set be
+    a finite union of **polyhedra** rather than only of affine subspaces: see
+    :mod:`lfp_efficient.levelsets`, where that is the difference between
+    reaching ``|c'x+a|/(d'x+b)`` and reaching ``max`` or ``min`` of ratios.
 
     The ``p`` slice equations are *solved* rather than merely used as pruning
     rows.  Gaussian elimination expresses ``r`` of the variables as linear
@@ -210,6 +216,7 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
         for coeffs, rhs in equations:
             rows.append((list(coeffs), rhs))
             rows.append(([-c for c in coeffs], -rhs))
+        rows.extend((list(c), r) for c, r in inequalities)
         return _fast_feasible_points(problem, bounds, rows)
     pivot_set = set(pivots)
     free = [j for j in range(n) if j not in pivot_set]
@@ -228,6 +235,10 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
         return out, right
 
     le_rows, others = [], []
+    # extra ``a'x <= b`` rows that came with the branch, not with the model --
+    # they go through the same substitution as the model's own rows
+    for coeffs, rhs in inequalities:
+        le_rows.append(substitute(coeffs, rhs))
     for con in problem.model.constraints:
         if con.sense == LE:
             le_rows.append(substitute(con.coeffs, con.rhs))
