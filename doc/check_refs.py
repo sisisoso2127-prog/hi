@@ -196,8 +196,25 @@ def controle(path: str) -> List[str]:
                 # se retrouve dans « 230{,}26 » et le fascheur reclame une
                 # macro pour une valeur qui n'a rien a voir. Une regle qui
                 # crie a tort finit par ne plus etre lue.
-                if re.search(r"(?<![\d])" + re.escape(lit) + r"(?![\d])",
-                             ligne):
+                # Frontiere de chiffre a GAUCHE, et a droite il faut en
+                # plus que la valeur ne porte pas une autre unite. Deux
+                # faux positifs l'ont montre : « $1{,}5\cdot 10^{6}$ »
+                # (un coefficient) et « $1{,}5$~s » (un temps median)
+                # n'ont rien a voir avec une cardinalite de 1,5 %. Une
+                # valeur suivie d'un exposant, d'un multiplicateur ou
+                # d'une unite designe une autre grandeur ; seul le pour
+                # cent et la valeur nue sont les grandeurs partagees.
+                for m in re.finditer(
+                        r"(?<![\d])" + re.escape(lit) + r"(?![\d])",
+                        ligne):
+                    queue = ligne[m.end():m.end() + 14]
+                    if re.match(r"\$?\s*(?:\\cdot|\\times|\^|"
+                                r"[~ ]\\?,?\s*s\b|\\,?s\b)", queue):
+                        continue
+                    break
+                else:
+                    continue
+                if True:
                     pbs.append(f"valeur mesuree en dur ligne {num} : "
                                f"{lit} -- utiliser \\{mac}")
     return pbs

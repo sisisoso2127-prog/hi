@@ -2997,50 +2997,74 @@ elles n'ont aucune raison de coïncider.
 \paragraph{Au-delà de l'énumérable.}
 Les huit lignes ci-dessus ont $|S|$ de $1\,130$ à $5\,275$ : $Z(\Ecal)$ s'y
 obtient en filtrant $S$. C'est une limite du protocole et non du sujet. Le
-tableau~\ref{tab:livrablegrand} la lève, la vérité terrain y étant produite
-par décomposition en régions -- chaque vecteur efficace découpe l'espace
-restant en sous-régions disjointes, posées comme des programmes entiers de
-taille constante -- avec arrêt sur \emph{toutes régions closes}. Le
-certificat tient donc par épuisement et non par budget : à $n=16$,
-\grandRegions{} régions closes, \grandIlp{} appels \ILP. Les cardinaux sont
-exacts, pas des minorants.
+tableau~\ref{tab:livrablegrand} la lève jusqu'à un front de
+$\grandZEmax{}$ vecteurs, avec une vérité terrain exacte produite par deux
+méthodes selon le régime. Quand $S$ est hors d'atteinte : décomposition en
+régions -- chaque vecteur efficace découpe l'espace restant en sous-régions
+disjointes, posées comme des programmes entiers de taille constante -- avec
+arrêt sur \emph{toutes régions closes}, donc un certificat par épuisement et
+non par budget ($n=20$, $p=3$ : \grandRegions{} régions,
+\grandIlp{} appels \ILP, \grandSecondes{}~s). Quand $S$ est parcourable :
+force brute. Ce partage n'est pas un relâchement du protocole mais une
+mesure : sur $n=12$, $p=4$, les régions ont dépensé $\regionsBudget{}$~s
+sans clore ($\regionsEchec{}$ vecteurs sur $1\,874$) là où la force brute
+tranche en $\bruteSecondes{}$~s, parce que chaque vecteur trouvé engendre
+$p$ régions et que le nombre de régions croît donc avec l'épaisseur du
+front, quand le coût de la force brute ne dépend que de $|S|$.
 
 \begin{table}[H]
 \centering
-\caption{L'archive contre $Z(\Ecal)$ \emph{énuméré par régions}, budget de
-$180$ appels \ILP. Instances non énumérables ($|S|$ non calculé). Pureté
-$1$ et $z^\ast\in\Acal$ sur les quatre lignes.\ \conf{1}{1}{1}}
+\caption{L'archive contre $Z(\Ecal)$ \emph{énuméré exactement}, budget de
+$180$ appels \ILP. Pureté $1$ et $z^\ast\in\Acal$ sur les sept lignes. La
+dernière colonne donne la méthode exacte employée.\ \conf{1}{1}{1}}
 \label{tab:livrablegrand}
-\begin{tabular}{rrrrrrrr}
+\begin{tabular}{rrrrrrrrl}
 \toprule
 $n$ & $p$ & corr & $|Z(\Ecal)|$ & $|Z(\Acal)|$ &
-card\,\% & $HV$\,\% & $\varepsilon^+$\\
+card\,\% & $HV$\,\% & $\varepsilon^+$ & $Z(\Ecal)$ par\\
 \midrule
-$10$ & $3$ & $0{,}00$ & $70$  & $12$ & $17{,}1$ & $85{,}1$ & $0{,}374$\\
-$12$ & $3$ & $0{,}00$ & $202$ & $27$ & $13{,}4$ & $76{,}5$ & $0{,}374$\\
-$14$ & $3$ & $0{,}00$ & $591$ & $22$ & $3{,}7$  & $79{,}3$ & $0{,}144$\\
-$16$ & $3$ & $0{,}00$ & $811$ & $25$ & $3{,}1$  & $80{,}2$ & $0{,}215$\\
+$10$ & $3$ & $0{,}00$ & $70$    & $12$ & $17{,}1$ & $85{,}1$ & $0{,}374$ & régions\\
+$12$ & $3$ & $0{,}00$ & $202$   & $27$ & $13{,}4$ & $76{,}5$ & $0{,}374$ & régions\\
+$14$ & $3$ & $0{,}00$ & $591$   & $22$ & $3{,}7$  & $79{,}3$ & $0{,}144$ & régions\\
+$16$ & $3$ & $0{,}00$ & $811$   & $25$ & $3{,}1$  & $80{,}2$ & $0{,}215$ & régions\\
+$20$ & $3$ & $0{,}00$ & $860$   & $27$ & $3{,}1$  & $72{,}6$ & $0{,}468$ & régions\\
+$10$ & $4$ & $0{,}00$ & $194$   & $27$ & $13{,}9$ & $92{,}3$ & $0{,}254$ & brute\\
+$12$ & $4$ & $0{,}00$ & $1\,874$& $29$ & $1{,}5$  & $66{,}1$ & $0{,}258$ & brute\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Trois faits, dont le deuxième corrige la lecture naturelle du précédent.
-La pureté tient quand le front est multiplié par onze
-(\puretePtsGrand{} points de plus, \puretePtsTotal{} au total). La
+Quatre faits, dont le troisième retire une réserve que nous avions inscrite
+avant de l'avoir mesurée. La pureté tient quand le front est multiplié par
+vingt-sept (\puretePtsGrand{} points de plus, \puretePtsTotal{} au total) ;
+les colonnes card et couv restent égales, rejouant la
+proposition~\ref{prop:couv} sur des fronts vingt fois plus épais. La
 couverture s'effondre à $\grandCardMin{}\,\%$ sans que l'archive recule --
-elle passe de $12$ à $25$ points ; c'est le dénominateur qui croît, et
+elle passe de $12$ à $29$ points ; c'est le dénominateur qui croît, et
 l'énoncé exact est que l'archive croît et que le front croît plus vite.
-Enfin ce qui est rendu ne se dégrade pas : $HV$ reste entre
-$\grandHVMin{}\,\%$ et $\grandHVMax{}\,\%$, le rapport $HV/\text{card}$
-monte de $5{,}0$ à $\grandFacteurMax{}$, et le pire $\varepsilon^+$ des
-quatre lignes est atteint sur le \emph{plus petit} front. La méthode ne se
-dégrade donc pas avec la dimension : elle change de nature de livrable, d'un
-échantillon représentatif vers un petit ensemble de compromis bien placés.
-Une réserve, car elle borne la portée : les quatre instances sont toutes à
-$p=3$, et le pire $\varepsilon^+$ de l'étude reste celui de la ligne $p=4$
-du tableau~\ref{tab:livrable}. Nous avons mesuré l'ajout de variables, pas
-l'ajout de critères.
+\emph{L'ajout d'un critère ne dégrade pas le décalage} : les deux lignes
+$p=4$ donnent $\grandEpsQuatreA{}$ et $\grandEpsQuatreB{}$, mieux que trois
+des cinq lignes $p=3$, et le pire $\varepsilon^+$ du tableau
+($\grandEpsMax{}$) est sur une ligne $p=3$ ; la ligne $n=12$, $p=4$ a même
+un front huit fois plus épais que la ligne $p=4$ du
+tableau~\ref{tab:livrable} pour un $\varepsilon^+$ deux fois meilleur
+($\grandEpsQuatreB{}$ contre $0{,}503$), de sorte que ce $0{,}503$ était un effet
+d'instance et non un effet de $p$. Ce qui se dégrade est l'hypervolume sur
+un front épais : $HV$ atteint son minimum ($\grandHVMin{}\,\%$) précisément
+sur le front le plus épais et son maximum ($\grandHVMax{}\,\%$) sur l'un des
+plus minces, tandis que le rapport $HV/\text{card}$ monte à
+$\grandFacteurMax{}$. La méthode ne se dégrade donc pas avec la taille :
+elle change de nature de livrable, d'un échantillon représentatif vers un
+petit ensemble de compromis bien placés.
+
+Une réserve subsiste et elle est nette : $n=20$, $p=4$ est hors de portée
+des \emph{deux} méthodes -- force brute au-delà de ses deux millions de
+points réalisables, régions arrêtées à $\horsPorteeVect{}$ vecteurs pour
+$\horsPorteeIlp{}$ appels \ILP\ sans clore. Nous n'avons aucune vérité
+terrain là où $n$ et $p$ sont \emph{simultanément} grands, et les sept
+lignes font varier l'un ou l'autre, jamais les deux : rien ici ne permet de
+l'extrapoler.
 
 % ============================================================================
 \section{Usage en aide à la décision}

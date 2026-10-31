@@ -1,14 +1,26 @@
 ================================================================================================
-L'ARCHIVE CONTRE Z(E) ENUMERE PAR REGIONS -- plafond ILP 180
+L'ARCHIVE CONTRE Z(E) ENUMERE EXACTEMENT -- plafond ILP 180
 ================================================================================================
 
-instance            |Z(E)|  |Z(A)|   purete   card %   couv %     HV %     eps+  z* in A
+instance            |Z(E)|  |Z(A)|   purete   card %   couv %     HV %     eps+  z* in A   Z(E) par
 ------------------------------------------------------------------------------------------------
-n=10 p=3 c=0.00         70      12    1.000     17.1     17.1     85.1    0.374      oui
-n=12 p=3 c=0.00        202      27    1.000     13.4     13.4     76.5    0.374      oui
-n=14 p=3 c=0.00        591      22    1.000      3.7      3.7     79.3    0.144      oui
-n=16 p=3 c=0.00        811      25    1.000      3.1      3.1     80.2    0.215      oui
+n=10 p=3 c=0.00         70      12    1.000     17.1     17.1     85.1    0.374      oui    regions
+n=12 p=3 c=0.00        202      27    1.000     13.4     13.4     76.5    0.374      oui    regions
+n=14 p=3 c=0.00        591      22    1.000      3.7      3.7     79.3    0.144      oui    regions
+n=16 p=3 c=0.00        811      25    1.000      3.1      3.1     80.2    0.215      oui    regions
+n=20 p=3 c=0.00        860      27    1.000      3.1      3.1     72.6    0.468      oui    regions
+n=10 p=4 c=0.00        194      27    1.000     13.9     13.9     92.3    0.254      oui      brute
+n=12 p=4 c=0.00       1874      29    1.000      1.5      1.5     66.1    0.258      oui      brute
+n=20 p=4 c=0.00         --   enumeration non terminee dans le budget : pas de verite terrain
 ------------------------------------------------------------------------------------------------
+La colonne « Z(E) par » dit QUELLE methode exacte a produit la
+verite terrain : force brute quand S est parcourable, regions
+quand il ne l'est pas. Ce n'est pas une inconsistance du
+protocole mais la regle -- sur un front epais relativement a S,
+chaque vecteur engendre p regions et leur nombre explose, tandis
+que la force brute, elle, ne depend que de |S|. Les deux rendent
+un Z(E) exact ; seul le cout differe.
+
 « z* in A » verifie que le vecteur critere de l'incumbent est
 EFFICACE -- c'est-a-dire present dans Z(E). C'est le controle
 qui tombe en premier si l'archive ment sur son contenu.

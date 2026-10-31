@@ -5971,85 +5971,124 @@ Tout ce qui précède est mesuré sur des instances dont $S$ se parcourt
 exhaustivement : $|S|$ y va de $1\,130$ à $5\,275$, et $Z(E)$ s'obtient en
 filtrant cette liste. C'est une contrainte du protocole, pas du sujet, et
 elle plafonne les conclusions à des fronts de quelques dizaines de vecteurs.
-Nous la levons ici.
+Nous la levons ici, et nous allons jusqu'à un front de $\grandZEmax{}$.
 
-La vérité terrain des quatre instances qui suivent n'est pas obtenue par
-parcours de $S$ -- il est hors d'atteinte -- mais par \emph{décomposition en
-régions} : chaque vecteur efficace trouvé découpe l'espace restant en
-sous-régions disjointes où un critère est strictement amélioré, chacune
-posée comme un programme entier de taille constante. L'énumération s'arrête
-quand toutes les régions sont closes, et c'est ce qui donne au résultat sa
-valeur : le certificat tient \emph{par épuisement et non par budget}. À
-$n=16$, \grandRegions{} régions closes et \grandIlp{} appels ILP. Les quatre
-cardinaux $|Z(E)|$ du tableau~\ref{tab:livrableC} sont donc des cardinaux
-exacts, pas des minorants.
+La vérité terrain des sept instances qui suivent est \emph{exacte}, mais
+elle n'est pas produite partout de la même façon, et la règle mérite d'être
+énoncée parce qu'elle n'est pas celle que nous avions d'abord suivie.
+
+Pour les instances où $S$ est hors d'atteinte, nous employons une
+\emph{décomposition en régions} : chaque vecteur efficace trouvé découpe
+l'espace restant en sous-régions disjointes où un critère est strictement
+amélioré, chacune posée comme un programme entier de taille constante.
+L'énumération s'arrête quand toutes les régions sont closes, et c'est ce qui
+donne au résultat sa valeur -- le certificat tient \emph{par épuisement et
+non par budget}. À $n=20$, $p=3$ : \grandRegions{} régions closes,
+\grandIlp{} appels ILP, \grandSecondes{}~s.
+
+\begin{remark}[la décomposition n'est pas uniformément meilleure]
+Nous l'avons d'abord traitée comme si elle l'était, et la mesure l'a
+démenti. Sur $n=12$, $p=4$, elle a dépensé $\regionsBudget{}$~s cumulées
+sans clore -- $\regionsEchec{}$ vecteurs sur $1\,874$ -- pendant que la
+force brute tranche la même instance en $\bruteSecondes{}$~s. La raison est
+structurelle et non accidentelle : chaque vecteur trouvé engendre $p$
+nouvelles régions, donc le nombre de régions croît avec l'\emph{épaisseur}
+du front, tandis que le coût de la force brute ne dépend que de $|S|$. Avec
+$1\,874$ vecteurs efficaces pour $304\,497$ points réalisables, cette
+instance est exactement le régime inverse de celui pour lequel la
+décomposition a été écrite. La règle est donc : \emph{force brute quand $S$
+est parcourable, régions quand il ne l'est pas}, et le
+tableau~\ref{tab:livrableC} dit pour chaque ligne laquelle a servi. Les
+deux rendent un $Z(E)$ exact ; seul le coût diffère.
+\end{remark}
 
 \begin{table}[H]
 \centering
-\caption{L'archive mesurée contre $Z(E)$ \emph{énuméré par régions}, budget
-de $180$ appels ILP. Instances non énumérables : $|S|$ n'y est pas calculé,
-et la colonne disparaît. Les quatre lignes sont certifiées par épuisement
-(toutes régions closes).\ \conf{1}{1}{1}}
+\caption{L'archive mesurée contre $Z(E)$ \emph{énuméré exactement}, budget
+de $180$ appels ILP. Instances non énumérables par le protocole de la
+section précédente. La dernière colonne donne la méthode exacte employée.
+Les cinq lignes « régions » sont certifiées par épuisement (toutes régions
+closes).\ \conf{1}{1}{1}}
 \label{tab:livrableC}
-\begin{tabular}{rrrrrrrrc}
+\begin{tabular}{rrrrrrrrrl}
 \toprule
 $n$ & $p$ & corr & $|Z(E)|$ & $|Z(\mathcal{A})|$ &
-card\,\% & couv\,\% & $HV$\,\% & $\varepsilon^+$\\
+card\,\% & couv\,\% & $HV$\,\% & $\varepsilon^+$ & $Z(E)$ par\\
 \midrule
-$10$ & $3$ & $0{,}00$ & $70$  & $12$ & $17{,}1$ & $17{,}1$ & $85{,}1$ & $0{,}374$\\
-$12$ & $3$ & $0{,}00$ & $202$ & $27$ & $13{,}4$ & $13{,}4$ & $76{,}5$ & $0{,}374$\\
-$14$ & $3$ & $0{,}00$ & $591$ & $22$ & $3{,}7$  & $3{,}7$  & $79{,}3$ & $0{,}144$\\
-$16$ & $3$ & $0{,}00$ & $811$ & $25$ & $3{,}1$  & $3{,}1$  & $80{,}2$ & $0{,}215$\\
+$10$ & $3$ & $0{,}00$ & $70$    & $12$ & $17{,}1$ & $17{,}1$ & $85{,}1$ & $0{,}374$ & régions\\
+$12$ & $3$ & $0{,}00$ & $202$   & $27$ & $13{,}4$ & $13{,}4$ & $76{,}5$ & $0{,}374$ & régions\\
+$14$ & $3$ & $0{,}00$ & $591$   & $22$ & $3{,}7$  & $3{,}7$  & $79{,}3$ & $0{,}144$ & régions\\
+$16$ & $3$ & $0{,}00$ & $811$   & $25$ & $3{,}1$  & $3{,}1$  & $80{,}2$ & $0{,}215$ & régions\\
+$20$ & $3$ & $0{,}00$ & $860$   & $27$ & $3{,}1$  & $3{,}1$  & $72{,}6$ & $0{,}468$ & régions\\
+$10$ & $4$ & $0{,}00$ & $194$   & $27$ & $13{,}9$ & $13{,}9$ & $92{,}3$ & $0{,}254$ & brute\\
+$12$ & $4$ & $0{,}00$ & $1\,874$& $29$ & $1{,}5$  & $1{,}5$  & $66{,}1$ & $0{,}258$ & brute\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-La pureté vaut $1$ et $z^\ast$ appartient à l'archive sur les quatre lignes ;
-nous ne leur donnons pas de colonne pour ne pas en faire quatre fois la même.
-Trois lectures, dont la deuxième corrige ce que la section précédente
-laissait croire.
+La pureté vaut $1$ et $z^\ast$ appartient à l'archive sur les sept lignes ;
+nous ne leur donnons pas de colonne pour ne pas en faire sept fois la même.
+Les colonnes \textsc{card} et \textsc{couv} restent identiques, ce qui
+rejoue la proposition~\ref{prop:couv} sur des fronts jusqu'à vingt fois plus
+épais que ceux qui l'avaient d'abord constatée.
 
-\paragraph{La pureté tient quand le front se multiplie par onze.}
-De $|Z(E)|=70$ à $|Z(E)|=\grandZEmax{}$, aucun vecteur faussement annoncé
-efficace : \puretePtsGrand{} points de plus, soit \puretePtsTotal{} au total
-sur l'ensemble des instances mesurées. C'est la seule propriété de la
-méthode que nous présentons comme garantie par construction plutôt que par
-mesure, et c'est donc celle où une mesure contredisante coûterait le plus
-cher. Elle ne l'est pas. Les colonnes \textsc{card} et \textsc{couv}
-restent par ailleurs identiques, ce qui rejoue la
-proposition~\ref{prop:couv} sur des fronts vingt fois plus épais que ceux
-qui l'avaient d'abord constatée.
+Quatre lectures, dont la troisième retire une réserve que nous avions
+inscrite ici-même avant de l'avoir mesurée.
+
+\paragraph{La pureté tient quand le front se multiplie par vingt-sept.}
+De $|Z(E)|=\grandZEmin{}$ à $|Z(E)|=\grandZEmax{}$, aucun vecteur
+faussement annoncé efficace : \puretePtsGrand{} points de plus, soit
+\puretePtsTotal{} au total sur l'ensemble des instances mesurées. C'est la
+seule propriété de la méthode que nous présentons comme garantie par
+construction plutôt que par mesure, et c'est donc celle où une mesure
+contredisante coûterait le plus cher. Elle ne l'est pas.
 
 \paragraph{La couverture s'effondre, mais ce n'est pas l'archive qui recule.}
 Elle passe de $17{,}1\,\%$ à $\grandCardMin{}\,\%$. L'archive, elle, ne
-diminue pas : $12$ points à $n=10$, $25$ à $n=16$. C'est le dénominateur qui
-est multiplié par onze. L'énoncé exact est donc : \emph{l'archive croît, le
-front croît plus vite}. Le dire comme une dégradation de l'archive serait
-inexact, et le dire comme un succès le serait tout autant -- un décideur à
-qui l'on remet $25$ compromis sur $811$ ne reçoit pas le front.
+diminue pas : $12$ points à $n=10$, $29$ au front le plus épais. C'est le
+dénominateur qui est multiplié par vingt-sept. L'énoncé exact est donc :
+\emph{l'archive croît, le front croît plus vite}. Le dire comme une
+dégradation de l'archive serait inexact, et le dire comme un succès le
+serait tout autant -- un décideur à qui l'on remet $29$ compromis sur
+$1\,874$ ne reçoit pas le front.
 
-\paragraph{Mais ce qui est rendu ne se dégrade pas.}
-L'hypervolume ne suit pas la cardinalité : il reste entre
-$\grandHVMin{}\,\%$ et $\grandHVMax{}\,\%$ sur les quatre lignes, et le
-rapport $HV/\text{card}$ monte de $5{,}0$ à $\grandFacteurMax{}$. Le
-$\varepsilon^+$ ne se dégrade pas davantage : son pire cas ici est
-$\grandEpsMax{}$, à $n=10$, c'est-à-dire sur le \emph{plus petit} front des
-quatre, et il vaut $\grandEpsMin{}$ là où $|Z(E)|=591$. La lecture à retenir
-n'est donc pas que la méthode se dégrade avec la dimension, mais qu'elle
-\emph{change de nature de livrable} : d'un échantillon quantitativement
-représentatif du front elle devient un petit ensemble de compromis bien
-placés. Ce qui est exactement ce que demande un problème où $f$ désigne la
-partie du front qui intéresse.
+\paragraph{L'ajout d'un critère ne dégrade pas le décalage, contrairement à
+ce que nous avions supposé.}
+Nous avions écrit ici qu'ayant mesuré l'ajout de \emph{variables}, nous ne
+pouvions rien dire de l'ajout de \emph{critères}, et que le pire
+$\varepsilon^+$ de l'étude était sur une ligne $p=4$. Les deux lignes $p=4$
+du tableau donnent $\grandEpsQuatreA{}$ et $\grandEpsQuatreB{}$, soit mieux
+que trois des cinq lignes $p=3$ ; et le pire $\varepsilon^+$ du tableau,
+$\grandEpsMax{}$, est sur une ligne $p=3$. Mieux : $n=12$, $p=4$ a un front
+huit fois plus épais que la ligne $n=7$, $p=4$ du
+tableau~\ref{tab:livrableA} ($1\,874$ contre $218$) pour un
+$\varepsilon^+$ deux fois meilleur ($\grandEpsQuatreB{}$ contre
+$0{,}503$). Le
+$0{,}503$ était donc un effet d'instance et non un effet de $p$. Nous
+retirons la réserve plutôt que de la laisser, parce qu'elle attribuait à une
+cause structurelle ce qui n'était qu'une ligne particulière.
 
-\begin{remark}[ce que ces quatre lignes ne disent pas]
-Le $\varepsilon^+$ le plus mauvais de tout le mémoire reste celui de la
-ligne $n=7$, $p=4$ du tableau~\ref{tab:livrableA} ($0{,}503$), et les quatre
-instances nouvelles sont toutes à $p=3$. Il serait donc faux de lire le
-tableau~\ref{tab:livrableC} comme démentant le diagnostic de la
-section précédente : il montre que l'ajout de \emph{variables} ne dégrade
-pas le décalage, non que l'ajout de \emph{critères} ne le dégrade pas. Les
-deux dimensions ne se compensent pas et nous n'avons mesuré que la première.
+\paragraph{Ce qui se dégrade vraiment, c'est l'hypervolume sur un front épais.}
+$HV$ reste entre $\grandHVMin{}\,\%$ et $\grandHVMax{}\,\%$, et son minimum
+est atteint précisément sur le front le plus épais ($n=12$, $p=4$),
+son maximum sur l'un des plus minces ($n=10$, $p=4$). Le rapport $HV/\text{card}$, lui, monte jusqu'à
+$\grandFacteurMax{}$ : l'archive tient une part du volume quarante fois
+supérieure à sa part des points. La lecture à retenir n'est donc pas que la
+méthode se dégrade avec la taille, mais qu'elle \emph{change de nature de
+livrable} -- d'un échantillon quantitativement représentatif du front elle
+devient un petit ensemble de compromis bien placés. Ce qui est exactement ce
+que demande un problème où $f$ désigne la partie du front qui intéresse.
+
+\begin{remark}[la réserve qui subsiste, et elle est nette]
+$n=20$, $p=4$ est hors de portée des \emph{deux} méthodes : la force brute
+dépasse ses deux millions de points réalisables, et la décomposition en
+régions y a atteint $\horsPorteeVect{}$ vecteurs pour $\horsPorteeIlp{}$
+appels ILP sans clore. Nous n'avons donc aucune vérité terrain là où $n$ et
+$p$ sont \emph{simultanément} grands, et rien dans ce tableau ne permet de
+l'extrapoler : les sept lignes font varier l'un ou l'autre, jamais les deux.
+C'est la frontière de ce que nous savons mesurer, et nous préférons l'écrire
+que la combler par analogie.
 \end{remark}
 
 \subsection{Ce que cette section permet d'affirmer}

@@ -34,21 +34,33 @@
 \newcommand{\epsMed}{0{,}137}         % epsilon+ normalise
 \newcommand{\puretePts}{102}          % points sur lesquels la purete vaut 1
 
-% -- archive au-dela de l'enumerable : quatre instances n=10..16 -----------
-% Verite terrain par decomposition en regions (molfp_regions.py), toutes
-% regions closes -- certificat par epuisement, pas par budget.
-\newcommand{\grandZEmin}{70}          % |Z(E)| a n=10
-\newcommand{\grandZEmax}{811}         % |Z(E)| a n=16
-\newcommand{\grandCardMin}{3{,}1}     % cardinalite la plus faible (n=16)
-\newcommand{\grandHVMin}{76{,}5}      % hypervolume le plus faible (n=12)
-\newcommand{\grandHVMax}{85{,}1}      % hypervolume le plus eleve (n=10)
-\newcommand{\grandEpsMax}{0{,}374}    % epsilon+ le plus mauvais (n=10 et 12)
-\newcommand{\grandEpsMin}{0{,}144}    % epsilon+ le meilleur (n=14)
-\newcommand{\grandFacteurMax}{25{,}9} % rapport HV/card le plus eleve (n=16)
-\newcommand{\puretePtsGrand}{86}      % points purs sur les quatre lignes
-\newcommand{\puretePtsTotal}{188}     % 102 + 86, toutes instances mesurees
-\newcommand{\grandRegions}{14\,752}   % regions closes a n=16
-\newcommand{\grandIlp}{22\,187}       % appels ILP de l'enumeration a n=16
+% -- archive au-dela de l'enumerable : sept instances n=10..20, p=3 et 4 ---
+% Verite terrain EXACTE par deux methodes : decomposition en regions
+% (molfp_regions.py) quand S n'est pas parcourable, force brute
+% (cache_brute.py) quand il l'est. Les sept lignes sont exactes ; seul le
+% cout differe.
+\newcommand{\grandZEmin}{70}          % |Z(E)| a n=10 p=3
+\newcommand{\grandZEmax}{1874}        % |Z(E)| a n=12 p=4
+\newcommand{\grandCardMin}{1{,}5}     % cardinalite la plus faible (n=12 p=4)
+\newcommand{\grandHVMin}{66{,}1}      % hypervolume le plus faible (n=12 p=4)
+\newcommand{\grandHVMax}{92{,}3}      % hypervolume le plus eleve (n=10 p=4)
+\newcommand{\grandEpsMax}{0{,}468}    % epsilon+ le plus mauvais (n=20 p=3)
+\newcommand{\grandEpsMin}{0{,}144}    % epsilon+ le meilleur (n=14 p=3)
+\newcommand{\grandEpsQuatreA}{0{,}254}% epsilon+ a n=10 p=4
+\newcommand{\grandEpsQuatreB}{0{,}258}% epsilon+ a n=12 p=4
+\newcommand{\grandFacteurMax}{44{,}1} % rapport HV/card le plus eleve (n=12 p=4)
+\newcommand{\puretePtsGrand}{169}     % points purs sur les sept lignes
+\newcommand{\puretePtsTotal}{271}     % 102 + 169, toutes instances mesurees
+\newcommand{\grandRegions}{20\,119}   % regions closes a n=20 p=3
+\newcommand{\grandIlp}{31\,998}       % appels ILP de l'enumeration a n=20 p=3
+\newcommand{\grandSecondes}{1\,325}   % secondes de l'enumeration a n=20 p=3
+% Le cas hors de portee des DEUX methodes, qui borne ce que nous savons.
+\newcommand{\horsPorteeVect}{533}     % vecteurs atteints a n=20 p=4
+\newcommand{\horsPorteeIlp}{71\,448}  % appels ILP y depenses
+% Le regime ou les regions perdent contre la force brute.
+\newcommand{\bruteSecondes}{86{,}8}   % force brute a n=12 p=4
+\newcommand{\regionsEchec}{916}       % vecteurs des regions au meme endroit
+\newcommand{\regionsBudget}{9\,000}   % secondes cumulees qu'elles y ont eues
 
 % -- seconde route et forme unifiee ----------------------------------------
 \newcommand{\gainGeomMax}{38{,}77}    % meilleur gain, seconde route
