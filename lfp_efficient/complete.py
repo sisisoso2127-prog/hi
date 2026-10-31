@@ -178,8 +178,8 @@ def reduce_rows(equations, n: int):
     return pivots, M[:row]
 
 
-def slice_points(problem: MOILFP, bounds: Sequence[int],
-                 v: Sequence[Fraction]) -> List[tuple]:
+def points_satisfying(problem: MOILFP, bounds: Sequence[int],
+                      equations) -> List[tuple]:
     """Integer points of ``D`` with ``Z(x) = v``, by elimination then scan.
 
     The ``p`` slice equations are *solved* rather than merely used as pruning
@@ -201,12 +201,16 @@ def slice_points(problem: MOILFP, bounds: Sequence[int],
     approximation.
     """
     n = problem.n
-    solved = reduce_rows(slice_equations(problem, v), n)
+    solved = reduce_rows(equations, n)
     if solved is None:
         return []
     pivots, M = solved
     if not pivots:                           # nothing to eliminate: plain scan
-        return _fast_feasible_points(problem, bounds, slice_rows(problem, v))
+        rows = []
+        for coeffs, rhs in equations:
+            rows.append((list(coeffs), rhs))
+            rows.append(([-c for c in coeffs], -rhs))
+        return _fast_feasible_points(problem, bounds, rows)
     pivot_set = set(pivots)
     free = [j for j in range(n) if j not in pivot_set]
 
@@ -326,6 +330,18 @@ class CompleteSet:
             lines.append(f"  best Phi over E(P_D): {self.best_value} at "
                          f"({', '.join(str(c) for c in self.best_x)})")
         return "\n".join(lines)
+
+
+def slice_points(problem: MOILFP, bounds: Sequence[int],
+                 v: Sequence[Fraction]) -> List[tuple]:
+    """Integer points of ``D`` with ``Z(x) = v``.
+
+    The slice of a *linear fractional* criterion vector: one equation per
+    criterion, solved by :func:`points_satisfying`.  See
+    :mod:`lfp_efficient.levelsets` for why one equation per criterion is
+    exactly the fractional case and what lies just outside it.
+    """
+    return points_satisfying(problem, bounds, slice_equations(problem, v))
 
 
 def _assert_front_belongs(problem: MOILFP, front) -> None:

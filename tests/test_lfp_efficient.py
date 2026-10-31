@@ -39,6 +39,8 @@ from lfp_efficient.criterion_space import _rows_for, looks_empty, split
 from lfp_efficient.complete import box_shortfall, variable_bounds
 from lfp_efficient.over import (maximize_over_efficient_set,
                                 nondominated_over_efficient_set)
+from lfp_efficient.levelsets import (abs_ratio_branches,
+                                     generalized_slice_points)
 from lfp_efficient.subset import EfficientSubset, efficient_subset
 from lfp_efficient.front import (Front, enumerate_front, in_box,
                                  pre_split)
@@ -2770,6 +2772,110 @@ def test_the_queries_refuse_an_incomplete_efficient_set():
     assert maximize_over_efficient_set(whole, phi).value == \
         optimize_over_efficient_set(problem, phi).value
     return "truncated sets refused by both queries; the proved one agrees"
+
+def _abs_ratio_instance():
+    """``D`` in three variables; ``x_3`` enters no criterion, so slices are
+    grids in it, and ``Z_2`` is an absolute value over a linear form --- not a
+    linear fractional criterion."""
+    model = (Model(3).add([1, 1, 0], LE, 6).add([1, -1, 0], LE, 2)
+             .add([0, 0, 1], LE, 3))
+    problem = MOILP(model, [[1, 0, 0], [0, 1, 0]])
+    C1, A1 = [1, 0, 0], 0
+    C2, A2, D2, B2 = [1, -2, 0], 1, [1, 1, 0], 3
+
+    def Z(x):
+        num = sum(C2[j] * x[j] for j in range(3)) + A2
+        den = sum(D2[j] * x[j] for j in range(3)) + B2
+        return (Fraction(sum(C1[j] * x[j] for j in range(3)) + A1),
+                Fraction(abs(num), den))
+    branch_fns = [
+        lambda v: [([Fraction(c) for c in C1], v - A1)],
+        abs_ratio_branches(C2, A2, D2, B2, 3),
+    ]
+    return problem, Z, branch_fns, (C2, A2, D2, B2)
+
+
+def test_the_slice_machinery_reaches_past_linear_fractional_criteria():
+    """``E(P_D)`` rebuilt exactly for a criterion that is **not** a ratio.
+
+    The slice theorem itself assumes nothing about ``Z`` --- it is a dominance
+    argument --- so what limits the completion step is only whether a level set
+    can be enumerated.  A single hyperplane with data affine in the level is
+    exactly the linear fractional case (the proof is in
+    :mod:`lfp_efficient.levelsets`), but the machinery never needed *one*
+    hyperplane: a finite union of affine pieces costs a finite multiple.
+
+    ``Z_2 = |x_1 - 2x_2 + 1| / (x_1 + x_2 + 3)`` is outside the fractional
+    class and inside this one, its level set being the two hyperplanes
+    ``c'x + a = +- v (d'x + b)``.
+    """
+    import itertools
+    problem, Z, branch_fns, _ = _abs_ratio_instance()
+    bounds = variable_bounds(problem)
+
+    feasible = [tuple(Fraction(c) for c in t)
+                for t in itertools.product(*(range(b + 1) for b in bounds))
+                if problem.model.is_feasible([Fraction(c) for c in t])]
+
+    def dominates(y, x):
+        zy, zx = Z(y), Z(x)
+        return (all(b >= a for a, b in zip(zx, zy))
+                and any(b > a for a, b in zip(zx, zy)))
+
+    truth = [x for x in feasible if not any(dominates(y, x) for y in feasible)]
+    front = sorted({Z(x) for x in truth})
+    sizes = [sum(1 for x in truth if Z(x) == v) for v in front]
+    assert max(sizes) > 1, "a singleton-slice instance would test nothing"
+
+    rebuilt = set()
+    for v in front:
+        for pt in generalized_slice_points(problem, bounds, list(v), branch_fns):
+            rebuilt.add(tuple(Fraction(c) for c in pt))
+
+    assert rebuilt == {tuple(x) for x in truth}, (len(rebuilt), len(truth))
+    for x in rebuilt:
+        assert not any(dominates(y, list(x)) for y in feasible), x
+    return (f"|front|={len(front)}, |E(P_D)|={len(truth)} rebuilt exactly on a "
+            f"non-fractional criterion; slices carry {sizes}")
+
+
+def test_one_hyperplane_is_genuinely_not_enough_outside_the_ratio_class():
+    """The second branch is load-bearing, not defensive.
+
+    If a single hyperplane sufficed, the criterion would be linear fractional
+    by the characterisation.  It does not: dropping the ``-`` branch loses
+    points of the slice, and the points it loses are efficient.
+    """
+    import itertools
+    problem, Z, branch_fns, (C2, A2, D2, B2) = _abs_ratio_instance()
+    bounds = variable_bounds(problem)
+    feasible = [tuple(Fraction(c) for c in t)
+                for t in itertools.product(*(range(b + 1) for b in bounds))
+                if problem.model.is_feasible([Fraction(c) for c in t])]
+
+    def dominates(y, x):
+        zy, zx = Z(y), Z(x)
+        return (all(b >= a for a, b in zip(zx, zy))
+                and any(b > a for a, b in zip(zx, zy)))
+    truth = {tuple(x) for x in feasible
+             if not any(dominates(y, x) for y in feasible)}
+    front = sorted({Z(list(x)) for x in truth})
+
+    # only the "+" branch of the absolute value
+    plus_only = [branch_fns[0],
+                 lambda v: [abs_ratio_branches(C2, A2, D2, B2, 3)(v)[0]]]
+    partial = set()
+    for v in front:
+        for pt in generalized_slice_points(problem, bounds, list(v), plus_only):
+            partial.add(tuple(Fraction(c) for c in pt))
+
+    assert partial < truth, "one branch should be strictly insufficient"
+    lost = truth - partial
+    assert lost, "no points lost -- the test instance proves nothing"
+    for x in lost:
+        assert not any(dominates(y, list(x)) for y in feasible), x
+    return (f"the single-hyperplane slice loses {len(lost)} of {len(truth)} "
+            f"efficient points, every one of them genuinely efficient")
 
 # --------------------------------------------------------------------------
 def main():
