@@ -424,9 +424,17 @@ def _breakeven_one(instances, budget, n, p, queries):
 
     Each instance pays for ``E(P_D)`` once, then answers ``queries`` different
     decision functions by scanning, and separately answers the same ones with
-    the exact search one at a time.  An instance whose front does not prove
-    complete within the budget is censored: without completeness the scan is
-    not entitled to answer at all.
+    the exact search one at a time.  Two kinds of instance are censored: one
+    whose front does not prove complete within the budget, since without
+    completeness the scan is not entitled to answer at all, and one where an
+    exact run spends its budget, since its true cost is then only a lower
+    bound.
+
+    The second censoring is **one-sided against this method**.  An exact run
+    that overruns is an expensive one, and an expensive exact run is exactly
+    the case where building ``E(P_D)`` pays soonest; dropping it removes the
+    instances most favourable to the scan.  So a break-even quoted despite it
+    is conservative --- the true figure is lower, not higher.
     """
     records, censored = [], 0
     for seed in range(instances):
@@ -454,11 +462,23 @@ def _breakeven_one(instances, budget, n, p, queries):
         t_scan /= queries
         prog_scan /= queries
 
-        t_exact, prog_exact = 0.0, 0
+        # The exact runs carry the same budget as every other experiment
+        # here.  Without one a single hard instance stalls the campaign, which
+        # is what a first version of this experiment did.
+        t_exact, prog_exact, spent = 0.0, 0, False
         for f in phis:
-            _, t, pr, _ = timed(optimize_over_efficient_set, problem, f)
+            sol, t, pr, _ = timed(optimize_over_efficient_set, problem, f,
+                                  time_budget=budget)
+            if not getattr(sol, "proved_optimal", True):
+                spent = True
+                break
             t_exact += t
             prog_exact += pr
+        if spent:
+            censored += 1
+            print(f"    seed={seed:2d}: an exact run spent its budget "
+                  f"-- censored", flush=True)
+            continue
         t_exact /= queries
         prog_exact /= queries
 

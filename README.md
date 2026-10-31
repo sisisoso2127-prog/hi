@@ -989,9 +989,10 @@ papers"*.
 Most figures above were first taken on four to eight instances. The *direction*
 of each was argued from a mechanism, which is what made them worth reporting —
 but a total over four runs is not an estimate. `studies/campaign.py` re-measures
-four of the claims over **thirty instances per configuration**, in 751 seconds,
-and writes every per-instance record to `studies/campaign-results.json` so the
-tables can be rebuilt and re-checked without paying for the run again.
+five of the claims over **thirty instances per configuration** — the first four
+of them in 751 seconds — and writes every per-instance record to
+`studies/campaign-results.json` so the tables can be rebuilt and re-checked
+without paying for the run again.
 
 ```bash
 python studies/campaign.py --quick    # a pilot
