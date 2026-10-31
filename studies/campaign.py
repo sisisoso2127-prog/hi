@@ -58,6 +58,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILP, Model,
                            optimize_over_efficient_set,
                            tchebychev_incumbent)
 from lfp_efficient.complete import complete_efficient_set, variable_bounds
+from lfp_efficient.over import maximize_over_efficient_set
 from lfp_efficient.front import enumerate_front
 
 OUT = Path(__file__).resolve().parent / "campaign-results.json"
@@ -401,6 +402,149 @@ def experiment_complete(instances, budget, n=5, p=3):
 
 
 # --------------------------------------------------------------------------
+# experiment 5: how many decision functions before building E(P_D) pays
+# --------------------------------------------------------------------------
+def _breakeven_one(instances, budget, n, p, queries):
+    """The break-even of :mod:`lfp_efficient.over`, at the campaign's standard.
+
+    An earlier version of this number came from eight instances and spanned
+    three orders of magnitude, so it was reported as a direction rather than a
+    figure.  This re-measures it at thirty.
+
+    The headline statistic here is **in sub-programs, not seconds**, and that
+    is not a stylistic choice.  A scan over an explicit ``E(P_D)`` solves no
+    integer program at all, so the break-even in programs is exactly
+
+        programs to build E(P_D)  /  programs for one exact run
+
+    which is deterministic: identical on every machine and every repeat,
+    immune to the +-30% noise floor that no number of repeats removes.  The
+    seconds are reported beside it and are the noisy version of the same
+    quantity.
+
+    Each instance pays for ``E(P_D)`` once, then answers ``queries`` different
+    decision functions by scanning, and separately answers the same ones with
+    the exact search one at a time.  An instance whose front does not prove
+    complete within the budget is censored: without completeness the scan is
+    not entitled to answer at all.
+    """
+    records, censored = [], 0
+    for seed in range(instances):
+        problem, phi, _ = build(seed, n, p)
+        rng = random.Random(seed * 31 + 7)
+        phis = [FractionalObjective(
+                    [-rng.randint(1, 5) for _ in range(n)],
+                    [rng.randint(1, 3) for _ in range(n)],
+                    rng.randint(20, 45), rng.randint(4, 10))
+                for _ in range(queries)]
+
+        whole, t_build, prog_build, _ = timed(complete_efficient_set, problem,
+                                              time_budget=budget)
+        if not whole.complete:
+            censored += 1
+            print(f"    seed={seed:2d}: front not proved complete -- censored",
+                  flush=True)
+            continue
+
+        t_scan, prog_scan = 0.0, 0
+        for f in phis:
+            _, t, pr, _ = timed(maximize_over_efficient_set, whole, f)
+            t_scan += t
+            prog_scan += pr
+        t_scan /= queries
+        prog_scan /= queries
+
+        t_exact, prog_exact = 0.0, 0
+        for f in phis:
+            _, t, pr, _ = timed(optimize_over_efficient_set, problem, f)
+            t_exact += t
+            prog_exact += pr
+        t_exact /= queries
+        prog_exact /= queries
+
+        # break-even: build / (one exact run - one scan), in each unit
+        k_prog = (prog_build / (prog_exact - prog_scan)
+                  if prog_exact > prog_scan else None)
+        k_time = (t_build / (t_exact - t_scan)
+                  if t_exact > t_scan else None)
+        records.append({"seed": seed, "n": n, "p": p,
+                        "points": len(whole.points),
+                        "t_build": t_build, "t_scan": t_scan,
+                        "t_exact": t_exact,
+                        "prog_build": prog_build, "prog_scan": prog_scan,
+                        "prog_exact": prog_exact,
+                        "k_programs": k_prog, "k_time": k_time})
+        kp = f"{k_prog:7.1f}" if k_prog is not None else "      -"
+        print(f"    seed={seed:2d}: |E|={len(whole.points):4d}  "
+              f"build {prog_build:5d} progs / {t_build:6.2f}s  "
+              f"one exact {prog_exact:7.1f} progs  break-even {kp}",
+              flush=True)
+
+    return {"instances": instances, "n": n, "p": p, "queries": queries,
+            "censored": censored, "records": records,
+            "k_programs": summary([r["k_programs"] for r in records]),
+            "k_time": summary([r["k_time"] for r in records]),
+            "scan_programs": summary([r["prog_scan"] for r in records]),
+            "size": summary([r["points"] for r in records])}
+
+
+def experiment_breakeven(instances, budget, configs=None, queries=5):
+    """The break-even across several configurations, because there isn't one.
+
+    Run on one instance family the break-even looks like a number.  Run across
+    configurations it is plainly a *function of the instance*: it is governed
+    by ``|E(P_D)|``, which sets what building costs, and by the cost of one
+    exact run, which sets what each query saves -- and both move by orders of
+    magnitude.  Reporting a single median over a single family would hide
+    exactly that, which is the error this campaign exists to prevent.
+    """
+    configs = configs or [(5, 3), (6, 3), (6, 4), (7, 3)]
+    rows = []
+    for n, p in configs:
+        print(f"    -- n={n}, p={p}", flush=True)
+        rows.append(_breakeven_one(instances, budget, n, p, queries))
+    return rows
+
+
+
+def _report_breakeven(results, out):
+    out.append("\n=== 5. break-even: decision functions before building "
+               "E(P_D) pays ===")
+    out.append("the statistic is in SUB-PROGRAMS and is deterministic: a scan "
+               "solves no\ninteger program, so it is build-programs / "
+               "one-exact-run-programs exactly.")
+    out.append(f"{'config':>10} {'inst':>5} {'cens':>5} {'|E| med':>8} | "
+               f"{'break-even, sub-programs':<32} | {'seconds':<16}")
+    out.append("-" * 84)
+    for b in results["breakeven"]:
+        kp, kt = b["k_programs"], b["k_time"]
+        size = b["size"]
+        cfg = f"n={b['n']} p={b['p']}"
+        if kp is None or size is None:
+            out.append(f"{cfg:>10} {b['instances']:>5} {b['censored']:>5} "
+                       f"{'-':>8} | nothing to quote")
+            continue
+        tail = (f"{kt['median']:>6.1f} [{kt['q1']:.1f},{kt['q3']:.1f}]"
+                if kt is not None else "-")
+        out.append(
+            f"{cfg:>10} {b['instances']:>5} {b['censored']:>5} "
+            f"{size['median']:>8.0f} | "
+            f"{kp['median']:>6.1f}  [{kp['q1']:.1f}, {kp['q3']:.1f}]"
+            f"   min {kp['min']:.1f} max {kp['max']:.1f} | {tail}")
+    allk = [r["k_programs"] for b in results["breakeven"]
+            for r in b["records"] if r["k_programs"] is not None]
+    if allk:
+        st = summary(allk)
+        out.append("-" * 84)
+        out.append(f"{'all':>10} {len(allk):>5} {'':>5} {'':>8} | "
+                   f"{st['median']:>6.1f}  [{st['q1']:.1f}, {st['q3']:.1f}]"
+                   f"   min {st['min']:.1f} max {st['max']:.1f}")
+        out.append("the spread across configurations is the finding: the "
+                   "break-even is a function of\n|E(P_D)| and of what one "
+                   "exact run costs, not a constant of the method.")
+
+
+# --------------------------------------------------------------------------
 def report(results):
     out = []
     if "margin" in results:
@@ -472,6 +616,9 @@ def report(results):
                        f"max {ov['max']:.1%}")
             out.append(f"points gained | {c['ties']} of {len(c['records'])} "
                        "instances had a non-singleton slice")
+
+    if "breakeven" in results:
+        _report_breakeven(results, out)
     return "\n".join(out)
 
 
@@ -483,13 +630,14 @@ def main():
     parser.add_argument("--quick", action="store_true",
                         help="a pilot run: few instances, small p")
     parser.add_argument("--only", action="append", default=None,
-                        choices=["margin", "seeds", "front", "complete"])
+                        choices=["margin", "seeds", "front", "complete", "breakeven"])
     args = parser.parse_args()
 
     instances = 5 if args.quick else args.instances
     budget = 10.0 if args.quick else args.budget
     ps = [2, 3, 4] if args.quick else [2, 3, 4, 5, 6]
-    wanted = args.only or ["margin", "seeds", "front", "complete"]
+    wanted = args.only or ["margin", "seeds", "front", "complete",
+                           "breakeven"]
 
     print(f"campaign: {instances} instances per configuration, "
           f"{budget:.0f}s budget per run")
@@ -501,17 +649,20 @@ def main():
     started = time.perf_counter()
 
     if "margin" in wanted:
-        print("  [1/4] the margin, per p")
+        print("  [1/5] the margin, per p")
         results["margin"] = experiment_margin(instances, budget, ps)
     if "seeds" in wanted:
-        print("  [2/4] what a seed is worth")
+        print("  [2/5] what a seed is worth")
         results["seeds"] = experiment_seeds(instances, budget)
     if "front" in wanted:
-        print("  [3/4] enumerating the front")
+        print("  [3/5] enumerating the front")
         results["front"] = experiment_front(max(8, instances // 2), budget)
     if "complete" in wanted:
-        print("  [4/4] completing the front")
+        print("  [4/5] completing the front")
         results["complete"] = experiment_complete(instances, budget)
+    if "breakeven" in wanted:
+        print("  [5/5] how many decision functions before E(P_D) pays")
+        results["breakeven"] = experiment_breakeven(instances, budget)
 
     results["meta"]["seconds"] = time.perf_counter() - started
     OUT.write_text(json.dumps(results, indent=1, default=str))
