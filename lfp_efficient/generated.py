@@ -152,6 +152,12 @@ class GeneratedSeeds:
     seconds: float = 0.0
     #: walk restarts spent, when the walk sized itself
     rounds: int = 1
+    #: the same points in the order the archive produced them, before
+    #: :func:`probe_order` sorted them.  Kept because the difference between
+    #: the two orders is a measured result and not a detail: seeded in archive
+    #: order the same hybrid is *slower*, and a study of that needs the order
+    #: the sort replaced rather than a shuffle standing in for it.
+    archive_order: List[List[Fraction]] = field(default_factory=list)
 
     def __len__(self) -> int:
         return len(self.vectors)
@@ -340,6 +346,7 @@ The fix that works is one line: **the first round is sized to the
         if quiet > patience:
             break
 
+    result.archive_order = [list(x) for x in result.points]
     result.points = probe_order(problem, result.points)
     result.seconds = monotonic() - started
     return result

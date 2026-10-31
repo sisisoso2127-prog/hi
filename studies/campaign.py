@@ -609,6 +609,103 @@ def _report_filter(results, out):
                "costs nothing and answers nothing.")
 
 
+# --------------------------------------------------------------------------
+# experiment 7: the order the seeds are handed over in
+# --------------------------------------------------------------------------
+def experiment_order(instances, budget, n=6, p=3):
+    """Whether the hybrid's gain survives a change of hand-over order.
+
+    The exact search probes by maximising a fixed linear direction, so it
+    splits first around whatever scores highest on it.  Seeds pre-split the
+    root box; handed over in a different order they build a structure the
+    search would not have chosen, and that structure can cost more probes than
+    the seeds save.
+
+    Three arms, and the third is the point.  **Probe order** sorts the seeds by
+    the probe's own direction.  **Archive order** is the order the local search
+    produced them, which is what a straightforward implementation would use.
+    **Reversed** is probe order backwards: it shares every property of probe
+    order except the direction, so if reversed behaves like archive order
+    rather than like probe order, the direction is causal and not a
+    coincidence of sortedness.
+
+    The statistic is the **probe count** against the unseeded search --
+    deterministic, so the +-30% noise floor does not enter -- with seconds
+    beside it.
+    """
+    from lfp_efficient.front import enumerate_front
+    from lfp_efficient.generated import pareto_seeds
+
+    records, censored = [], 0
+    for seed in range(instances):
+        problem, phi, _ = build(seed, n, p)
+        base, t_base, prog_base, _ = timed(enumerate_front, problem, phi,
+                                           time_budget=budget)
+        if not base.complete:
+            censored += 1
+            continue
+        gen = pareto_seeds(problem, phi, seeds=8, seed=seed)
+        if len(gen.points) < 2:
+            continue                      # nothing an order could change
+        arms = {"probe": list(gen.points),
+                "archive": list(gen.archive_order),
+                "reversed": list(reversed(gen.points))}
+        row = {"seed": seed, "base_probes": base.probes,
+               "base_seconds": t_base, "seeds": len(gen.points)}
+        ok = True
+        for name, pts in arms.items():
+            front, t, _, _ = timed(enumerate_front, problem, phi,
+                                   time_budget=budget, seeds=pts)
+            if not front.complete:
+                ok = False
+                break
+            assert len(front.vectors) == len(base.vectors), (seed, name)
+            row[f"{name}_probes"] = front.probes
+            row[f"{name}_seconds"] = t
+        if not ok:
+            censored += 1
+            continue
+        records.append(row)
+        print(f"    seed={seed:2d}: base {base.probes:3d} probes  "
+              + "  ".join(f"{k} {row[k + '_probes']:3d}" for k in arms),
+              flush=True)
+
+    out = {"instances": instances, "n": n, "p": p, "censored": censored,
+           "records": records}
+    for name in ("probe", "archive", "reversed"):
+        out[f"{name}_probes"] = ratios([(r[f"{name}_probes"], r["base_probes"])
+                                        for r in records])
+        out[f"{name}_raised"] = sum(1 for r in records
+                                    if r[f"{name}_probes"] > r["base_probes"])
+    return out
+
+
+def _report_order(results, out):
+    o = results["order"]
+    kept = len(o["records"])
+    out.append(f"\n=== 7. the order the seeds are handed over "
+               f"(n={o['n']}, p={o['p']}) ===")
+    out.append(f"{kept} instances"
+               + (f", {o['censored']} censored" if o["censored"] else "")
+               + ".  probe counts are deterministic; the ratio is against the "
+                 "unseeded search.")
+    out.append(f"{'order':<12} | {'probes vs unseeded':<30} | raised the count on")
+    out.append("-" * 70)
+    for name in ("archive", "probe", "reversed"):
+        st = o[f"{name}_probes"]
+        if st is None:
+            continue
+        label = f"**{name}**" if name == "probe" else name
+        out.append(f"{label:<12} | {st['median']:>6.2f}x  "
+                   f"[{st['q1']:.2f}, {st['q3']:.2f}]"
+                   f"   min {st['min']:.2f} max {st['max']:.2f} | "
+                   f"{o[f'{name}_raised']} of {kept}")
+    out.append("the reversed arm is the control: it shares every property of "
+               "probe order\nexcept the direction, so a reversed result "
+               "resembling archive order makes\nthe direction causal rather "
+               "than sortedness.")
+
+
 def _report_breakeven(results, out):
     out.append("\n=== 5. break-even: decision functions before building "
                "E(P_D) pays ===")
@@ -723,6 +820,8 @@ def report(results):
         _report_breakeven(results, out)
     if "filter" in results:
         _report_filter(results, out)
+    if "order" in results:
+        _report_order(results, out)
     return "\n".join(out)
 
 
@@ -735,14 +834,14 @@ def main():
                         help="a pilot run: few instances, small p")
     parser.add_argument("--only", action="append", default=None,
                         choices=["margin", "seeds", "front", "complete", "breakeven",
-                                 "filter"])
+                                 "filter", "order"])
     args = parser.parse_args()
 
     instances = 5 if args.quick else args.instances
     budget = 10.0 if args.quick else args.budget
     ps = [2, 3, 4] if args.quick else [2, 3, 4, 5, 6]
     wanted = args.only or ["margin", "seeds", "front", "complete",
-                           "breakeven", "filter"]
+                           "breakeven", "filter", "order"]
 
     print(f"campaign: {instances} instances per configuration, "
           f"{budget:.0f}s budget per run")
@@ -754,23 +853,26 @@ def main():
     started = time.perf_counter()
 
     if "margin" in wanted:
-        print("  [1/6] the margin, per p")
+        print("  [1/7] the margin, per p")
         results["margin"] = experiment_margin(instances, budget, ps)
     if "seeds" in wanted:
-        print("  [2/6] what a seed is worth")
+        print("  [2/7] what a seed is worth")
         results["seeds"] = experiment_seeds(instances, budget)
     if "front" in wanted:
-        print("  [3/6] enumerating the front")
+        print("  [3/7] enumerating the front")
         results["front"] = experiment_front(max(8, instances // 2), budget)
     if "complete" in wanted:
-        print("  [4/6] completing the front")
+        print("  [4/7] completing the front")
         results["complete"] = experiment_complete(instances, budget)
     if "breakeven" in wanted:
-        print("  [5/6] how many decision functions before E(P_D) pays")
+        print("  [5/7] how many decision functions before E(P_D) pays")
         results["breakeven"] = experiment_breakeven(instances, budget)
     if "filter" in wanted:
-        print("  [6/6] several decision functions at once")
+        print("  [6/7] several decision functions at once")
         results["filter"] = experiment_filter(instances, budget)
+    if "order" in wanted:
+        print("  [7/7] the order the seeds are handed over")
+        results["order"] = experiment_order(instances, budget)
 
     results["meta"]["seconds"] = time.perf_counter() - started
     OUT.write_text(json.dumps(results, indent=1, default=str))
