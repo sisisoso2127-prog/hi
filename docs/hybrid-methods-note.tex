@@ -1825,6 +1825,47 @@ piecewise / black box           & no & $3/11$ \\
 \end{tabular}
 \end{table}
 
+\subsection{What the characterisation says about a neighbouring published class}
+
+The limit is sharp enough to be \emph{predictive about the literature}, which
+is what makes it worth more than a description of our own code.
+
+Cherfaoui and Moula\"i (Annals of Operations Research \textbf{296} (2021),
+pp.~735--753) generate the efficient set of multiobjective integer
+\emph{linear plus linear fractional} programs, whose criteria are
+\[
+  Z(x) \;=\; c^{\top}x \;+\; \frac{p^{\top}x + \alpha}{q^{\top}x + \beta} ,
+\]
+a \emph{sum} rather than a ratio.  Clearing the denominator at level $v$,
+\[
+  (c^{\top}x)(q^{\top}x + \beta) + p^{\top}x + \alpha
+     - v\,(q^{\top}x + \beta) \;=\; 0 ,
+\]
+whose quadratic part is $(c^{\top}x)(q^{\top}x)$, with matrix
+$(c q^{\top} + q c^{\top})/2$.  That matrix is non-zero whenever $c$ and $q$
+both are, so \textbf{the level set is a conic and not a hyperplane}.  We check
+this rather than assert it: the matrix is formed, and three non-collinear
+rational points are exhibited on a single level of a concrete instance.
+
+A conic is not a finite union of affine subspaces, so the class sits outside
+Proposition~\ref{prop:admissible}.  Two consequences, and the second is the one that
+matters:
+
+\begin{enumerate}
+\item The method here \textbf{does not reach} linear-plus-linear-fractional
+      criteria, and the characterisation says so \emph{in advance} instead of
+      leaving it to be found out.
+\item That paper therefore \textbf{cannot} be generating its efficient set by
+      the slice argument used here, because its criteria have no linear slices
+      to enumerate.  The two works address disjoint criterion classes.
+\end{enumerate}
+
+\noindent
+The premise is the problem class as that title states it; everything after it
+is the algebra above.  Confirming it still needs the paper, which could not be
+reached from the environment this work was done in --- so this is stated as a
+prediction the characterisation makes, not as a reading of the paper.
+
 \subsection{Several decision functions at once}
 
 Optimising \emph{two} linear fractional functions over an integer efficient set

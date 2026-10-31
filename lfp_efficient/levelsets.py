@@ -56,6 +56,42 @@ That class is strictly larger than linear fractional.  ``Z(x) =
 the pair of hyperplanes ``c'x + a = +-v (d'x + b)``.  So are integer powers of
 a ratio, and sign-split forms generally.
 
+What the characterisation predicts about a neighbouring published class
+----------------------------------------------------------------------
+The limit above is not only about this package.  It is sharp enough to say
+which *published* problem classes the slice machinery cannot reach, and one of
+them sits directly next door.
+
+Cherfaoui and Moula\"i (Annals of Operations Research **296** (2021), 735-753)
+generate the efficient set of multiobjective integer **linear plus linear
+fractional** programs, whose criteria are
+
+    ``Z(x) = c'x + (p'x + alpha) / (q'x + beta)`` ,
+
+a *sum* rather than a ratio.  Clearing the denominator at level ``v`` gives
+
+    ``(c'x)(q'x + beta) + p'x + alpha - v (q'x + beta) = 0`` ,
+
+whose quadratic part is ``(c'x)(q'x)``, with matrix ``(c q^T + q c^T)/2``.
+That matrix is non-zero whenever ``c`` and ``q`` both are, so **the level set
+is a conic and not a hyperplane** -- checked here rather than asserted, both by
+forming the matrix and by exhibiting three non-collinear rational points on one
+level of a concrete instance.
+
+A conic is not a finite union of affine subspaces, so the class falls outside
+the condition above.  Two consequences, and the second is the useful one:
+
+1. The method of this package **does not reach** linear-plus-linear-fractional
+   criteria, and the characterisation says so in advance rather than leaving it
+   to be discovered.
+2. That paper therefore **cannot** be generating its efficient set by the slice
+   argument used here, since its criteria have no linear slices to enumerate.
+   The two works address disjoint criterion classes.
+
+The premise is the problem class as that title states it; the inference from
+there is the algebra above.  Confirming it still needs the paper itself, which
+could not be reached from the environment this was written in.
+
 What this does **not** extend
 -----------------------------
 The front enumeration of :mod:`lfp_efficient.front` is a different matter and

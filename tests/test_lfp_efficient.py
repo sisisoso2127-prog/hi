@@ -2877,6 +2877,59 @@ def test_one_hyperplane_is_genuinely_not_enough_outside_the_ratio_class():
     return (f"the single-hyperplane slice loses {len(lost)} of {len(truth)} "
             f"efficient points, every one of them genuinely efficient")
 
+def test_linear_plus_linear_fractional_falls_outside_the_reachable_class():
+    """The characterisation predicts a neighbouring published class is out of
+    reach, and the prediction is checked rather than asserted.
+
+    Cherfaoui and Moula\u00ef (Annals of Operations Research 296 (2021),
+    735--753) generate the efficient set for *linear plus linear fractional*
+    criteria, ``Z(x) = c'x + (p'x + a)/(q'x + b)`` --- a sum, not a ratio.
+    Clearing the denominator at level ``v`` leaves
+
+        ``(c'x)(q'x + b) + p'x + a - v(q'x + b) = 0``
+
+    whose quadratic part has matrix ``(c q^T + q c^T)/2``.  Non-zero means the
+    level set is a conic, so it is not a finite union of affine subspaces and
+    the slice machinery provably does not reach it.
+
+    Two checks: the matrix is non-zero, and three non-collinear rational points
+    sit on one level.  A single level set with three non-collinear points
+    cannot be a line, which is the whole claim.
+    """
+    c, pv, a, q, b = [1, 1], [1, -2], 1, [1, 1], 3
+
+    Q = [[Fraction(c[i] * q[j] + q[i] * c[j], 2) for j in range(2)]
+         for i in range(2)]
+    assert any(t != 0 for row in Q for t in row), "quadratic part vanished"
+
+    def Z(x):
+        return (Fraction(c[0] * x[0] + c[1] * x[1])
+                + Fraction(pv[0] * x[0] + pv[1] * x[1] + a,
+                           q[0] * x[0] + q[1] * x[1] + b))
+
+    trio = [(Fraction(3), Fraction(2)), (Fraction(3), Fraction(-4)),
+            (Fraction(6), Fraction(-4))]
+    assert len({Z(t) for t in trio}) == 1, [str(Z(t)) for t in trio]
+    (x1, y1), (x2, y2), (x3, y3) = trio
+    assert (x2 - x1) * (y3 - y1) != (x3 - x1) * (y2 - y1), "they are collinear"
+
+    # and the contrast: a pure ratio on the same data has one-line level sets,
+    # which is what makes it reachable
+    import itertools
+    def ratio(x):
+        return Fraction(pv[0] * x[0] + pv[1] * x[1] + a,
+                        q[0] * x[0] + q[1] * x[1] + b)
+    grid = [(Fraction(i), Fraction(j)) for i, j in
+            itertools.product(range(8), repeat=2)]
+    byval = {}
+    for x in grid:
+        byval.setdefault(ratio(x), []).append(x)
+    for pts in byval.values():
+        for (u1, v1), (u2, v2), (u3, v3) in itertools.combinations(pts, 3):
+            assert (u2 - u1) * (v3 - v1) == (u3 - u1) * (v2 - v1), "ratio bent"
+    return ("linear-plus-linear-fractional has conic level sets (three "
+            "non-collinear points on one level); the pure ratio does not")
+
 # --------------------------------------------------------------------------
 def main():
     # only the functions defined here -- ``test_efficiency`` imported from the
