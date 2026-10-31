@@ -2537,7 +2537,7 @@ EJOR 2017 one.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 106 tests. Several check
+exact rational arithmetic throughout, and carries 112 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -2619,7 +2619,15 @@ Three further tests cover the admissible class of Section~\ref{sec:admissible}:
 six shapes of decision function checked against brute force in both senses with
 every tie reported, several decision functions at once matching the brute-force
 non-dominated subset, and both queries refusing an efficient set that is not
-proved complete.  That is $93 + 10 + 3 = 106$.
+proved complete.
+
+Six more cover the characterisation of
+Section~\ref{sec:admissible}: ``$E(P_D)$'' rebuilt exactly for a criterion
+outside the ratio class and again for a $\max$-of-ratios one, the check that
+dropping a branch loses genuinely efficient points, the conic level sets of the
+linear-plus-linear-fractional class, the three published problem statements
+answered from one $\E$, and the front search's narrower reach.  That is
+$93 + 10 + 3 + 6 = 112$.
 
 \noindent
 Every comparison in this note is reproduced by scripts in the repository, run

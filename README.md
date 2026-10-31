@@ -400,11 +400,79 @@ break-even is 1 only for an `f` outside the linear fractional class, where
 there is no competitor to amortise against — and that part does not depend on
 the measurement.
 
+## How far the method reaches, exactly
+
+The slice argument asks nothing of the criteria — it is a dominance argument —
+so what limits the method is only whether a level set can be enumerated. That
+turns out to be answerable precisely, and the answer has two halves that do not
+coincide.
+
+**The limit.** If the level set of `Z` is a *single* hyperplane whose data
+depends affinely on the level, `alpha(v) = c - v d` and `beta(v) = v b - a`,
+then substituting `v = Z(x)` gives `c'x + a = v(d'x + b)`, so `Z` **is** linear
+fractional. With the converse, that is an equivalence:
+
+> a criterion has one-hyperplane level sets with data affine in the level
+> **iff** it is linear fractional.
+
+So within that shape the fractional case is not a convenient choice but the
+maximal one. There is nothing larger of that shape to look for.
+
+**The reach.** But the enumerator never needed one hyperplane — it takes a
+conjunction of equations and `a'x <= b` inequalities, and running it once per
+piece of a finite union costs a finite multiple. So:
+
+> it is enough that `{x : Z(x) = v}` is a **finite union of polyhedra**,
+> computable from `v`.
+
+That is strictly larger, and reaches criteria the fractional class does not:
+`|c'x+a|/(d'x+b)` (two hyperplanes), and `max`/`min` of ratios — each branch is
+one equation plus `m-1` inequalities, a polyhedron. `lfp_efficient/levelsets.py`
+builds both; the suite rebuilds `E(P_D)` exactly for each against brute force,
+and checks that dropping a branch loses genuinely efficient points.
+
+**The other half reaches less, and that is what names the method.** The front
+search splits at a centre into `Z(x) > Z(a)` and `Z(x) <= Z(a)`; for each child
+to be one linear program, *both* sides must be half-spaces. So the front
+reaches exactly the criteria whose sublevel sets are half-spaces — essentially
+the fractional case. `|ratio|` has a slab (non-convex complement) and
+`max`-of-ratios a polyhedron (complement a union), and a single split cannot
+express a union.
+
+> The slice reaches finite unions of polyhedra; the front reaches half-space
+> sublevel sets. **Not one reach but two, and the smaller one names the
+> method.** A criterion between them can have its efficient set completed here
+> exactly, but its front must come from elsewhere.
+
+**And the characterisation sorts the neighbouring literature.** Look at the
+criteria, not the method:
+
+| published class | criteria | level sets | reachable |
+|---|---|---|---|
+| linear fractional over `E` of a MOILP | linear | hyperplanes | **yes** |
+| hyperbolic over `E` of a MOILFP | ratios | hyperplanes | **yes** |
+| two fractional functions over `E` | ratios | hyperplanes | **yes** |
+| quadratic over the Pareto set of a MOILFP | ratios | hyperplanes | **yes** |
+| linear **plus** linear fractional (Cherfaoui & Moulaï, Annals of OR 296) | sums | **conics** | **no** |
+| bi-objective over `E` of an integer quadratic | quadratic | **quadrics** | **no** |
+
+The reachable side collapses: those four differ only in their *decision*
+function, which is free once `E(P_D)` is explicit — so four separate problem
+statements are four queries against one computation, which the suite checks on
+a 48-point efficient set with zero integer programs for the three queries.
+
+The two unreachable rows fail for the same reason: a criterion that is a sum or
+a product has **curved** level sets, and curvature is what the slice
+enumeration cannot absorb. This is not a performance claim — those methods
+never build `E(P_D)` and are untouched by its size — and not a reading of those
+papers: the rows are the problem classes as their titles state them, and the
+reachable column is then decided by the algebra alone.
+
 ## What is verified, and how
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 106 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 112 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |

@@ -62,7 +62,7 @@ python3 examples/paper_example.py        # reproduces section 4 of the paper
 python3 examples/large_example.py        # larger instances, up to |D| = 34635
 python3 examples/scaling.py              # the scaling study, up to n = 20
 python3 examples/fractional_example.py   # MOILFP: every criterion a ratio
-python3 tests/test_lfp_efficient.py      # 106 tests, incl. the fractional case
+python3 tests/test_lfp_efficient.py      # 112 tests, incl. the fractional case
 ```
 
 ## Larger instances
@@ -730,6 +730,27 @@ direction and not a prediction). **For a single linear fractional `Phi` the
 decision-space method is often the better buy.** The break-even is 1 only
 outside the class it accepts.
 
+## How far the method reaches
+
+The slice argument needs nothing of the criteria, so what limits the method is
+only whether a level set can be enumerated — and that is answerable exactly.
+
+- **Limit.** One-hyperplane level sets with data affine in the level **iff**
+  linear fractional. Within that shape the fractional case is maximal.
+- **Reach.** The enumerator takes equations *and* inequalities, so it is enough
+  that `{x : Z(x) = v}` be a **finite union of polyhedra**. That reaches
+  `|ratio|` and `max`/`min` of ratios, which are not fractional.
+- **The other half reaches less.** The front search needs *both* sides of its
+  split to be half-spaces, so it reaches exactly the criteria with half-space
+  sublevel sets — essentially the fractional case. `max`-of-ratios has a
+  polyhedral sublevel set whose complement is a union, and one split cannot
+  express a union.
+
+So there are two reaches, not one, and the smaller names the method: this is a
+MOILFP package because of its *front*, not its slice. A criterion between the
+two can have its efficient set completed exactly here, with its front supplied
+from elsewhere.
+
 ## Modules
 
 | File | Contents |
@@ -751,3 +772,4 @@ outside the class it accepts.
 | `subset.py` | a subset of `E(P_D)`, delivered as a subset and saying so |
 | `generated.py` | the Pareto walk that seeds the enumeration, and the probe order that makes it pay |
 | `over.py` | queries over an explicit `E(P_D)`: **any** computable decision function, or several at once |
+| `levelsets.py` | how far the slice reaches: the characterisation, its two widenings, and branch builders for criteria outside the ratio class |
