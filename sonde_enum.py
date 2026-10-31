@@ -129,7 +129,22 @@ def main() -> int:
         else:
             r = moteur(inst, time_budget=delai)
         tc = time.time() - t0
-        nb, tb, err = brute(inst, delai)
+        # LA FORCE BRUTE NE SE REFAIT PAS. Elle ne depend que de
+        # l'instance, pas de l'avancement du moteur : la recalculer a
+        # chaque dose, c'est payer 85 s par dose sur n=12 p=4 pour
+        # reobtenir 1874 -- huit minutes sur six doses, et autant de
+        # moins pour l'enumeration qui, elle, en a besoin. Un
+        # enregistrement anterieur qui l'a deja tranchee (un nombre, ou
+        # un refus explique) la fournit.
+        if cible.exists():
+            d0 = json.loads(cible.read_text(encoding="utf-8"))
+            nb, tb, err = (d0["brute_vecteurs"], d0["brute_s"],
+                           d0["brute_erreur"])
+            print(f"### {nom} : brute reprise de l'enregistrement "
+                  f"({nb if nb is not None else 'hors de portee'})",
+                  flush=True)
+        else:
+            nb, tb, err = brute(inst, delai)
 
         # ECRITURE ATOMIQUE : un fichier a moitie ecrit serait relu comme
         # un resultat complet par le saut ci-dessus.
