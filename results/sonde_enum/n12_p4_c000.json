@@ -10,5 +10,5 @@
  "brute_vecteurs": 1874,
  "brute_s": 139.3,
  "brute_erreur": "",
- "accord": false
+ "verdict": "moteur incomplet, brute a fini"
 }

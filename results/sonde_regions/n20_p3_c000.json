@@ -1,0 +1,15 @@
+{
+ "n": 20,
+ "p": 3,
+ "corr": 0.0,
+ "moteur": "regions",
+ "coupes_vecteurs": 860,
+ "coupes_complet": true,
+ "coupes_motif": "toutes regions closes",
+ "coupes_s": 1324.2,
+ "coupes_ilp": 31998,
+ "brute_vecteurs": null,
+ "brute_s": 32.5,
+ "brute_erreur": "Plus de 2000000 points realisables : instance trop grande po",
+ "verdict": "moteur seul a fini"
+}

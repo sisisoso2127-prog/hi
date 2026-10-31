@@ -108,14 +108,23 @@ def main() -> int:
             coupes_vecteurs=len(r.vecteurs), coupes_complet=r.complet,
             coupes_motif=r.motif, coupes_s=round(tc, 1), coupes_ilp=r.ilp,
             brute_vecteurs=nb, brute_s=round(tb, 1), brute_erreur=err,
-            # Trois etats et non deux. « desaccord » ne doit designer que
-            # le cas ou les DEUX methodes ont fini et ne s'accordent pas ;
-            # une enumeration interrompue rend un sous-ensemble, ce qui
-            # n'est pas une contradiction mais un budget epuise.
-            verdict=("accord" if (nb is not None and r.complet
-                                  and nb == len(r.vecteurs))
-                     else "desaccord" if (nb is not None and r.complet)
-                     else "coupes incompletes" if nb is not None
+            # QUATRE etats, et l'oubli du quatrieme etait un faux
+            # rapport. L'ancienne cascade tombait dans « aucune des deux
+            # n'a fini » des que la force brute renoncait, SANS regarder
+            # si le moteur avait abouti -- elle a donc declare inacheves
+            # n=14, 16 et 20, dont les enumerations etaient closes par
+            # epuisement. Elle se trompait precisement sur les instances
+            # qui font l'interet de la sonde : celles hors de portee de
+            # la force brute. L'etat « moteur seul a fini » est le
+            # resultat cherche, pas un echec.
+            # « desaccord » ne designe que le cas ou les DEUX ont fini et
+            # ne s'accordent pas ; une enumeration interrompue rend un
+            # sous-ensemble, ce qui n'est pas une contradiction.
+            verdict=(("accord" if nb == len(r.vecteurs) else "desaccord")
+                     if (nb is not None and r.complet)
+                     else "moteur seul a fini" if r.complet
+                     else "moteur incomplet, brute a fini"
+                     if nb is not None
                      else "aucune des deux n'a fini"),
         ), ensure_ascii=False, indent=1), encoding="utf-8")
         part.replace(cible)

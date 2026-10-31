@@ -10,5 +10,5 @@
  "brute_vecteurs": null,
  "brute_s": 48.6,
  "brute_erreur": "Plus de 2000000 points realisables : instance trop grande po",
- "accord": false
+ "verdict": "aucune des deux n'a fini"
 }
