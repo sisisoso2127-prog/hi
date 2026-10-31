@@ -527,6 +527,88 @@ def experiment_breakeven(instances, budget, configs=None, queries=5):
 
 
 
+# --------------------------------------------------------------------------
+# experiment 6: several decision functions at once, and where it stops helping
+# --------------------------------------------------------------------------
+def experiment_filter(instances, budget, configs=None, ms=(1, 2, 3, 4, 5, 6, 8)):
+    """How many decision functions can be asked at once before the answer is
+    ``everything``.
+
+    Optimising several linear fractional functions over an integer efficient
+    set needs a new algorithm per count in decision space; over an explicit
+    ``E(P_D)`` it is a dominance filter, and the integer-program cost is
+    **zero** whatever ``m`` is and whatever the functions are.  That part is
+    free.
+
+    What is not free is the *answer*.  As ``m`` grows the non-dominated subset
+    grows towards the whole of ``E(P_D)``, and a filter that returns everything
+    has told the decision maker nothing.  This measures where that happens, and
+    the honest headline is the limit rather than the capability.
+    """
+    from lfp_efficient.over import nondominated_over_efficient_set
+
+    configs = configs or [(5, 3), (6, 3), (6, 4), (7, 3)]
+    pooled = {}
+    for n, p in configs:
+        for seed in range(instances):
+            problem, _, _ = build(seed, n, p)
+            whole, _, _, _ = timed(complete_efficient_set, problem,
+                                   time_budget=budget)
+            if not whole.complete or len(whole.points) < 3:
+                continue
+            size = len(whole.points)
+            bucket = pooled.setdefault(min(size // 8, 3),
+                                       {"sizes": [], "shares": {}})
+            bucket["sizes"].append(size)
+            rnd = random.Random(seed * 977 + n * 13 + p)
+            for m in ms:
+                fs = [FractionalObjective(
+                          [rnd.randint(-4, 5) for _ in range(n)],
+                          [rnd.randint(1, 3) for _ in range(n)], 0, 2)
+                      for _ in range(m)]
+                nd = nondominated_over_efficient_set(whole, fs)
+                bucket["shares"].setdefault(m, []).append(len(nd) / size)
+        print(f"    -- n={n}, p={p} done", flush=True)
+
+    rows = []
+    for key in sorted(pooled):
+        b = pooled[key]
+        if len(b["sizes"]) < 3:
+            continue
+        shares = {m: summary(v) for m, v in b["shares"].items()}
+        full = [m for m in sorted(shares)
+                if shares[m] and shares[m]["median"] >= 0.999]
+        rows.append({"bucket": key, "instances": len(b["sizes"]),
+                     "size": summary(b["sizes"]),
+                     "shares": {str(m): shares[m] for m in shares},
+                     "saturates_at": full[0] if full else None})
+    return {"ms": list(ms), "rows": rows}
+
+
+def _report_filter(results, out):
+    f = results["filter"]
+    ms = f["ms"]
+    out.append("\n=== 6. several decision functions at once ===")
+    out.append("the integer-program cost of m decision functions is ZERO for "
+               "every m.\nwhat degrades is the answer: the share of E(P_D) "
+               "the filter still removes.")
+    out.append(f"{'|E(P_D)|':>10} {'inst':>5} | "
+               + " ".join(f"m={m:<4}" for m in ms) + " | saturates")
+    out.append("-" * (24 + 7 * len(ms)))
+    for r in f["rows"]:
+        cells = []
+        for m in ms:
+            st = r["shares"].get(str(m))
+            cells.append(f"{st['median']*100:>4.0f}%" if st else "   -")
+        sat = r["saturates_at"]
+        out.append(f"{r['size']['median']:>10.0f} {r['instances']:>5} | "
+                   + " ".join(cells)
+                   + f" | {'m=' + str(sat) if sat else 'beyond range'}")
+    out.append("saturation moves only slowly with |E(P_D)|, and that is the "
+               "practical limit:\npast it, asking more decision functions "
+               "costs nothing and answers nothing.")
+
+
 def _report_breakeven(results, out):
     out.append("\n=== 5. break-even: decision functions before building "
                "E(P_D) pays ===")
@@ -639,6 +721,8 @@ def report(results):
 
     if "breakeven" in results:
         _report_breakeven(results, out)
+    if "filter" in results:
+        _report_filter(results, out)
     return "\n".join(out)
 
 
@@ -650,14 +734,15 @@ def main():
     parser.add_argument("--quick", action="store_true",
                         help="a pilot run: few instances, small p")
     parser.add_argument("--only", action="append", default=None,
-                        choices=["margin", "seeds", "front", "complete", "breakeven"])
+                        choices=["margin", "seeds", "front", "complete", "breakeven",
+                                 "filter"])
     args = parser.parse_args()
 
     instances = 5 if args.quick else args.instances
     budget = 10.0 if args.quick else args.budget
     ps = [2, 3, 4] if args.quick else [2, 3, 4, 5, 6]
     wanted = args.only or ["margin", "seeds", "front", "complete",
-                           "breakeven"]
+                           "breakeven", "filter"]
 
     print(f"campaign: {instances} instances per configuration, "
           f"{budget:.0f}s budget per run")
@@ -669,20 +754,23 @@ def main():
     started = time.perf_counter()
 
     if "margin" in wanted:
-        print("  [1/5] the margin, per p")
+        print("  [1/6] the margin, per p")
         results["margin"] = experiment_margin(instances, budget, ps)
     if "seeds" in wanted:
-        print("  [2/5] what a seed is worth")
+        print("  [2/6] what a seed is worth")
         results["seeds"] = experiment_seeds(instances, budget)
     if "front" in wanted:
-        print("  [3/5] enumerating the front")
+        print("  [3/6] enumerating the front")
         results["front"] = experiment_front(max(8, instances // 2), budget)
     if "complete" in wanted:
-        print("  [4/5] completing the front")
+        print("  [4/6] completing the front")
         results["complete"] = experiment_complete(instances, budget)
     if "breakeven" in wanted:
-        print("  [5/5] how many decision functions before E(P_D) pays")
+        print("  [5/6] how many decision functions before E(P_D) pays")
         results["breakeven"] = experiment_breakeven(instances, budget)
+    if "filter" in wanted:
+        print("  [6/6] several decision functions at once")
+        results["filter"] = experiment_filter(instances, budget)
 
     results["meta"]["seconds"] = time.perf_counter() - started
     OUT.write_text(json.dumps(results, indent=1, default=str))
