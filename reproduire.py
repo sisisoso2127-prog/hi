@@ -41,6 +41,12 @@ etabli, et il faut la lire litteralement :
             a faire
   defaut    ni l'un ni l'autre : le banc tourne avec ses defauts et rien
             n'etablit que le tableau publie en vienne
+  perime    les arguments ci-dessous sont les bons, mais le journal
+            present dans results/ a ete produit avec D'AUTRES. Il n'est
+            donc PAS une reproduction du tableau, et ce fichier le rejoue
+            d'office -- sans attendre --refaire, car un journal perime
+            saute silencieusement est precisement le piege que ce fichier
+            existe pour supprimer.
 
 Usage :  python reproduire.py              tout ce qui manque
          python reproduire.py --liste      n'execute rien, montre l'etat
@@ -68,8 +74,9 @@ class Entree(NamedTuple):
     banc: str                 # fichier du banc
     args: List[str]           # arguments EXACTS
     tableaux: str             # ce que ce journal produit
-    etat: str                 # verifie | declare | defaut
+    etat: str                 # verifie | declare | defaut | perime
     note: str = ""
+    env: dict = {}            # variables d'environnement du protocole
 
 
 # ---------------------------------------------------------------------------
@@ -137,28 +144,82 @@ ENTREES: List[Entree] = [
            "8/8 contre la force brute"),
 
     # -- defauts, mapping non etabli ----------------------------------------
+    # Les entrees qui suivent ont ete confrontees le 31/10 a l'en-tete que
+    # leur journal archive s'ecrit a lui-meme : leurs DEFAUTS sont bien le
+    # reglage publie. C'est etabli, et non plus seulement non infirme.
     Entree("bench_budget", "bench_budget.py", [],
-           "decomposition LB/UB citee en prose", "defaut",
+           "decomposition LB/UB citee en prose", "declare",
+           "defaut = publie : plafonds 300,900 et 2 graines. "
            "+49,6 %, 1,7 point et q_ub ~ 103 confirmes ligne a ligne"),
     Entree("bench_recherche", "bench_recherche.py", [],
-           "5/12 lignes ou l'incumbent progresse", "defaut"),
+           "5/12 lignes ou l'incumbent progresse", "declare",
+           "defaut = publie : plafonds 300,900 et 2 graines"),
     Entree("bench_filter", "bench_filter.py", [], "-- rien de cite --",
-           "defaut"),
-    Entree("bench_archive", "bench_archive.py", [], "tab:famine", "defaut"),
-    Entree("bench_cglp", "bench_cglp.py", [], "tab:cglp, tab:cglp900",
-           "defaut", "le plafond publie est 300, pas celui du defaut"),
+           "declare", "defaut = publie : 12 instances, budget 12 s"),
+    Entree("bench_archive", "bench_archive.py", [], "tab:famine",
+           "declare", "defaut = publie : 10 graines, budget 7 s + 5 s"),
+    # Verifie le 31/10 contre la legende de tab:cglp et contre l'en-tete
+    # que le journal archive s'ecrit a lui-meme : « plafond 300 appels
+    # entiers, jusqu'a 20 coupes generees ». Les defauts du banc valent
+    # 900, 60 coupes et UNE graine : trois ecarts, pas un.
+    Entree("bench_cglp", "bench_cglp.py", ["300", "20"],
+           "tab:cglp", "declare",
+           "tab:cglp : plafond 300, 20 coupes, TROIS graines. Les defauts "
+           "du banc (900, 60, une graine) ne le produisent pas. "
+           "tab:cglp900 est le meme banc a 900 : entree bench_cglp900.",
+           {"CGLP_GRAINES": "1,2,3"}),
+    Entree("bench_cglp900", "bench_cglp.py", ["900", "20"],
+           "tab:cglp900", "declare",
+           "sa legende dit « le MEME banc, budget porte de 300 a 900, tout "
+           "le reste inchange : trois graines »",
+           {"CGLP_GRAINES": "1,2,3"}),
     Entree("bench_litterature", "bench_litterature.py", [],
-           "tab:match, tab:drici", "defaut"),
-    Entree("bench_zm", "bench_zm.py", [], "terrain Zerdani & Moulai",
-           "defaut"),
-    Entree("bench_scale", "bench_scale.py", [], "lot d'echelle", "defaut"),
-    Entree("bench_quality", "bench_quality.py", [], "", "defaut"),
-    Entree("bench_compare", "bench_compare.py", [], "", "defaut"),
-    Entree("bench_determin", "bench_determin.py", [], "tab:determ",
-           "defaut"),
-    Entree("bench_improve", "bench_improve.py", [], "", "defaut"),
-    Entree("bench_bigm", "bench_bigm.py", [], "", "defaut"),
-    Entree("bench_bound", "bench_bound.py", [], "", "defaut"),
+           "tab:drici", "declare",
+           "defaut = publie : plafond 1500, 10 instances par taille"),
+    # Verifie le 31/10 contre l'en-tete du journal : « 24 instances,
+    # notre plafond : 400 ». Le defaut du banc est 20 instances.
+    #
+    # REATTRIBUTION, et elle est inferee, non etablie : tab:match etait
+    # porte ici par bench_litterature. Sa legende dit « Match, 24
+    # instances » et c'est bench_zm, non bench_litterature, qui en joue
+    # 24 -- bench_litterature annonce « 10 instances par taille » et
+    # correspond a tab:drici. L'argument est un compte d'instances, pas
+    # une confrontation cellule par cellule : si elle infirme ce
+    # rapprochement, c'est elle qui tranche.
+    Entree("bench_zm", "bench_zm.py", ["24", "400"],
+           "terrain Zerdani & Moulai, tab:match (reattribue)", "declare",
+           "le journal annonce 24 instances ; le defaut du banc en joue 20"),
+    Entree("bench_scale", "bench_scale.py", [], "lot d'echelle",
+           "declare", "defaut = publie : budget 30 s par methode"),
+    Entree("bench_quality", "bench_quality.py", [], "", "declare",
+           "defaut = publie : plafond 700 appels entiers"),
+    Entree("bench_compare", "bench_compare.py", [], "", "declare",
+           "defaut = publie : budget 12 s par methode et par instance"),
+    # Verifie le 31/10. tab:determ publie « plafond de 100 appels,
+    # 90 instances ». Le banc par defaut prend 250 appels et ne joue
+    # qu'une instance sur quatre (noms[::4]), soit 23 : c'est ce que dit
+    # le journal archive, « 23/23 instances ». Ce journal n'est donc PAS
+    # une reproduction de tab:determ.
+    Entree("bench_determin", "bench_determin.py", ["100", "--all"],
+           "tab:determ", "perime",
+           "le journal present annonce 23 instances ; tab:determ en "
+           "publie 90, au plafond 100 et non 250"),
+    # Verifie le 31/10 contre l'en-tete du journal : « 10 graines par
+    # instance [variante : ameliore] ». Les defauts du banc valent
+    # 5 graines et l'etiquette « courant ».
+    Entree("bench_improve", "bench_improve.py", ["10", "ameliore"],
+           "", "declare",
+           "le journal annonce 10 graines et la variante « ameliore » ; "
+           "les defauts donnent 5 graines et « courant »"),
+    # Ces deux-la restent « defaut » et le resteront tant qu'on ne les
+    # aura pas fait ecrire leur reglage : leur journal n'imprime AUCUN
+    # en-tete de protocole, donc rien dans results/ ne dit avec quels
+    # arguments il a ete produit. Ce n'est pas une omission de lecture,
+    # c'est une absence de trace.
+    Entree("bench_bigm", "bench_bigm.py", [], "", "defaut",
+           "journal sans en-tete de reglage : provenance invérifiable"),
+    Entree("bench_bound", "bench_bound.py", [], "", "defaut",
+           "journal sans en-tete de reglage : provenance invérifiable"),
 
     # -- mesures de cette campagne ------------------------------------------
     Entree("bench_temps", "bench_temps.py", ["AB", "2"],
@@ -192,7 +253,8 @@ def liste() -> None:
     print("-" * 100)
     for e in ENTREES:
         present = "oui" if (JOURNAUX / f"{e.nom}.out").exists() else "NON"
-        cmd = f"python3 {e.banc} {' '.join(e.args)}".rstrip()
+        pre = "".join(f"{k}={v} " for k, v in sorted(e.env.items()))
+        cmd = f"{pre}python3 {e.banc} {' '.join(e.args)}".rstrip()
         print(f"{e.nom:<{larg}}{e.etat:<10}{present:<9}{cmd}")
         if e.note:
             print(f"{'':<{larg}}{'':<19}-- {e.note}")
@@ -213,7 +275,9 @@ def joue(e: Entree, delai: int, tmp: Path) -> int:
         code = subprocess.call(["timeout", str(delai), sys.executable,
                                 str(RACINE / e.banc), *e.args],
                                stdout=f, stderr=subprocess.STDOUT,
-                               cwd=RACINE)
+                               cwd=RACINE,
+                               env={**os.environ, **e.env} if e.env
+                               else None)
     duree = int(time.time() - t0)
     if code != 0:
         with open(part, "a") as f:
@@ -243,10 +307,14 @@ def main() -> int:
     for e in ENTREES:
         cible = JOURNAUX / f"{e.nom}.out"
         if cible.exists() and cible.stat().st_size > 0 \
-                and e.nom not in refaire:
+                and e.nom not in refaire and e.etat != "perime":
             print(f"### {e.nom} : deja archive, passe")
             continue
-        cmd = f"{e.banc} {' '.join(e.args)}".rstrip()
+        if e.etat == "perime" and cible.exists():
+            print(f"### {e.nom} : journal PERIME (produit avec d'autres "
+                  f"arguments), on rejoue", flush=True)
+        pre = "".join(f"{k}={v} " for k, v in sorted(e.env.items()))
+        cmd = f"{pre}{e.banc} {' '.join(e.args)}".rstrip()
         print(f"### {e.nom} [{e.etat}] : {cmd}", flush=True)
         code = joue(e, delai, tmp)
         print(f"### {e.nom} : code={code}", flush=True)
