@@ -345,7 +345,24 @@ Two linear fractional functions at once — its own problem in the literature,
 with its own branch and bound and cutting planes — is a dominance filter here,
 and the cost depends neither on how many functions are asked for nor on what
 they are. On the published instance it keeps 4 of the 7 efficient points,
-exactly the brute-force answer. Ties are reported rather than resolved
+exactly the brute-force answer.
+
+**But asking more is not learning more, and the limit is measured.** The
+integer-program cost of `m` decision functions is *zero* for every `m` — but as
+`m` grows the non-dominated subset grows towards the whole of `E(P_D)`, and a
+filter that returns everything has told the decision maker nothing:
+
+| \|E(P_D)\| | inst | m=1 | m=2 | m=3 | m=4 | m=6 | m=8 | saturates |
+|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 5 | 54 | 25% | 37% | 69% | 100% | 100% | 100% | **m=4** |
+| 9 | 41 | 11% | 25% | 46% | 73% | 100% | 100% | **m=6** |
+| 18† | 8 | 6% | 27% | 40% | 44% | 97% | 100% | **m=8** |
+| 28† | 4 | 4% | 11% | 30% | 30% | 87% | 100% | **m=8** |
+
+† fewer than fifteen instances. The saturation point rises with `|E(P_D)|` but
+only slowly. The growth is *consistent with* being logarithmic, which the
+classical result on non-dominated subset size would suggest — but four buckets
+on a coarse grid cannot establish that, so it is not claimed. Ties are reported rather than resolved
 arbitrarily, which matters because `Phi` is a function of `x` and not of `Z(x)`.
 
 Both entry points **refuse a `CompleteSet` that is not proved complete**. A

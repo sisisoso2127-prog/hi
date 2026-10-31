@@ -57,10 +57,32 @@ def breakeven(data):
     return "\n".join(out)
 
 
+def filter_(data):
+    f = data.get("filter")
+    if not f:
+        raise SystemExit("no filter experiment in campaign-results.json")
+    ms = f["ms"]
+    out = []
+    for r in f["rows"]:
+        cells = []
+        for m in ms:
+            st = r["shares"].get(str(m))
+            cells.append(f"${st['median']*100:.0f}\\%$" if st else "---")
+        sat = r["saturates_at"]
+        thin = "$^{\\dagger}$" if r["instances"] < 15 else ""
+        out.append(f"${r['size']['median']:.0f}${thin} & {r['instances']} & "
+                   + " & ".join(cells)
+                   + f" & $\\mathbf{{m={sat}}}$ \\\\"
+                   if sat else " & --- \\\\")
+    out.append(f"% columns: m = {', '.join(str(m) for m in ms)}")
+    out.append("% dagger marks a row resting on fewer than 15 instances")
+    return "\n".join(out)
+
+
 def main():
     which = sys.argv[1] if len(sys.argv) > 1 else "breakeven"
     data = json.loads(RESULTS.read_text())
-    print({"breakeven": breakeven}[which](data))
+    print({"breakeven": breakeven, "filter": filter_}[which](data))
 
 
 if __name__ == "__main__":

@@ -357,6 +357,41 @@ one ratio and one quadratic, or ten black boxes cost the same scan.  On the
 published instance the two-ratio filter keeps $4$ of the $7$ efficient points,
 exactly the brute-force answer.
 
+\textbf{But asking more is not the same as learning more, and the limit is
+measured.}  As $m$ grows the non-dominated subset grows towards the whole of
+$\E$, and a filter that returns everything has told the decision maker nothing.
+
+\begin{table}[h]
+\centering
+\caption{Share of $\E$ surviving the filter, by number of decision functions
+and by $|\E|$.  Thirty instances per configuration, pooled by size; $\dagger$
+marks a row resting on fewer than fifteen instances.  Generated from the
+campaign's JSON.}
+\label{tab:filter}
+\small
+\begin{tabular}{lrrrrrrrrl}
+\toprule
+$|\E|$ & inst. & $m{=}1$ & $m{=}2$ & $m{=}3$ & $m{=}4$ & $m{=}5$ & $m{=}6$ &
+$m{=}8$ & saturates \\
+\midrule
+$5$ & 54 & $25\%$ & $37\%$ & $69\%$ & $100\%$ & $100\%$ & $100\%$ & $100\%$ & $\mathbf{m=4}$ \\
+$9$ & 41 & $11\%$ & $25\%$ & $46\%$ & $73\%$ & $85\%$ & $100\%$ & $100\%$ & $\mathbf{m=6}$ \\
+$18$$^{\dagger}$ & 8 & $6\%$ & $27\%$ & $40\%$ & $44\%$ & $59\%$ & $97\%$ & $100\%$ & $\mathbf{m=8}$ \\
+$28$$^{\dagger}$ & 4 & $4\%$ & $11\%$ & $30\%$ & $30\%$ & $69\%$ & $87\%$ & $100\%$ & $\mathbf{m=8}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+So the capability is free and the \emph{answer} is not.  The saturation point
+rises with $|\E|$ --- $m = 4, 6, 8, 8$ for efficient sets of about $5, 9, 18$
+and $28$ points --- but only slowly, and past it a decision maker who asks
+another question gets the whole efficient set back.  The growth is consistent
+with being logarithmic in $|\E|$, which is what the classical result on the
+expected size of a non-dominated subset would suggest, but four buckets on a
+coarse grid in $m$ cannot establish that and it is not claimed here.
+
+
 Ties are reported rather than resolved arbitrarily, which the single-answer
 interface of the decision-space methods cannot do and which matters here for
 the reason in Remark~\ref{rem:notZ}: $\Phi$ is a function of $x$ and not of
