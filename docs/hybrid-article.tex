@@ -46,9 +46,10 @@ decision-space methods need a ratio form to build their cuts from.  A sum of
 ratios, a maximum of ratios, or several decision functions at once --- each its
 own problem in that literature --- cost here exactly what one ratio costs.  The
 break-even against solving one decision function at a time is a measured median
-of $13$ functions, with a range of three orders of magnitude; for a single
-linear fractional $\Phi$ the decision-space method is often the better buy, and
-the break-even is $1$ only outside the class it accepts.
+of $2.4$ functions over $117$ instances, counted in sub-programs so that it is
+deterministic; for a single linear fractional $\Phi$ the decision-space method
+is often the better buy, and the break-even is $1$ only outside the class it
+accepts.
 
 The hybrid reaches the whole of $\E$ at $1.36\times$ the pure
 exact method over 120 instances spanning $n = 6 \dots 12$, faster on 116, at
@@ -371,24 +372,22 @@ pays only after enough questions are asked of it.
 
 \begin{table}[h]
 \centering
-\caption{How many decision functions before building $\E$ pays.  Eight
-instances with conflicting criteria; ``break-even'' is
-$\text{build} / (\text{one exact run} - \text{one scan})$.}
+\caption{How many decision functions before building $\E$ pays, in
+\textbf{sub-programs}: $(\text{programs to build } \E)/(\text{programs for
+one exact run})$, a deterministic quantity since a scan solves none.  Thirty
+instances per configuration; generated from the campaign's JSON by
+\texttt{studies/tables.py}, not transcribed.}
 \label{tab:breakeven}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrl}
 \toprule
-instance & $|\E|$ & build $\E$ & one scan & break-even \\
+configuration & inst. & cens. & $|\E|$ & break-even, sub-programs \\
 \midrule
-$n=6$, $p=3$  & $52$  & $1.10$\,s & $0.0015$\,s & $\mathbf{0.9}$ \\
-$n=6$, $p=3$  & $64$  & $2.05$\,s & $0.0018$\,s & $1.6$ \\
-$n=5$, $p=3$  & $17$  & $0.18$\,s & $0.0004$\,s & $2.2$ \\
-$n=7$, $p=3$  & $90$  & $2.36$\,s & $0.0029$\,s & $11.3$ \\
-$n=5$, $p=3$  & $72$  & $1.18$\,s & $0.0018$\,s & $13.8$ \\
-$n=4$, $p=3$  & $25$  & $0.19$\,s & $0.0005$\,s & $19.0$ \\
-$n=6$, $p=4$  & $105$ & $3.13$\,s & $0.0031$\,s & $70.4$ \\
-$n=4$, $p=3$  & $58$  & $0.77$\,s & $0.0013$\,s & $2117$ \\
+$n=5$, $p=3$ & 30 & 0 & $4$ & $\mathbf{1.8}$ $[1.6,\ 2.5]$ \\
+$n=6$, $p=3$ & 30 & 0 & $6$ & $\mathbf{2.2}$ $[2.0,\ 2.5]$ \\
+$n=6$, $p=4$ & 27 & 3 & $9$ & $\mathbf{3.1}$ $[2.1,\ 4.2]$ \\
+$n=7$, $p=3$ & 30 & 0 & $8$ & $\mathbf{2.6}$ $[2.0,\ 3.3]$ \\
 \midrule
-\textbf{median} & & & & $\mathbf{13}$ \\
+\textbf{all} & 117 & & & $\mathbf{2.4}$ $[1.8,\ 2.9]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -405,11 +404,35 @@ deficit on the shared one.
 \end{quote}
 
 \noindent
-The median is $13$ decision functions and the range spans three orders of
-magnitude, so this is a \emph{direction and not a prediction} --- the same
-discipline applied to every other magnitude in this paper.  The spread is
-driven by how expensive one exact run happens to be on that instance, which
-varies by a factor of $600$ across these eight and is not known in advance.
+The pooled median is $\mathbf{2.4}$ decision functions, with an interquartile
+range of $[1.8,\ 2.9]$ over $117$ instances and extremes of $1.2$ and $7.2$.
+
+\textbf{The statistic is in sub-programs and not in seconds, which is why it
+can be quoted this tightly.}  A scan over an explicit $\E$ solves \emph{no}
+integer program at all, so the break-even in programs is exactly
+$(\text{programs to build } \E) / (\text{programs for one exact run})$ --- a
+deterministic quantity, identical on every machine and every repeat, immune to
+the $\pm 30\%$ noise floor that no number of repeats removes.  The seconds in
+the campaign's own output are the noisy version of the same number and sit
+below $1$.
+
+\textbf{An earlier version of this section reported a median of $13$ with a
+range of $1$ to $2117$.  That is withdrawn.}  It came from eight hand-made
+instances with a deliberately conflicting criterion structure, where
+$|\E|$ ran from $17$ to $105$; the campaign family has $|\E|$ between $4$ and
+$9$, and building a small efficient set is cheap.  The old figure was not a
+wrong measurement --- it is what those eight instances did --- but it was
+quoted as the break-even when it was the break-even \emph{of one family}, and
+generalising from a single family is the error this work records committing
+five times before.  This is the sixth, caught by re-measuring at the
+campaign's standard.
+
+Three of the $120$ runs were censored, all at $p=4$, when an exact run spent
+its budget.  That censoring is one-sided \emph{against} the method argued for
+here: an exact run that overruns is an expensive one, and an expensive exact
+run is precisely the case where building $\E$ pays soonest, so dropping it
+removes the instances most favourable to the scan.  The true break-even is
+therefore below $2.4$, not above it.
 
 Two consequences, and the first is the unflattering one.  \textbf{For a single
 linear fractional $\Phi$, the decision-space method is often the better buy},

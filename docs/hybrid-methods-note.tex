@@ -1835,23 +1835,21 @@ the exact method of Algorithm~\ref{alg:box} once per decision function.
 
 \begin{table}[h]
 \centering
-\caption{How many decision functions before building $\E$ pays.  Eight
-instances with conflicting criteria; break-even is
-$\text{build} / (\text{one exact run} - \text{one scan})$.}
-\begin{tabular}{lrrrr}
+\caption{How many decision functions before building $\E$ pays, in
+\textbf{sub-programs}: $(\text{programs to build }\E)/(\text{programs for one
+exact run})$, deterministic because a scan solves none.  Thirty instances per
+configuration; generated from the campaign's JSON by
+\texttt{studies/tables.py} rather than transcribed.}
+\begin{tabular}{lrrrl}
 \toprule
-instance & $|\E|$ & build $\E$ & one scan & break-even \\
+configuration & inst. & cens. & $|\E|$ & break-even, sub-programs \\
 \midrule
-$n=6$, $p=3$  & $52$  & $1.10$\,s & $0.0015$\,s & $\mathbf{0.9}$ \\
-$n=6$, $p=3$  & $64$  & $2.05$\,s & $0.0018$\,s & $1.6$ \\
-$n=5$, $p=3$  & $17$  & $0.18$\,s & $0.0004$\,s & $2.2$ \\
-$n=7$, $p=3$  & $90$  & $2.36$\,s & $0.0029$\,s & $11.3$ \\
-$n=5$, $p=3$  & $72$  & $1.18$\,s & $0.0018$\,s & $13.8$ \\
-$n=4$, $p=3$  & $25$  & $0.19$\,s & $0.0005$\,s & $19.0$ \\
-$n=6$, $p=4$  & $105$ & $3.13$\,s & $0.0031$\,s & $70.4$ \\
-$n=4$, $p=3$  & $58$  & $0.77$\,s & $0.0013$\,s & $2117$ \\
+$n=5$, $p=3$ & 30 & 0 & $4$ & $\mathbf{1.8}$ $[1.6,\ 2.5]$ \\
+$n=6$, $p=3$ & 30 & 0 & $6$ & $\mathbf{2.2}$ $[2.0,\ 2.5]$ \\
+$n=6$, $p=4$ & 27 & 3 & $9$ & $\mathbf{3.1}$ $[2.1,\ 4.2]$ \\
+$n=7$, $p=3$ & 30 & 0 & $8$ & $\mathbf{2.6}$ $[2.0,\ 3.3]$ \\
 \midrule
-\textbf{median} & & & & $\mathbf{13}$ \\
+\textbf{all} & 117 & & & $\mathbf{2.4}$ $[1.8,\ 2.9]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1869,12 +1867,36 @@ one.
 \end{quote}
 
 \noindent
-Median $13$, range across three orders of magnitude.  By the discipline of
-Section~\ref{sec:audit} that makes it a \emph{direction and not a prediction}:
-the spread is driven by how expensive one exact run happens to be on the
-instance, which varies by a factor of $600$ across these eight and is not known
-beforehand.  Quoting the median alone would be the same error this note
-records making five times.
+Pooled median $\mathbf{2.4}$, IQR $[1.8,\ 2.9]$ over $117$ instances, extremes
+$1.2$ and $7.2$.
+
+\textbf{The statistic is in sub-programs and not seconds, which is what lets it
+be quoted this tightly.}  A scan over an explicit $\E$ solves \emph{no} integer
+program, so the break-even in programs is exactly $(\text{programs to build }
+\E)/(\text{programs for one exact run})$: deterministic, identical on every
+machine and every repeat, and untouched by the $\pm 30\%$ noise floor of
+Section~\ref{sec:lessons} that no number of repeats removes.  This is the
+clearest case in the whole note for the lesson recorded there --- count the
+deterministic work rather than the seconds --- because here it converts a
+figure spanning three orders of magnitude into one spanning a factor of six.
+
+\paragraph{A withdrawn figure.}
+An earlier version of this section reported a median of $13$, range $1$ to
+$2117$.  \textbf{That is withdrawn.}  It came from eight hand-made instances
+with a deliberately conflicting criterion structure and $|\E|$ between $17$ and
+$105$; the campaign family has $|\E|$ between $4$ and $9$, and a small
+efficient set is cheap to build.  The old number was not a bad measurement ---
+it is what those eight instances did --- but it was quoted as \emph{the}
+break-even when it was the break-even of \emph{one family}.  Generalising from
+a single family is the error this note already records making five times, and
+this was the sixth; it was caught by re-measuring at the campaign's standard
+rather than by noticing.
+
+Three of the $120$ runs were censored, all at $p=4$, when an exact run spent
+its budget.  As set out in the experiment, that censoring is one-sided
+\emph{against} the case argued here --- an overrunning exact run is an
+expensive one, and an expensive exact run is exactly where building $\E$ pays
+soonest --- so $2.4$ is an upper bound on the truth, not a lower one.
 
 \paragraph{The unflattering half, stated first.}
 For a single linear fractional $\Phi$ the decision-space method is often the
@@ -1957,6 +1979,7 @@ binaries.  The box decomposition is not only a better search; it is a better
 proof.
 
 \section{Three measurement lessons, and what they cost}
+\label{sec:lessons}
 
 We report these because the direction of a result is worth less than the
 knowledge of how it was checked.

@@ -355,11 +355,30 @@ downstream could tell the difference.
 
 **The price, measured, and it is not always worth paying.** Against running the
 exact method once per decision function, building `E(P_D)` first pays after a
-median of **13** decision functions over eight instances — range 1 to 2117,
-three orders of magnitude, so that is a direction and not a prediction. **For a
-single linear fractional `Phi` the decision-space method is often the better
-buy**: it never builds `E(P_D)` and is untouched by its size, while this route
-builds it and is bounded by it. They fail on different instances. The
+median of **2.4** decision functions — IQR [1.8, 2.9] over 117 instances,
+extremes 1.2 and 7.2, thirty instances per configuration.
+
+The statistic is in **sub-programs, not seconds**, which is what lets it be
+quoted that tightly: a scan over an explicit `E(P_D)` solves *no* integer
+program, so the break-even is exactly `programs to build / programs for one
+exact run` — deterministic, identical on every machine and every repeat, and
+untouched by the ±30% noise floor. Three of 120 runs were censored when an
+exact run spent its budget; that censoring is one-sided *against* this method
+(an overrunning exact run is an expensive one, which is where building
+`E(P_D)` pays soonest), so 2.4 is an upper bound on the truth.
+
+> **A withdrawn figure.** An earlier version of this section reported a median
+> of **13**, range 1 to 2117. That is withdrawn. It came from eight hand-made
+> instances with a deliberately conflicting criterion structure and `|E(P_D)|`
+> between 17 and 105; the campaign family has `|E(P_D)|` between 4 and 9, and a
+> small efficient set is cheap to build. The old number is what those eight
+> instances did — but it was quoted as *the* break-even when it was the
+> break-even of *one family*, which is the error this project records making
+> five times before. This was the sixth, caught by re-measuring.
+
+**For a single linear fractional `Phi` the decision-space method is often the
+better buy**: it never builds `E(P_D)` and is untouched by its size, while this
+route builds it and is bounded by it. They fail on different instances. The
 break-even is 1 only for an `f` outside the linear fractional class, where
 there is no competitor to amortise against — and that part does not depend on
 the measurement.
