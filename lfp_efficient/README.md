@@ -62,7 +62,7 @@ python3 examples/paper_example.py        # reproduces section 4 of the paper
 python3 examples/large_example.py        # larger instances, up to |D| = 34635
 python3 examples/scaling.py              # the scaling study, up to n = 20
 python3 examples/fractional_example.py   # MOILFP: every criterion a ratio
-python3 tests/test_lfp_efficient.py      # 24 tests, incl. the fractional case
+python3 tests/test_lfp_efficient.py      # 106 tests, incl. the fractional case
 ```
 
 ## Larger instances
@@ -700,6 +700,36 @@ some of these instances, so a worse seed could score above 1. The tables here
 use the non-negative gap `(Phi* - Phi(seed)) / |Phi*|`, which is zero exactly
 when the seed is optimal and well defined whatever the sign.
 
+## What an explicit `E(P_D)` buys
+
+The decision-space methods need **structure in `Phi`** and nothing of
+`E(P_D)`; this package's criterion-space route needs **`E(P_D)`** and nothing
+of `Phi`. A branch-and-cut for a linear fractional `Phi` derives its cuts and
+bounds from the ratio form; given a sum of two ratios it does not slow down, it
+stops applying. Over a proved-complete `E(P_D)` that case costs what one ratio
+costs:
+
+```python
+from lfp_efficient import (complete_efficient_set,
+                           maximize_over_efficient_set,
+                           nondominated_over_efficient_set)
+
+result = complete_efficient_set(problem)
+maximize_over_efficient_set(result, lambda x: phi1(x) + phi2(x))  # 47/35
+nondominated_over_efficient_set(result, [phi1, phi2])             # 4 of 7
+```
+
+Sums, maxima, products, ratios of quadratics and black boxes are all exact;
+each is checked against brute force in the suite. Both entry points refuse a
+`CompleteSet` that is not proved complete, since a maximum over a truncated set
+is still a number and nothing downstream could tell the difference.
+
+Measured: against running the exact method once per decision function, building
+`E(P_D)` first pays after a median of 13 functions (range 1–2117, so a
+direction and not a prediction). **For a single linear fractional `Phi` the
+decision-space method is often the better buy.** The break-even is 1 only
+outside the class it accepts.
+
 ## Modules
 
 | File | Contents |
@@ -716,3 +746,8 @@ when the seed is optimal and well defined whatever the sign.
 | `hybrid.py` | the exact-exact hybrid: the paper's method handing over to the box search |
 | `metaheuristic.py` | Pareto local search with an archive, and the seeded hybrid |
 | `tchebychev.py` | the augmented weighted Tchebychev program, measured as a reference |
+| `front.py` | the complete non-dominated set, proved complete in criterion space |
+| `complete.py` | `E(P_D)` itself: front slices, exact-rational variable elimination, the box guards |
+| `subset.py` | a subset of `E(P_D)`, delivered as a subset and saying so |
+| `generated.py` | the Pareto walk that seeds the enumeration, and the probe order that makes it pay |
+| `over.py` | queries over an explicit `E(P_D)`: **any** computable decision function, or several at once |

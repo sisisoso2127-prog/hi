@@ -302,11 +302,73 @@ method now **knows** which case it is in, instead of returning a point list
 whose completeness rested on an assumption about the coefficients. Where ties
 do occur, the front alone silently returns a fraction of the answer.
 
+## What an explicit `E(P_D)` buys: any decision function at all
+
+This is the part worth reading if you read only one section, because it does
+not rest on being fastest at anything — it is about which problems can be
+*posed*.
+
+> A decision-space method needs **structure in `Phi`** and nothing of
+> `E(P_D)`; this route needs **`E(P_D)`** and nothing of `Phi`.
+
+A branch-and-cut for a linear fractional `Phi` builds its cuts, bounds and
+Dinkelbach steps out of the ratio form. Replace `Phi` by a *sum* of two ratios
+and it does not slow down — it stops applying. Over a finite, explicit,
+certified `E(P_D)` that case costs exactly what one ratio costs, because the
+optimum of a function over a finite explicit set is settled by evaluation.
+
+```python
+from lfp_efficient import (complete_efficient_set,
+                           maximize_over_efficient_set,
+                           nondominated_over_efficient_set)
+
+result = complete_efficient_set(problem)        # proved complete, or it refuses
+
+maximize_over_efficient_set(result, lambda x: phi1(x) + phi2(x))   # sum
+maximize_over_efficient_set(result, lambda x: max(phi1(x), phi2(x)))
+maximize_over_efficient_set(result, f, minimize=True)
+nondominated_over_efficient_set(result, [phi1, phi2])   # several at once
+```
+
+Six shapes on the published instance, each checked against brute force:
+
+| decision function | admitted by decision-space branch-and-cut? | optimum |
+|---|---|---|
+| `Phi1` | yes — the classical case | 5/17 |
+| `Phi1 + Phi2` | **no** | 47/35 |
+| `max(Phi1, Phi2)` | **no** | 6/5 |
+| `Phi1 * Phi2` | **no** | 6/35 |
+| `(x1^2+1)/(x2^2+1)` | **no** | 10 |
+| piecewise / black box | **no** | 3/11 |
+
+Two linear fractional functions at once — its own problem in the literature,
+with its own branch and bound and cutting planes — is a dominance filter here,
+and the cost depends neither on how many functions are asked for nor on what
+they are. On the published instance it keeps 4 of the 7 efficient points,
+exactly the brute-force answer. Ties are reported rather than resolved
+arbitrarily, which matters because `Phi` is a function of `x` and not of `Z(x)`.
+
+Both entry points **refuse a `CompleteSet` that is not proved complete**. A
+budget-truncated set still holds genuine efficient points, so a maximum over it
+is still a number — just not the answer to the question asked, and nothing
+downstream could tell the difference.
+
+**The price, measured, and it is not always worth paying.** Against running the
+exact method once per decision function, building `E(P_D)` first pays after a
+median of **13** decision functions over eight instances — range 1 to 2117,
+three orders of magnitude, so that is a direction and not a prediction. **For a
+single linear fractional `Phi` the decision-space method is often the better
+buy**: it never builds `E(P_D)` and is untouched by its size, while this route
+builds it and is bounded by it. They fail on different instances. The
+break-even is 1 only for an `f` outside the linear fractional class, where
+there is no competitor to amortise against — and that part does not depend on
+the measurement.
+
 ## What is verified, and how
 
 | | |
 |---|---|
-| `python tests/test_lfp_efficient.py` | 93 tests, no pytest needed (it runs under pytest too) |
+| `python tests/test_lfp_efficient.py` | 106 tests, no pytest needed (it runs under pytest too) |
 | `python examples/paper_example.py` | reproduces §4 of the paper: `X_opt = (3,3)`, `Phi_opt = 5/17` |
 | `python examples/large_example.py` | instances up to \|D\| = 34635, each cross-checked against an independent scan |
 | `python examples/fractional_example.py` | fully fractional criteria, checked against Definition 1 point by point |
@@ -316,6 +378,40 @@ Correctness rests on **four independent references**, not on the algorithm
 agreeing with itself: exhaustive enumeration, a repeated-cut enumeration of the
 non-dominated set, a sorted scan with dominance tests, and `certify_optimum`,
 which settles 362293 challengers with 3 exact efficiency tests.
+
+**And the references themselves were audited.** Eleven places were found where
+a hypothesis stated in the documentation was never checked in the code — all
+fixed, all carrying regression tests, and no measured result moved. The pattern
+is worth knowing if you build on this package:
+
+- Every flag claiming something was *proved* was computed from control flow
+  ("the loop finished"), not from the proof's hypotheses. "The box list is
+  empty" was reported as "the front is complete", which holds exactly when `D`
+  is bounded and the denominators are positive — neither of which was
+  established.
+- **Every parameter added to save work was a way to supply a hypothesis without
+  proving it.** A precomputed variable box, a precomputed front, seeds, an
+  incumbent and its value: each was introduced as an optimisation and quietly
+  became a trust assumption. A caller passing a variable box asserts it contains
+  `D`, and nothing downstream can detect one that does not — every routine
+  receiving it searches it honestly and reports a complete-looking answer about
+  a feasible set that is not `D`.
+- The two worst sat in the verification apparatus itself: `certify_optimum`
+  certified a suboptimal point when handed a clipped box (`[1,1]` certified
+  `Phi = 1/9` while the optimum is `5/17`), and both *reference oracles* did the
+  same — answering about the efficient set of a different feasible set under the
+  names `E(P_D)` and "the exact optimum". A clipped oracle does not give a wrong
+  answer; it gives a wrong *standard*.
+- None of it was visible to the suite because all 93 tests then in it fed
+  **valid** input. They established the method is correct when its hypotheses
+  hold — never the question — and could not establish that anything enforced
+  them. The ten added tests all feed violating input and require a refusal.
+
+The mathematics survived unchanged: the slice characterisation, front
+completeness, split disjointness and big-M validity were re-derived and
+re-tested, the last on 220 point pairs with no violation and the bound exactly
+attained. All eleven findings were in the *enforcement* of hypotheses, never in
+the reasoning that uses them.
 
 ## Where the code reads differently from the paper
 
@@ -870,6 +966,26 @@ beats answering one with 88 binaries.
 
 ## How the numbers were measured
 
+**What the baseline is.** The decision-space side of every comparison above is
+**this package's own reimplementation** of the published method
+(`lfp_efficient/algorithm.py`), on instances generated here — not the authors'
+code, and not their published benchmarks. Both sides share the same simplex,
+the same exact rational arithmetic, the same branch and bound and the same
+machine, and the reimplementation follows the printed algorithm step for step,
+with the two places where that pseudo-code is internally inconsistent corrected
+and the corrections documented in the module.
+
+So the comparison **isolates the algorithmic difference**, which is a cleaner
+question than code against code — that would also measure language, solver
+backend and engineering effort. The price is that **absolute seconds carry no
+information outside this implementation**: pure Python over exact rationals is
+far slower than any production solver, equally on both sides, so only ratios
+transfer and only ratios are quoted. A comparison against the authors' own
+implementations on their own benchmarks has **not** been done and is not
+claimed; until it is, every margin here reads *"this algorithm beats that
+algorithm when both are implemented the same way"*, not *"this work beats those
+papers"*.
+
 Most figures above were first taken on four to eight instances. The *direction*
 of each was argued from a mechanism, which is what made them worth reporting —
 but a total over four runs is not an estimate. `studies/campaign.py` re-measures
@@ -898,6 +1014,40 @@ python studies/campaign.py            # the full campaign
 Nothing else ran on the machine during the campaign. A contaminated measurement
 is discarded rather than quoted — a rule adopted here only after breaking it
 once.
+
+## Where this sits in the literature
+
+Two parts of this construction are **prior art and are not claimed**:
+
+- **Criterion-space decomposition** for optimising over an efficient set —
+  Boland, Charkhgard & Savelsbergh (EJOR, 2017) work in the full-dimensional
+  criterion space and decompose it each iteration, which is structurally the box
+  search here with a *linear* decision function; their balanced box, boxed line
+  and triangle splitting methods are the bi-objective precursors.
+- **Metaheuristic–exact hybridisation**, which has a known taxonomy in which
+  "run a metaheuristic to approximate the Pareto set, then let an exact method
+  refine it" is exactly the scheme used here.
+
+What the *fractional* literature does not appear to do is work in criterion
+space. Optimising a linear fractional function over an integer efficient set is
+a sustained line — Drici, Ouail & Moulaï (Annals of OR, 2018), a 2015 RAIRO-OR
+paper, Ouail & Chergui (arXiv:1907.02036), Chaiblaine, Moulaï & Cherfaoui
+(arXiv:2003.05364), a 2021 *Optimization* paper on quadratic objectives, and
+the stochastic and interval variants of Younsi-Abbaci & Moulaï (2021–2023) —
+and all of them search decision space with branch and bound or cutting planes.
+
+So what is plausibly unaddressed is narrower than "the method": the
+**combination**, together with what makes the transfer exact rather than
+approximate (the integer-valued `e_k`, which replaces an estimated minimal step
+by `e_k >= 1` exactly, and the slice results), and what that combination then
+buys — the admissible class above.
+
+**This is a statement about what was and was not found, not a claim of
+novelty.** No full text in that list has been read; it was assembled from
+abstracts and listings. One paper bears directly on the complete-set result and
+must be read before it is called new: *Generating the efficient set of
+multi-objective integer linear plus linear fractional programming problems*,
+Annals of Operations Research **296** (2021), pp. 735–753.
 
 ## Layout
 

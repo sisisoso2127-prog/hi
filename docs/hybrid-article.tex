@@ -1229,7 +1229,9 @@ Both halves were invisible to the test suite for one reason: all $93$ tests
 then in the suite fed \emph{valid} inputs.  They established that the method is
 correct when its hypotheses hold, which was never in question; they could not
 see that nothing enforced them.  The suite now contains $103$ tests, and the
-ten added ones all feed deliberately invalid input and require a refusal.
+ten added for the audit all feed deliberately invalid input and require a
+refusal; three more were added later for the admissible class of
+Section~\ref{sec:admissible}, bringing the suite to $106$.
 
 \subsection{The findings}
 
@@ -1422,7 +1424,7 @@ linear fractional programming problems}, Annals of Operations Research
 
 \paragraph{Reproducibility.}  The implementation is pure Python with no
 third-party dependency, computes in exact rational arithmetic throughout, and
-carries $103$ tests.  Several check \emph{properties} rather than answers --- the
+carries $106$ tests.  Several check \emph{properties} rather than answers --- the
 split is a partition, the metaheuristic never hands over an inefficient point,
 a budgeted run never claims completeness --- since a method that silently lost
 efficient points would still agree with the optimum on favourable instances.

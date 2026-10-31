@@ -2056,7 +2056,7 @@ the method computes the right answer when its hypotheses hold --- which was
 never the question --- and they could not establish that anything enforced
 them. A suite of that shape is blind to this entire class by construction, and
 the blindness is invisible from inside it: every test passes, on every commit,
-for years. The suite now holds $103$ tests, and the ten added all feed
+for years. The suite then held $103$ tests, and the ten added all feed
 deliberately invalid input and require a refusal.
 
 \subsection{The eleven}
@@ -2308,7 +2308,7 @@ EJOR 2017 one.
 \section{Reproducibility}
 
 The implementation is pure Python with no third-party dependency, computes in
-exact rational arithmetic throughout, and carries 103 tests. Several check
+exact rational arithmetic throughout, and carries 106 tests. Several check
 properties rather than answers, since a method that silently lost efficient
 points would still agree with the optimum on favourable instances:
 
@@ -2384,6 +2384,13 @@ requires the call to refuse rather than answer:
       and the value list in step, over $201$ instances, $53$ of which produce
       such a slice.
 \end{itemize}
+
+\noindent
+Three further tests cover the admissible class of Section~\ref{sec:admissible}:
+six shapes of decision function checked against brute force in both senses with
+every tie reported, several decision functions at once matching the brute-force
+non-dominated subset, and both queries refusing an efficient set that is not
+proved complete.  That is $93 + 10 + 3 = 106$.
 
 \noindent
 Every comparison in this note is reproduced by scripts in the repository, run
