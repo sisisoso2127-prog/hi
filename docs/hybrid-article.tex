@@ -1454,6 +1454,89 @@ simplex pivots --- are reported next to the times and are identical on every
 run and every machine.  Runs stopped by a time budget are reported as censored
 and excluded from medians rather than counted as their budget.
 
+\subsection{Where the method stops: two walls, not one $n$}
+\label{sec:walls}
+
+Every measurement above lives at $n \leqslant 12$, which leaves the obvious
+question open.  Asked directly --- at what $n$ does the method stop? --- it has
+no answer, because there are \textbf{two walls and they move in opposite
+directions}.
+
+\begin{itemize}
+\item The \textbf{front enumeration} gets dearer as $p$ grows: more criteria
+      mean a larger non-dominated set and more boxes to settle.
+\item The \textbf{slice completion} gets \emph{cheaper} as $p$ grows.  The
+      slice equations have rank $p$ --- measured per instance, not assumed, and
+      it came out equal to $p$ in every instance where it could be read --- so
+      elimination leaves $n - p$ free variables and the scan is exponential in
+      \emph{those}.
+\end{itemize}
+
+\noindent
+So an instance is solvable when it clears both, and more criteria buy a cheaper
+completion and a dearer front.  The slice time tracks $n-p$ and not $n$:
+$0.04$\,s at $n-p=3$, $0.48$\,s at $7$, $2.26$\,s at $9$.
+
+\begin{table}[h]
+\centering
+\caption{Which wall each instance hit.  Five instances per cell, $20$\,s
+budget.  \textbf{At this budget the front binds almost everywhere}, which is a
+property of the budget and not of the method --- see below.}
+\label{tab:walls}
+\small
+\begin{tabular}{rrrrrrr}
+\toprule
+$n$ & $p$ & $n-p$ & solved & front wall & slice wall & rank \\
+\midrule
+ 8 & 3 &  5 & $5/5$ & $0$ & $0$ & $3$ \\
+10 & 3 &  7 & $4/5$ & $1$ & $0$ & $3$ \\
+12 & 3 &  9 & $3/5$ & $2$ & $0$ & $3$ \\
+14 & 3 & 11 & $0/5$ & $4$ & $1$ & $3$ \\
+16 & 3 & 13 & $0/5$ & $4$ & $1$ & $3$ \\
+\midrule
+ 8 & 5 &  3 & $3/5$ & $2$ & $0$ & $5$ \\
+10 & 5 &  5 & $1/5$ & $4$ & $0$ & $5$ \\
+12 & 5 &  7 & $0/5$ & $5$ & $0$ & --- \\
+14 & 5 &  9 & $1/5$ & $4$ & $0$ & $5$ \\
+\midrule
+10 & 7 &  3 & $0/5$ & $5$ & $0$ & --- \\
+12 & 7 &  5 & $0/5$ & $5$ & $0$ & --- \\
+12 & 9 &  3 & $0/5$ & $5$ & $0$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{A budget that binds measures the budget.}
+The table above attributes almost every failure to the front, and that
+attribution is \textbf{an artefact}.  Re-running the $p=3$ column with a
+$120$\,s budget instead of $20$\,s reverses it where it matters:
+
+\begin{center}
+\begin{tabular}{rrrr}
+\toprule
+$n$, $p=3$ & solved & front wall & slice wall \\
+\midrule
+$10$ & $5/5$ & $0$ & $0$ \\
+$12$ & $5/5$ & $0$ & $0$ \\
+$14$ & $\mathbf{2/5}$ & $\mathbf{0}$ & $\mathbf{3}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+At $n=14$ the tight budget reported four front walls and one slice wall; the
+generous one reports \emph{zero} front walls and three slice walls.  The method
+did not change.  A time budget that binds before the mechanism does converts a
+measurement of the method into a measurement of the budget, and it does so
+\emph{silently} --- every cell still produces a number, and the numbers point
+at the wrong wall.
+
+That is worth more than the map it corrects.  Censoring is reported throughout
+this work, but reporting \emph{that} a run was censored is not the same as
+checking \emph{what} the censoring was caused by, and the first does not catch
+this.  The sweep at $p=3$ is being extended to $n=16$ and $n=18$; the rows
+above are what is established.
+
 \section{Negative results, and a wall}
 \label{sec:wall}
 
