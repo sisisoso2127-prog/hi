@@ -1,0 +1,383 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,
+            pdftitle={How far the slice argument reaches}}
+
+\newcommand{\Dset}{D}
+\newcommand{\E}{E(P_{\Dset})}
+\newcommand{\Z}{Z}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Zint}{\mathbb{Z}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+\title{\bfseries How far the slice argument reaches\\[4pt]
+\large A characterisation of the criteria for which the efficient set\\
+of a multi-objective integer program is cheaply enumerable}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Let $\Dset \subseteq \Zint^n_+$ be finite and let $\Z_1,\dots,\Z_p$ be criteria
+on $\Dset$.  If $v$ is a non-dominated criterion vector then \emph{every}
+$x \in \Dset$ with $\Z(x) = v$ is efficient, so the efficient set is exactly
+the union of the \emph{slices} of the non-dominated set and no efficiency test
+is needed on any slice point.  This argument assumes nothing about the
+criteria.  What does need structure is the enumeration of a slice, and this
+note determines exactly how much.
+
+We prove: (i) a criterion has one-hyperplane level sets with data depending
+affinely on the level \emph{if and only if} it is linear fractional, on the set
+where the relevant denominator does not vanish --- so within that shape the
+fractional case is maximal; (ii) the enumeration in fact needs only that each
+level set be a finite union of \emph{polyhedra}, a strictly larger class that
+contains $|c^{\top}x+a|/(d^{\top}x+b)$ and maxima and minima of ratios; and
+(iii) a separate and strictly tighter condition governs the enumeration of the
+non-dominated set itself, namely that sublevel sets be half-spaces.  The two
+reaches do not coincide, and the smaller one is what confines such a method to
+linear fractional criteria.  We close with what the characterisation implies
+about neighbouring problem classes, and with a precise statement of what is
+\emph{not} proved here.
+\end{abstract}
+
+\section{Setting}
+
+Throughout, $\Dset \subseteq \Zint^{n}_{+}$ is a non-empty finite set --- in
+the application $\Dset = \{x \in \Zint^n_+ : Ax \leqslant b\}$ with the system
+bounded --- and $\Z = (\Z_1,\dots,\Z_p)$ is a vector of real-valued criteria on
+$\Dset$, all to be maximised.
+
+\begin{definition}
+$y \in \Dset$ \emph{dominates} $x \in \Dset$ when $\Z(y) \geqslant \Z(x)$
+componentwise with at least one strict inequality.  A point is \emph{efficient}
+when nothing dominates it; $\E$ denotes the set of efficient points.  A vector
+$v \in \R^p$ is \emph{non-dominated} when $v = \Z(x)$ for some $x \in \Dset$
+and no $\Z(y)$ dominates it in the same sense; $F$ denotes the set of
+non-dominated vectors.
+\end{definition}
+
+\begin{definition}
+For $v \in \R^p$ the \emph{slice} at $v$ is
+$S(v) = \{x \in \Dset : \Z(x) = v\}$.
+\end{definition}
+
+\section{The slice argument, which assumes nothing}
+
+\begin{theorem}\label{th:slice}
+If $v$ is non-dominated then every $x \in S(v)$ is efficient.
+\end{theorem}
+
+\begin{proof}
+Let $x \in S(v)$ and suppose some $y \in \Dset$ dominates $x$.  Then
+$\Z(y) \geqslant \Z(x) = v$ with at least one strict inequality, so $\Z(y)$
+dominates $v$, contradicting the assumption that $v$ is non-dominated.  Hence
+no $y$ dominates $x$.
+\end{proof}
+
+\begin{corollary}\label{cor:union}
+$\displaystyle \E = \bigcup_{v \in F} S(v)$, and the union is disjoint.
+\end{corollary}
+
+\begin{proof}
+($\supseteq$) is Theorem~\ref{th:slice}.  For ($\subseteq$), let $x$ be
+efficient and put $v = \Z(x)$.  If some $\Z(y)$ dominated $v$ then $y$ would
+dominate $x$, so $v \in F$ and $x \in S(v)$.  Disjointness holds because
+$S(v) \cap S(w) = \emptyset$ for $v \neq w$.
+\end{proof}
+
+\begin{remark}
+Theorem~\ref{th:slice} uses no property of $\Z$ whatsoever --- not linearity,
+not continuity, not finiteness of $\Dset$ beyond what makes the notions
+well posed.  So the \emph{characterisation} of $\E$ as a union of slices is
+available for arbitrary criteria.  Everything that follows is about the cost of
+\emph{enumerating} $S(v)$, which is a different question and the one where
+structure enters.
+\end{remark}
+
+\begin{remark}\label{rem:cost}
+The practical content of Corollary~\ref{cor:union} is that \textbf{no
+efficiency test is paid on any slice point}.  A direct construction of $\E$
+tests each candidate against the others; here the test is spent only in
+producing $F$, and the points are recovered by enumeration.
+\end{remark}
+
+\section{Where one hyperplane is exactly the fractional case}
+
+Call a criterion \emph{linear fractional} when
+$\Z(x) = (c^{\top}x + a)/(d^{\top}x + b)$ for fixed $c,d \in \R^n$ and
+$a,b \in \R$.
+
+\begin{proposition}\label{prop:lf-gives-hyperplane}
+If $\Z$ is linear fractional and $d^{\top}x + b \neq 0$ on $\Dset$, then for
+every level $v$,
+\[
+  S(v) = \{x \in \Dset : (c - v d)^{\top} x = v b - a\} ,
+\]
+an intersection of $\Dset$ with one hyperplane whose data is affine in $v$.
+\end{proposition}
+
+\begin{proof}
+$\Z(x) = v$ iff $c^{\top}x + a = v(d^{\top}x + b)$, since multiplying by the
+non-vanishing $d^{\top}x+b$ is reversible; rearranging gives the stated
+equation, whose coefficient vector $c - vd$ and right-hand side $vb-a$ are
+affine in $v$.
+\end{proof}
+
+The converse is the part that makes this a characterisation, and it holds for
+\emph{any} affine dependence on the level rather than only for the
+parametrisation just produced.
+
+\begin{theorem}[Limit]\label{th:limit}
+Suppose there are $a_0, a_1 \in \R^n$ and $b_0, b_1 \in \R$ with
+\[
+  \{x : \Z(x) = v\} = \{x : (a_0 + v a_1)^{\top} x = b_0 + v b_1\}
+  \qquad \text{for every level } v .
+\]
+Then on $\{x : b_1 - a_1^{\top}x \neq 0\}$ the criterion is linear fractional:
+\[
+  \Z(x) \;=\; \frac{a_0^{\top}x - b_0}{\,b_1 - a_1^{\top}x\,} .
+\]
+Together with Proposition~\ref{prop:lf-gives-hyperplane}: \textbf{on the set
+where the denominator does not vanish, a criterion has one-hyperplane level
+sets with data affine in the level if and only if it is linear fractional.}
+\end{theorem}
+
+\begin{proof}
+Fix such an $x$ and put $v = \Z(x)$.  Then $x$ lies in its own level set, so
+$(a_0 + v a_1)^{\top}x = b_0 + v b_1$, that is
+$a_0^{\top}x - b_0 = v\,(b_1 - a_1^{\top}x)$.  Dividing by the non-zero
+$b_1 - a_1^{\top}x$ gives the claim, with $c = a_0$, $a = -b_0$, $d = -a_1$
+and $b = b_1$.
+\end{proof}
+
+\begin{remark}
+The non-vanishing hypothesis is not a technicality to be dropped.  It is the
+positive-denominator assumption under which the fractional problem is normally
+posed, restated; without it $\Z$ is not even continuous and the level-set
+description can fail.  The theorem is accordingly stated \emph{on} that set.
+\end{remark}
+
+\begin{remark}
+Theorem~\ref{th:limit} is a \emph{limitation}, and that is its value.  It says
+there is nothing larger \emph{of that shape} to look for: a method whose slices
+are single hyperplanes with affine data is a method for linear fractional
+criteria, whatever else one might hope.
+\end{remark}
+
+\section{But one hyperplane was never required}
+
+What an enumerator of $S(v)$ actually consumes is a system of linear
+constraints.  Nothing forces that system to describe a single hyperplane, and
+nothing forces it to be a single system.
+
+\begin{proposition}[Reach, affine version]\label{prop:reach-affine}
+Suppose that for each level $v$ there are finitely many affine subspaces
+$A_1(v),\dots,A_{m}(v)$, computable from $v$, with
+$\{x : \Z(x) = v\} = \bigcup_{i} A_i(v)$.  Then
+$S(v) = \bigcup_i \bigl(\Dset \cap A_i(v)\bigr)$ is enumerable at $m$ times the
+cost of the one-subspace case.
+\end{proposition}
+
+\begin{proof}
+Immediate: enumerate $\Dset \cap A_i(v)$ for each $i$ and take the union,
+discarding repetitions where the $A_i(v)$ meet.
+\end{proof}
+
+\begin{example}\label{ex:abs}
+$\Z(x) = |c^{\top}x + a| / (d^{\top}x + b)$ with $d^{\top}x + b > 0$ is not
+linear fractional, and
+\[
+  \{x : \Z(x) = v\} = \{x : c^{\top}x + a = v(d^{\top}x+b)\}
+  \;\cup\; \{x : c^{\top}x + a = -v(d^{\top}x+b)\} ,
+\]
+two hyperplanes.  By Proposition~\ref{prop:reach-affine} its slices are
+enumerable.
+\end{example}
+
+The same argument runs once more, and the second step is the one that reaches a
+criterion type of independent interest.
+
+\begin{proposition}[Reach, polyhedral version]\label{prop:reach-poly}
+Suppose that for each level $v$ there are finitely many polyhedra
+$P_1(v),\dots,P_m(v)$, computable from $v$, with
+$\{x : \Z(x) = v\} = \bigcup_i P_i(v)$.  Then $S(v)$ is enumerable at $m$ times
+the cost of one polyhedron.
+\end{proposition}
+
+\begin{proof}
+As before; an enumerator that accepts linear equations accepts linear
+inequalities at no structural cost, since both are linear constraints on the
+same variables.
+\end{proof}
+
+\begin{example}[Minimax criteria]\label{ex:max}
+Let $\Z(x) = \max_{i \leqslant m} \Z_i(x)$ with each $\Z_i$ linear fractional
+of positive denominator.  Then
+\[
+  \{x : \Z(x) = v\} \;=\; \bigcup_{j=1}^{m}
+  \Bigl\{ x : \Z_j(x) = v \ \text{ and } \ \Z_i(x) \leqslant v
+  \ \ (i \neq j) \Bigr\} ,
+\]
+and each branch is one linear equation together with $m-1$ linear inequalities
+--- a polyhedron, not an affine subspace.  Minimisation is the same with the
+inequalities reversed.
+\end{example}
+
+\begin{remark}
+Propositions~\ref{prop:reach-affine} and~\ref{prop:reach-poly} are one
+observation applied twice: what a slice enumeration needs is not a \emph{shape}
+but \emph{finitely many linear systems}.  What it cannot absorb is curvature.
+\end{remark}
+
+\section{The other half of such a method reaches less}
+
+Corollary~\ref{cor:union} presupposes $F$.  Producing $F$ is a separate
+problem, and a method that searches criterion space by splitting around a
+visited point faces a different requirement.
+
+Such a search, at a centre $\bar x$, divides the remaining region into
+$\{x : \Z_k(x) > \Z_k(\bar x)\}$ and $\{x : \Z_k(x) \leqslant \Z_k(\bar x)\}$.
+For each part to be a single linear program, both must be half-spaces.
+
+\begin{proposition}[Necessary condition for the split]\label{prop:front}
+If the split above is to express each part as one linear program for every
+centre, then every sublevel set $\{x : \Z(x) \leqslant t\}$ must be a
+half-space.
+\end{proposition}
+
+\begin{proof}
+Taking $t = \Z(\bar x)$ as $\bar x$ ranges over $\Dset$, the sublevel set is
+one of the two parts, hence a half-space; the other part is its complement,
+which is then a half-space as well.
+\end{proof}
+
+\begin{remark}[What is not claimed]\label{rem:notexact}
+Proposition~\ref{prop:front} is a \emph{necessary} condition, not a
+characterisation.  A criterion could satisfy it and still not be usable,
+because a method must also \emph{construct} those half-spaces from the problem
+data, and nothing above provides that in general.  Sufficiency is available for
+linear fractional criteria, where after scaling the data to integers the
+quantity
+\[
+  e_k(x ; \bar x) \;=\; D_k(\bar x)\,D_k(x)\,
+  \bigl(\Z_k(x) - \Z_k(\bar x)\bigr)
+\]
+is linear in $x$ and integer-valued, so that
+$\Z_k(x) > \Z_k(\bar x) \iff e_k(x;\bar x) \geqslant 1$ exactly and both parts
+are explicit.  An earlier draft of this material asserted an equivalence here;
+that assertion is withdrawn.
+\end{remark}
+
+\begin{proposition}\label{prop:gap}
+The condition of Proposition~\ref{prop:front} is strictly stronger than that of
+Proposition~\ref{prop:reach-poly}.
+\end{proposition}
+
+\begin{proof}
+A half-space sublevel set has a hyperplane boundary, which is a level set, so a
+criterion satisfying Proposition~\ref{prop:front} satisfies
+Proposition~\ref{prop:reach-affine} with $m=1$, hence
+Proposition~\ref{prop:reach-poly}.  Strictness: in Example~\ref{ex:abs} the
+sublevel set $\{|c^{\top}x+a| \leqslant v(d^{\top}x+b)\}$ is the intersection
+of two half-spaces and its complement is not convex; in Example~\ref{ex:max} it
+is $\bigcap_i \{\Z_i \leqslant v\}$, a polyhedron whose complement is a union.
+Neither is a half-space, while both have enumerable slices.
+\end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:gap} explains a feature of such methods that is otherwise
+puzzling.  They are described as methods for linear fractional programs, yet
+their completion step is indifferent to the criteria.  The reason is that the
+two halves have different reaches, and \textbf{the smaller one names the
+method}.  For a criterion between the two --- Example~\ref{ex:max} is one ---
+the efficient set can be completed exactly once $F$ is known, but $F$ must be
+obtained some other way.
+\end{remark}
+
+\section{A consequence for the decision function}
+
+\begin{theorem}[Admissible decision functions]\label{th:admissible}
+Let $\E$ be known.  Then for any function $f$ defined on $\Dset$, both
+$\max\{f(x) : x \in \E\}$ and $\operatorname*{argmax}\{f(x) : x \in \E\}$ are
+obtained by evaluating $f$ on $\E$.  No linearity, monotonicity, continuity,
+differentiability or ratio form is required of $f$.  The same holds for the
+non-dominated subset of $\E$ under finitely many such functions.
+\end{theorem}
+
+\begin{proof}
+$\E$ is finite.
+\end{proof}
+
+\begin{remark}
+The proof is the whole of the content, and stating the theorem would be idle
+were it not for Corollary~\ref{cor:union} and Remark~\ref{rem:cost}: the point
+is not that maximising over a finite set is easy, but that the slice argument
+makes $\E$ affordable, and that this is what the affordability buys.  Methods
+that never construct $\E$ must instead derive their cuts and bounds from the
+form of $f$, and so are confined to the forms they can differentiate or
+linearise.
+\end{remark}
+
+\section{What the characterisation says about neighbouring classes}
+
+Theorem~\ref{th:limit} and Proposition~\ref{prop:reach-poly} classify a
+criterion by inspection of its level sets.
+
+\begin{example}[Sums of a linear and a fractional term]\label{ex:lplf}
+Let $\Z(x) = c^{\top}x + (p^{\top}x + \alpha)/(q^{\top}x + \beta)$.  Clearing
+the denominator at level $v$,
+\[
+  (c^{\top}x)(q^{\top}x + \beta) + p^{\top}x + \alpha
+     - v\,(q^{\top}x + \beta) \;=\; 0 ,
+\]
+whose quadratic part is $(c^{\top}x)(q^{\top}x)$, with matrix
+$(c q^{\top} + q c^{\top})/2$.  That matrix is non-zero whenever $c$ and $q$
+both are, so the level set is a conic.  A conic is not a finite union of
+polyhedra, so Proposition~\ref{prop:reach-poly} does not apply and the slice
+machinery does not reach this class.
+\end{example}
+
+\noindent
+The same computation disposes of criteria that are products, and of quadratic
+criteria, for the same reason: curvature.  Example~\ref{ex:lplf} is worth
+isolating because the class it describes is studied in its own right, so the
+characterisation says in advance that a slice-based method and a method for
+that class are addressing disjoint problems.
+
+\section{What is not proved here}
+
+\begin{enumerate}[itemsep=3pt]
+\item \textbf{Proposition~\ref{prop:front} is not a characterisation.}  See
+      Remark~\ref{rem:notexact}.  Sufficiency is shown only for linear
+      fractional criteria.
+\item \textbf{Nothing here bounds the cost.}  Propositions~\ref{prop:reach-affine}
+      and~\ref{prop:reach-poly} say a slice is enumerable, not that it is
+      small.  The size of $S(v)$ and the number of branches are properties of
+      the instance.
+\item \textbf{Theorem~\ref{th:limit} concerns level sets with data affine in
+      the level.}  A criterion whose level sets are single hyperplanes with
+      data depending on $v$ in some other way is not covered, and we do not
+      claim such criteria cannot exist.
+\item \textbf{The classification of a published problem class} --- as in
+      Example~\ref{ex:lplf} --- rests on the class as stated.  The algebra is
+      ours; the identification of which class a given paper treats is not a
+      mathematical claim.
+\end{enumerate}
+
+\end{document}
