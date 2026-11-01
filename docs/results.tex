@@ -29,7 +29,12 @@ where they keep the unexplored part of the problem, and that decides the cost:
 \begin{description}
 \item[decision space] truncates $\Dset$ with Sylva--Crema cuts.  Each cut is a
   disjunction, so it costs $p$ binaries and $p+1$ big-$M$ rows, and every
-  sub-problem is strictly larger than the last.
+  sub-problem is strictly larger than the last.  \emph{This is the cut of the
+  method reimplemented here, not of every decision-space method}: Oua\"il and
+  Chergui, the one paper in this literature read in full, cut instead with
+  the single row $\sum_{j \in \Delta_l} x_j \geqslant 1$ over the improving
+  nonbasic directions --- no binaries, no big-$M$.  Every figure below
+  compares against the Sylva--Crema construction.
 \item[criterion space] keeps a list of boxes in $\R^p$.  The same truncation is
   a box subtraction; every sub-problem is $\Dset$ plus a few ordinary rows, and
   \textbf{the model never grows}.
@@ -438,8 +443,8 @@ one idea, measured twice.
 
 The same substitution works on complete enumeration of the non-dominated set,
 and there the mechanism is visible directly: \textbf{every vector is a cut}, so
-in decision space a larger front means more binaries and more big-$M$ rows on
-every sub-problem that follows, while the box list never grows.  The campaign
+with Sylva--Crema cuts a larger front means more binaries and more big-$M$
+rows on every sub-problem that follows, while the box list never grows.  The campaign
 swept the constraint tightness on purpose to move $|F|$ --- fifteen instances
 at each of three tightnesses, $n=5$, $p=3$, nothing censored, the same vectors
 returned on both sides every time.

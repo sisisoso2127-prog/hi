@@ -64,9 +64,10 @@
 
 % ===== The fractional-objective line: all decision space ===================
 
-% VERIFY THE AUTHOR LIST.  Volume, pages and DOI are agreed by two indexes,
-%   but one aggregator shows only Drici and Moulai in the Springer metadata
-%   while a citing paper gives all three.  The DOI page settles it.
+% RESOLVED.  The author list is confirmed by reference [13] of ouail2019,
+%   read in full: "Wassila Drici, Fatma Zohra Ouail, Mustapha Moula" -- three
+%   authors, by co-authors of the second.  (That list dates it 2017, the
+%   online-first year; the issue is 2018.)
 @article{drici2018,
   author  = {Drici, Wassila and Oua{\"\i}l, Fatma Zohra and
              Moula{\"\i}, Mustapha},
@@ -81,9 +82,10 @@
 }
 
 % PROVENANCE: authors, volume, issue, pages and DOI from the journal's own
-%   landing page (article ro140036), the NUMDAM record and OpenAlex.
-%   Online 18 December 2014.  An earlier draft of this file had no author
-%   list for this entry at all.
+%   landing page (article ro140036), the NUMDAM record and OpenAlex, and
+%   corroborated field for field by reference [12] of ouail2019, read in
+%   full.  Online 18 December 2014.  An earlier draft of this file had no
+%   author list for this entry at all.
 @article{mahdi2015,
   author  = {Mahdi, Sara and Chaabane, Djamal},
   title   = {A linear fractional optimization over an integer efficient set},
@@ -95,8 +97,15 @@
   doi     = {10.1051/ro/2014036}
 }
 
-% PROVENANCE: author list confirmed from the arXiv listing; submitted
-%   3 July 2019.  Check for a journal version before submission.
+% READ IN FULL (18 pages, arXiv v1).  Decision space, confirmed from the
+%   algorithm itself: the unexplored region is X_l, a subset of X carried as
+%   constraints on x; branching is x_j <= floor(a_j) / x_j >= floor(a_j)+1;
+%   both cut families are linear inequalities in x.  Its cut of type I is
+%   sum_{j in Delta_l} x_j >= 1 over the improving nonbasic directions --
+%   ONE row, no binaries, no big-M -- and its efficiency test is Benson's
+%   program (Q), not the Sylva-Crema/Isermann pair.  See benson1978.
+%   Its own reference list corroborates drici2018 (three authors),
+%   mahdi2015, eckerkouada (375-377), ozlen2009, sylvacrema and boland2017.
 @misc{ouail2019,
   author       = {Oua{\"\i}l, Fatma Zohra and Chergui, Mohamed El-Amine},
   title        = {Hyperbolic optimization over the integer efficient set of
@@ -207,9 +216,10 @@
   doi     = {10.1007/s10898-012-9955-7}
 }
 
-% PROVENANCE: volume, issue and pages agree across RePEc and two independent
-%   reference lists.  No DOI found in an index -- add it from the publisher
-%   page; it is the only entry here without one.
+% PROVENANCE: volume, issue and pages agree across RePEc, two independent
+%   reference lists, and reference [28] of ouail2019, read in full.  No DOI
+%   found in an index -- add it from the publisher page; it is the only
+%   entry here without one.
 @article{ozlen2009,
   author  = {{\"O}zlen, Melih and Azizo{\u{g}}lu, Meral},
   title   = {Multi-objective integer programming: A general approach for
@@ -225,8 +235,9 @@
 % ===== Classical results the method uses ===================================
 
 % PROVENANCE: DOI and authors from the Semantic Scholar record; volume,
-%   issue, pages and year from citing reference lists.  An earlier draft of
-%   this file had none of these fields.
+%   issue, pages and year from citing reference lists.  Reference [29] of
+%   ouail2019 dates it 2003 "in press", which fits a 2004 issue.  An earlier
+%   draft of this file had none of these fields.
 @article{sylvacrema,
   author  = {Sylva, John and Crema, Alejandro},
   title   = {A method for finding the set of non-dominated vectors for
@@ -239,9 +250,9 @@
   doi     = {10.1016/S0377-2217(03)00255-8}
 }
 
-% PROVENANCE: volume, pages, year and DOI from the Springer landing-page
-%   listing (December 1975).  One secondary source gives 373-377; the paper
-%   is a three-page short communication, which fits 375-377.
+% RESOLVED at 375-377.  The Springer landing-page listing and reference
+%   [22] of ouail2019, read in full, both give Math. Prog. 8, 375-377
+%   (1975).  The 373-377 of one secondary source is a typo.
 @article{eckerkouada,
   author  = {Ecker, J. G. and Kouada, I. A.},
   title   = {Finding efficient points for linear multiple objective
@@ -252,4 +263,37 @@
   pages   = {375--377},
   year    = {1975},
   doi     = {10.1007/BF01580453}
+}
+
+
+% ===== The efficiency test, attributed precisely ===========================
+% Our one-program test -- max sum_k e_k subject to e_k >= 0 -- is the form the
+% base method states, and the two classical sources differ in what each
+% supplies.  Isermann gives the test; Ecker and Kouada give the fact that its
+% maximiser is itself efficient in the linear case, which is what the repair
+% step relies on; Benson's (Q) is the variant ouail2019 uses.
+
+% PROVENANCE: reference [25] of ouail2019, read in full.  Not independently
+%   confirmed in an index -- open it before relying on the attribution.
+@article{isermann1974,
+  author  = {Isermann, Heinz},
+  title   = {Proper efficiency and the linear vector maximization problem},
+  journal = {Operations Research},
+  volume  = {22},
+  number  = {1},
+  pages   = {189--191},
+  year    = {1974}
+}
+
+% PROVENANCE: reference [52] of ouail2019, read in full, cited there for the
+%   efficiency test (Q).  Not independently confirmed in an index.
+@article{benson1978,
+  author  = {Benson, Harold P.},
+  title   = {Existence of efficient solutions for vector maximization
+             problems},
+  journal = {Journal of Optimization Theory and Applications},
+  volume  = {26},
+  number  = {4},
+  pages   = {569--580},
+  year    = {1978}
 }

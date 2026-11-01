@@ -128,13 +128,16 @@ immediate.
 
 One iteration of the published approach~\cite{younsiabbaci2025} maximises
 $\Phi$ over a truncated region $\Dset_l$, tests the maximiser for efficiency
-by the test of Ecker and Kouada~\cite{eckerkouada}, banks the best $\Phi$ on
-the criterion slice about to be destroyed, and truncates:
+with the one-program test of Isermann~\cite{isermann1974} --- whose
+maximiser is itself efficient in the linear case, which is Ecker and
+Kouada's~\cite{eckerkouada} and is what the repair step of
+Section~\ref{sec:complete} rests on --- banks the best $\Phi$ on the
+criterion slice about to be destroyed, and truncates:
 $\text{delete } \{x : \Z(x) \leqslant \Z(\tilde x)\}$.
 
 Keeping the complement means keeping the $x$ for which \emph{some} criterion
 strictly improves on $\tilde x$.  That is a disjunction, not a system of linear
-inequalities, and it is modelled, as in the cut of Sylva and
+inequalities, and it is modelled there, as in the cut of Sylva and
 Crema~\cite{sylvacrema}, with one binary per criterion:
 \begin{equation}\label{eq:cut}
   e_k(x;\tilde x) \geqslant 1 \cdot y_k + M_k (1 - y_k), \quad k = 1,\dots,p,
@@ -1417,9 +1420,11 @@ instance made it look.
 \subsection{Two further comparisons}
 
 \paragraph{The margin on front enumeration tracks $|F|$, not $n$.}  Every
-vector is a cut, and in decision space a cut costs $p$ binaries and $p+1$
-rows, so a larger front means larger sub-problems there and nothing at all in
-criterion space.  Over 45 instances swept across constraint tightness:
+vector is a cut, and the Sylva--Crema cut used by the method compared here
+costs $p$ binaries and $p+1$ rows, so a larger front means larger
+sub-problems there and nothing at all in criterion space.  (Not every
+decision-space method pays that; see the paragraph on Oua\"il and Chergui in
+Section~\ref{sec:prior}.)  Over 45 instances swept across constraint tightness:
 
 \begin{table}[h]
 \centering
@@ -1901,9 +1906,57 @@ Chergui~\cite{ouail2019}, Chaiblaine, Moula\"i and
 Cherfaoui~\cite{chaiblaine2020}, the quadratic objective of Mekhilef and
 Moula\"i~\cite{mekhilef2021}, and the method this implementation
 follows~\cite{younsiabbaci2025} --- and all of them search decision space
-with branch and bound or cutting planes, the cut itself going back to Sylva
-and Crema~\cite{sylvacrema} and the efficiency test to Ecker and
-Kouada~\cite{eckerkouada}.  So what is plausibly
+with branch and bound or cutting planes.
+
+\paragraph{One of them has now been read in full, and it sharpens this in
+two directions.}
+Oua\"il and Chergui~\cite{ouail2019} optimise a hyperbolic criterion over
+the integer efficient set of a MOILFP.  The family claim survives contact
+with it: the unexplored region is $X_l$, a subset of $X$ carried as
+\emph{constraints on $x$}; branching is on $x_j \leqslant \lfloor
+\alpha_j \rfloor$ and $x_j \geqslant \lfloor \alpha_j \rfloor + 1$; and both
+cut families are linear inequalities in $x$.  Decision space, confirmed from
+the algorithm rather than from an abstract.
+
+The \emph{cost model} does not survive unqualified, and this is a correction
+to what an earlier draft of this paper asserted.  Their cut of type~I is the
+single row
+\[
+  \sum_{j \in \Delta_l} x_j \;\geqslant\; 1 ,
+\]
+over the improving nonbasic directions $\Delta_l$ of the current tableau,
+with a bound cut $\psi(x) \geqslant \psi_{\mathrm{opt}}$ beside it:
+\textbf{no binaries and no big-$M$ anywhere}.  Their efficiency test is
+Benson's program $(Q)$~\cite{benson1978}, not Isermann's.  So ``$p$ binaries
+and $p+1$ big-$M$ rows per cut'' describes the method reimplemented and
+compared here --- and the Sylva--Crema construction generally --- but
+\textbf{not the decision-space family as a whole}.  Every cost comparison in
+Section~\ref{sec:results} should be read with that scope.
+
+\paragraph{And their reported scale is well beyond ours.}
+They report instances at $n = 30$ to $120$ variables, $m$ up to $120$
+constraints and $k$ up to $6$ criteria, with mean CPU times from $13$ to
+roughly $2000$ seconds in MATLAB on a Pentium~4, and one run at $n = 200$
+finishing in $35801$\,s.  The operating range measured in
+Section~\ref{sec:walls} for the method here is $n \leqslant 16$.  That gap
+is real and is not argued away.
+
+What it is \emph{not} is a like-for-like comparison, because the deliverables
+differ.  Their method is explicitly built so as not to enumerate the
+efficient set --- ``only a few of them are visited'' --- and their tables bear
+that out: a mean of $3.8$ to $15.6$ efficient solutions found per instance,
+while they cite a figure of about $100$ efficient solutions on average at
+$n=25$, $m=10$, $k=4$ for the same problem class.  They return
+$\max \psi$.  The method here returns the whole of $\E$, and with it the
+answer to \emph{any} computable decision function
+(Section~\ref{sec:admissible}) --- which is the deliverable the admissible
+class is about, and the one that costs the range.
+
+Both statements are true at once, and the honest summary is that this
+method buys a larger deliverable at a smaller $n$.  Closing the gap on the
+optimisation task alone would need the front enumeration to get cheaper,
+which Section~\ref{sec:walls} identifies as one of the two binding
+quantities.  So what is plausibly
 unaddressed is narrower than the method: the \emph{combination}, together with
 what makes the transfer exact rather than approximate --- the integer-valued
 $e_k$ of \eqref{eq:ek}, which replaces an estimated minimal step by
@@ -1914,10 +1967,12 @@ first, because it does not rest on being the fastest at anything: it is a
 statement about which problems can be posed at all.
 
 \textbf{This is a statement about what we did and did not find, not a claim of
-novelty}, and two limits are worth naming.  No full text in that list has been
-read; it was assembled from abstracts and bibliographic records, so a method
-an abstract calls ``branch and bound'' may do something in criterion space the
-abstract does not mention.  And one paper bears directly on the complete-set
+novelty}, and two limits are worth naming.  \emph{One} full text in that list
+has been read, the one discussed above; the rest was assembled from abstracts
+and bibliographic records, so a method an abstract calls ``branch and bound''
+may do something in criterion space the abstract does not mention.  That the
+one paper read confirmed the family claim \emph{and} refuted a cost model
+stated about the family is the reason the remaining five matter.  And one paper bears directly on the complete-set
 result of Section~\ref{sec:complete} and must be read before it is called
 new: Cherfaoui and Moula\"i~\cite{cherfaoui2021}, whose relation to this work
 is argued from its problem class in

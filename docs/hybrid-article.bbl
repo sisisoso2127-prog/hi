@@ -1,5 +1,11 @@
 \begin{thebibliography}{10}
 
+\bibitem{benson1978}
+Harold~P. Benson.
+\newblock Existence of efficient solutions for vector maximization problems.
+\newblock {\em Journal of Optimization Theory and Applications},
+  26(4):569--580, 1978.
+
 \bibitem{balancedbox}
 Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
 \newblock A criterion space search algorithm for biobjective integer
@@ -41,6 +47,11 @@ Wassila Drici, Fatma~Zohra Oua{\"\i}l, and Mustapha Moula{\"\i}.
 J.~G. Ecker and I.~A. Kouada.
 \newblock Finding efficient points for linear multiple objective programs.
 \newblock {\em Mathematical Programming}, 8(1):375--377, 1975.
+
+\bibitem{isermann1974}
+Heinz Isermann.
+\newblock Proper efficiency and the linear vector maximization problem.
+\newblock {\em Operations Research}, 22(1):189--191, 1974.
 
 \bibitem{lokman2013}
 Banu Lokman and Murat K{\"o}ksalan.

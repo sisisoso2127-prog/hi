@@ -134,6 +134,9 @@ print(front.report())
 
 `enumerate_nondominated` already did this, but **in decision space** — Sylva–Crema
 cuts, `p` binaries and `p+1` big-M rows per cut, the model growing all the way.
+(That is the cut of the method reimplemented here. Ouail & Chergui, the one
+paper in this literature read in full, cut with a single row and no binaries at
+all — the cost model is about *this* decision-space method, not the family.)
 That is the cost profile this whole package exists to avoid, and the same
 substitution works on enumeration:
 
@@ -145,7 +148,7 @@ substitution works on enumeration:
 | `n=6` | 6 | 0.08 s | 0.63 s | 8.0× |
 
 **The ratio tracks the size of the front, not `n`.** Every vector is a cut, and
-in decision space every cut adds `p` binaries and `p+1` big-M rows — so a
+with Sylva-Crema cuts every cut adds `p` binaries and `p+1` big-M rows — so a
 30-vector front leaves 90 binaries on the last sub-problem, while the
 criterion-space list never grows. The instance with the largest front is the
 one with the 204× gap; the two smallest fronts give 2.8× and 8.0×.

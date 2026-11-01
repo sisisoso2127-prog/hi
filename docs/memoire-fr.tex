@@ -150,18 +150,39 @@ en deux familles, selon l'espace dans lequel elles cherchent.
 
 \paragraph{L'espace des décisions.}
 La région non explorée est maintenue dans l'espace des variables, et réduite
-par des coupes.  La coupe de Sylva--Crema~\cite{sylvacrema} supprime
+par des coupes.  Toute la littérature sur un critère \emph{fractionnaire}
+au-dessus d'un ensemble efficace entier appartient à cette famille~: Drici,
+Ouaïl et Moulaï~\cite{drici2018}, Mahdi et Chaabane~\cite{mahdi2015}, Ouaïl
+et Chergui pour le cas hyperbolique~\cite{ouail2019}, Chaiblaine, Moulaï et
+Cherfaoui pour deux fonctions fractionnaires~\cite{chaiblaine2020}, Mekhilef
+et Moulaï pour un objectif quadratique~\cite{mekhilef2021}, ainsi que la
+méthode dont cette mise en {\oe}uvre est issue~\cite{younsiabbaci2025}.
+
+\paragraph{Mais la famille n'a pas une seule coupe, et la distinction
+importe.}
+La coupe de Sylva--Crema~\cite{sylvacrema} supprime
 $\{x : \Z(x) \leqslant \Z(\tilde x)\}$ ; comme il s'agit d'une disjonction,
 elle s'exprime par $p$ variables binaires et $p+1$ contraintes de type
-grand-$M$, et le test d'efficacité employé est celui d'Ecker et
-Kouada~\cite{eckerkouada}.  Toute la littérature sur un critère
-\emph{fractionnaire} au-dessus d'un ensemble efficace entier appartient à
-cette famille~: Drici, Ouaïl et Moulaï~\cite{drici2018}, Mahdi et
-Chaabane~\cite{mahdi2015}, Ouaïl et Chergui pour le cas
-hyperbolique~\cite{ouail2019}, Chaiblaine, Moulaï et Cherfaoui pour deux
-fonctions fractionnaires~\cite{chaiblaine2020}, Mekhilef et Moulaï pour un
-objectif quadratique~\cite{mekhilef2021}, ainsi que la méthode dont cette
-mise en {\oe}uvre est issue~\cite{younsiabbaci2025}.
+grand-$M$, et c'est elle qu'emploie la méthode reprise ici.  \textbf{Ce n'est
+pas la seule.}  Ouaïl et Chergui~\cite{ouail2019} --- le seul article de
+cette liste que nous ayons lu intégralement --- n'utilisent aucune variable
+binaire~: leur coupe est la ligne unique
+\[
+  \sum_{j \in \Delta_l} x_j \;\geqslant\; 1 ,
+\]
+où $\Delta_l$ est l'ensemble des directions non basiques améliorantes du
+tableau courant, complétée d'une borne $\psi(x) \geqslant \psi_{\text{opt}}$,
+et leur test d'efficacité est le programme $(Q)$ de Benson~\cite{benson1978}
+et non celui d'Isermann~\cite{isermann1974} que l'on retrouve ici --- dont
+Ecker et Kouada~\cite{eckerkouada} fournissent la propriété utilisée au
+chapitre~\ref{ch:contrib}, à savoir que le maximiseur du test est lui-même
+efficace dans le cas linéaire.
+
+\textbf{Conséquence pour les comparaisons du chapitre~\ref{ch:resultats}}~: le
+modèle de coût en $p$ binaires et $p+1$ lignes décrit la méthode
+\emph{reprise ici}, non la famille entière.  Une méthode de l'espace des
+décisions dont la coupe est une seule ligne ne paie pas cette croissance~;
+elle en paie une autre, puisqu'elle n'énumère jamais $\E$.
 
 \paragraph{L'espace des critères.}
 La région non explorée est maintenue dans l'espace des valeurs des critères,
