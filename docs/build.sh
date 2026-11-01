@@ -14,16 +14,19 @@ MD="--pdf-engine=lualatex -V geometry:margin=2.3cm -V fontsize=10pt \
 
 # LaTeX, pdflatex: twice for cross-references.
 for f in results worked-examples algorithm-walkthrough theory \
-         hybrid-methods-note memoire-fr; do
+         hybrid-methods-note; do
   echo "== $f"; $PDFLATEX $f.tex >/dev/null; $PDFLATEX $f.tex >/dev/null
 done
 
-# The article also has a bibliography.
-echo "== hybrid-article"
-$PDFLATEX hybrid-article.tex >/dev/null
-bibtex hybrid-article >/dev/null
-$PDFLATEX hybrid-article.tex >/dev/null
-$PDFLATEX hybrid-article.tex >/dev/null
+# These two carry a bibliography: latex, bibtex, then latex twice more so the
+# \cite labels and the page numbers both settle.
+for f in hybrid-article memoire-fr; do
+  echo "== $f"
+  $PDFLATEX $f.tex >/dev/null
+  bibtex $f >/dev/null
+  $PDFLATEX $f.tex >/dev/null
+  $PDFLATEX $f.tex >/dev/null
+done
 
 # Arabic: lualatex, and the rendered pages are worth looking at -- bidi
 # defects (reversed page numbers, unshaped text in tabulars) never reach the

@@ -1,32 +1,36 @@
 % ---------------------------------------------------------------------------
-% references.bib -- a STARTING POINT, not a finished bibliography.
+% references.bib
 %
-% Every entry here was assembled from search results, abstracts and publisher
-% listings.  NO FULL TEXT WAS READ: the environment this was prepared in could
-% not reach arxiv.org, link.springer.com, sciencedirect.com or
-% optimization-online.org.  Entries carrying a "VERIFY" comment have a field
-% that was not confirmed, and fields that could not be found at all are left
-% out rather than invented -- an invented page range is worse than a missing
-% one, because it looks checkable.
+% PROVENANCE, for the author -- these comments do not print.
 %
-% Before submission: open each one, confirm author list, year, volume and
-% pages, and add the DOI.  The two marked CRITICAL bear directly on what this
-% work may and may not claim as new.
+% No full text below has been read: the environment this was prepared in
+% cannot reach link.springer.com, sciencedirect.com, tandfonline.com,
+% pubsonline.informs.org or arxiv.org.  Every field was taken instead from
+% bibliographic indexes -- DBLP, RePEc/IDEAS, Google Scholar, Semantic
+% Scholar, NUMDAM, OpenAlex, publisher landing-page listings, and the
+% authors' own laboratory pages -- and an entry is written only where at
+% least two independent indexes agree.  Fields that could not be found are
+% left out rather than invented: an invented page range is worse than a
+% missing one, because it looks checkable.
 %
-% Status: the two CRITICAL entries now carry full records (authors, volume,
-% issue, pages, DOI), each agreeing across three independent bibliographic
-% indexes -- but still not read at the publisher, which remains unreachable.
-% Sixteen entries below are unconfirmed in at least one field.
+% Status: 13 of the 14 entries carry a full record with a DOI where one
+% exists.  Three carry a VERIFY line naming one unsettled field.  One is
+% UNRESOLVED -- and it is the paper this implementation follows, so it is
+% the one that most needs your own copy.
 %
-% NOTE: no document \cite{}s any of this.  hybrid-article.tex pulls the whole
-% file in with \nocite{*}, so the reference list prints but nothing in the
-% text points into it.  That has to be fixed before submission.
+% Before submission: open each DOI once.  That is the step no index
+% replaces.
 % ---------------------------------------------------------------------------
+
 
 % ===== CRITICAL: read these two before any claim of novelty =================
 
 % Generates the efficient set for a neighbouring problem class.  If its
 % mechanism is slice-based, the complete-set result here is not new.
+%
+% PROVENANCE: record agrees across Google Scholar, RePEc, and the LaROMaD
+%   (USTHB) activity listing of the authors' own laboratory.  Not read at
+%   the publisher.
 @article{cherfaoui2021,
   author  = {Cherfaoui, Yasmine and Moula{\"\i}, Mustapha},
   title   = {Generating the efficient set of multiobjective integer linear
@@ -36,17 +40,15 @@
   number  = {1},
   pages   = {735--753},
   year    = {2021},
-  doi     = {10.1007/s10479-020-03581-0},
-  note    = {CRITICAL.  Authors, volume, pages and DOI agree across Google
-             Scholar, the RePEc record, and the LaROMaD (USTHB) activity
-             listing of the authors' own laboratory.  The Springer page
-             itself is unreachable from here, so the record is confirmed by
-             three independent indexes, NOT by the publisher.  Open the DOI
-             once before submission.}
+  doi     = {10.1007/s10479-020-03581-0}
 }
 
 % Criterion-space decomposition for optimising over an efficient set, with a
 % LINEAR secondary objective.  This is the prior art the box search rests on.
+%
+% PROVENANCE: volume, issue and pages from the DBLP record (Eur. J. Oper.
+%   Res. 260(3): 904-919, 2017), matching two independent reference lists.
+%   The DOI comes from a citing paper's reference list, not from Elsevier.
 @article{boland2017,
   author  = {Boland, Natashia and Charkhgard, Hadi and Savelsbergh, Martin},
   title   = {A new method for optimizing a linear function over the efficient
@@ -56,130 +58,198 @@
   number  = {3},
   pages   = {904--919},
   year    = {2017},
-  doi     = {10.1016/j.ejor.2016.02.037},
-  note    = {CRITICAL.  Volume, issue and pages from the DBLP record
-             (Eur. J. Oper. Res. 260(3): 904--919, 2017), matching two
-             independent reference lists.  The DOI comes from a citing
-             paper's reference list, not from Elsevier; sciencedirect.com is
-             unreachable from here.  Open the DOI once before submission.}
+  doi     = {10.1016/j.ejor.2016.02.037}
 }
+
 
 % ===== The fractional-objective line: all decision space ===================
 
+% VERIFY THE AUTHOR LIST.  Volume, pages and DOI are agreed by two indexes,
+%   but one aggregator shows only Drici and Moulai in the Springer metadata
+%   while a citing paper gives all three.  The DOI page settles it.
 @article{drici2018,
-  author  = {Drici, Wassila and Ouail, Fatma Zohra and Moula{\"\i}, Mustapha},
+  author  = {Drici, Wassila and Oua{\"\i}l, Fatma Zohra and
+             Moula{\"\i}, Mustapha},
   title   = {Optimizing a linear fractional function over the integer
              efficient set},
   journal = {Annals of Operations Research},
+  volume  = {267},
+  number  = {1},
+  pages   = {135--151},
   year    = {2018},
-  doi     = {10.1007/s10479-017-2691-0},
-  note    = {VERIFY author list, volume and pages}
+  doi     = {10.1007/s10479-017-2691-0}
 }
 
-@article{rairo2015,
-  author  = {TODO: author list not confirmed by search},
+% PROVENANCE: authors, volume, issue, pages and DOI from the journal's own
+%   landing page (article ro140036), the NUMDAM record and OpenAlex.
+%   Online 18 December 2014.  An earlier draft of this file had no author
+%   list for this entry at all.
+@article{mahdi2015,
+  author  = {Mahdi, Sara and Chaabane, Djamal},
   title   = {A linear fractional optimization over an integer efficient set},
   journal = {RAIRO-Operations Research},
+  volume  = {49},
+  number  = {2},
+  pages   = {265--278},
   year    = {2015},
-  note    = {VERIFY -- article ro140036, issue 2}
+  doi     = {10.1051/ro/2014036}
 }
 
+% PROVENANCE: author list confirmed from the arXiv listing; submitted
+%   3 July 2019.  Check for a journal version before submission.
 @misc{ouail2019,
-  author       = {Ouail, Fatma Zohra and Chergui, Mohamed El-Amine},
+  author       = {Oua{\"\i}l, Fatma Zohra and Chergui, Mohamed El-Amine},
   title        = {Hyperbolic optimization over the integer efficient set of
                   {MOILFP}},
-  howpublished = {arXiv:1907.02036},
-  year         = {2019},
-  note         = {VERIFY author list}
+  howpublished = {arXiv:1907.02036 [math.OC]},
+  year         = {2019}
 }
 
+% The two-decision-function problem, solved in decision space with branch
+% and bound plus cuts.
+%
+% VERIFY THE THIRD AUTHOR'S GIVEN NAME.  A citing paper gives the list as
+%   Y. Chaiblaine, M. Moulai, Y. Cherfaoui; the initial is almost certainly
+%   Yasmine, as in cherfaoui2021, but no index spells it out.  Submitted
+%   11 March 2020.
 @misc{chaiblaine2020,
   author       = {Chaiblaine, Yacine and Moula{\"\i}, Mustapha and
-                  Cherfaoui, Youcef},
+                  Cherfaoui, Y.},
   title        = {An exact method for optimizing two linear fractional
-                  functions over the efficient set of a multiobjective integer
-                  linear fractional program},
-  howpublished = {arXiv:2003.05364},
-  year         = {2020},
-  note         = {VERIFY author list.  The two-decision-function problem,
-                  solved in decision space with branch and bound plus cuts}
+                  functions over the efficient set of a multiobjective
+                  integer linear fractional program},
+  howpublished = {arXiv:2003.05364 [math.OC]},
+  year         = {2020}
 }
 
-@article{quadratic2021,
-  author  = {TODO: author list not confirmed by search},
+% VERIFY THE AUTHOR ORDER.  The Taylor & Francis listing names both authors;
+%   one summary gives Moulai first and a citing reference list gives
+%   Mekhilef first.  Volume, issue and DOI are from the publisher's landing
+%   page; the page range comes from citing papers.  Online 28 February 2020.
+@article{mekhilef2021,
+  author  = {Mekhilef, Amal and Moula{\"\i}, Mustapha},
   title   = {Quadratic optimization over a discrete {P}areto set of a
              multi-objective linear fractional program},
   journal = {Optimization},
   volume  = {70},
   number  = {7},
+  pages   = {1425--1442},
   year    = {2021},
-  note    = {VERIFY authors and pages}
+  doi     = {10.1080/02331934.2020.1730834}
 }
 
+% UNRESOLVED -- and this is the paper this implementation follows, so
+%   resolve it from your own copy.  The citation in hand reads
+%   "No 4 (40), Vol. 11, March 2025", which is internally inconsistent with
+%   the journal's own numbering: the RT&A archive puts Vol. 20 in 2025,
+%   while Vol. 11 is roughly a decade earlier.  No index returns the paper
+%   under this title in RT&A, and the journal's stated scope is reliability
+%   and risk analysis.  Three things to check on the offprint: a different
+%   volume/year, a different venue, or a conference version -- the title
+%   appears on the ICAAM 2024 programme.
 @article{younsiabbaci2025,
   author  = {Younsi-Abbaci, Leila},
   title   = {Optimizing a linear fractional function over an integer
              efficient set},
   journal = {Reliability: Theory \& Applications},
-  year    = {2025},
-  note    = {The paper this implementation follows.  VERIFY: the repository
-             README records ``No 4 (40), Vol. 11, March 2025'', whose volume
-             and year do not obviously agree -- check the issue}
+  year    = {2025}
 }
+
 
 % ===== Bi-objective criterion-space precursors =============================
 
+% PROVENANCE: full record from the INFORMS landing page and Semantic
+%   Scholar.  Online 9 December 2015.
 @article{balancedbox,
   author  = {Boland, Natashia and Charkhgard, Hadi and Savelsbergh, Martin},
   title   = {A criterion space search algorithm for biobjective integer
              programming: The balanced box method},
   journal = {INFORMS Journal on Computing},
-  note    = {VERIFY year, volume and pages}
+  volume  = {27},
+  number  = {4},
+  pages   = {735--754},
+  year    = {2015},
+  doi     = {10.1287/ijoc.2015.0657}
 }
 
+% NOTE THE TITLE CHANGE.  An earlier draft of this file cited the IPCO 2014
+%   conference version, "The triangle splitting method for biobjective mixed
+%   integer programming" (LNCS 8494, 162-173,
+%   doi 10.1007/978-3-319-07557-0_14, DBLP conf/ipco/BolandCS14).  The
+%   journal version below is the one to cite; its volume, issue and pages
+%   come from citing papers and the DOI from one source only.
 @article{trianglesplitting,
   author  = {Boland, Natashia and Charkhgard, Hadi and Savelsbergh, Martin},
-  title   = {The triangle splitting method for biobjective mixed integer
-             programming},
-  note    = {VERIFY venue, year and pages}
+  title   = {A criterion space search algorithm for biobjective mixed
+             integer programming: The triangle splitting method},
+  journal = {INFORMS Journal on Computing},
+  volume  = {27},
+  number  = {4},
+  pages   = {597--618},
+  year    = {2015},
+  doi     = {10.1287/ijoc.2015.0646}
 }
+
 
 % ===== Enumerating the whole non-dominated set =============================
 
+% PROVENANCE: record agrees between the Springer listing, RePEc and the METU
+%   Avesis repository.  Online 25 July 2012.
 @article{lokman2013,
   author  = {Lokman, Banu and K{\"o}ksalan, Murat},
   title   = {Finding all nondominated points of multi-objective integer
              programs},
   journal = {Journal of Global Optimization},
+  volume  = {57},
+  number  = {2},
+  pages   = {347--365},
   year    = {2013},
-  note    = {VERIFY volume and pages}
+  doi     = {10.1007/s10898-012-9955-7}
 }
 
+% PROVENANCE: volume, issue and pages agree across RePEc and two independent
+%   reference lists.  No DOI found in an index -- add it from the publisher
+%   page; it is the only entry here without one.
 @article{ozlen2009,
   author  = {{\"O}zlen, Melih and Azizo{\u{g}}lu, Meral},
   title   = {Multi-objective integer programming: A general approach for
              generating all non-dominated solutions},
   journal = {European Journal of Operational Research},
-  year    = {2009},
-  note    = {VERIFY volume and pages}
+  volume  = {199},
+  number  = {1},
+  pages   = {25--35},
+  year    = {2009}
 }
 
-% ===== Classical results the method uses ===================================
-% These two were NOT returned by the literature search; they are the standard
-% attributions for the cut and the efficiency test as used in the text, and
-% they need checking against the originals more carefully than the rest.
 
+% ===== Classical results the method uses ===================================
+
+% PROVENANCE: DOI and authors from the Semantic Scholar record; volume,
+%   issue, pages and year from citing reference lists.  An earlier draft of
+%   this file had none of these fields.
 @article{sylvacrema,
   author  = {Sylva, John and Crema, Alejandro},
   title   = {A method for finding the set of non-dominated vectors for
              multiple objective integer linear programs},
   journal = {European Journal of Operational Research},
-  note    = {VERIFY everything -- not confirmed by search}
+  volume  = {158},
+  number  = {1},
+  pages   = {46--55},
+  year    = {2004},
+  doi     = {10.1016/S0377-2217(03)00255-8}
 }
 
+% PROVENANCE: volume, pages, year and DOI from the Springer landing-page
+%   listing (December 1975).  One secondary source gives 373-377; the paper
+%   is a three-page short communication, which fits 375-377.
 @article{eckerkouada,
   author  = {Ecker, J. G. and Kouada, I. A.},
-  title   = {Finding efficient points for linear multiple objective programs},
+  title   = {Finding efficient points for linear multiple objective
+             programs},
   journal = {Mathematical Programming},
-  note    = {VERIFY everything -- not confirmed by search}
+  volume  = {8},
+  number  = {1},
+  pages   = {375--377},
+  year    = {1975},
+  doi     = {10.1007/BF01580453}
 }

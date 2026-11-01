@@ -126,14 +126,16 @@ immediate.
 \section{Where the cost of the decision-space method comes from}
 \label{sec:cost}
 
-One iteration of the published approach maximises $\Phi$ over a truncated
-region $\Dset_l$, tests the maximiser for efficiency, banks the best $\Phi$ on
+One iteration of the published approach~\cite{younsiabbaci2025} maximises
+$\Phi$ over a truncated region $\Dset_l$, tests the maximiser for efficiency
+by the test of Ecker and Kouada~\cite{eckerkouada}, banks the best $\Phi$ on
 the criterion slice about to be destroyed, and truncates:
 $\text{delete } \{x : \Z(x) \leqslant \Z(\tilde x)\}$.
 
 Keeping the complement means keeping the $x$ for which \emph{some} criterion
 strictly improves on $\tilde x$.  That is a disjunction, not a system of linear
-inequalities, and it is modelled with one binary per criterion:
+inequalities, and it is modelled, as in the cut of Sylva and
+Crema~\cite{sylvacrema}, with one binary per criterion:
 \begin{equation}\label{eq:cut}
   e_k(x;\tilde x) \geqslant 1 \cdot y_k + M_k (1 - y_k), \quad k = 1,\dots,p,
   \qquad \sum_{k=1}^{p} y_k \geqslant 1 ,
@@ -172,6 +174,14 @@ We use it in Section~\ref{sec:wall}.
 \label{sec:complete}
 
 \subsection{Enumerating the non-dominated set}
+
+Enumerating the whole non-dominated set of an integer program is itself a
+developed subject --- the $\varepsilon$-constraint recursion of {\"O}zlen and
+Azizo{\u{g}}lu~\cite{ozlen2009} and the region-exclusion algorithms of Lokman
+and K{\"o}ksalan~\cite{lokman2013} are two general approaches, and in the
+bi-objective case the balanced box~\cite{balancedbox} and triangle
+splitting~\cite{trianglesplitting} methods of Boland, Charkhgard and
+Savelsbergh are the criterion-space precursors of what follows.
 
 The enumeration keeps a list of boxes covering the unexplored region.  It pops
 a box, \emph{probes} it by maximising a fixed strictly positive direction over
@@ -343,8 +353,8 @@ piecewise / black box           & no & $3/11$ \\
 The limit is sharp enough to be \emph{predictive about the literature}, which
 is what makes it worth more than a description of our own code.
 
-Cherfaoui and Moula\"i (Annals of Operations Research \textbf{296} (2021),
-pp.~735--753) generate the efficient set of multiobjective integer
+Cherfaoui and Moula\"i~\cite{cherfaoui2021} generate the efficient set of
+multiobjective integer
 \emph{linear plus linear fractional} programs, whose criteria are
 \[
   Z(x) \;=\; c^{\top}x \;+\; \frac{p^{\top}x + \alpha}{q^{\top}x + \beta} ,
@@ -1874,23 +1884,26 @@ family and should not be read as expected values elsewhere.
 \paragraph{Where this sits in the literature.}\label{sec:prior}
 Two parts of this construction are prior art and are not claimed here.
 Criterion-space decomposition for optimising over an efficient set is
-established: Boland, Charkhgard and Savelsbergh (EJOR, 2017) work in the
+established: Boland, Charkhgard and Savelsbergh~\cite{boland2017} work in the
 full-dimensional criterion space and decompose it at each iteration, which is
 structurally Section~\ref{sec:box} with a \emph{linear} secondary objective,
-and their balanced box, boxed line and triangle splitting methods are the
-bi-objective precursors.  Metaheuristic--exact hybridisation likewise has a
-known taxonomy, in which ``run a metaheuristic to approximate the Pareto set,
-then let an exact method refine it'' is exactly the scheme of
-Section~\ref{sec:hybrid}.
+and their balanced box~\cite{balancedbox} and triangle
+splitting~\cite{trianglesplitting} methods are the bi-objective precursors.
+Metaheuristic--exact hybridisation likewise has a known taxonomy, in which
+``run a metaheuristic to approximate the Pareto set, then let an exact method
+refine it'' is exactly the scheme of Section~\ref{sec:hybrid}.
 
 What the fractional literature does \emph{not} appear to do is work in
 criterion space.  Optimising a linear fractional function over an integer
-efficient set has a sustained literature --- Drici, Ouail and Moula\"i (Annals
-of OR, 2018), a 2015 RAIRO-OR paper, Ouail and Chergui (arXiv:1907.02036),
-Chaiblaine, Moula\"i and Cherfaoui (arXiv:2003.05364), a 2021 Optimization
-paper on quadratic objectives, and the stochastic and interval-coefficient
-variants of Younsi-Abbaci and Moula\"i (2021--2023) --- and all of them search
-decision space with branch and bound or cutting planes.  So what is plausibly
+efficient set has a sustained literature --- Drici, Oua\"il and
+Moula\"i~\cite{drici2018}, Mahdi and Chaabane~\cite{mahdi2015}, Oua\"il and
+Chergui~\cite{ouail2019}, Chaiblaine, Moula\"i and
+Cherfaoui~\cite{chaiblaine2020}, the quadratic objective of Mekhilef and
+Moula\"i~\cite{mekhilef2021}, and the method this implementation
+follows~\cite{younsiabbaci2025} --- and all of them search decision space
+with branch and bound or cutting planes, the cut itself going back to Sylva
+and Crema~\cite{sylvacrema} and the efficiency test to Ecker and
+Kouada~\cite{eckerkouada}.  So what is plausibly
 unaddressed is narrower than the method: the \emph{combination}, together with
 what makes the transfer exact rather than approximate --- the integer-valued
 $e_k$ of \eqref{eq:ek}, which replaces an estimated minimal step by
@@ -1902,13 +1915,13 @@ statement about which problems can be posed at all.
 
 \textbf{This is a statement about what we did and did not find, not a claim of
 novelty}, and two limits are worth naming.  No full text in that list has been
-read; it was assembled from abstracts and listings, so a method an abstract
-calls ``branch and bound'' may do something in criterion space the abstract
-does not mention.  And one paper bears directly on the complete-set result of
-Section~\ref{sec:complete} and must be read before it is called new:
-\emph{Generating the efficient set of multi-objective integer linear plus
-linear fractional programming problems}, Annals of Operations Research
-\textbf{296} (2021), pp.~735--753.
+read; it was assembled from abstracts and bibliographic records, so a method
+an abstract calls ``branch and bound'' may do something in criterion space the
+abstract does not mention.  And one paper bears directly on the complete-set
+result of Section~\ref{sec:complete} and must be read before it is called
+new: Cherfaoui and Moula\"i~\cite{cherfaoui2021}, whose relation to this work
+is argued from its problem class in
+Section~\ref{sec:admissible} and not from its text.
 
 \paragraph{Reproducibility.}  The implementation is pure Python with no
 third-party dependency, computes in exact rational arithmetic throughout, and
@@ -1923,16 +1936,18 @@ rebuilt and re-checked without re-running it.
 \addcontentsline{toc}{section}{References}
 
 \noindent
-\textbf{This list is a starting point and is not yet verified.}  It was
-assembled from search results, abstracts and publisher listings; no full text
-in it has been read, because the environment this work was prepared in could
-not reach the publishers.  Entries whose note says \textsc{verify} have a field
-that was not confirmed, and fields that could not be found are left out rather
-than invented --- an invented page range is worse than a missing one, since it
-looks checkable.  The two marked \textsc{critical} bear directly on what this
-work may claim as new.
+\textbf{Provenance.}  No full text in this list has been read: the
+environment this work was prepared in cannot reach the publishers.  Every
+field was taken instead from bibliographic indexes --- \textsc{dblp},
+RePEc, Google Scholar, Semantic Scholar, \textsc{numdam}, OpenAlex,
+publisher landing-page listings and the authors' own laboratory pages ---
+and an entry is written only where at least two independent indexes agree.
+Fields that could not be found are left out rather than invented, since an
+invented page range is worse than a missing one: it looks checkable.  Three
+entries carry a \textsc{verify} note on a specific field, and one is marked
+\textsc{unresolved}.  Opening each \textsc{doi} once is the step no index
+replaces.
 
-\nocite{*}
 \bibliographystyle{plain}
 \bibliography{references}
 

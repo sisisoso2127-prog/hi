@@ -150,33 +150,51 @@ en deux familles, selon l'espace dans lequel elles cherchent.
 
 \paragraph{L'espace des décisions.}
 La région non explorée est maintenue dans l'espace des variables, et réduite
-par des coupes.  La coupe de Sylva--Crema supprime $\{x : \Z(x) \leqslant
-\Z(\tilde x)\}$ ; comme il s'agit d'une disjonction, elle s'exprime par $p$
-variables binaires et $p+1$ contraintes de type grand-$M$.  Toute la
-littérature sur un critère \emph{fractionnaire} au-dessus d'un ensemble
-efficace entier appartient à cette famille~: Drici, Ouail et Moulaï
-(\emph{Annals of Operations Research}, 2018), une contribution de 2015 dans
-\emph{RAIRO-Operations Research}, Ouail et Chergui pour le cas hyperbolique,
-Chaiblaine, Moulaï et Cherfaoui pour deux fonctions fractionnaires, un article
-de 2021 dans \emph{Optimization} pour un objectif quadratique, ainsi que les
-variantes stochastiques et à coefficients intervalles de Younsi-Abbaci et
-Moulaï.
+par des coupes.  La coupe de Sylva--Crema~\cite{sylvacrema} supprime
+$\{x : \Z(x) \leqslant \Z(\tilde x)\}$ ; comme il s'agit d'une disjonction,
+elle s'exprime par $p$ variables binaires et $p+1$ contraintes de type
+grand-$M$, et le test d'efficacité employé est celui d'Ecker et
+Kouada~\cite{eckerkouada}.  Toute la littérature sur un critère
+\emph{fractionnaire} au-dessus d'un ensemble efficace entier appartient à
+cette famille~: Drici, Ouaïl et Moulaï~\cite{drici2018}, Mahdi et
+Chaabane~\cite{mahdi2015}, Ouaïl et Chergui pour le cas
+hyperbolique~\cite{ouail2019}, Chaiblaine, Moulaï et Cherfaoui pour deux
+fonctions fractionnaires~\cite{chaiblaine2020}, Mekhilef et Moulaï pour un
+objectif quadratique~\cite{mekhilef2021}, ainsi que la méthode dont cette
+mise en {\oe}uvre est issue~\cite{younsiabbaci2025}.
 
 \paragraph{L'espace des critères.}
 La région non explorée est maintenue dans l'espace des valeurs des critères,
-sous forme de régions géométriques.  Boland, Charkhgard et Savelsbergh
-(\emph{European Journal of Operational Research}, 2017) travaillent dans
-l'espace des critères de dimension pleine et le décomposent à chaque itération.
-Leurs méthodes \emph{balanced box}, \emph{boxed line} et \emph{triangle
-splitting} en sont les précurseurs bi-objectif.  Les synthèses rapportent cette
+sous forme de régions géométriques.  Boland, Charkhgard et
+Savelsbergh~\cite{boland2017} travaillent dans l'espace des critères de
+dimension pleine et le décomposent à chaque itération ; leurs méthodes
+\emph{balanced box}~\cite{balancedbox} et \emph{triangle
+splitting}~\cite{trianglesplitting} en sont les précurseurs bi-objectif.
+L'énumération de l'ensemble non dominé tout entier relève du même espace~:
+la récursion $\varepsilon$-contrainte d'Özlen et Azizoğlu~\cite{ozlen2009}
+et les algorithmes d'exclusion de régions de Lokman et
+Köksalan~\cite{lokman2013} en sont deux approches générales.  Les synthèses rapportent cette
 famille comme actuellement la plus efficace --- \textbf{mais pour un critère de
 décision \emph{linéaire}}.
+
+\paragraph{Une classe voisine, à lire avant toute revendication.}
+Cherfaoui et Moulaï~\cite{cherfaoui2021} engendrent l'ensemble efficace de
+programmes en nombres entiers \emph{linéaires plus linéaires fractionnaires},
+dont les critères sont une \emph{somme} $c^{\top}x + (p^{\top}x+\alpha) /
+(q^{\top}x+\beta)$ et non un rapport.  En chassant le dénominateur au niveau
+$v$, la partie quadratique $(c^{\top}x)(q^{\top}x)$ subsiste~: l'ensemble de
+niveau est une \emph{conique}, non un hyperplan.  La caractérisation de la
+section~\ref{sec:admissible} prédit donc que les deux travaux portent sur des
+classes de critères \emph{disjointes}.  C'est une prédiction tirée de
+l'énoncé de la classe, non une lecture de l'article, qui n'a pas pu être
+consulté.
 
 \section{Positionnement de ce travail}
 
 Deux éléments de la construction présentée ici relèvent de l'état de l'art et
 ne sont pas revendiqués~: la \textbf{décomposition de l'espace des critères},
-établie par les travaux ci-dessus pour un objectif linéaire, et le
+établie par les travaux ci-dessus~\cite{boland2017,balancedbox,trianglesplitting}
+pour un objectif linéaire, et le
 \textbf{schéma d'hybridation} métaheuristique--exacte, dont la taxonomie est
 connue et dont la variante employée ici --- produire une approximation du front
 par une métaheuristique, puis la faire raffiner par une méthode exacte --- est
@@ -799,7 +817,14 @@ conservés~:
       front reste à étendre pour que ces classes soient traitées de bout en
       bout.
 \item \textbf{Revue bibliographique complète}, incluant la lecture intégrale
-      des sources citées au chapitre~\ref{ch:etat}.
+      des sources citées au chapitre~\ref{ch:etat}.  Les références
+      ci-dessous ont été établies à partir d'index bibliographiques
+      concordants, et non lues chez l'éditeur~; une entrée
+      (\cite{younsiabbaci2025}) reste à résoudre.
 \end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{references}
+\addcontentsline{toc}{chapter}{Bibliographie}
 
 \end{document}
