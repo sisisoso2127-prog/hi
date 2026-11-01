@@ -24,3 +24,6 @@ docs/*.toc
 *.blg
 *.out
 *.toc
+
+# the packaged archive (rebuild with: sh pack.sh)
+memoire-code.zip
