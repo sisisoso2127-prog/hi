@@ -2073,32 +2073,52 @@ $Z_k(x) \leqslant Z_k(a)$; for each child to be one ordinary linear program,
 \emph{both} sides must be half-spaces.  So
 
 \begin{quote}
-the front enumeration \textbf{requires} that the sublevel sets
-$\{x : Z(x) \leqslant t\}$ be \textbf{half-spaces}, and for linear fractional
-criteria the integer-valued $e_k$ supplies them,
+the front enumeration \textbf{requires} that the sublevel set
+$\{x : Z(x) \leqslant t\}$ be a \textbf{half-space} at every \emph{attained}
+level $t \in Z(\Dset)$, and for linear fractional criteria the integer-valued
+$e_k$ supplies them,
 \end{quote}
 
 \noindent
-which is strictly tighter than the slice condition.  The first half is a
-\emph{necessary} condition on the split mechanism and is what rules criteria
-out; the sufficiency is established only for the fractional class, by
-construction.  An earlier draft wrote ``reaches exactly'', which asserts an
-equivalence --- a criterion could meet the condition and still not be
-reachable, since the method must also \emph{build} those half-spaces from the
-data.  The claim is stated as the necessary condition it is.  A half-space sublevel set
-has a hyperplane boundary, so this class sits inside the one-hyperplane case
---- exactly linear fractional.  And the two criteria the slice gained fail it
-for visible reasons: $|c^{\top}x + a|/(d^{\top}x + b)$ has a \emph{slab} for a
-sublevel set, the intersection of two half-spaces, whose complement is not
-convex; $\max$ of ratios has a polyhedron, whose complement is a \emph{union},
-which is exactly what a single split cannot express.  Checked on a $49$-point
+which is strictly tighter than the slice condition.  Two qualifications belong
+to the claim rather than to its footnotes.  First the levels: the split only
+ever produces levels of the form $Z(\bar x)$ for a centre $\bar x \in \Dset$,
+so attained levels are all the argument delivers.  A statement about every real
+$t$ would be stronger than its proof, and on a finite $\Dset$ the attained
+levels are all the enumeration ever sees.  Second the direction: the condition
+is \emph{necessary} on the split mechanism and is what rules criteria out;
+sufficiency is established only for the fractional class, by construction.  An
+earlier draft wrote ``reaches exactly'', which asserts an equivalence --- a
+criterion could meet the condition and still not be reachable, since the method
+must also \emph{build} those half-spaces from the data.  The claim is stated as
+the necessary condition it is.
+
+The containment needs one step of care.  It is tempting to say that a
+half-space sublevel set has a hyperplane boundary and therefore lands in the
+one-hyperplane case; that step is \textbf{false} --- a topological boundary
+need not be a level set, and on a finite $\Dset$ it has no content at all.
+What carries the argument is the difference of consecutive sublevel sets.
+Enumerate the attained levels $t_1 < \dots < t_N$ and write
+$H_i = \{x : Z(x) \leqslant t_i\}$, a half-space by hypothesis; since the
+levels below $t_i$ are exactly $t_1,\dots,t_{i-1}$,
+\[
+  \{x : Z(x) = t_i\} \;=\; H_i \setminus H_{i-1} \qquad (H_0 = \emptyset) ,
+\]
+a half-space intersected with the complement of a half-space, hence a
+polyhedron.  So the front's class does sit inside the polyhedral slice class,
+and the containment is strict --- the two criteria the slice gained fail the
+half-space condition for visible reasons: $|c^{\top}x + a|/(d^{\top}x + b)$ has
+a \emph{slab} for a sublevel set, the intersection of two half-spaces, whose
+complement is not convex; $\max$ of ratios has a polyhedron, whose complement
+is a \emph{union}, which is exactly what a single split cannot express.  Checked on a $49$-point
 grid rather than argued: the ratio and the linear form pass at every level, the
 other two fail.
 
 \textbf{So the asymmetry is characterised on both sides.}  The slice reaches
-finite unions of polyhedra; the front reaches half-space sublevel sets, which
-is essentially the fractional case.  A criterion between the two --- $\max$ of
-ratios is one --- can have its efficient set completed exactly here, but its
+finite unions of polyhedra; the front \emph{requires} half-space sublevel sets
+at the attained levels, which is essentially the fractional case.  A criterion
+between the two --- $\max$ of ratios is one --- can have its efficient set
+completed exactly here, but its
 front must come from somewhere else.  That is the honest shape of the method:
 not one reach, but two, and the smaller one is what names it.
 

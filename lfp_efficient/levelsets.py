@@ -135,25 +135,38 @@ Its box search splits at a centre ``a`` into ``Z_k(x) > Z_k(a)`` and
 ``Z_k(x) <= Z_k(a)``.  For each child to be one ordinary linear program, both
 sides must be half-spaces.  So:
 
-    **The front enumeration requires that the sublevel sets
-    ``{x : Z(x) <= t}`` be half-spaces**, and for linear fractional criteria
-    the integer-valued ``e_k`` supplies them, so there the condition is met.
+    **The front enumeration requires that the sublevel set
+    ``{x : Z(x) <= t}`` be a half-space at every *attained* level
+    ``t`` in ``Z(D)``**, and for linear fractional criteria the integer-valued
+    ``e_k`` supplies them, so there the condition is met.
 
-The first half is a *necessary* condition on the split mechanism and is what
-rules criteria out; the second is the sufficiency, and it is established only
-for the fractional class, by construction.  An earlier draft wrote "reaches
-exactly", which asserts an equivalence --- a criterion could satisfy the
-condition and still not be reachable, because the method must also *build*
-those half-spaces from the data, and nothing above says a general such
-criterion admits that.  The claim is therefore stated as the necessary
+Two qualifications belong to the claim rather than to its footnotes.
+
+The *levels*: the split only ever produces levels of the form ``Z(a)`` for a
+centre ``a`` in ``D``, so attained levels are all the argument delivers.  A
+statement about every real ``t`` would be stronger than its proof, and on a
+finite ``D`` the attained levels are all the enumeration ever sees.
+
+The *direction*: the first half is a *necessary* condition on the split
+mechanism and is what rules criteria out; the second is the sufficiency, and it
+is established only for the fractional class, by construction.  An earlier
+draft wrote "reaches exactly", which asserts an equivalence --- a criterion
+could satisfy the condition and still not be reachable, because the method must
+also *build* those half-spaces from the data, and nothing above says a general
+such criterion admits that.  The claim is therefore stated as the necessary
 condition it is.
 
 That condition is strictly tighter than the slice one, and the gap is not a
 technicality --- it is the reason this package is a *MOILFP* method:
 
-* a half-space sublevel set has a hyperplane boundary, so this class sits
-  inside the one-hyperplane case, which half one showed is exactly linear
-  fractional;
+* the class sits inside the polyhedral slice class.  The tempting one-line
+  argument --- a half-space sublevel set has a hyperplane boundary, which is
+  the level set --- is *false*: a topological boundary need not be a level set,
+  and on a finite ``D`` it has no content at all.  What carries it is the
+  difference of consecutive sublevel sets: with ``t_1 < ... < t_N`` the
+  attained levels and ``H_i = {x : Z(x) <= t_i}`` a half-space by hypothesis,
+  ``{x : Z(x) = t_i} == H_i \ H_{i-1}`` (with ``H_0`` empty), a half-space
+  intersected with the complement of a half-space, hence a polyhedron;
 * ``|c'x + a| / (d'x + b)`` fails it: its sublevel set is a *slab*, the
   intersection of two half-spaces, whose complement is not convex;
 * ``max`` of ratios fails it too: the sublevel set is an intersection of ``m``
@@ -165,8 +178,8 @@ half-space sublevel sets at every level, ``|ratio|`` and ``max``-of-ratios do
 not.
 
 So the asymmetry is now characterised on both sides.  **The slice reaches
-finite unions of polyhedra; the front reaches half-space sublevel sets, which
-is essentially the fractional case.**  For a criterion between the two --- and
+finite unions of polyhedra; the front *requires* half-space sublevel sets at
+the attained levels, which is essentially the fractional case.**  For a criterion between the two --- and
 ``max`` of ratios is one --- the front must be obtained some other way, and the
 completion is then exact.  Claiming the front generalises too would be the kind
 of unchecked statement the audit of this package exists to prevent.

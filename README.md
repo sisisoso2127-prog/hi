@@ -442,15 +442,30 @@ and checks that dropping a branch loses genuinely efficient points.
 **The other half reaches less, and that is what names the method.** The front
 search splits at a centre into `Z(x) > Z(a)` and `Z(x) <= Z(a)`; for each child
 to be one linear program, *both* sides must be half-spaces. So the front
-reaches exactly the criteria whose sublevel sets are half-spaces — essentially
-the fractional case. `|ratio|` has a slab (non-convex complement) and
-`max`-of-ratios a polyhedron (complement a union), and a single split cannot
-express a union.
+**requires** that the sublevel set `{x : Z(x) <= t}` be a half-space at every
+*attained* level `t` in `Z(D)` — essentially the fractional case, where the
+integer-valued `e_k` supplies them. Two qualifications are part of the claim.
+The levels: the split only ever produces levels of the form `Z(a)` for a centre
+`a` in `D`, so attained levels are all the argument delivers. The direction:
+the condition is *necessary* on the split mechanism and is what rules criteria
+out — sufficiency is established only for the fractional class, by
+construction, so this is not a characterisation. `|ratio|` has a slab
+(non-convex complement) and `max`-of-ratios a polyhedron (complement a union),
+and a single split cannot express a union.
 
-> The slice reaches finite unions of polyhedra; the front reaches half-space
-> sublevel sets. **Not one reach but two, and the smaller one names the
-> method.** A criterion between them can have its efficient set completed here
-> exactly, but its front must come from elsewhere.
+The containment in the slice class needs one step of care. A half-space
+sublevel set has a hyperplane boundary — but that boundary need not be a level
+set, and on a finite `D` it has no content at all, so the tempting one-line
+argument is false. What works is the difference of consecutive sublevel sets:
+with `t_1 < ... < t_N` the attained levels and `H_i = {x : Z(x) <= t_i}`,
+`{x : Z(x) = t_i} = H_i \ H_{i-1}` (with `H_0` empty) — a half-space minus a
+half-space, hence a polyhedron.
+
+> The slice reaches finite unions of polyhedra; the front requires half-space
+> sublevel sets at the attained levels. **Not one reach but two, and the
+> smaller one names the method.** A criterion between them can have its
+> efficient set completed here exactly, but its front must come from
+> elsewhere.
 
 **And the characterisation sorts the neighbouring literature.** Look at the
 criteria, not the method:

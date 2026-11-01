@@ -735,17 +735,23 @@ outside the class it accepts.
 The slice argument needs nothing of the criteria, so what limits the method is
 only whether a level set can be enumerated — and that is answerable exactly.
 
-- **Limit.** One-hyperplane level sets with data affine in the level **iff**
-  linear fractional. Within that shape the fractional case is maximal.
+- **Limit.** On the set where the denominator does not vanish, one-hyperplane
+  level sets with data affine in the level **iff** linear fractional. Within
+  that shape the fractional case is maximal.
 - **Reach.** The enumerator takes equations *and* inequalities, so it is enough
   that `{x : Z(x) = v}` be a **finite union of polyhedra**. That reaches
   `|ratio|` and `max`/`min` of ratios, which are not fractional.
 - **The other half reaches less.** The front search needs *both* sides of its
-  split to be half-spaces, so it *requires* criteria with half-space sublevel
-  sets (a necessary condition; sufficiency is established for the fractional
-  class, by construction) — essentially the fractional case. `max`-of-ratios has a
-  polyhedral sublevel set whose complement is a union, and one split cannot
-  express a union.
+  split to be half-spaces, so it *requires* a half-space sublevel set
+  `{x : Z(x) <= t}` at every **attained** level `t` in `Z(D)` — the only levels
+  the split ever produces (a necessary condition; sufficiency is established
+  for the fractional class, by construction). That is essentially the
+  fractional case. `max`-of-ratios has a polyhedral sublevel set whose
+  complement is a union, and one split cannot express a union. The containment
+  in the slice class comes from `{Z = t_i} = H_i \ H_{i-1}` on consecutive
+  attained sublevel sets, *not* from a boundary argument — a half-space's
+  topological boundary need not be a level set, and on a finite `D` it has no
+  content.
 
 So there are two reaches, not one, and the smaller names the method: this is a
 MOILFP package because of its *front*, not its slice. A criterion between the
