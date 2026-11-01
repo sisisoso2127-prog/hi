@@ -40,4 +40,11 @@ echo "== README / package-notes"
 pandoc ../README.md            -o README.pdf        $MD
 pandoc ../lfp_efficient/README.md -o package-notes.pdf $MD
 
+# The Arabic reading list: a Unicode engine, an Arabic face, and RTL.  Look
+# at the rendered pages -- bidi defects never reach the exit code.
+echo "== reading-list-ar"
+pandoc reading-list-ar.md -o reading-list-ar.pdf --pdf-engine=lualatex \
+  -V geometry:margin=2.3cm -V fontsize=11pt \
+  -V mainfont=Amiri -V monofont=DejaVuSansMono -V dir=rtl -V lang=ar
+
 echo "done"
