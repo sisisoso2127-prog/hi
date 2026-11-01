@@ -807,6 +807,50 @@ quietly not computing it, because binning before correlating is an easy way to
 turn a moderate relationship into a spectacular one, and this project has
 withdrawn two numbers already for being quoted past their evidence.
 
+\paragraph{And the mechanism is narrower still: it is the \emph{first} seed.}
+$\tau$ is a property of the whole ordering, but the pre-split consumes the
+seeds \emph{in order}, so the first one fixes the top-level box structure
+before any other has been looked at.  That suggests a sharper hypothesis, and
+conditioning on it settles the matter.
+
+\begin{table}[h]
+\centering
+\caption{The same orderings, split by whether the \emph{first} seed handed over
+is the one the probe would have met first.  $228$ orderings over $26$
+instances.}
+\label{tab:firstseed}
+\begin{tabular}{lrrr}
+\toprule
+ & orderings & probe ratio & $r(\tau)$ in group \\
+\midrule
+first seed is probe-maximal & $92$ & $\mathbf{0.708}$ & $-0.185$ \\
+it is not                           & $136$ & $0.833$ & $-0.281$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The gap between the two rows, $0.708$ against $0.833$, is most of the gap
+between probe order and archive order.  And $\tau$'s predictive power
+\textbf{collapses} once the first seed is held fixed: from $-0.52$ over all
+orderings to $-0.19$ and $-0.28$ within the groups.  A correlation that
+disappears under conditioning was largely carried by what it was conditioned
+on.
+
+\begin{quote}
+\textbf{So it is not the ordering.  It is the first seed.}  Hand the
+probe-maximal seed over first and most of the gain is secured; the rest of the
+order is nearly free.
+\end{quote}
+
+\noindent
+This \emph{refines} the $\tau$ result rather than replacing it --- the band
+medians above are real, and the tail order still carries a little --- but it
+moves the mechanism from a property of the whole list to a property of one
+element, which is both sharper and cheaper to act on.  It also explains why the
+reversed arm behaves like archive order: reversing moves the probe-maximal seed
+from the front of the list to the back, which is the worst place for it.
+
 \subsection{The algorithm}
 \label{sec:pseudo}
 
