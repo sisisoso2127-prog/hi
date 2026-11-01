@@ -2291,34 +2291,60 @@ $n$ & $p$ & $n-p$ & solved & front wall & slice wall & rank \\
 
 \paragraph{A budget that binds measures the budget.}
 The table above attributes almost every failure to the front, and that
-attribution is \textbf{an artefact}.  Re-running the $p=3$ column with a
-$120$\,s budget instead of $20$\,s reverses it where it matters:
+attribution is \textbf{an artefact}.  Re-run with a $120$\,s budget instead of
+$20$\,s and the $p=3$ column reverses:
 
-\begin{center}
-\begin{tabular}{rrrr}
+\begin{table}[h]
+\centering
+\caption{The $p=3$ column at a $120$\,s budget.  Five instances per row; rank
+came out $3$ in every one.  ``slices'' is the median time of the runs that
+finished.}
+\label{tab:walls120}
+\begin{tabular}{rrrrrrr}
 \toprule
-$n$, $p=3$ & solved & front wall & slice wall \\
+$n$ & $n-p$ & solved & front wall & slice wall & $|F|$ & slices \\
 \midrule
-$10$ & $5/5$ & $0$ & $0$ \\
-$12$ & $5/5$ & $0$ & $0$ \\
-$14$ & $\mathbf{2/5}$ & $\mathbf{0}$ & $\mathbf{3}$ \\
+$10$ & $7$ & $5/5$ & $0$ & $0$ & $24$ & $0.65$\,s \\
+$12$ & $9$ & $5/5$ & $0$ & $0$ & $25$ & $2.09$\,s \\
+$14$ & $11$ & $2/5$ & $\mathbf{0}$ & $3$ & $52$ & $48.08$\,s \\
+$16$ & $13$ & $1/5$ & $\mathbf{0}$ & $4$ & $18$ & $126.14$\,s \\
+$18$ & $15$ & $0/5$ & $2$ & $3$ & --- & --- \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \noindent
 At $n=14$ the tight budget reported four front walls and one slice wall; the
-generous one reports \emph{zero} front walls and three slice walls.  The method
-did not change.  A time budget that binds before the mechanism does converts a
-measurement of the method into a measurement of the budget, and it does so
-\emph{silently} --- every cell still produces a number, and the numbers point
-at the wrong wall.
+generous one reports \textbf{zero} front walls and three slice walls.  The
+method did not change.  A time budget that binds before the mechanism does
+converts a measurement of the method into a measurement of the budget, and it
+does so \emph{silently} --- every cell still produces a number, and the numbers
+point at the wrong wall.
 
 That is worth more than the map it corrects.  Censoring is reported throughout
 this work, but reporting \emph{that} a run was censored is not the same as
 checking \emph{what} the censoring was caused by, and the first does not catch
-this.  The sweep at $p=3$ is being extended to $n=16$ and $n=18$; the rows
-above are what is established.
+this.
+
+\paragraph{What the completed sweep says.}
+Three things, and the third is the one to carry away.
+
+The slice time grows as predicted --- $0.65$, $2.09$, $48.08$, $126.14$
+seconds at $n-p = 7, 9, 11, 13$ --- which is the exponential in $n-p$ that the
+rank argument requires, and not a growth in $n$.
+
+The front does not bind at all until $n=18$, where it accounts for $2$ of the
+$5$ failures.  Its cost tracks $|F|$ rather than $n$: the $n=14$ row has
+$|F|=52$ and a $31.9$\,s front, while $n=16$ has $|F|=18$ and a $20.2$\,s one.
+So the two walls are not merely different in direction but in \emph{what they
+are a function of} --- $|F|$ for one, $n-p$ for the other --- and neither is a
+function of $n$ alone.
+
+Which gives the honest operating range at $p=3$: comfortable to $n=12$,
+marginal at $n=14$--$16$, gone by $n=18$.  Larger $p$ moves that boundary
+\emph{up} in $n$ for the slices and \emph{down} for the front, so the
+reachable region is a band rather than a threshold, and the published
+instances at $n \leqslant 12$ sit inside it with room to spare.
 
 \section{A wall met four times, and the one change that went round it}
 \label{sec:wall}
