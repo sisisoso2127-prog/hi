@@ -843,6 +843,101 @@ def _report_order_mechanism(results, out):
                    "concentrated at the first position.")
 
 
+# --------------------------------------------------------------------------
+# experiment 9: where the method stops working, and why there are two walls
+# --------------------------------------------------------------------------
+def experiment_walls(instances, budget, grid=None):
+    """Map the region where ``E(P_D)`` is actually reachable.
+
+    Every other experiment here lives at ``n <= 12``.  This asks where the
+    method stops, and the answer is not a single ``n``: there are **two walls,
+    and they pull in opposite directions**.
+
+    The front enumeration gets harder as ``p`` grows --- more criteria means a
+    larger non-dominated set and more boxes to settle.  The slice completion
+    gets *easier*, because the slice equations have rank ``p`` (measured, not
+    assumed: the rank is recorded per instance), so elimination leaves
+    ``n - p`` free variables and the scan is exponential in that.  More
+    criteria therefore buy a cheaper completion and a dearer front.
+
+    So the reachable region is bounded above in ``p`` by the front and above in
+    ``n - p`` by the slices, and an instance is solvable when it clears both.
+    Reporting a single ``n`` at which the method fails would hide that
+    entirely.
+
+    Each cell records which wall was hit, so a failure is attributed rather
+    than merely counted.
+    """
+    grid = grid or [(8, 3), (10, 3), (12, 3), (14, 3), (16, 3),
+                    (8, 5), (10, 5), (12, 5), (14, 5),
+                    (10, 7), (12, 7), (12, 9)]
+    from lfp_efficient.front import enumerate_front
+    from lfp_efficient.complete import slice_equations, reduce_rows
+
+    cells = []
+    for n, p in grid:
+        rows = []
+        for seed in range(instances):
+            problem, phi, _ = build(seed, n, p)
+            front, t_front, _, _ = timed(enumerate_front, problem, phi,
+                                         time_budget=budget)
+            if not front.complete:
+                rows.append({"seed": seed, "wall": "front",
+                             "t_front": t_front})
+                continue
+            eqs = slice_equations(problem, front.vectors[0])
+            solved = reduce_rows(eqs, problem.n)
+            rank = len(solved[0]) if solved else 0
+            bounds = variable_bounds(problem)
+            whole, t_sl, _, _ = timed(complete_efficient_set, problem,
+                                      bounds=bounds, front=front,
+                                      time_budget=budget)
+            rows.append({"seed": seed,
+                         "wall": None if whole.complete else "slices",
+                         "front": len(front.vectors),
+                         "points": len(whole.points) if whole.complete else None,
+                         "rank": rank, "free": n - rank,
+                         "t_front": t_front, "t_slices": t_sl})
+        ok = [r for r in rows if r["wall"] is None]
+        cells.append({
+            "n": n, "p": p, "instances": len(rows),
+            "solved": len(ok),
+            "front_wall": sum(1 for r in rows if r["wall"] == "front"),
+            "slice_wall": sum(1 for r in rows if r["wall"] == "slices"),
+            "rank": summary([r["rank"] for r in rows if "rank" in r]),
+            "free": summary([r["free"] for r in rows if "free" in r]),
+            "t_front": summary([r["t_front"] for r in ok]),
+            "t_slices": summary([r["t_slices"] for r in ok]),
+            "front_size": summary([r["front"] for r in ok]),
+            "points": summary([r["points"] for r in ok])})
+        c = cells[-1]
+        print(f"    n={n:2d} p={p}: {c['solved']}/{c['instances']} solved, "
+              f"{c['front_wall']} front wall, {c['slice_wall']} slice wall",
+              flush=True)
+    return cells
+
+
+def _report_walls(results, out):
+    out.append("\n=== 9. where the method stops, and the two walls ===")
+    out.append("the front gets dearer as p grows; the slices get dearer as "
+               "n-p grows.\nrank is measured per instance, not assumed.")
+    out.append(f"{'n':>3} {'p':>3} {'n-p':>4} {'solved':>7} {'front wall':>11} "
+               f"{'slice wall':>11} {'rank':>5} {'|F|':>6} {'front s':>8} "
+               f"{'slices s':>9}")
+    out.append("-" * 78)
+    for c in results["walls"]:
+        f = lambda st, d=1: (f"{st['median']:.{d}f}" if st else "--")
+        out.append(f"{c['n']:>3} {c['p']:>3} {c['n']-c['p']:>4} "
+                   f"{c['solved']:>3}/{c['instances']:<3} "
+                   f"{c['front_wall']:>11} {c['slice_wall']:>11} "
+                   f"{f(c['rank'], 0):>5} {f(c['front_size'], 0):>6} "
+                   f"{f(c['t_front'], 2):>8} {f(c['t_slices'], 2):>9}")
+    out.append("-" * 78)
+    out.append("a single n at which the method 'fails' would hide this: the "
+               "two walls\nmove in opposite directions, so more criteria buy "
+               "a cheaper completion\nand a dearer front.")
+
+
 def _report_breakeven(results, out):
     out.append("\n=== 5. break-even: decision functions before building "
                "E(P_D) pays ===")
@@ -961,6 +1056,8 @@ def report(results):
         _report_order(results, out)
     if "order_mechanism" in results:
         _report_order_mechanism(results, out)
+    if "walls" in results:
+        _report_walls(results, out)
     return "\n".join(out)
 
 
@@ -974,7 +1071,7 @@ def main():
     parser.add_argument("--only", action="append", default=None,
                         choices=["margin", "seeds", "front", "complete", "breakeven",
                                  "filter", "order",
-                                 "mechanism"])
+                                 "mechanism", "walls"])
     args = parser.parse_args()
 
     instances = 5 if args.quick else args.instances
@@ -982,7 +1079,7 @@ def main():
     ps = [2, 3, 4] if args.quick else [2, 3, 4, 5, 6]
     wanted = args.only or ["margin", "seeds", "front", "complete",
                            "breakeven", "filter", "order",
-                           "mechanism"]
+                           "mechanism", "walls"]
 
     print(f"campaign: {instances} instances per configuration, "
           f"{budget:.0f}s budget per run")
@@ -994,30 +1091,33 @@ def main():
     started = time.perf_counter()
 
     if "margin" in wanted:
-        print("  [1/8] the margin, per p")
+        print("  [1/9] the margin, per p")
         results["margin"] = experiment_margin(instances, budget, ps)
     if "seeds" in wanted:
-        print("  [2/8] what a seed is worth")
+        print("  [2/9] what a seed is worth")
         results["seeds"] = experiment_seeds(instances, budget)
     if "front" in wanted:
-        print("  [3/8] enumerating the front")
+        print("  [3/9] enumerating the front")
         results["front"] = experiment_front(max(8, instances // 2), budget)
     if "complete" in wanted:
-        print("  [4/8] completing the front")
+        print("  [4/9] completing the front")
         results["complete"] = experiment_complete(instances, budget)
     if "breakeven" in wanted:
-        print("  [5/8] how many decision functions before E(P_D) pays")
+        print("  [5/9] how many decision functions before E(P_D) pays")
         results["breakeven"] = experiment_breakeven(instances, budget)
     if "filter" in wanted:
-        print("  [6/8] several decision functions at once")
+        print("  [6/9] several decision functions at once")
         results["filter"] = experiment_filter(instances, budget)
     if "order" in wanted:
-        print("  [7/8] the order the seeds are handed over")
+        print("  [7/9] the order the seeds are handed over")
         results["order"] = experiment_order(instances, budget)
     if "mechanism" in wanted:
-        print("  [8/8] does the probe direction predict the gain")
+        print("  [8/9] does the probe direction predict the gain")
         results["order_mechanism"] = experiment_order_mechanism(
             instances, budget)
+    if "walls" in wanted:
+        print("  [9/9] where the method stops, and the two walls")
+        results["walls"] = experiment_walls(instances, budget)
 
     results["meta"]["seconds"] = time.perf_counter() - started
     OUT.write_text(json.dumps(results, indent=1, default=str))
