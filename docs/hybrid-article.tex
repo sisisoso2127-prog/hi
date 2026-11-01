@@ -851,6 +851,38 @@ element, which is both sharper and cheaper to act on.  It also explains why the
 reversed arm behaves like archive order: reversing moves the probe-maximal seed
 from the front of the list to the back, which is the worst place for it.
 
+\paragraph{And the seed we put there is the right one.}
+If the first position carries the effect, the obvious next question is whether
+``probe-maximal'' is the best thing to put in it.  Five rules were tried, with
+the tail left in probe order in every arm so that only the first position
+differs:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+rule for the first seed & probe ratio (median) \\
+\midrule
+\textbf{probe-maximal} (what the code does) & $\mathbf{0.667}$ \\
+most central criterion vector & $0.722$ \\
+best $\Phi$ & $0.750$ \\
+probe-minimal & $0.765$ \\
+median by the probe direction & $0.778$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The current choice wins, and the ordering of the rest is the one the mechanism
+predicts: putting the probe-\emph{minimal} seed first is nearly as bad as the
+median, and ``best $\Phi$'' --- the tempting choice, since $\Phi$ is what the
+search is ultimately maximising --- is worse than both the probe-maximal and
+the central rule.  The search's own \emph{probe} direction is what the
+pre-split has to agree with, not the decision criterion.
+
+This is a confirmation rather than an improvement, and it is reported for the
+same reason the losses are: it closes the question at the one position that was
+shown to matter.
+
 \subsection{The algorithm}
 \label{sec:pseudo}
 
