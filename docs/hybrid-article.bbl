@@ -6,13 +6,6 @@ TODO: author list not confirmed~by search.
 \newblock {\em RAIRO-Operations Research}, 2015.
 \newblock VERIFY -- article ro140036, issue 2.
 
-\bibitem{generating2021}
-TODO: author list not confirmed~by search.
-\newblock Generating the efficient set of multiobjective integer linear plus
-  linear fractional programming problems.
-\newblock {\em Annals of Operations Research}, 296:735--753, 2021.
-\newblock CRITICAL -- VERIFY authors.
-
 \bibitem{quadratic2021}
 TODO: author list not confirmed~by search.
 \newblock Quadratic optimization over a discrete {P}areto set of a
@@ -37,8 +30,13 @@ Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
 Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
 \newblock A new method for optimizing a linear function over the efficient set
   of a multiobjective integer program.
-\newblock {\em European Journal of Operational Research}, 2017.
-\newblock CRITICAL -- VERIFY volume and pages.
+\newblock {\em European Journal of Operational Research}, 260(3):904--919,
+  2017.
+\newblock CRITICAL. Volume, issue and pages from the DBLP record (Eur. J. Oper.
+  Res. 260(3): 904--919, 2017), matching two independent reference lists. The
+  DOI comes from a citing paper's reference list, not from Elsevier;
+  sciencedirect.com is unreachable from here. Open the DOI once before
+  submission.
 
 \bibitem{chaiblaine2020}
 Yacine Chaiblaine, Mustapha Moula{\"\i}, and Youcef Cherfaoui.
@@ -47,6 +45,17 @@ Yacine Chaiblaine, Mustapha Moula{\"\i}, and Youcef Cherfaoui.
 \newblock arXiv:2003.05364, 2020.
 \newblock VERIFY author list. The two-decision-function problem, solved in
   decision space with branch and bound plus cuts.
+
+\bibitem{cherfaoui2021}
+Yasmine Cherfaoui and Mustapha Moula{\"\i}.
+\newblock Generating the efficient set of multiobjective integer linear plus
+  linear fractional programming problems.
+\newblock {\em Annals of Operations Research}, 296(1):735--753, 2021.
+\newblock CRITICAL. Authors, volume, pages and DOI agree across Google Scholar,
+  the RePEc record, and the LaROMaD (USTHB) activity listing of the authors'
+  own laboratory. The Springer page itself is unreachable from here, so the
+  record is confirmed by three independent indexes, NOT by the publisher. Open
+  the DOI once before submission.
 
 \bibitem{drici2018}
 Wassila Drici, Fatma~Zohra Ouail, and Mustapha Moula{\"\i}.
