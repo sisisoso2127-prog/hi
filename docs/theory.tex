@@ -257,8 +257,8 @@ For each part to be a single linear program, both must be half-spaces.
 
 \begin{proposition}[Necessary condition for the split]\label{prop:front}
 If the split above is to express each part as one linear program for every
-centre, then every sublevel set $\{x : \Z(x) \leqslant t\}$ must be a
-half-space.
+centre, then for every \emph{attained} level $t \in \Z(\Dset)$ the sublevel set
+$\{x : \Z(x) \leqslant t\}$ must be a half-space.
 \end{proposition}
 
 \begin{proof}
@@ -266,6 +266,13 @@ Taking $t = \Z(\bar x)$ as $\bar x$ ranges over $\Dset$, the sublevel set is
 one of the two parts, hence a half-space; the other part is its complement,
 which is then a half-space as well.
 \end{proof}
+
+\begin{remark}
+The restriction to attained levels is not cosmetic: the split only ever
+produces levels of the form $\Z(\bar x)$, so that is all the argument delivers.
+A statement about every real $t$ would be stronger than the proof, and on a
+finite $\Dset$ the attained levels are all that the enumeration ever sees.
+\end{remark}
 
 \begin{remark}[What is not claimed]\label{rem:notexact}
 Proposition~\ref{prop:front} is a \emph{necessary} condition, not a
@@ -290,10 +297,23 @@ Proposition~\ref{prop:reach-poly}.
 \end{proposition}
 
 \begin{proof}
-A half-space sublevel set has a hyperplane boundary, which is a level set, so a
-criterion satisfying Proposition~\ref{prop:front} satisfies
-Proposition~\ref{prop:reach-affine} with $m=1$, hence
-Proposition~\ref{prop:reach-poly}.  Strictness: in Example~\ref{ex:abs} the
+For the containment, let $\Z$ satisfy Proposition~\ref{prop:front} and let
+$t_1 < \dots < t_N$ enumerate $\Z(\Dset)$, which is finite.  Write
+$H_i = \{x : \Z(x) \leqslant t_i\}$, a half-space by hypothesis.  Since the
+levels below $t_i$ are exactly $t_1,\dots,t_{i-1}$,
+\[
+  \{x : \Z(x) = t_i\} \;=\; H_i \setminus H_{i-1}
+  \qquad (H_0 = \emptyset) ,
+\]
+an intersection of a half-space with the complement of a half-space, hence a
+polyhedron.  So Proposition~\ref{prop:reach-poly} applies with $m = 1$.
+
+\emph{(The step one is tempted to write --- that the boundary of a half-space
+sublevel set is the level set --- does not hold in general, and on a finite
+$\Dset$ a topological boundary has no content.  The difference of consecutive
+sublevel sets is what carries the argument.)}
+
+Strictness: in Example~\ref{ex:abs} the
 sublevel set $\{|c^{\top}x+a| \leqslant v(d^{\top}x+b)\}$ is the intersection
 of two half-spaces and its complement is not convex; in Example~\ref{ex:max} it
 is $\bigcap_i \{\Z_i \leqslant v\}$, a polyhedron whose complement is a union.
