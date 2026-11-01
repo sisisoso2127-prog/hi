@@ -1,18 +1,35 @@
 ============================================================================================================
 COUPE PAR PROGRAMME GENERATEUR - plafond 300 appels entiers, jusqu'a 20 coupes generees
+configuration mesuree : [V* S* D*]   graines : 3
 ============================================================================================================
    n  corr  gr  reprod  ecart sans  ecart avec  gain pts  cglp     ILP s/a        PL s/a  coherent
 ------------------------------------------------------------------------------------------------------------
-  20  0.00   1     oui       98.6%       98.5%    +0.11    13   300/300      360/390           ok
+  20  0.00   1     oui       80.8%       80.8%    +0.00    10   291/291      330/378           ok
+  20  0.00   2     oui       40.6%       40.6%    +0.00    10   290/290      309/354           ok
+  20  0.00   3     oui       37.4%       37.4%    +0.00     6   291/291      255/277           ok
   20  0.50   1     oui        0.0%        0.0%    +0.00     0   143/143      105/105           ok
-  30  0.00   1     oui       93.9%       93.8%    +0.06    12   300/300      315/346           ok
-  30  0.50   1     oui       78.9%       78.9%    +0.00     3   300/300      270/279           ok
-  40  0.00   1     oui       96.6%       96.6%    +0.00    12   300/300      333/375           ok
-  40  0.50   1     oui        0.0%        0.0%    +0.00     9   197/197      171/191           ok
+  20  0.50   2     oui        0.0%        0.0%    +0.00     6   214/214      171/191           ok
+  20  0.50   3     oui        0.0%        0.0%    +0.00     0   249/249      174/174           ok
+  30  0.00   1     oui       78.6%       78.6%    +0.00    13   291/291      282/331           ok
+  30  0.00   2     oui       23.7%       23.2%    +0.45    23   290/290      321/415           ok
+  30  0.00   3     oui       32.5%       32.5%    +0.00    23   291/291      330/404           ok
+  30  0.50   1     oui        1.2%        1.2%    +0.00     4   290/290      252/267           ok
+  30  0.50   2     oui       13.7%       13.7%    +0.00     5   290/290      276/300           ok
+  30  0.50   3     oui        0.0%        0.0%    +0.00     0   272/272      227/245           ok
+  40  0.00   1     oui       96.5%       96.5%    +0.00    15   291/291      309/386           ok
+  40  0.00   2     oui       87.3%       87.3%    +0.00     7   292/292      282/317           ok
+  40  0.00   3     oui       60.3%       60.3%    +0.00    10   290/290      309/384           ok
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+  40  0.50   1     oui        0.0%        0.0%    +0.00     4   197/197      171/192           ok
+  40  0.50   2     oui       43.9%       43.9%    +0.00    10   291/291      264/299           ok
+  40  0.50   3     oui       16.7%       16.9%    -0.19     3   290/290      270/292           ok
 ------------------------------------------------------------------------------------------------------------
-  REPRODUCTIBILITE : 6/6 lignes stables
-  points d'ecart garanti gagnes : median +0.00   moyen +0.03   max +0.11   min +0.00
-  MIEUX 2   PIRE 0   EGAL 4
+  REPRODUCTIBILITE : 18/18 lignes stables
+  points d'ecart garanti gagnes : median +0.00   moyen +0.01   max +0.45   min -0.19
+  MIEUX 1   PIRE 1   EGAL 16
   COHERENCE des encadrements : TOUT VALIDE
 
   Rappel : le budget est compte en appels ENTIERS, or la coupe

@@ -181,12 +181,15 @@ ENTREES: List[Entree] = [
     # que le journal archive s'ecrit a lui-meme : « plafond 300 appels
     # entiers, jusqu'a 20 coupes generees ». Les defauts du banc valent
     # 900, 60 coupes et UNE graine : trois ecarts, pas un.
+    # Rejoue le 01/11 avec ses trois graines, puis CONFRONTE a tab:cglp :
+    # les 18 lignes x 4 colonnes du bloc trois graines sont identiques,
+    # les six statistiques de bilan aussi, et la somme de la colonne des
+    # coupes vaut les 149 publiees. Le tableau etait juste ; c'est le
+    # journal archive qui ne venait pas de la bonne execution.
     Entree("bench_cglp", "bench_cglp.py", ["300", "20"],
-           "tab:cglp", "perime",
-           "sa colonne « gr » ne contient que la graine 1, six lignes ; "
-           "tab:cglp en declare TROIS. Le journal n'a pas non plus la "
-           "ligne « configuration mesuree » que le banc imprime "
-           "aujourd'hui : il est anterieur au code",
+           "tab:cglp", "verifie",
+           "72 cellules et les six statistiques de bilan confrontees le "
+           "01/11 : identiques, total de 149 coupes compris",
            {"CGLP_GRAINES": "1,2,3"}),
     Entree("bench_cglp900", "bench_cglp.py", ["900", "20"],
            "tab:cglp900", "declare",
