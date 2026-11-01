@@ -259,11 +259,29 @@ programmes en nombres entiers \emph{linéaires plus linéaires fractionnaires},
 dont les critères sont une \emph{somme} $c^{\top}x + (p^{\top}x+\alpha) /
 (q^{\top}x+\beta)$ et non un rapport.  En chassant le dénominateur au niveau
 $v$, la partie quadratique $(c^{\top}x)(q^{\top}x)$ subsiste~: l'ensemble de
-niveau est une \emph{conique}, non un hyperplan.  La caractérisation de la
-section~\ref{sec:admissible} prédit donc que les deux travaux portent sur des
-classes de critères \emph{disjointes}.  C'est une prédiction tirée de
-l'énoncé de la classe, non une lecture de l'article, qui n'a pas pu être
-consulté.
+niveau est une \emph{conique}.
+
+Une conique n'est pas forcément irréductible --- une conique dégénérée se
+factorise en hyperplans --- de sorte que le bon énoncé est une condition de
+rang.  Soit $M(v)$ la matrice $(n+1) \times (n+1)$ de la quadrique~: celle-ci
+n'est une réunion d'hyperplans que si $\operatorname{rang} M(v) \leqslant 2$.
+Là où $\operatorname{rang} M(v) \geqslant 3$, l'ensemble de niveau est
+irréductible et la section~\ref{sec:admissible} ne s'applique pas.  La
+dégénérescence à \emph{tous} les niveaux est une condition algébrique de
+codimension positive~: mesurée sur des données entières uniformes dans
+$[-3,3]$, elle touche $2{,}20\%$ des critères en $n=2$, $0{,}10\%$ en $n=3$
+et $0{,}08\%$ en $n=4$.
+
+\textbf{Mais les deux classes ne sont pas disjointes}, et l'inclusion va dans
+le sens inconfortable~: poser $c = 0$ redonne un rapport pur, donc la classe
+«~linéaire plus linéaire fractionnaire~» \textbf{contient} la nôtre.  Ce qui
+est établi, c'est que les membres \emph{génériques} de leur classe sont hors
+de portée d'ici --- énoncé sur notre méthode, démontrable à partir du seul
+énoncé de leur problème.  Ce qui reste ouvert est la seule question qui pèse
+sur le chapitre~\ref{ch:contrib}~: \emph{restreinte à $c = 0$, leur méthode
+produit-elle tout $\E$~?}  Si oui, le résultat d'ensemble complet n'est pas
+nouveau~; si elle renvoie un optimum ou une partie, il l'est.  Cela exige
+l'article, qui n'a pas pu être consulté.
 
 \section{Positionnement de ce travail}
 

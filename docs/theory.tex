@@ -368,9 +368,24 @@ the denominator at level $v$,
 \]
 whose quadratic part is $(c^{\top}x)(q^{\top}x)$, with matrix
 $(c q^{\top} + q c^{\top})/2$.  That matrix is non-zero whenever $c$ and $q$
-both are, so the level set is a conic.  A conic is not a finite union of
-polyhedra, so Proposition~\ref{prop:reach-poly} does not apply and the slice
-machinery does not reach this class.
+both are, so the level set is a conic.  A conic need \emph{not} be
+irreducible --- a degenerate one factors into hyperplanes --- so ``a conic is
+not a finite union of polyhedra'', which an earlier draft asserted here, is
+false.  The correct statement is a rank condition.  Let $M(v)$ be the
+symmetric $(n+1) \times (n+1)$ matrix of the quadric.  A quadric is a union
+of hyperplanes only if $\operatorname{rank} M(v) \leqslant 2$; so wherever
+$\operatorname{rank} M(v) \geqslant 3$ the level set is irreducible,
+Proposition~\ref{prop:reach-poly} does not apply, and the slice machinery
+does not reach the criterion there.
+
+Degeneracy at every level is an algebraic condition of positive codimension
+on the data, and $c \parallel q$ is neither necessary nor sufficient for it.
+Measured over uniform integer data in $[-3,3]$ with $c \neq 0$, $q \neq 0$,
+$\beta > 0$, five levels per criterion: $2.20\%$ of criteria degenerate at
+every level for $n = 2$, $0.10\%$ for $n = 3$, $0.08\%$ for $n = 4$ --- the
+share falling with $n$ because $\operatorname{rank} \leqslant 2$ out of
+$n+1$ is a stronger demand as $n$ grows.  Note also that $c = 0$ returns a
+pure ratio, so this class \emph{contains} the linear fractional one.
 \end{example}
 
 \noindent

@@ -111,15 +111,36 @@ is a conic and not a hyperplane** -- checked here rather than asserted, both by
 forming the matrix and by exhibiting three non-collinear rational points on one
 level of a concrete instance.
 
-A conic is not a finite union of affine subspaces, so the class falls outside
-the condition above.  Two consequences, and the second is the useful one:
+An earlier draft of this docstring said "a conic is not a finite union of
+affine subspaces".  **That is false**: a *degenerate* quadric factors into
+hyperplanes, and a criterion whose every level set factored that way would
+sit inside the widened reach above.  The correct statement is a rank
+condition.  Write ``M(v)`` for the symmetric ``(n+1) x (n+1)`` matrix of the
+quadric.  A quadric is a union of hyperplanes only if ``rank M(v) <= 2``, so
+wherever ``rank M(v) >= 3`` the level set is irreducible, is not a finite
+union of affine subspaces, and the criterion falls outside the condition
+above.
 
-1. The method of this package **does not reach** linear-plus-linear-fractional
-   criteria, and the characterisation says so in advance rather than leaving it
-   to be discovered.
-2. That paper therefore **cannot** be generating its efficient set by the slice
-   argument used here, since its criteria have no linear slices to enumerate.
-   The two works address disjoint criterion classes.
+Degeneracy at *every* level is an algebraic condition of positive
+codimension on ``(c, p, alpha, q, beta)`` -- and not the parallelism one
+first guesses, since ``c || q`` is neither necessary nor sufficient.
+Measured over uniform integer data in ``[-3, 3]`` with ``c != 0``,
+``q != 0``, ``beta > 0``, five levels per criterion: 2.20% of criteria
+degenerate at every level for ``n = 2``, 0.10% for ``n = 3``, 0.08% for
+``n = 4``.  The share falls with ``n`` because ``rank <= 2`` out of ``n+1``
+is a stronger demand as ``n`` grows.
+
+So on all but a vanishing subfamily this package **does not reach**
+linear-plus-linear-fractional criteria, and the characterisation says so in
+advance rather than leaving it to be discovered.
+
+**What this does not settle.**  The two classes are *not* disjoint, and the
+containment runs the uncomfortable way: ``c = 0`` gives a pure ratio, so the
+linear-plus-linear-fractional class **contains** MOILFP.  What is proved is
+that the *generic* members of their class are out of reach here -- a
+statement about this package, from their problem statement alone.  What
+stays open is the one question bearing on the complete-set result:
+restricted to ``c = 0``, does their method produce the whole of ``E(P_D)``?
 
 The premise is the problem class as that title states it; the inference from
 there is the algebra above.  Confirming it still needs the paper itself, which

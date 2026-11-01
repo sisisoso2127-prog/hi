@@ -481,8 +481,19 @@ criteria, not the method:
 | hyperbolic over `E` of a MOILFP | ratios | hyperplanes | **yes** |
 | two fractional functions over `E` | ratios | hyperplanes | **yes** |
 | quadratic over the Pareto set of a MOILFP | ratios | hyperplanes | **yes** |
-| linear **plus** linear fractional (Cherfaoui & Moulaï, Annals of OR 296) | sums | **conics** | **no** |
+| linear **plus** linear fractional (Cherfaoui & Moulaï, Annals of OR 296) | sums | **conics**\* | **no**\* |
 | bi-objective over `E` of an integer quadratic | quadratic | **quadrics** | **no** |
+
+\* Precisely: the level set is a quadric with symmetric `(n+1)x(n+1)` matrix
+`M(v)`, and a quadric is a union of hyperplanes only if `rank M(v) <= 2`. Where
+`rank M(v) >= 3` it is irreducible and out of reach. Degeneracy at every level
+is an algebraic condition of positive codimension — measured on uniform integer
+data in `[-3,3]`: 2.20% of criteria at `n=2`, 0.10% at `n=3`, 0.08% at `n=4`.
+"A conic is not a finite union of affine subspaces", which an earlier draft of
+this README asserted, is false. Note also that `c = 0` gives a pure ratio, so
+that class *contains* MOILFP rather than being disjoint from it; what stays open
+is whether their method, restricted to `c = 0`, produces all of `E(P_D)`.
+
 
 The reachable side collapses: those four differ only in their *decision*
 function, which is free once `E(P_D)` is explicit — so four separate problem

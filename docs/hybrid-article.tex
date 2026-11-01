@@ -367,30 +367,72 @@ a \emph{sum} rather than a ratio.  Clearing the denominator at level $v$,
   (c^{\top}x)(q^{\top}x + \beta) + p^{\top}x + \alpha
      - v\,(q^{\top}x + \beta) \;=\; 0 ,
 \]
-whose quadratic part is $(c^{\top}x)(q^{\top}x)$, with matrix
-$(c q^{\top} + q c^{\top})/2$.  That matrix is non-zero whenever $c$ and $q$
-both are, so \textbf{the level set is a conic and not a hyperplane}.  We check
-this rather than assert it: the matrix is formed, and three non-collinear
-rational points are exhibited on a single level of a concrete instance.
+whose quadratic part is $(c^{\top}x)(q^{\top}x)$.  Write $M(v)$ for the
+symmetric $(n+1) \times (n+1)$ matrix of that quadric, whose leading block is
+$(c q^{\top} + q c^{\top})/2$.
 
-A conic is not a finite union of affine subspaces, so the class sits outside
-Theorem~\ref{thm:admissible}.  Two consequences, and the second is the one that
-matters:
+\paragraph{The earlier draft of this section was wrong here, and the
+correction matters.}
+It said ``a conic is not a finite union of affine subspaces''.  That is
+false: a \emph{degenerate} quadric factors into hyperplanes, and a criterion
+whose every level set factored that way would sit squarely inside the
+widened reach of the polyhedral widening of Section~\ref{sec:map}.  The correct statement
+is a rank condition.
 
-\begin{enumerate}
-\item The method here \textbf{does not reach} linear-plus-linear-fractional
-      criteria, and the characterisation says so \emph{in advance} instead of
-      leaving it to be found out.
-\item That paper therefore \textbf{cannot} be generating its efficient set by
-      the slice argument used here, because its criteria have no linear slices
-      to enumerate.  The two works address disjoint criterion classes.
-\end{enumerate}
+\begin{proposition}[What the characterisation says about this class]
+\label{prop:neighbour}
+A quadric is a union of hyperplanes only if $\operatorname{rank} M(v)
+\leqslant 2$.  Hence if $\operatorname{rank} M(v) \geqslant 3$ at some
+attained level $v$, the level set there is an irreducible quadric, which is
+not a finite union of affine subspaces, and
+Theorem~\ref{thm:admissible} does not apply to the criterion.
+\end{proposition}
 
 \noindent
-The premise is the problem class as that title states it; everything after it
-is the algebra above.  Confirming it still needs the paper, which could not be
-reached from the environment this work was done in --- so this is stated as a
-prediction the characterisation makes, not as a reading of the paper.
+The degenerate alternative --- $\operatorname{rank} M(v) \leqslant 2$ at
+every level --- is an algebraic condition of positive codimension on
+$(c, p, \alpha, q, \beta)$, and it is not the parallelism one first guesses:
+$c \parallel q$ is neither necessary nor sufficient for it.  Measured rather
+than asserted, over uniform integer data in $[-3,3]$ with $c \neq 0$,
+$q \neq 0$ and $\beta > 0$, testing five levels per criterion:
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+ & $n=2$ & $n=3$ & $n=4$ \\
+\midrule
+criteria degenerate at every level & $2.20\%$ & $0.10\%$ & $0.08\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The share falls with $n$ because a pair of hyperplanes needs
+$\operatorname{rank} M \leqslant 2$ out of $n+1$, which is a stronger demand
+as $n$ grows.  So: \textbf{on all but a vanishing subfamily this method does
+not reach linear-plus-linear-fractional criteria, and the characterisation
+says so in advance}; on that subfamily the level sets do become unions of
+hyperplanes and the machinery of the polyhedral widening of Section~\ref{sec:map} reaches
+them.
+
+\paragraph{What this does and does not settle about priority.}
+It is tempting to conclude that the two works address disjoint classes.
+They do not, and the containment runs the wrong way for comfort: setting
+$c = 0$ makes $Z$ a pure ratio, so \textbf{the
+linear-plus-linear-fractional class \emph{contains} MOILFP as its $c = 0$
+case}.  What Proposition~\ref{prop:neighbour} establishes is that the
+\emph{generic} members of their class are out of reach here --- a statement
+about this method, provable from their problem statement alone and needing
+no reading of their algorithm.  What it leaves open is the only question
+that bears on Section~\ref{sec:complete}: \emph{restricted to $c = 0$, does
+their method produce the whole of $\E$?}  If it does, the complete-set
+result here is not new; if it produces one optimum, or a subset, it is.
+
+That question cannot be answered from a title, a characterisation or an
+index.  It needs the paper, which could not be reached from the environment
+this work was prepared in.  It is recorded here as the one open item
+bearing on novelty, stated precisely enough to be settled in a few minutes
+by anyone holding the offprint.
 
 \subsection{Several decision functions at once}
 

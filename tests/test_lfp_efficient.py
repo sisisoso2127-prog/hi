@@ -2931,6 +2931,75 @@ def test_linear_plus_linear_fractional_falls_outside_the_reachable_class():
     return ("linear-plus-linear-fractional has conic level sets (three "
             "non-collinear points on one level); the pure ratio does not")
 
+def test_neighbouring_class_is_out_of_reach_by_rank_not_by_being_a_conic():
+    """Why the linear-plus-linear-fractional class is out of reach, stated right.
+
+    The claim this pins used to read "the level set is a conic, and a conic is
+    not a finite union of affine subspaces".  The second half is **false**: a
+    degenerate quadric factors into hyperplanes, and a criterion whose every
+    level set factored that way would sit inside the widened reach of
+    :mod:`lfp_efficient.levelsets`.
+
+    The correct statement is a rank condition on the quadric's symmetric
+    ``(n+1) x (n+1)`` matrix ``M(v)``: a quadric is a union of hyperplanes only
+    if ``rank M(v) <= 2``.  This test checks both directions that matter ---
+    that a generic criterion of the class has ``rank M(v) >= 3`` at some level
+    (so it is genuinely out of reach), and that the degenerate case is real and
+    not a straw man, since a criterion with ``rank M(v) <= 2`` everywhere does
+    exist.  It also pins the containment that makes the priority question live:
+    ``c = 0`` turns the criterion into a pure ratio, so that class *contains*
+    MOILFP rather than being disjoint from it.
+    """
+    def matrix(c, p_, al, q, be, v):
+        n = len(c)
+        rows = [[Fraction(c[i] * q[j] + c[j] * q[i], 2) for j in range(n)]
+                for i in range(n)]
+        lin = [Fraction(c[i] * be + p_[i] - v * q[i], 2) for i in range(n)]
+        return ([r + [lin[i]] for i, r in enumerate(rows)]
+                + [lin + [Fraction(al - v * be)]])
+
+    def rank(mat):
+        mat = [row[:] for row in mat]
+        rows, cols, r = len(mat), len(mat[0]), 0
+        for col in range(cols):
+            piv = next((i for i in range(r, rows) if mat[i][col] != 0), None)
+            if piv is None:
+                continue
+            mat[r], mat[piv] = mat[piv], mat[r]
+            for i in range(rows):
+                if i != r and mat[i][col] != 0:
+                    f = Fraction(mat[i][col], mat[r][col])
+                    mat[i] = [a - f * b for a, b in zip(mat[i], mat[r])]
+            r += 1
+            if r == rows:
+                break
+        return r
+
+    levels = [Fraction(v) for v in (-2, 0, 1, 3, 7)]
+
+    # A generic member: out of reach, and the reason is the rank, not the word
+    # "conic".
+    c, p_, al, q, be = [1, 2], [3, 1], 0, [1, 1], 1
+    ranks = [rank(matrix(c, p_, al, q, be, v)) for v in levels]
+    assert max(ranks) >= 3, ranks
+
+    # The degenerate case is not hypothetical: here every level factors, so the
+    # criterion is *inside* the widened reach and the old blanket claim would
+    # have mis-sorted it.
+    c, p_, al, q, be = [-2, -2], [-2, -2], -1, [-2, -2], 1
+    ranks = [rank(matrix(c, p_, al, q, be, v)) for v in levels]
+    assert max(ranks) <= 2, ranks
+
+    # And c = 0 is a pure ratio: the quadratic block vanishes, so this class
+    # contains MOILFP instead of being disjoint from it.
+    c, p_, al, q, be = [0, 0], [3, 1], 0, [1, 1], 1
+    for v in levels:
+        mat = matrix(c, p_, al, q, be, v)
+        assert all(mat[i][j] == 0 for i in range(2) for j in range(2))
+
+    return "rank >= 3 generically; degenerate case exists; c=0 is a ratio"
+
+
 def test_three_published_problem_statements_are_one_computation():
     """What the reachable side of the characterisation collapses into.
 
