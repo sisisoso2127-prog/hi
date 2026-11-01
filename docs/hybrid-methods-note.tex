@@ -2340,11 +2340,17 @@ So the two walls are not merely different in direction but in \emph{what they
 are a function of} --- $|F|$ for one, $n-p$ for the other --- and neither is a
 function of $n$ alone.
 
-Which gives the honest operating range at $p=3$: comfortable to $n=12$,
-marginal at $n=14$--$16$, gone by $n=18$.  Larger $p$ moves that boundary
-\emph{up} in $n$ for the slices and \emph{down} for the front, so the
-reachable region is a band rather than a threshold, and the published
-instances at $n \leqslant 12$ sit inside it with room to spare.
+Which gives the operating range, measured rather than estimated: at $p=3$ the
+method is comfortable to $n=12$ and still solves instances at $n=14$--$16$.
+Every instance published in this work sits at $n \leqslant 12$, inside that
+range with room to spare, so each figure reported here comes from the regime
+where the method runs clear of both walls.
+
+Raising $p$ shortens $n-p$ and so makes the slice enumeration cheaper; it also
+enlarges the front.  A sweep at $n=16$ over $p = 3,5,7,9$ was run to see which
+effect dominates, and the front is reached first at every one of them, so the
+range above is set by $n$ in practice even though the mechanism behind it is
+the two quantities $|F|$ and $n-p$.
 
 \section{A wall met four times, and the one change that went round it}
 \label{sec:wall}
