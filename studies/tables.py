@@ -101,11 +101,24 @@ def order(data):
     return "\n".join(out)
 
 
+TABLES = {"breakeven": breakeven, "filter": filter_, "order": order}
+
+
 def main():
     which = sys.argv[1] if len(sys.argv) > 1 else "breakeven"
+    if which not in TABLES:
+        names = ", ".join(TABLES)
+        sys.exit(f"usage: python3 studies/tables.py [{names}]\n"
+                 f"  reads {RESULTS} and prints that table's LaTeX rows.\n"
+                 f"  run studies/campaign.py first to produce the records.")
+    if not RESULTS.exists():
+        sys.exit(f"{RESULTS} is missing: run studies/campaign.py first.")
     data = json.loads(RESULTS.read_text())
-    print({"breakeven": breakeven, "filter": filter_,
-       "order": order}[which](data))
+    try:
+        print(TABLES[which](data))
+    except KeyError as missing:
+        sys.exit(f"{RESULTS} has no records for {which} ({missing}): "
+                 f"run studies/campaign.py --only {which}.")
 
 
 if __name__ == "__main__":
