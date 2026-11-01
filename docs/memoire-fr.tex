@@ -1,0 +1,674 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue,
+            pdftitle={Méthodes hybrides pour l'ensemble efficace}}
+
+\newcommand{\Dset}{D}
+\newcommand{\E}{E(P_D)}
+\newcommand{\Z}{Z}
+\newcommand{\fig}[1]{\input{figs/#1}}
+
+\theoremstyle{plain}
+\newtheorem{theoreme}{Théorème}[chapter]
+\newtheorem{proposition}[theoreme]{Proposition}
+\newtheorem{corollaire}[theoreme]{Corollaire}
+\theoremstyle{definition}
+\newtheorem{definition}[theoreme]{Définition}
+\newtheorem{remarque}[theoreme]{Remarque}
+
+\title{\bfseries Méthodes hybrides pour la génération de l'ensemble
+des solutions efficaces d'un programme linéaire en nombres entiers
+multi-objectif,\\[4pt] avec un critère de décision linéaire fractionnaire}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Soit $\Dset = \{x \in \mathbb{Z}^n_+ : Ax \leqslant b\}$ non vide et borné, et
+soient $\Z_1,\dots,\Z_p$ des critères à maximiser, chacun un rapport de formes
+affines de dénominateur strictement positif sur $\Dset$.  Ce mémoire traite
+deux questions portant sur l'ensemble efficace $\E$~: le \emph{produire en
+entier}, et y maximiser un critère de décision linéaire fractionnaire $\Phi$.
+
+Les méthodes existantes pour la seconde question travaillent dans l'espace des
+\emph{décisions}, en tronquant $\Dset$ par des coupes de Sylva--Crema.  Chaque
+coupe étant une disjonction, elle coûte $p$ variables binaires et $p+1$
+contraintes de type grand-$M$~: chaque sous-problème est strictement plus gros
+que le précédent.  Nous conservons la partie inexplorée dans l'espace des
+\emph{critères}, sous forme d'une liste de boîtes~: la troncature devient une
+soustraction de boîtes, chaque sous-problème est $\Dset$ augmenté de quelques
+contraintes linéaires ordinaires, et \textbf{le modèle ne grossit jamais}.
+
+Quatre contributions en découlent.  D'abord une caractérisation qui rend
+l'ensemble efficace complet accessible~: \textbf{si $v$ est non dominé, alors
+tout $x \in \Dset$ tel que $\Z(x) = v$ est efficace}, de sorte que $\E$ est
+exactement la réunion des tranches du front et qu'\emph{aucun test d'efficacité
+n'est payé sur un point de tranche}.  Ensuite, une tranche est $\Dset$ augmenté
+de $p$ équations \emph{linéaires}, y compris pour des critères fractionnaires~;
+résoudre ces équations élimine $r$ variables avant toute énumération et vaut un
+facteur médian de $49$.  Ensuite une hybridation qui paie~: une recherche
+locale de Pareto fournit des points efficaces vérifiés, placés dans la liste de
+boîtes sans sondage, atteignant la totalité de $\E$ à $1{,}36$ fois la méthode
+exacte pure sur $120$ instances.  Enfin, un $\E$ explicite admet
+\emph{n'importe quelle} fonction de décision calculable, là où les méthodes de
+l'espace des décisions exigent une forme de rapport pour construire leurs
+coupes.
+
+Sur le problème commun, la recherche dans l'espace des critères l'emporte à
+chaque valeur de $p$, de $1{,}52$ à $p=2$ jusqu'à $14{,}57$ à $p=6$, avec des
+optima identiques des deux côtés.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+\section{Contexte}
+
+En optimisation multi-objectif en nombres entiers, il n'existe en général pas
+de solution unique, mais un \emph{ensemble} de solutions efficaces, dont aucune
+n'est meilleure que les autres sur tous les critères à la fois.  Le décideur
+doit alors trancher, et ce choix s'exprime souvent par un critère
+supplémentaire $\Phi$ à optimiser \emph{sur} cet ensemble.
+
+Le problème qui en résulte,
+\[
+  (P_E) \qquad \max\ \Phi(x) \quad \text{sous} \quad x \in \E ,
+\]
+est difficile pour une raison structurelle~: $\E$ est une réunion de faces de
+$\Dset$, non convexe, et ne possède aucune description explicite par
+inégalités.  On ne peut donc pas le passer à un solveur.
+
+\section{Problème traité}
+
+\begin{equation}\label{eq:pd}
+  (P_{\Dset}) \qquad \text{<<}\max\text{>>}\ \ \Z_k(x) =
+  \frac{c_k^{\top}x + a_k}{d_k^{\top}x + b_k},
+  \quad k = 1,\dots,p, \qquad x \in \Dset ,
+\end{equation}
+avec $\Dset = \{x \in \mathbb{Z}^{n}_{+} : Ax \leqslant b\}$ non vide et borné,
+et chaque dénominateur $D_k(x) = d_k^{\top}x + b_k$ strictement positif sur
+$\Dset$.  Les deux hypothèses sont \emph{vérifiées} par la mise en {\oe}uvre,
+pour une raison développée au chapitre~\ref{ch:valid}~: les violer ne produit
+pas une erreur, mais une réponse fausse et d'apparence complète.
+
+\begin{definition}
+Un point $x \in \Dset$ est \emph{efficace} lorsqu'il n'existe aucun $y \in
+\Dset$ vérifiant $\Z(y) \geqslant \Z(x)$ avec au moins une inégalité stricte.
+On note $\E$ l'ensemble des points efficaces et $F = \Z(\E)$ l'ensemble non
+dominé.
+\end{definition}
+
+\begin{remarque}\label{rem:notZ}
+$\Phi$ est une fonction de $x$ et \textbf{non} de $\Z(x)$.  Deux points
+efficaces de même vecteur critère peuvent avoir des valeurs de $\Phi$
+différentes.  Toute construction menée dans l'espace des critères doit en tenir
+compte, et c'est la raison pour laquelle le transfert des méthodes de l'espace
+des critères du cas linéaire au cas fractionnaire n'est pas immédiat.
+\end{remarque}
+
+\section{Objectifs et plan}
+
+Le travail poursuit les objectifs fixés dans le projet de mémoire~:
+
+\begin{enumerate}[itemsep=3pt]
+\item concevoir des méthodes \emph{hybrides} --- exacte--métaheuristique et
+      exacte--exacte --- pour l'optimisation d'une fonction linéaire
+      fractionnaire sur l'ensemble efficace entier~;
+\item produire \emph{un ensemble de solutions efficaces} engendré par ces
+      algorithmes~;
+\item \textbf{évaluer les performances} des algorithmes proposés par rapport
+      aux méthodes existantes.
+\end{enumerate}
+
+\noindent
+Le chapitre~\ref{ch:etat} situe le travail dans la littérature.  Le
+chapitre~\ref{ch:methode} présente la méthode dans l'espace des critères.  Le
+chapitre~\ref{ch:contrib} expose les contributions.  Le
+chapitre~\ref{ch:resultats} donne l'évaluation des performances, et le
+chapitre~\ref{ch:valid} la validation.
+
+
+\chapter{État de l'art}
+\label{ch:etat}
+
+\section{Deux familles de méthodes}
+
+Les méthodes exactes pour l'optimisation sur l'ensemble efficace se répartissent
+en deux familles, selon l'espace dans lequel elles cherchent.
+
+\paragraph{L'espace des décisions.}
+La région non explorée est maintenue dans l'espace des variables, et réduite
+par des coupes.  La coupe de Sylva--Crema supprime $\{x : \Z(x) \leqslant
+\Z(\tilde x)\}$ ; comme il s'agit d'une disjonction, elle s'exprime par $p$
+variables binaires et $p+1$ contraintes de type grand-$M$.  Toute la
+littérature sur un critère \emph{fractionnaire} au-dessus d'un ensemble
+efficace entier appartient à cette famille~: Drici, Ouail et Moulaï
+(\emph{Annals of Operations Research}, 2018), une contribution de 2015 dans
+\emph{RAIRO-Operations Research}, Ouail et Chergui pour le cas hyperbolique,
+Chaiblaine, Moulaï et Cherfaoui pour deux fonctions fractionnaires, un article
+de 2021 dans \emph{Optimization} pour un objectif quadratique, ainsi que les
+variantes stochastiques et à coefficients intervalles de Younsi-Abbaci et
+Moulaï.
+
+\paragraph{L'espace des critères.}
+La région non explorée est maintenue dans l'espace des valeurs des critères,
+sous forme de régions géométriques.  Boland, Charkhgard et Savelsbergh
+(\emph{European Journal of Operational Research}, 2017) travaillent dans
+l'espace des critères de dimension pleine et le décomposent à chaque itération.
+Leurs méthodes \emph{balanced box}, \emph{boxed line} et \emph{triangle
+splitting} en sont les précurseurs bi-objectif.  Les synthèses rapportent cette
+famille comme actuellement la plus efficace --- \textbf{mais pour un critère de
+décision \emph{linéaire}}.
+
+\section{Positionnement de ce travail}
+
+Deux éléments de la construction présentée ici relèvent de l'état de l'art et
+ne sont pas revendiqués~: la \textbf{décomposition de l'espace des critères},
+établie par les travaux ci-dessus pour un objectif linéaire, et le
+\textbf{schéma d'hybridation} métaheuristique--exacte, dont la taxonomie est
+connue et dont la variante employée ici --- produire une approximation du front
+par une métaheuristique, puis la faire raffiner par une méthode exacte --- est
+la forme standard.
+
+Ce que la littérature fractionnaire ne semble pas faire, c'est travailler dans
+l'espace des critères.  La combinaison des deux, avec les éléments techniques
+qui la rendent \emph{exacte} plutôt qu'approchée, constitue l'apport de ce
+mémoire~:
+
+\begin{itemize}[itemsep=3pt]
+\item la forme $e_k$ à valeurs entières (section~\ref{sec:ek}), qui remplace
+      l'estimation d'un pas minimal par un seuil exact~;
+\item les résultats de tranche du chapitre~\ref{ch:contrib}, qui donnent
+      l'ensemble efficace complet~;
+\item la classe de fonctions de décision admissibles que cet ensemble explicite
+      ouvre (section~\ref{sec:admissible}).
+\end{itemize}
+
+\begin{remarque}
+Cette section indique ce qui a été trouvé et ce qui ne l'a pas été~; elle ne
+constitue pas une revendication de nouveauté.  Une revue bibliographique
+complète, incluant la lecture intégrale des sources, reste à mener.
+\end{remarque}
+
+\chapter{La méthode dans l'espace des critères}
+\label{ch:methode}
+
+\section{D'où vient le coût de la méthode en espace des décisions}
+\label{sec:cout}
+
+Chaque coupe de Sylva--Crema ajoute $p$ variables binaires et $p+1$ contraintes
+au modèle.  Le coût est donc \emph{structurel} et non accidentel~: sur une
+instance mesurée, le modèle passe de $5$ colonnes et $7$ lignes à $95$ et
+$127$ au fil de $30$ coupes, et le profil montre que $100\%$ du temps est passé
+dans le programme en nombres entiers --- la construction des coupes et la
+réparation ne comptent pour rien.  Rien en dehors des sous-problèmes ne mérite
+d'être optimisé, et c'est précisément leur croissance que la méthode en espace
+des critères n'a pas.
+
+\section{La forme \texorpdfstring{$e_k$}{e\_k}, à valeurs entières}
+\label{sec:ek}
+
+Les données de chaque critère sont mises à l'échelle entière (numérateur et
+dénominateur multipliés par le même facteur, le rapport est inchangé).  On
+pose alors
+\begin{equation}\label{eq:ek}
+  e_k(x ; \bar x) \;=\; D_k(\bar x)\,D_k(x)\,
+  \bigl(\Z_k(x) - \Z_k(\bar x)\bigr) ,
+\end{equation}
+qui est \textbf{linéaire en $x$ et à valeurs entières}, de sorte que
+\begin{equation}\label{eq:exact}
+  \Z_k(x) > \Z_k(\bar x) \iff e_k(x;\bar x) \geqslant 1 .
+\end{equation}
+
+\noindent
+C'est le point qui rend le passage des critères linéaires aux critères
+fractionnaires \emph{fidèle} et non approché~: aucun pas minimal n'a à être
+estimé.  Les deux dénominateurs étant strictement positifs sur $\Dset$,
+multiplier par eux ne change ni le sens ni la validité de l'inégalité.
+
+\section{Les boîtes, et pourquoi le modèle ne grossit pas}
+\label{sec:boites}
+
+La partie inexplorée est conservée comme une liste de boîtes dans l'espace des
+critères.  Tronquer revient à soustraire une boîte, et chaque sous-problème est
+$\Dset$ augmenté de quelques lignes linéaires ordinaires issues de
+\eqref{eq:exact}.  Aucune variable binaire, aucun grand-$M$, aucune croissance
+d'une itération à la suivante.
+
+La partition est disjointe~: l'enfant $k$ reçoit $e_k \geqslant 1$ et
+$e_j \leqslant 0$ pour $j < k$, ce qui couvre la boîte privée du centre sans
+recouvrement.
+
+\begin{center}
+\fig{h-process}
+\end{center}
+
+
+\chapter{Contributions}
+\label{ch:contrib}
+
+\section{L'ensemble efficace complet}
+\label{sec:complet}
+
+L'énumération du front prouve la complétude de sa liste de \emph{vecteurs},
+mais un seul point est conservé par tranche~: la liste de \emph{points} n'est
+pas l'ensemble efficace.  Cet écart se comble pour presque rien.
+
+\begin{theoreme}[Caractérisation par tranches]\label{th:tranche}
+Si $v$ est non dominé, alors \textbf{tout} $x \in \Dset$ tel que $\Z(x) = v$
+est efficace.
+\end{theoreme}
+
+\begin{proof}
+Supposons qu'un $y \in \Dset$ domine un tel $x$.  Alors $\Z(y) \geqslant \Z(x)
+= v$ avec au moins une inégalité stricte, ce qui signifie que $v$ est dominé,
+contrairement à l'hypothèse.  Donc aucun $y$ ne domine $x$, et $x$ est efficace.
+\end{proof}
+
+\begin{corollaire}
+$\E = \{x \in \Dset : \Z(x) = v \text{ pour un } v \text{ non dominé}\}$, et
+\textbf{aucun test d'efficacité n'est payé sur un point de tranche}.
+\end{corollaire}
+
+\noindent
+L'opération la plus coûteuse de la méthode n'est tout simplement pas invoquée.
+La démonstration n'utilise aucune propriété de $\Z$ --- ni linéarité, ni
+continuité, ni forme de rapport --- de sorte que la caractérisation vaut pour
+des critères arbitraires.  Ce qui exige une structure, c'est seulement
+l'\emph{énumération} de chaque tranche.
+
+\section{Une tranche est \texorpdfstring{$\Dset$}{D} plus \texorpdfstring{$p$}{p} équations linéaires}
+\label{sec:elim}
+
+Fixer $\Z_k(x) = v_k$ est linéaire en $x$ \emph{même pour un critère
+fractionnaire}~: comme $d_k^{\top}x + b_k > 0$ sur $\Dset$, l'équation
+$(c_k^{\top}x + a_k)/(d_k^{\top}x + b_k) = v_k$ se libère en
+\begin{equation}\label{eq:tranche}
+  (c_k - v_k d_k)^{\top} x \;=\; v_k b_k - a_k .
+\end{equation}
+
+Aucun binaire, aucun grand-$M$, rien qui croisse d'une tranche à la suivante~:
+la même propriété que celle de la recherche par boîtes, obtenue une seconde
+fois.
+
+\paragraph{Résoudre ces équations plutôt que s'en servir comme coupes.}
+L'élimination de Gauss en arithmétique rationnelle exacte exprime $r$ variables
+en fonction des autres~; la substitution laisse un système équivalent à $n - r$
+inconnues, et le balayage porte sur celui-là.  L'espace de recherche passe de
+$(ub+1)^n$ à $(ub+1)^{n-r}$.
+
+\begin{table}[h]
+\centering
+\caption{Élagage sur les équations de tranche contre résolution de ces
+équations.  Quatorze instances, $n = 7 \dots 12$~; ensembles de points
+identiques dans tous les cas.}
+\begin{tabular}{lrrr}
+\toprule
+instance & élagage & élimination & rapport \\
+\midrule
+$n=9$, $p=3$  & $29{,}71$\,s  & $0{,}31$\,s & $96{,}7\times$ \\
+$n=10$, $p=5$ & $119{,}47$\,s & $0{,}92$\,s & $129{,}9\times$ \\
+$n=12$, $p=3$ & $796{,}84$\,s & $8{,}34$\,s & $95{,}5\times$ \\
+\midrule
+\textbf{médiane des quatorze} & & & $\mathbf{49{,}2\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+L'exactitude n'est pas affectée~: tous les coefficients sont des rationnels
+exacts et l'élimination l'est aussi, de sorte qu'il s'agit d'un changement
+d'ordre de parcours et non d'une approximation.
+
+\section{Ce qu'un \texorpdfstring{$\E$}{E(P\_D)} explicite autorise}
+\label{sec:admissible}
+
+C'est la contribution que l'on défendrait en premier, parce qu'elle ne repose
+pas sur le fait d'être le plus rapide~: elle dit quels problèmes peuvent être
+\emph{posés}.
+
+\begin{quote}
+Une méthode en espace des décisions exige une \emph{structure dans $\Phi$} et
+rien de $\E$~; cette voie exige \emph{$\E$} et rien de $\Phi$.
+\end{quote}
+
+\begin{theoreme}[Classe admissible]\label{th:admissible}
+Soit $\E$ connu et prouvé complet.  Alors pour \emph{toute} fonction $f$
+définie sur $\Dset$, $\max\{f(x) : x \in \E\}$ et l'ensemble complet de ses
+maximiseurs se calculent exactement en évaluant $f$ sur $\E$.  Aucune
+linéarité, monotonie, continuité, dérivabilité ni forme de rapport n'est
+requise.
+\end{theoreme}
+
+\noindent
+La démonstration est la finitude de $\E$ et rien d'autre.  Le contenu n'est pas
+dans l'énoncé~: il est dans le fait d'avoir payé $\E$ à un prix qui rend ce
+paiement intéressant, et l'énoncé est ce que ce prix achète.
+
+\begin{table}[h]
+\centering
+\caption{Six formes de fonction de décision sur l'instance publiée, chacune
+vérifiée contre une maximisation exhaustive de référence.  $\Phi_1,\Phi_2$ sont
+linéaires fractionnaires.}
+\begin{tabular}{llr}
+\toprule
+fonction de décision & admise par un branch-and-cut ? & optimum \\
+\midrule
+$\Phi_1$                        & oui --- le cas classique & $5/17$ \\
+$\Phi_1 + \Phi_2$               & non & $47/35$ \\
+$\max(\Phi_1,\Phi_2)$           & non & $6/5$ \\
+$\Phi_1 \cdot \Phi_2$           & non & $6/35$ \\
+$(x_1^2+1)/(x_2^2+1)$           & non & $10$ \\
+définie par morceaux            & non & $3/11$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Un branch-and-cut pour un $\Phi$ linéaire fractionnaire tire ses coupes et ses
+bornes de la forme de rapport.  Remplacer $\Phi$ par une \emph{somme} de deux
+rapports ne le ralentit pas~: il cesse de s'appliquer.  Ici, ce cas coûte
+exactement ce que coûte un rapport unique.
+
+\paragraph{Plusieurs fonctions de décision à la fois.}
+Optimiser \emph{deux} fonctions linéaires fractionnaires sur un ensemble
+efficace entier constitue un problème à part entière dans la littérature, avec
+son propre branch-and-bound.  Ici, c'est un filtre de dominance sur un ensemble
+déjà en main, et le coût ne dépend ni du nombre de fonctions ni de leur nature.
+Sur l'instance publiée, le filtre à deux rapports conserve $4$ des $7$ points
+efficaces, exactement la réponse exhaustive.
+
+\section{L'hybridation qui paie}
+\label{sec:hybride}
+
+Une recherche locale de Pareto avec archive fournit des points efficaces
+\textbf{vérifiés}, placés dans la liste de boîtes \textbf{sans sondage}.  La
+correction se situe là~: l'archive est filtrée par dominance \emph{parmi ce
+qu'elle a vu}, ce qui n'est pas le test exact~; rien ne franchit la frontière
+sans vérification.  La métaheuristique décide \emph{où chercher}~; elle ne
+décide jamais de ce qui est vrai.
+
+\paragraph{L'ordre est toute la différence.}
+C'est le résultat pratique le plus transférable du travail.  L'hybridation ne
+paie que si les graines sont transmises dans l'ordre où le sondage de la
+méthode exacte les aurait rencontrées.
+
+\begin{table}[h]
+\centering
+\caption{Sondages contre l'énumération non amorcée, selon l'ordre de
+transmission.  Vingt-sept instances, aucune censurée~; le nombre de sondages
+est déterministe.}
+\begin{tabular}{lrll}
+\toprule
+ordre & sondages & IQR & a augmenté le compte sur \\
+\midrule
+ordre de l'archive & $0{,}83\times$ & $[0{,}74,\ 0{,}92]$ & $2$ sur $27$ \\
+\textbf{ordre du sondage} & $\mathbf{0{,}69}\times$ & $[0{,}67,\ 0{,}75]$ & \textbf{aucune} \\
+inversé (témoin) & $0{,}90\times$ & $[0{,}83,\ 1{,}05]$ & $9$ sur $27$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Le bras inversé est le témoin~: il est \emph{tout aussi trié} et ne diffère de
+l'ordre du sondage que par la direction.  Or l'ordre du sondage n'augmente le
+nombre de sondages sur aucune des vingt-sept instances, tandis que l'inversé
+l'augmente sur neuf, et sa médiane se place avec l'ordre de l'archive.  Ce que
+l'amorçage exploite est donc la \emph{direction propre de la recherche}, et non
+le fait qu'une liste soit triée.
+
+\paragraph{Et plus précisément~: la première graine.}
+La pré-partition consomme les graines \emph{dans l'ordre}, de sorte que la
+première fixe la structure de boîtes de premier niveau.  En conditionnant sur
+elle, sur $228$ ordres et $26$ instances~: lorsque la première graine est celle
+que le sondage aurait rencontrée en premier, la médiane est $0{,}708$~; sinon
+$0{,}833$.  Cet écart représente l'essentiel de l'écart entre les deux ordres
+nommés.
+
+
+\chapter{Évaluation des performances}
+\label{ch:resultats}
+
+Ce chapitre répond au quatrième point du projet~: l'évaluation des performances
+des algorithmes proposés par rapport aux méthodes existantes.
+
+\section{Protocole de mesure}
+
+Toute l'arithmétique est rationnelle exacte, sans aucun flottant, de sorte que
+chaque comparaison oppose deux problèmes résolus exactement.  La statistique
+est la \textbf{médiane des rapports par instance} avec l'écart interquartile,
+jamais un rapport de totaux --- lequel serait décidé par la seule instance la
+plus lourde.
+
+\paragraph{Ce qu'est la référence.}
+Le côté « espace des décisions » de chaque comparaison est une
+\textbf{réimplémentation} de la méthode publiée, sur des instances engendrées
+ici --- et non le code de ses auteurs ni leurs instances de référence.  Les
+deux côtés partagent le même simplexe, la même arithmétique rationnelle exacte,
+le même branch-and-bound et la même machine, et la réimplémentation suit
+l'algorithme imprimé pas à pas.  La comparaison \emph{isole donc la différence
+algorithmique}, ce qui est une question plus propre qu'une comparaison de code
+à code --- celle-ci mesurerait aussi le langage, le solveur sous-jacent et
+l'effort d'ingénierie.
+
+En contrepartie, \textbf{les secondes absolues ne portent aucune information
+hors de cette mise en {\oe}uvre}~: du Python pur sur des rationnels exacts est
+bien plus lent que tout solveur de production, également des deux côtés.  Seuls
+les rapports se transportent, et seuls des rapports sont cités.
+
+\section{Espace des décisions contre espace des critères}
+
+\begin{table}[h]
+\centering
+\caption{Le gain selon le nombre de critères, $n = 6$, \textbf{trente
+instances par ligne}.}
+\label{tab:marge}
+\begin{tabular}{crrrr}
+\toprule
+$p$ & décisions & critères & rapport (médiane) & IQR \\
+\midrule
+2 & $0{,}07$\,s & $0{,}04$\,s & $1{,}52\times$  & $[1{,}25,\ 1{,}91]$ \\
+3 & $0{,}34$\,s & $0{,}12$\,s & $2{,}69\times$  & $[1{,}87,\ 3{,}72]$ \\
+4 & $0{,}50$\,s & $0{,}13$\,s & $4{,}99\times$  & $[2{,}39,\ 11{,}62]$ \\
+5 & $2{,}19$\,s & $0{,}25$\,s & $7{,}93\times$  & $[3{,}61,\ 19{,}98]$ \\
+6 & $3{,}67$\,s & $0{,}31$\,s & $\mathbf{14{,}57\times}$ & $[7{,}90,\ 25{,}17]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\fig{r-campaign-margin}
+\end{center}
+
+\noindent
+\textbf{La méthode l'emporte à chaque ligne, et l'avantage croît avec $p$} ---
+la direction qui importe, puisque c'est $p$ qui rend ces problèmes difficiles.
+Trois des $150$ exécutions ont épuisé un budget de $45$\,s et sont exclues
+plutôt que comptées à leur budget~; cette censure est \emph{unilatérale} --- 
+elle ne peut que faire paraître la méthode en espace des décisions meilleure ---
+de sorte que chaque marge citée est conservatrice.  Toute exécution terminée a
+donné le même optimum des deux côtés.
+
+\paragraph{La référence est-elle handicapée ?}
+Le perdant a été profilé plutôt que simplement cité.  Sur l'instance qui
+demande $137$\,s pour produire un front de $30$ vecteurs en espace des
+décisions, $100\%$ du temps est dans le programme en nombres entiers, et le
+modèle croît de $5$ colonnes à $95$.  Le coût est structurel.  Le seul
+handicap plausible --- sonder en maximisant une direction plutôt qu'avec un
+objectif nul --- a été testé~: l'objectif nul est $4$ à $13$ fois
+\emph{pire}, à coupes identiques.
+
+\section{L'hybridation}
+
+\begin{table}[h]
+\centering
+\caption{L'hybride contre la méthode exacte pure. Réponses identiques partout.}
+\begin{tabular}{lrr}
+\toprule
+expérience & instances & rapport \\
+\midrule
+$\E$ complet, $n = 6\dots12$ & $120$ & $\mathbf{1{,}36\times}$, plus rapide sur $116$ \\
+critères véritablement fractionnaires & $30$ & $1{,}39\times$ \\
+cinq familles structurelles & $150$ & $1{,}23\times$ médian, plus rapide sur $136$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Chacune des cinq familles paie, entre $1{,}14\times$ et $1{,}37\times$~:
+l'avantage n'est donc pas un artefact d'une famille particulière.
+
+\section{Le domaine de fonctionnement}
+
+Deux quantités gouvernent le coût, et elles sont distinctes.  L'énumération du
+front suit $|F|$~; le complètement par tranches suit $n - p$, parce que les
+équations de tranche sont de rang $p$ --- mesuré par instance, et égal à $p$
+dans chaque cas --- de sorte que l'élimination laisse $n-p$ variables libres.
+Le temps de tranche le confirme~: $0{,}65$, $2{,}09$, $48{,}08$ et $126{,}14$
+secondes à $n-p = 7, 9, 11, 13$.
+
+À $p=3$, la méthode est confortable jusqu'à $n=12$ et résout encore des
+instances à $n=14$--$16$.  \textbf{Toutes les instances présentées dans ce
+mémoire se situent à $n \leqslant 12$}, à l'intérieur de ce domaine avec de la
+marge~: chaque chiffre rapporté provient donc du régime où la méthode
+fonctionne à l'écart des deux limites.
+
+\section{Bilan des essais}
+
+Vingt-deux modifications ont été essayées et mesurées.  Les plus instructives~:
+
+\begin{table}[h]
+\centering
+\caption{Essais et verdicts.}
+\begin{tabular}{lll}
+\toprule
+essai & verdict & effet \\
+\midrule
+espace des décisions $\to$ critères & \textbf{gain} & $1{,}5\times$ à $14{,}6\times$ \\
+amorçage par marche de Pareto & \textbf{gain} & $\mathbf{1{,}31\times}$ vers tout $\E$ \\
+résolution des équations de tranche & \textbf{gain} & $49\times$ médian \\
+tranches au lieu d'un test d'efficacité & \textbf{gain} & tout $\E$, sous $2\times$ \\
+dimensionnement de la marche & \textbf{gain} & $1{,}00 \to 1{,}53\times$ à $n=12$ \\
+hybride sur critères fractionnaires & \textbf{gain} & $1{,}39\times$ \\
+Tchebychev comme générateur & \textbf{gain} & atteint les points non supportés \\
+démarrage à chaud + point mémorisé & \textbf{gain} & $20\%$ de pivots en moins \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\chapter{Validation}
+\label{ch:valid}
+
+\section{Comment les résultats sont contrôlés}
+
+La mise en {\oe}uvre est en Python pur, sans aucune dépendance externe, en
+arithmétique rationnelle exacte de bout en bout --- aucun flottant nulle part,
+donc aucune tolérance nulle part --- et porte \textbf{112 tests} exécutés à
+chaque validation.
+
+Plusieurs tests contrôlent des \emph{propriétés} plutôt que des réponses, car
+une méthode qui perdrait silencieusement des points efficaces s'accorderait
+quand même avec l'optimum sur les instances favorables~: la partition est
+disjointe~; la métaheuristique ne transmet jamais de point inefficace~; tout
+point mémorisé est efficace~; une racine démarrée à chaud atteint la même
+valeur que la racine froide~; la sortie anticipée laisse des boîtes ouvertes et
+prouve tout de même l'optimalité.
+
+Les réponses sont recoupées de \textbf{quatre façons indépendantes}~:
+l'énumération exhaustive, une énumération de l'ensemble non dominé par coupes
+répétées, un balayage trié avec tests de dominance, et un certificat
+d'optimalité qui règle $362\,293$ concurrents avec $3$ tests d'efficacité
+exacts.
+
+\section{Les hypothèses sont vérifiées, pas supposées}
+
+Les deux hypothèses de \eqref{eq:pd} --- $\Dset$ borné et dénominateurs
+strictement positifs --- sont \textbf{vérifiées} par les points d'entrée, pour
+une raison précise~: les violer ne produit pas une erreur mais une réponse
+fausse d'apparence complète.  Sur un $\Dset$ non borné pourtant admissible,
+l'énumération rendait un \emph{front vide marqué complet}~; sur un critère dont
+le dénominateur change de signe, elle rendait un seul vecteur comme front
+entier alors qu'un point admissible le domine.
+
+Le coût de ces vérifications est une charge fixe par problème~: un programme en
+nombres entiers pour la bornitude, un par critère \emph{véritablement}
+fractionnaire pour les dénominateurs et aucun pour un critère linéaire, et $n$
+programmes mis en cache pour la boîte de variables.  Face aux volumes de
+sous-problèmes du chapitre~\ref{ch:resultats}, ils ne se voient pas.
+
+\section{Ce que la démarche a permis de corriger}
+
+La discipline de mesure adoptée a permis de corriger des énoncés en cours de
+route, ce qui est rapporté ici parce que cela indique la fiabilité des chiffres
+conservés~:
+
+\begin{itemize}[itemsep=3pt]
+\item la statistique est la médiane des rapports \emph{par instance} --- un
+      rapport de totaux avait un jour été dominé par une seule instance
+      fournissant $110{,}95$ des $112{,}77$ secondes~;
+\item le \textbf{travail déterministe} est compté à côté des secondes ---
+      sous-programmes, n{\oe}uds de branch-and-bound, pivots --- car le plancher
+      de bruit de la machine est de $\pm 30\%$ par instance et aucun nombre de
+      répétitions ne le supprime~;
+\item une corrélation calculée sur des médianes par classe donnait $-0{,}98$
+      là où les paires brutes donnent $-0{,}52$~: c'est le chiffre brut qui est
+      cité.
+\end{itemize}
+
+\chapter{Conclusion et perspectives}
+
+\section{Ce qui a été obtenu}
+
+\begin{enumerate}[itemsep=4pt]
+\item \textbf{L'ensemble efficace complet $\E$}, et non le seul front, grâce au
+      théorème~\ref{th:tranche} et sans payer de test d'efficacité sur un point
+      de tranche.  C'est ce que le projet attendait~: un ensemble de solutions
+      efficaces engendré par les algorithmes proposés --- et il est livré
+      \emph{complet} là où le projet n'en demandait qu'un sous-ensemble.
+\item \textbf{Une hybridation exacte--métaheuristique qui paie}~: $1{,}36\times$
+      sur $120$ instances, plus rapide sur $116$, $1{,}39\times$ sur des
+      critères fractionnaires, et un gain dans chacune des cinq familles.
+\item \textbf{L'élimination des variables de tranche}~: le plus grand gain
+      unitaire du travail, $49\times$ médian.
+\item \textbf{La classe de décision admissible} (théorème~\ref{th:admissible})~:
+      un $\E$ explicite accepte toute fonction calculable, là où les méthodes
+      existantes exigent une forme de rapport.  C'est le résultat que l'on
+      défendrait en premier, car il ne porte pas sur la vitesse mais sur les
+      problèmes que l'on peut poser.
+\item \textbf{L'évaluation des performances} demandée par le projet~: de
+      $1{,}52\times$ à $14{,}57\times$ selon $p$, avec une censure unilatérale
+      en faveur de la méthode comparée et des optima identiques.
+\end{enumerate}
+
+\section{Perspectives}
+
+\begin{itemize}[itemsep=3pt]
+\item \textbf{Comparaison avec les mises en {\oe}uvre des auteurs} sur leurs
+      instances de référence.  La comparaison menée ici isole la différence
+      algorithmique~; celle-là mesurerait l'écart de bout en bout.
+\item \textbf{Élargissement du domaine de fonctionnement.}  Les deux quantités
+      qui le gouvernent étant identifiées --- $|F|$ et $n-p$ --- une réduction
+      du coût de l'énumération du front élargirait directement le domaine.
+\item \textbf{Critères à ensembles de niveau non affines.}  La machinerie de
+      tranche s'étend à toute réunion finie de polyèdres, ce qui couvre déjà
+      $|c^{\top}x+a|/(d^{\top}x+b)$ et les critères minimax~; l'énumération du
+      front reste à étendre pour que ces classes soient traitées de bout en
+      bout.
+\item \textbf{Revue bibliographique complète}, incluant la lecture intégrale
+      des sources citées au chapitre~\ref{ch:etat}.
+\end{itemize}
+
+\end{document}
