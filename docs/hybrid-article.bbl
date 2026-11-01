@@ -1,11 +1,5 @@
 \begin{thebibliography}{10}
 
-\bibitem{benson1978}
-Harold~P. Benson.
-\newblock Existence of efficient solutions for vector maximization problems.
-\newblock {\em Journal of Optimization Theory and Applications},
-  26(4):569--580, 1978.
-
 \bibitem{balancedbox}
 Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
 \newblock A criterion space search algorithm for biobjective integer
@@ -26,7 +20,7 @@ Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
   2017.
 
 \bibitem{chaiblaine2020}
-Yacine Chaiblaine, Mustapha Moula{\"\i}, and Y.~Cherfaoui.
+Yacine Chaiblaine, Mustapha Moula{\"\i}, and Yasmine Cherfaoui.
 \newblock An exact method for optimizing two linear fractional functions over
   the efficient set of a multiobjective integer linear fractional program.
 \newblock arXiv:2003.05364 [math.OC], 2020.
@@ -36,6 +30,13 @@ Yasmine Cherfaoui and Mustapha Moula{\"\i}.
 \newblock Generating the efficient set of multiobjective integer linear plus
   linear fractional programming problems.
 \newblock {\em Annals of Operations Research}, 296(1):735--753, 2021.
+
+\bibitem{cherguimoulai2008}
+Mohamed El-Amine Chergui and Mustapha Moula{\"\i}.
+\newblock An exact method for a discrete multiobjective linear fractional
+  optimization.
+\newblock {\em Journal of Applied Mathematics and Decision Sciences},
+  2008:760191, 2008.
 
 \bibitem{drici2018}
 Wassila Drici, Fatma~Zohra Oua{\"\i}l, and Mustapha Moula{\"\i}.
@@ -63,8 +64,8 @@ Sara Mahdi and Djamal Chaabane.
 \newblock A linear fractional optimization over an integer efficient set.
 \newblock {\em RAIRO-Operations Research}, 49(2):265--278, 2015.
 
-\bibitem{mekhilef2021}
-Amal Mekhilef and Mustapha Moula{\"\i}.
+\bibitem{moulai2021}
+Mustapha Moula{\"\i} and Amal Mekhilef.
 \newblock Quadratic optimization over a discrete {P}areto set of a
   multi-objective linear fractional program.
 \newblock {\em Optimization}, 70(7):1425--1442, 2021.

@@ -13,10 +13,14 @@
 % left out rather than invented: an invented page range is worse than a
 % missing one, because it looks checkable.
 %
-% Status: 13 of the 14 entries carry a full record with a DOI where one
-% exists.  Three carry a VERIFY line naming one unsettled field.  One is
-% UNRESOLVED -- and it is the paper this implementation follows, so it is
-% the one that most needs your own copy.
+% Status: FIVE of these are now READ IN FULL, not indexed -- the whole
+% fractional-criterion line (mahdi2015, drici2018, ouail2019,
+% chaiblaine2020, moulai2021), supplied by the user.  Reading them cleared
+% every VERIFY marker this file carried.  Sixteen of the seventeen entries
+% now have a full record with a DOI where one exists.
+%
+% ONE remains UNRESOLVED: younsiabbaci2025, the paper this implementation
+% follows.  It is the one that most needs your own copy.
 %
 % Before submission: open each DOI once.  That is the step no index
 % replaces.
@@ -64,10 +68,12 @@
 
 % ===== The fractional-objective line: all decision space ===================
 
-% RESOLVED.  The author list is confirmed by reference [13] of ouail2019,
-%   read in full: "Wassila Drici, Fatma Zohra Ouail, Mustapha Moula" -- three
-%   authors, by co-authors of the second.  (That list dates it 2017, the
-%   online-first year; the issue is 2018.)
+% READ IN FULL (17 pages).  Decision space: X_{l+1} = {x in X_l :
+%   sum_{j in H_l} x_j >= 1}.  Cuts with the SINGLE-ROW efficient cut it
+%   attributes to Chergui and Moulai (2008) -- no binaries, no big-M.  Does
+%   not enumerate the efficient set: the paper reports listing at most 19%
+%   of it at r=3, 3% at r=5, 0.9% at r=8.  Scale n to 40, m to 25, MATLAB.
+%   Author list confirmed from the title page: three authors.
 @article{drici2018,
   author  = {Drici, Wassila and Oua{\"\i}l, Fatma Zohra and
              Moula{\"\i}, Mustapha},
@@ -81,11 +87,13 @@
   doi     = {10.1007/s10479-017-2691-0}
 }
 
-% PROVENANCE: authors, volume, issue, pages and DOI from the journal's own
-%   landing page (article ro140036), the NUMDAM record and OpenAlex, and
-%   corroborated field for field by reference [12] of ouail2019, read in
-%   full.  Online 18 December 2014.  An earlier draft of this file had no
-%   author list for this entry at all.
+% READ IN FULL (14 pages).  Decision space -- and the ONE paper of the five
+%   that cuts as the method reimplemented here does: it brings together
+%   "Sylva and Crema's cuts", with binaries y_i in {0,1} and sum y_i >= 1.
+%   So the big-M cost model is not a straw man; it is simply not the whole
+%   family.  Scale n to 80, m to 20, MATLAB.  Authors, volume, issue, pages
+%   and DOI read off the offprint's own header.  An earlier draft of this
+%   file had no author list for this entry at all.
 @article{mahdi2015,
   author  = {Mahdi, Sara and Chaabane, Djamal},
   title   = {A linear fractional optimization over an integer efficient set},
@@ -114,16 +122,22 @@
   year         = {2019}
 }
 
-% The two-decision-function problem, solved in decision space with branch
-% and bound plus cuts.
+% READ IN FULL (20 pages, arXiv v1).  The two-decision-function problem,
+%   decision space: X_l carried as constraints on x, branching on
+%   x_r <= floor / x_r >= ceil, and TWO single-row efficient cuts
+%   sum_{j in H_l} x_j >= 1 and sum_{j in H'_l} x_j >= 1 -- no binaries.
+%   Its efficiency test linearises the ratio exactly as our e_row does,
+%   (c^i - Z_i(x*)d^i)x - w_i = Z_i(x*)d_0 - c_0, which is our e_k divided
+%   by D_k(x*): the linearisation is standard in this school, the integer
+%   SCALING that turns "> 0" into ">= 1" is not.  Uses CPLEX 12.9 under
+%   MATLAB; scale to n=80, m=160.  Its tables give |XE| directly: about
+%   22-38 at r=3 and 40-150 at r=5.
 %
-% VERIFY THE THIRD AUTHOR'S GIVEN NAME.  A citing paper gives the list as
-%   Y. Chaiblaine, M. Moulai, Y. Cherfaoui; the initial is almost certainly
-%   Yasmine, as in cherfaoui2021, but no index spells it out.  Submitted
-%   11 March 2020.
+% RESOLVED: the third author is Yasmine Cherfaoui, from the title page
+%   (the LaROMaD address ycherfaoui at usthb.dz) -- the same author as cherfaoui2021.
 @misc{chaiblaine2020,
   author       = {Chaiblaine, Yacine and Moula{\"\i}, Mustapha and
-                  Cherfaoui, Y.},
+                  Cherfaoui, Yasmine},
   title        = {An exact method for optimizing two linear fractional
                   functions over the efficient set of a multiobjective
                   integer linear fractional program},
@@ -131,12 +145,15 @@
   year         = {2020}
 }
 
-% VERIFY THE AUTHOR ORDER.  The Taylor & Francis listing names both authors;
-%   one summary gives Moulai first and a citing reference list gives
-%   Mekhilef first.  Volume, issue and DOI are from the publisher's landing
-%   page; the page range comes from citing papers.  Online 28 February 2020.
-@article{mekhilef2021,
-  author  = {Mekhilef, Amal and Moula{\"\i}, Mustapha},
+% READ IN FULL (19 pages).  Decision space: X_{l+1} = {x in X_l :
+%   sum x_j >= 1}, the same single-row efficient cut.  No binaries.
+%
+% RESOLVED: the author order is Moulai then Mekhilef, from the publisher's
+%   own "To cite this article" line on page 1 of the offprint: "Mustapha
+%   Moulai & Amal Mekhilef (2020)".  Accepted 7 February 2020, online
+%   28 February 2020.  The page range still comes from citing papers.
+@article{moulai2021,
+  author  = {Moula{\"\i}, Mustapha and Mekhilef, Amal},
   title   = {Quadratic optimization over a discrete {P}areto set of a
              multi-objective linear fractional program},
   journal = {Optimization},
@@ -265,6 +282,20 @@
   doi     = {10.1007/BF01580453}
 }
 
+
+% PROVENANCE: the cited record is identical in four of the five papers read
+%   (Drici et al., Ouail & Chergui, Chaiblaine et al., Moulai & Mekhilef),
+%   which all attribute the single-row efficient cut to it.  Open access.
+@article{cherguimoulai2008,
+  author  = {Chergui, Mohamed El-Amine and Moula{\"\i}, Mustapha},
+  title   = {An exact method for a discrete multiobjective linear fractional
+             optimization},
+  journal = {Journal of Applied Mathematics and Decision Sciences},
+  volume  = {2008},
+  pages   = {760191},
+  year    = {2008},
+  doi     = {10.1155/2008/760191}
+}
 
 % ===== The efficiency test, attributed precisely ===========================
 % Our one-program test -- max sum_k e_k subject to e_k >= 0 -- is the form the

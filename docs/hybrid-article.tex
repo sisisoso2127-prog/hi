@@ -1904,75 +1904,95 @@ efficient set has a sustained literature --- Drici, Oua\"il and
 Moula\"i~\cite{drici2018}, Mahdi and Chaabane~\cite{mahdi2015}, Oua\"il and
 Chergui~\cite{ouail2019}, Chaiblaine, Moula\"i and
 Cherfaoui~\cite{chaiblaine2020}, the quadratic objective of Mekhilef and
-Moula\"i~\cite{mekhilef2021}, and the method this implementation
+Moula\"i~\cite{moulai2021}, and the method this implementation
 follows~\cite{younsiabbaci2025} --- and all of them search decision space
 with branch and bound or cutting planes.
 
-\paragraph{One of them has now been read in full, and it sharpens this in
-two directions.}
-Oua\"il and Chergui~\cite{ouail2019} optimise a hyperbolic criterion over
-the integer efficient set of a MOILFP.  The family claim survives contact
-with it: the unexplored region is $X_l$, a subset of $X$ carried as
-\emph{constraints on $x$}; branching is on $x_j \leqslant \lfloor
-\alpha_j \rfloor$ and $x_j \geqslant \lfloor \alpha_j \rfloor + 1$; and both
-cut families are linear inequalities in $x$.  Decision space, confirmed from
-the algorithm rather than from an abstract.
+\paragraph{All five have now been read in full, and the claim survives
+intact.}
+Not one of them works in criterion space.  In every case the unexplored
+region is $X_l$, a subset of $X$ carried as \emph{constraints on $x$};
+branching is on $x_r \leqslant \lfloor x_r^* \rfloor$ and
+$x_r \geqslant \lceil x_r^* \rceil$; and the cuts are linear inequalities in
+$x$.  This is now a reading of five algorithms rather than of five abstracts.
 
-The \emph{cost model} does not survive unqualified, and this is a correction
-to what an earlier draft of this paper asserted.  Their cut of type~I is the
-single row
-\[
-  \sum_{j \in \Delta_l} x_j \;\geqslant\; 1 ,
-\]
-over the improving nonbasic directions $\Delta_l$ of the current tableau,
-with a bound cut $\psi(x) \geqslant \psi_{\mathrm{opt}}$ beside it:
-\textbf{no binaries and no big-$M$ anywhere}.  Their efficiency test is
-Benson's program $(Q)$~\cite{benson1978}, not Isermann's.  So ``$p$ binaries
-and $p+1$ big-$M$ rows per cut'' describes the method reimplemented and
-compared here --- and the Sylva--Crema construction generally --- but
-\textbf{not the decision-space family as a whole}.  Every cost comparison in
-Section~\ref{sec:results} should be read with that scope.
+\begin{table}[h]
+\centering
+\caption{The fractional line, read rather than indexed.  The region is
+$X_l \subseteq \R^n$ in all five.}
+\label{tab:read}
+\small
+\begin{tabular}{llcc}
+\toprule
+paper & cut on the region & binaries & enumerates $\E$ \\
+\midrule
+Mahdi \& Chaabane~\cite{mahdi2015}       & Sylva--Crema disjunction          & \textbf{yes} & no \\
+Drici et al.~\cite{drici2018}            & $\sum_{j \in H_l} x_j \geqslant 1$ & no & no \\
+Oua\"il \& Chergui~\cite{ouail2019}      & $\sum_{j \in \Delta_l} x_j \geqslant 1$ & no & no \\
+Chaiblaine et al.~\cite{chaiblaine2020}  & two such rows                      & no & no \\
+Moula\"i \& Mekhilef~\cite{moulai2021}   & $\sum_{j} x_j \geqslant 1$         & no & no \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\paragraph{And their reported scale is well beyond ours.}
-They report instances at $n = 30$ to $120$ variables, $m$ up to $120$
-constraints and $k$ up to $6$ criteria, with mean CPU times from $13$ to
-roughly $2000$ seconds in MATLAB on a Pentium~4, and one run at $n = 200$
-finishing in $35801$\,s.  The operating range measured in
-Section~\ref{sec:walls} for the method here is $n \leqslant 16$.  That gap
-is real and is not argued away.
+\paragraph{The cost model, corrected.}
+An earlier draft of this paper wrote that a decision-space cut costs $p$
+binaries and $p+1$ big-$M$ rows, of the family.  Table~\ref{tab:read} shows
+that is true of \emph{one} of the five.  The other four cut with a single
+row over the improving nonbasic directions of the current tableau, which
+they attribute to Chergui and Moula\"i~\cite{cherguimoulai2008}: no binaries
+and no big-$M$ anywhere.  The method reimplemented here uses the
+Sylva--Crema construction, as does Mahdi and Chaabane, so every comparison
+in Section~\ref{sec:results} is against that cut and is stated as such ---
+but \textbf{the growing model is a property of one branch of this
+literature, not of decision space}.
 
-What it is \emph{not} is a like-for-like comparison, because the deliverables
-differ.  Their method is explicitly built so as not to enumerate the
-efficient set --- ``only a few of them are visited'' --- and their tables bear
-that out: a mean of $3.8$ to $15.6$ efficient solutions found per instance,
-while they cite a figure of about $100$ efficient solutions on average at
-$n=25$, $m=10$, $k=4$ for the same problem class.  They return
-$\max \psi$.  The method here returns the whole of $\E$, and with it the
-answer to \emph{any} computable decision function
-(Section~\ref{sec:admissible}) --- which is the deliverable the admissible
-class is about, and the one that costs the range.
+\paragraph{And what is ours in $e_k$ is narrower than it looked.}
+The efficiency test of Chaiblaine et al.\ linearises the ratio as
+$(c^i - Z_i(x^*)d^i)^{\top}x - w_i = Z_i(x^*)d^i_0 - c^i_0$, which is
+\eqref{eq:ek} divided by the positive scalar $D_i(x^*)$.  The
+\emph{linearisation} is therefore standard in this school and is not claimed
+here.  What is claimed is the integer \emph{scaling}: after the data are
+scaled to integers, $e_k$ is integer-valued, so
+$Z_k(x) > Z_k(x^*) \iff e_k \geqslant 1$ holds exactly and no minimal step
+has to be estimated.  That is a smaller claim than the earlier drafts
+implied, and it is the correct one.
 
-Both statements are true at once, and the honest summary is that this
-method buys a larger deliverable at a smaller $n$.  Closing the gap on the
-optimisation task alone would need the front enumeration to get cheaper,
-which Section~\ref{sec:walls} identifies as one of the two binding
-quantities.  So what is plausibly
-unaddressed is narrower than the method: the \emph{combination}, together with
-what makes the transfer exact rather than approximate --- the integer-valued
-$e_k$ of \eqref{eq:ek}, which replaces an estimated minimal step by
-$e_k \geqslant 1$ exactly, and the slice results of Section~\ref{sec:complete}
---- and what that combination then buys, which is the admissible class of
-Section~\ref{sec:admissible}.  That last point is the one we would defend
-first, because it does not rest on being the fastest at anything: it is a
-statement about which problems can be posed at all.
+\paragraph{Their reported scale is beyond ours, with one caveat that is not
+an excuse.}
+Oua\"il and Chergui report $n$ up to $120$ variables (one run at $n=200$),
+Mahdi and Chaabane and Chaiblaine et al.\ up to $n=80$, Drici et al.\ up to
+$n=40$; CPU times run from seconds to roughly $2000$\,s.  The operating
+range measured in Section~\ref{sec:walls} for the method here is
+$n \leqslant 16$.  That gap is real and is reported, not argued away.
+
+Two things qualify it without closing it.  The \emph{implementations}
+differ: Chaiblaine et al.\ solve their sub-programs with CPLEX~12.9, while
+everything here runs on a dependency-free simplex in exact rational
+arithmetic, which is a deliberate correctness choice with a large constant
+factor attached.  And the \emph{deliverables} differ: all five are built so
+as not to enumerate the efficient set --- Drici et al.\ report listing at
+most $19\%$ of it at three criteria and $0.9\%$ at eight; Oua\"il and
+Chergui visit a mean of $3.8$ to $15.6$ efficient solutions --- and return
+one optimum, where the method here returns all of $\E$ and with it the
+answer to any computable decision function (Section~\ref{sec:admissible}).
+Chaiblaine et al.\ are the useful calibration, because their tables give
+$|\E|$ directly: about $22$--$38$ at three criteria and $40$--$150$ at five.
+
+The honest summary is that this method buys a larger deliverable at a
+smaller $n$, on an implementation that trades constant factors for
+exactness.  Closing the gap on the optimisation task alone would need the
+front enumeration to get cheaper, which Section~\ref{sec:walls} identifies
+as one of the two binding quantities.
 
 \textbf{This is a statement about what we did and did not find, not a claim of
-novelty}, and two limits are worth naming.  \emph{One} full text in that list
-has been read, the one discussed above; the rest was assembled from abstracts
-and bibliographic records, so a method an abstract calls ``branch and bound''
-may do something in criterion space the abstract does not mention.  That the
-one paper read confirmed the family claim \emph{and} refuted a cost model
-stated about the family is the reason the remaining five matter.  And one paper bears directly on the complete-set
+novelty}, and one limit is worth naming.  The five papers above have been
+read in full; the base method~\cite{younsiabbaci2025} and
+Cherfaoui and Moula\"i~\cite{cherfaoui2021} have not, and the second is the
+one that bears on Section~\ref{sec:complete}.  Reading the five confirmed
+the family claim and refuted a cost model this work had stated about the
+family, which is a fair estimate of what the remaining two could still
+change.  And one paper bears directly on the complete-set
 result of Section~\ref{sec:complete} and must be read before it is called
 new: Cherfaoui and Moula\"i~\cite{cherfaoui2021}, whose relation to this work
 is argued from its problem class in

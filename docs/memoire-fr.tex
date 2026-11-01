@@ -155,34 +155,89 @@ au-dessus d'un ensemble efficace entier appartient à cette famille~: Drici,
 Ouaïl et Moulaï~\cite{drici2018}, Mahdi et Chaabane~\cite{mahdi2015}, Ouaïl
 et Chergui pour le cas hyperbolique~\cite{ouail2019}, Chaiblaine, Moulaï et
 Cherfaoui pour deux fonctions fractionnaires~\cite{chaiblaine2020}, Mekhilef
-et Moulaï pour un objectif quadratique~\cite{mekhilef2021}, ainsi que la
+et Moulaï pour un objectif quadratique~\cite{moulai2021}, ainsi que la
 méthode dont cette mise en {\oe}uvre est issue~\cite{younsiabbaci2025}.
+
+\paragraph{Les cinq ont été lues intégralement, et la famille tient.}
+Aucune des cinq ne travaille dans l'espace des critères~: dans chacune, la
+région non explorée est $X_l$, partie de $X$ portée par des
+\emph{contraintes sur $x$}, le branchement se fait sur
+$x_r \leqslant \lfloor x_r^* \rfloor$ et $x_r \geqslant \lceil x_r^* \rceil$,
+et les coupes sont des inégalités linéaires en $x$.  C'est désormais une
+lecture de cinq algorithmes et non de cinq résumés.
+
+\begin{table}[h]
+\centering
+\caption{La ligne fractionnaire, lue et non indexée.  La région est
+$X_l \subseteq \mathbb{R}^n$ dans les cinq.}
+\label{tab:lues}
+\small
+\begin{tabular}{llcc}
+\toprule
+article & coupe sur la région & binaires & énumère $\E$ \\
+\midrule
+Mahdi \& Chaabane~\cite{mahdi2015}       & disjonction de Sylva--Crema        & \textbf{oui} & non \\
+Drici et al.~\cite{drici2018}            & $\sum_{j \in H_l} x_j \geqslant 1$ & non & non \\
+Oua\"il \& Chergui~\cite{ouail2019}      & $\sum_{j \in \Delta_l} x_j \geqslant 1$ & non & non \\
+Chaiblaine et al.~\cite{chaiblaine2020}  & deux lignes de ce type             & non & non \\
+Moula\"i \& Mekhilef~\cite{moulai2021}   & $\sum_{j} x_j \geqslant 1$         & non & non \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Mais la famille n'a pas une seule coupe, et la distinction
 importe.}
 La coupe de Sylva--Crema~\cite{sylvacrema} supprime
 $\{x : \Z(x) \leqslant \Z(\tilde x)\}$ ; comme il s'agit d'une disjonction,
 elle s'exprime par $p$ variables binaires et $p+1$ contraintes de type
-grand-$M$, et c'est elle qu'emploie la méthode reprise ici.  \textbf{Ce n'est
-pas la seule.}  Ouaïl et Chergui~\cite{ouail2019} --- le seul article de
-cette liste que nous ayons lu intégralement --- n'utilisent aucune variable
-binaire~: leur coupe est la ligne unique
+grand-$M$.  C'est la coupe de la méthode reprise ici --- et celle de Mahdi
+et Chaabane, \emph{une} des cinq.  \textbf{Les quatre autres} coupent par la
+ligne unique
 \[
-  \sum_{j \in \Delta_l} x_j \;\geqslant\; 1 ,
+  \sum_{j \in H_l} x_j \;\geqslant\; 1 ,
 \]
-où $\Delta_l$ est l'ensemble des directions non basiques améliorantes du
-tableau courant, complétée d'une borne $\psi(x) \geqslant \psi_{\text{opt}}$,
-et leur test d'efficacité est le programme $(Q)$ de Benson~\cite{benson1978}
-et non celui d'Isermann~\cite{isermann1974} que l'on retrouve ici --- dont
-Ecker et Kouada~\cite{eckerkouada} fournissent la propriété utilisée au
-chapitre~\ref{ch:contrib}, à savoir que le maximiseur du test est lui-même
-efficace dans le cas linéaire.
+où $H_l$ est l'ensemble des directions non basiques améliorantes du tableau
+courant, coupe qu'elles attribuent toutes à Chergui et
+Moula\"i~\cite{cherguimoulai2008}~: aucune binaire, aucun grand-$M$.
 
-\textbf{Conséquence pour les comparaisons du chapitre~\ref{ch:resultats}}~: le
-modèle de coût en $p$ binaires et $p+1$ lignes décrit la méthode
-\emph{reprise ici}, non la famille entière.  Une méthode de l'espace des
-décisions dont la coupe est une seule ligne ne paie pas cette croissance~;
-elle en paie une autre, puisqu'elle n'énumère jamais $\E$.
+Le test d'efficacité employé ici est celui d'Isermann~\cite{isermann1974},
+dont Ecker et Kouada~\cite{eckerkouada} fournissent la propriété utilisée au
+chapitre~\ref{ch:contrib} --- le maximiseur du test est lui-même efficace
+dans le cas linéaire~; Oua\"il et Chergui emploient plutôt le programme
+$(Q)$ de Benson~\cite{benson1978}.
+
+\textbf{Conséquence pour les comparaisons du chapitre~\ref{ch:resultats}}~:
+le modèle de coût en $p$ binaires et $p+1$ lignes décrit la méthode
+\emph{reprise ici}, non la famille entière.  Toutes les mesures du
+chapitre~\ref{ch:resultats} comparent à cette coupe-là, et le disent.
+
+\paragraph{Et ce qui nous revient dans $e_k$ est plus étroit qu'il n'y
+paraissait.}
+Le test d'efficacité de Chaiblaine et al.\ linéarise le rapport en
+$(c^i - Z_i(x^*)d^i)^{\top}x - w_i = Z_i(x^*)d^i_0 - c^i_0$, soit
+$e_k$ divisé par le scalaire positif $D_i(x^*)$.  \emph{La linéarisation est
+donc standard dans cette école} et n'est pas revendiquée ici.  Ce qui l'est,
+c'est la \textbf{mise à l'échelle entière}~: une fois les données entières,
+$e_k$ est à valeurs entières, donc
+$Z_k(x) > Z_k(x^*) \iff e_k \geqslant 1$ exactement, sans estimer de pas
+minimal.  C'est une revendication plus étroite que ne le laissaient entendre
+les versions antérieures, et c'est la bonne.
+
+\paragraph{Leur échelle dépasse la nôtre, et deux réserves ne l'effacent
+pas.}
+Oua\"il et Chergui rapportent $n$ jusqu'à $120$ variables (un essai à
+$n=200$), Mahdi et Chaabane ainsi que Chaiblaine et al.\ jusqu'à $n=80$,
+Drici et al.\ jusqu'à $n=40$.  Le domaine mesuré au
+chapitre~\ref{ch:resultats} est $n \leqslant 16$.  \textbf{L'écart est réel
+et il est rapporté tel quel.}  Les \emph{implémentations} diffèrent
+(Chaiblaine et al.\ résolvent par CPLEX~12.9~; tout ici repose sur un
+simplexe sans dépendance en arithmétique rationnelle exacte, choix de
+correction au prix d'un facteur constant), et les \emph{livrables} diffèrent
+--- les cinq sont construites pour \emph{ne pas} énumérer l'ensemble
+efficace, Drici et al.\ n'en listant au plus que $19\%$ à trois critères,
+et renvoient un optimum, là où la méthode d'ici renvoie tout $\E$ et avec
+lui n'importe quelle fonction de décision calculable.  En résumé~: un
+livrable plus grand, à un $n$ plus petit.
 
 \paragraph{L'espace des critères.}
 La région non explorée est maintenue dans l'espace des valeurs des critères,

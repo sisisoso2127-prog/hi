@@ -30,11 +30,13 @@ where they keep the unexplored part of the problem, and that decides the cost:
 \item[decision space] truncates $\Dset$ with Sylva--Crema cuts.  Each cut is a
   disjunction, so it costs $p$ binaries and $p+1$ big-$M$ rows, and every
   sub-problem is strictly larger than the last.  \emph{This is the cut of the
-  method reimplemented here, not of every decision-space method}: Oua\"il and
-  Chergui, the one paper in this literature read in full, cut instead with
-  the single row $\sum_{j \in \Delta_l} x_j \geqslant 1$ over the improving
-  nonbasic directions --- no binaries, no big-$M$.  Every figure below
-  compares against the Sylva--Crema construction.
+  method reimplemented here, not of every decision-space method.}  Of the
+  five papers in this literature now read in full, one (Mahdi and Chaabane)
+  cuts this way and four cut instead with the single row
+  $\sum_{j \in H_l} x_j \geqslant 1$ over the improving nonbasic
+  directions --- no binaries, no big-$M$.  Every figure below compares
+  against the Sylva--Crema construction, and the growing model is a property
+  of that branch of the literature rather than of decision space.
 \item[criterion space] keeps a list of boxes in $\R^p$.  The same truncation is
   a box subtraction; every sub-problem is $\Dset$ plus a few ordinary rows, and
   \textbf{the model never grows}.

@@ -134,9 +134,11 @@ print(front.report())
 
 `enumerate_nondominated` already did this, but **in decision space** — Sylva–Crema
 cuts, `p` binaries and `p+1` big-M rows per cut, the model growing all the way.
-(That is the cut of the method reimplemented here. Ouail & Chergui, the one
-paper in this literature read in full, cut with a single row and no binaries at
-all — the cost model is about *this* decision-space method, not the family.)
+(That is the cut of the method reimplemented here. Of the five papers in this
+literature now read in full, only Mahdi & Chaabane cut this way; the other four
+use a single row `sum_{j in H_l} x_j >= 1` with no binaries at all, after
+Chergui & Moulai 2008. The cost model is about *this* decision-space method,
+not the family. None of the five works in criterion space — that claim held.)
 That is the cost profile this whole package exists to avoid, and the same
 substitution works on enumeration:
 
