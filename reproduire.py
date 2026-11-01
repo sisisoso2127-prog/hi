@@ -33,6 +33,22 @@ CE QU'IL NE FAIT PAS. Comparer. Il produit les journaux ; la comparaison
 au texte publie reste un travail de lecture, que `check_sensib.py`
 n'automatise que pour un seul tableau sur soixante.
 
+DEUX TESTS QUI DECLASSENT UN JOURNAL. Appliques le 31/10 a chaque entree,
+ils ont declasse quatre journaux qui passaient pour bons :
+
+  1. L'en-tete de protocole que le banc s'ecrit a lui-meme contredit-il
+     la legende du tableau publie ? (bench_determin : « 23/23 instances »
+     contre 90 publiees ; bench_cglp : colonne « gr » a la seule graine 1
+     contre trois declarees.)
+  2. Le journal porte-t-il les lignes que le banc imprime AUJOURD'HUI ?
+     Un journal sans la ligne « configuration mesuree » que son banc
+     produit desormais est anterieur a son propre code, et ne certifie
+     donc rien de la configuration courante. (bench_cglp,
+     bench_litterature, bench_zm.)
+
+Le second test ne regarde pas les chiffres : il regarde si le journal
+pouvait avoir ete produit par le code qui le revendique.
+
 ETAT DE VERIFICATION. La colonne `etat` de chaque entree dit ce qui a ete
 etabli, et il faut la lire litteralement :
 
@@ -46,7 +62,10 @@ etabli, et il faut la lire litteralement :
             donc PAS une reproduction du tableau, et ce fichier le rejoue
             d'office -- sans attendre --refaire, car un journal perime
             saute silencieusement est precisement le piege que ce fichier
-            existe pour supprimer.
+            existe pour supprimer. Une fois rejoue, un temoin
+            results/<nom>.rejoue est pose : l'entree n'est plus rejouee et
+            son etiquette est a corriger a la main. Sans ce temoin une
+            boucle de reprise la rejouerait sans fin.
 
 Usage :  python reproduire.py              tout ce qui manque
          python reproduire.py --liste      n'execute rien, montre l'etat
@@ -163,10 +182,11 @@ ENTREES: List[Entree] = [
     # entiers, jusqu'a 20 coupes generees ». Les defauts du banc valent
     # 900, 60 coupes et UNE graine : trois ecarts, pas un.
     Entree("bench_cglp", "bench_cglp.py", ["300", "20"],
-           "tab:cglp", "declare",
-           "tab:cglp : plafond 300, 20 coupes, TROIS graines. Les defauts "
-           "du banc (900, 60, une graine) ne le produisent pas. "
-           "tab:cglp900 est le meme banc a 900 : entree bench_cglp900.",
+           "tab:cglp", "perime",
+           "sa colonne « gr » ne contient que la graine 1, six lignes ; "
+           "tab:cglp en declare TROIS. Le journal n'a pas non plus la "
+           "ligne « configuration mesuree » que le banc imprime "
+           "aujourd'hui : il est anterieur au code",
            {"CGLP_GRAINES": "1,2,3"}),
     Entree("bench_cglp900", "bench_cglp.py", ["900", "20"],
            "tab:cglp900", "declare",
@@ -174,8 +194,11 @@ ENTREES: List[Entree] = [
            "le reste inchange : trois graines »",
            {"CGLP_GRAINES": "1,2,3"}),
     Entree("bench_litterature", "bench_litterature.py", [],
-           "tab:drici", "declare",
-           "defaut = publie : plafond 1500, 10 instances par taille"),
+           "tab:drici", "perime",
+           "les arguments sont bons (defaut = publie : plafond 1500, 10 "
+           "instances par taille) mais le journal n'a pas la ligne "
+           "« configuration mesuree » que le banc imprime aujourd'hui : "
+           "il est anterieur au code et ne certifie pas la configuration"),
     # Verifie le 31/10 contre l'en-tete du journal : « 24 instances,
     # notre plafond : 400 ». Le defaut du banc est 20 instances.
     #
@@ -187,8 +210,10 @@ ENTREES: List[Entree] = [
     # une confrontation cellule par cellule : si elle infirme ce
     # rapprochement, c'est elle qui tranche.
     Entree("bench_zm", "bench_zm.py", ["24", "400"],
-           "terrain Zerdani & Moulai, tab:match (reattribue)", "declare",
-           "le journal annonce 24 instances ; le defaut du banc en joue 20"),
+           "terrain Zerdani & Moulai, tab:match (reattribue)", "perime",
+           "le defaut du banc joue 20 instances et le journal en annonce "
+           "24 ; et ce journal n'a pas la ligne « configuration mesuree » "
+           "que le banc imprime aujourd'hui : anterieur au code"),
     Entree("bench_scale", "bench_scale.py", [], "lot d'echelle",
            "declare", "defaut = publie : budget 30 s par methode"),
     Entree("bench_quality", "bench_quality.py", [], "", "declare",
@@ -306,11 +331,18 @@ def main() -> int:
 
     for e in ENTREES:
         cible = JOURNAUX / f"{e.nom}.out"
+        temoin = JOURNAUX / f"{e.nom}.rejoue"
+        perime_a_refaire = e.etat == "perime" and not temoin.exists()
         if cible.exists() and cible.stat().st_size > 0 \
-                and e.nom not in refaire and e.etat != "perime":
-            print(f"### {e.nom} : deja archive, passe")
+                and e.nom not in refaire and not perime_a_refaire:
+            if e.etat == "perime":
+                print(f"### {e.nom} : etait perime, deja rejoue avec les "
+                      f"bons arguments -- RELIRE l'etat de cette entree, "
+                      f"elle n'est plus perimee")
+            else:
+                print(f"### {e.nom} : deja archive, passe")
             continue
-        if e.etat == "perime" and cible.exists():
+        if perime_a_refaire and cible.exists():
             print(f"### {e.nom} : journal PERIME (produit avec d'autres "
                   f"arguments), on rejoue", flush=True)
         pre = "".join(f"{k}={v} " for k, v in sorted(e.env.items()))
@@ -318,6 +350,14 @@ def main() -> int:
         print(f"### {e.nom} [{e.etat}] : {cmd}", flush=True)
         code = joue(e, delai, tmp)
         print(f"### {e.nom} : code={code}", flush=True)
+        if e.etat == "perime" and code == 0:
+            # Le journal perime vient d'etre remplace : sans ce temoin,
+            # une boucle de reprise le rejouerait sans fin, puisque
+            # l'etiquette decrit le journal et non ce qui a ete fait.
+            temoin.write_text(
+                f"rejoue avec : {' '.join(e.args)}\n"
+                f"l'etat « perime » de cette entree est a mettre a jour.\n",
+                encoding="utf-8")
     print("### TOUTES LES ENTREES TRAITEES")
     return 0
 
