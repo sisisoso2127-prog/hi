@@ -438,6 +438,137 @@ $0{,}833$.  Cet écart représente l'essentiel de l'écart entre les deux ordres
 nommés.
 
 
+
+\chapter{Exemples numériques illustrés}
+\label{ch:exemples}
+
+Les deux exemples de ce chapitre sont de taille volontairement réduite, afin
+que chaque étape soit vérifiable à la main.  Ils montrent deux choses qu'un
+tableau ne montre pas~: que le maximiseur sans contrainte de $\Phi$ est dominé,
+et que l'optimum est atteint par un chemin qu'une mise en {\oe}uvre naïve
+manquerait.
+
+\section{Exemple A~: l'instance publiée, \texorpdfstring{$n=2$}{n=2}}
+
+\[
+  \Dset = \{x \in \mathbb{Z}^2_+ :\ -2x_1 + x_2 \leqslant 0,\
+  6x_1 + x_2 \leqslant 21,\ -2x_1 + 4x_2 \leqslant 6\}
+\]
+avec $\Z(x) = (x_1 - 2x_2,\ -x_1 + 4x_2)$ et
+$\Phi(x) = (x_1 + x_2 - 1)/(5x_1 + x_2 - 1)$.
+
+$\Dset$ compte $11$ points, dont $7$ efficaces, et la méthode conclut en $5$
+sous-problèmes.  \textbf{L'optimum est $\Phi^{*} = 5/17$ en $(3,3)$}, alors que
+le maximiseur libre de $\Phi$ est $(0,0)$ avec $\Phi = 1$ --- lequel est
+dominé.  Le test d'efficacité n'est donc pas une formalité sur cette instance~:
+il fait la différence entre une réponse et un nombre plausible mais faux.
+
+\begin{center}
+\fig{a-decision}
+\end{center}
+
+\subsection*{Étape 1 --- la boîte racine}
+\begin{center}\fig{a-step1}\end{center}
+
+\subsection*{Étape 2 --- une boîte éliminée sur sa borne}
+\begin{center}\fig{a-step2}\end{center}
+
+\subsection*{Étape 3 --- l'optimum arrive, depuis un maximiseur dominé}
+\begin{center}\fig{a-step3}\end{center}
+
+\noindent
+C'est l'étape instructive.  Le point $(3,3)$ est trouvé comme centre
+\emph{réparé} à partir du point dominé $(1,2)$, et sa valeur provient du
+sous-problème $Q$ --- celui qui examine les points partageant le même vecteur
+critère.  Une mise en {\oe}uvre qui omettrait $Q$, ce qui paraît raisonnable si
+l'on oublie la remarque~\ref{rem:notZ}, manquerait l'optimum.
+
+\subsection*{Étapes 4 et 5 --- le reste est la preuve}
+\begin{center}\fig{a-step4}\end{center}
+\begin{center}\fig{a-step5}\end{center}
+
+\section{Exemple B~: trois variables, toutes les branches exercées}
+
+\[
+  \Dset = \{x \in \mathbb{Z}^3_+ :\ x_j \leqslant 3,\
+  x_1 + x_2 + 2x_3 \leqslant 5,\ 2x_1 + 3x_2 + x_3 \leqslant 6\}
+\]
+avec $\Z(x) = (4x_1 - x_2 + x_3,\ 2x_2 + 2x_3)$ et
+$\Phi(x) = (-2x_1 + 4x_2 - 3x_3 + 1)/(x_1 + 2x_2 + x_3 + 1)$.
+
+$15$ points admissibles, $4$ efficaces, $4$ sous-problèmes,
+$\Phi^{*} = -1/5$.  Ici encore le maximiseur libre --- $\Phi = 9/5$ en
+$(0,2,0)$ --- est dominé.
+
+\begin{center}
+\fig{b-decision}
+\end{center}
+
+\subsection*{Étape 1 --- réparation et premier incumbent}
+\begin{center}\fig{b-step1}\end{center}
+
+\subsection*{Étape 2 --- une seconde réparation}
+\begin{center}\fig{b-step2}\end{center}
+
+\subsection*{Étape 3 --- un maximiseur déjà efficace}
+\begin{center}\fig{b-step3}\end{center}
+
+\subsection*{Étape 4 --- la sortie anticipée}
+\begin{center}\fig{b-step4}\end{center}
+
+\noindent
+La recherche s'arrête alors que des boîtes restent ouvertes~: leur meilleure
+borne est inférieure à la valeur déjà prouvée, de sorte qu'aucune ne peut
+contenir mieux.  C'est la sortie anticipée de la section~\ref{sec:boites}, et
+elle laisse effectivement des boîtes non résolues tout en prouvant
+l'optimalité.
+
+\section{Ce que les deux exemples montrent ensemble}
+
+\begin{table}[h]
+\centering
+\caption{Les deux exécutions.}
+\begin{tabular}{lrrrrr}
+\toprule
+ & $n$ & $|\Dset|$ & $|\E|$ & sous-problèmes & $\Phi^{*}$ \\
+\midrule
+A (instance publiée) & $2$ & $11$ & $7$ & $5$ & $5/17$ \\
+B & $3$ & $15$ & $4$ & $4$ & $-1/5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{enumerate}[itemsep=4pt]
+\item \textbf{Le maximiseur libre de $\Phi$ est dominé dans les deux cas.}
+      $\Phi = 1$ en $(0,0)$ contre une réponse de $5/17$~; $\Phi = 9/5$ en
+      $(0,2,0)$ contre $-1/5$.
+\item \textbf{L'optimum passe par $Q$ et non par un maximiseur}, dans A~: une
+      conséquence directe de la remarque~\ref{rem:notZ}.
+\item \textbf{Aucune des deux exécutions n'énumère l'ensemble efficace}~: cinq
+      sous-problèmes pour sept points efficaces, quatre pour quatre.  Sur les
+      instances du chapitre~\ref{ch:resultats} l'écart est l'essentiel~: huit
+      boîtes règlent une instance comptant $71$ points efficaces parmi $629$
+      admissibles.
+\end{enumerate}
+
+\section{L'hybridation, étape par étape}
+
+Les figures suivantes montrent ce que l'amorçage change~: la marche de Pareto
+produit des points efficaces vérifiés, et la pré-partition les place dans la
+liste de boîtes sans payer de sondage.
+
+\begin{center}
+\fig{ha-walk}
+\end{center}
+
+\noindent
+À gauche, la recherche non amorcée~; à droite, l'état après transmission des
+graines dans l'ordre du sondage.
+
+\begin{center}
+\fig{ha-left}
+\end{center}
+
 \chapter{Évaluation des performances}
 \label{ch:resultats}
 

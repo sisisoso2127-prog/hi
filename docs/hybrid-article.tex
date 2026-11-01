@@ -475,12 +475,19 @@ $Z_k(x) \leqslant Z_k(a)$; for each child to be one ordinary linear program,
 \emph{both} sides must be half-spaces.  So
 
 \begin{quote}
-the front enumeration reaches exactly the criteria whose sublevel sets
-$\{x : Z(x) \leqslant t\}$ are \textbf{half-spaces},
+the front enumeration \textbf{requires} that the sublevel sets
+$\{x : Z(x) \leqslant t\}$ be \textbf{half-spaces}, and for linear fractional
+criteria the integer-valued $e_k$ supplies them,
 \end{quote}
 
 \noindent
-which is strictly tighter than the slice condition.  A half-space sublevel set
+which is strictly tighter than the slice condition.  The first half is a
+\emph{necessary} condition on the split mechanism and is what rules criteria
+out; the sufficiency is established only for the fractional class, by
+construction.  An earlier draft wrote ``reaches exactly'', which asserts an
+equivalence --- a criterion could meet the condition and still not be
+reachable, since the method must also \emph{build} those half-spaces from the
+data.  The claim is stated as the necessary condition it is.  A half-space sublevel set
 has a hyperplane boundary, so this class sits inside the one-hyperplane case
 --- exactly linear fractional.  And the two criteria the slice gained fail it
 for visible reasons: $|c^{\top}x + a|/(d^{\top}x + b)$ has a \emph{slab} for a

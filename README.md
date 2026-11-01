@@ -408,12 +408,20 @@ turns out to be answerable precisely, and the answer has two halves that do not
 coincide.
 
 **The limit.** If the level set of `Z` is a *single* hyperplane whose data
-depends affinely on the level, `alpha(v) = c - v d` and `beta(v) = v b - a`,
-then substituting `v = Z(x)` gives `c'x + a = v(d'x + b)`, so `Z` **is** linear
-fractional. With the converse, that is an equivalence:
+depends affinely on the level — in general form, `alpha(v) = a0 + v a1` and
+`beta(v) = b0 + v b1` — then substituting `v = Z(x)` gives
+`a0'x - b0 = v(b1 - a1'x)`, so `Z` **is** linear fractional wherever
+`b1 - a1'x != 0`. With the converse:
 
-> a criterion has one-hyperplane level sets with data affine in the level
-> **iff** it is linear fractional.
+> on the set where its denominator does not vanish, a criterion has
+> one-hyperplane level sets with data affine in the level **iff** it is linear
+> fractional.
+
+The non-vanishing condition is the positive-denominator hypothesis restated, so
+the equivalence holds on `D`; it is stated with that qualifier rather than
+without. It also holds for *any* affine dependence and not only for one chosen
+parametrisation — checked on 400 random affine parametrisations with no
+exception.
 
 So within that shape the fractional case is not a convenient choice but the
 maximal one. There is nothing larger of that shape to look for.

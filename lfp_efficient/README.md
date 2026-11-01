@@ -741,8 +741,9 @@ only whether a level set can be enumerated — and that is answerable exactly.
   that `{x : Z(x) = v}` be a **finite union of polyhedra**. That reaches
   `|ratio|` and `max`/`min` of ratios, which are not fractional.
 - **The other half reaches less.** The front search needs *both* sides of its
-  split to be half-spaces, so it reaches exactly the criteria with half-space
-  sublevel sets — essentially the fractional case. `max`-of-ratios has a
+  split to be half-spaces, so it *requires* criteria with half-space sublevel
+  sets (a necessary condition; sufficiency is established for the fractional
+  class, by construction) — essentially the fractional case. `max`-of-ratios has a
   polyhedral sublevel set whose complement is a union, and one split cannot
   express a union.
 

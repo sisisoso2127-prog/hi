@@ -19,22 +19,33 @@ structure is only the *enumeration* of each slice.
 Half one: linear fractional is exactly the one-hyperplane case
 --------------------------------------------------------------
 Suppose the level set of ``Z`` is a single hyperplane whose data depends
-affinely on the level,
+affinely on the level --- in full generality, not in a chosen parametrisation,
 
     ``{x : Z(x) = v} = {x : alpha(v)'x = beta(v)}`` ,
-    ``alpha(v) = c - v d`` ,   ``beta(v) = v b - a`` .
+    ``alpha(v) = a0 + v a1`` ,   ``beta(v) = b0 + v b1`` .
 
-Then for any ``x`` in the domain, writing ``v = Z(x)`` and substituting,
+Then for any ``x`` with ``b1 - a1'x != 0``, writing ``v = Z(x)`` and
+substituting,
 
-    ``(c - v d)'x = v b - a``
-    ``c'x + a = v (d'x + b)``
-    ``v = (c'x + a) / (d'x + b)``   whenever ``d'x + b != 0`` ,
+    ``(a0 + v a1)'x = b0 + v b1``
+    ``a0'x - b0 = v (b1 - a1'x)``
+    ``v = (a0'x - b0) / (b1 - a1'x)`` ,
 
-so ``Z`` **is** linear fractional.  The converse is the computation already in
+so ``Z`` is linear fractional with ``c = a0``, ``a = -b0``, ``d = -a1`` and
+``b = b1``.  The converse is the computation already in
 :func:`~lfp_efficient.complete.slice_equations`.  Hence:
 
-    **A criterion has one-hyperplane level sets with data affine in the level
-    if and only if it is linear fractional.**
+    **On the set where its denominator does not vanish, a criterion has
+    one-hyperplane level sets with data affine in the level if and only if it
+    is linear fractional.**
+
+Two points of care.  The derivation needs ``b1 - a1'x != 0``, which is exactly
+the positive-denominator hypothesis of the model restated, so the
+equivalence holds on ``D`` and is stated with that qualifier rather than
+without it.  And it holds for *any* affine ``alpha, beta`` and not only for the
+parametrisation ``alpha = c - v d``, ``beta = v b - a`` that an earlier draft
+named --- checked on 400 random affine parametrisations with no exception, so
+the theorem is the general one.
 
 That is a statement about where the method stops, and it is worth more than a
 reach theorem: within this framework the fractional case is not a convenient
@@ -124,10 +135,20 @@ Its box search splits at a centre ``a`` into ``Z_k(x) > Z_k(a)`` and
 ``Z_k(x) <= Z_k(a)``.  For each child to be one ordinary linear program, both
 sides must be half-spaces.  So:
 
-    **The front enumeration reaches exactly the criteria whose sublevel sets
-    ``{x : Z(x) <= t}`` are half-spaces.**
+    **The front enumeration requires that the sublevel sets
+    ``{x : Z(x) <= t}`` be half-spaces**, and for linear fractional criteria
+    the integer-valued ``e_k`` supplies them, so there the condition is met.
 
-That is strictly tighter than the slice condition, and the gap is not a
+The first half is a *necessary* condition on the split mechanism and is what
+rules criteria out; the second is the sufficiency, and it is established only
+for the fractional class, by construction.  An earlier draft wrote "reaches
+exactly", which asserts an equivalence --- a criterion could satisfy the
+condition and still not be reachable, because the method must also *build*
+those half-spaces from the data, and nothing above says a general such
+criterion admits that.  The claim is therefore stated as the necessary
+condition it is.
+
+That condition is strictly tighter than the slice one, and the gap is not a
 technicality --- it is the reason this package is a *MOILFP* method:
 
 * a half-space sublevel set has a hyperplane boundary, so this class sits
