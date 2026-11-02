@@ -160,13 +160,6 @@ def slice_rows(problem: MOILFP, v: Sequence[Fraction]):
     return rows
 
 
-#: how many propagation sweeps the slice scan runs before giving up on
-#: further tightening.  One sweep can enable the next, but the sequence
-#: converges fast in practice and the cap keeps a pathological system
-#: from spending the budget on bookkeeping.
-_PROPAGATION_SWEEPS = 8
-
-
 def reduce_rows(equations, n: int):
     """Reduced row echelon form, in exact rationals.
 
@@ -284,14 +277,6 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
     # row by the lcm of its denominators makes the hot loop run on Python
     # ``int``: exact as before, with none of the boxing.  Nothing about which
     # points are returned changes, which is what the suite checks.
-    #
-    # Measured, same instances through both versions, 16 configurations at a
-    # 40 s budget: median 1.18x (range 0.71x to 4.38x) on the 9 that finish
-    # either way, TWO crossing from censored to complete (n=12 p=2, n=10 p=3),
-    # none regressing, and identical |E| and box counts throughout.  So the
-    # operating range is the implementation's and not the method's -- but it
-    # moved by little, and the remaining 74% is now in the simplex pivot,
-    # where the lever would be a fraction-free (Bareiss) tableau.
     int_rows = []
     for coeffs, rhs in le_rows:
         scale = 1
@@ -299,156 +284,18 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
             scale = scale * value.denominator // gcd(scale, value.denominator)
         int_rows.append(([int(c * scale) for c in coeffs], int(rhs * scale)))
 
-    # Narrow each free variable's own interval before scanning anything.
-    #
-    # The scan loops ``range(lo[t], hi[t] + 1)`` at depth ``t``, so the tree it
-    # walks is the product of those interval widths: tightening them pays
-    # multiplicatively, where tightening the pruning test pays once per node.
-    # Measured before this existed: 198,614 nodes to return 27 points on one
-    # n=10 instance, about 7,400 nodes per point.  Most of that tree could not
-    # contain a feasible assignment at all, and a row says so without being
-    # searched.
-    #
-    # The rule is the textbook one.  For a row ``a'x <= b`` and an index k,
-    # every other variable contributes at least ``min(a_j lo_j, a_j hi_j)``, so
-    #
-    #     a_k > 0  =>  x_k <= floor((b - rest_min) / a_k)
-    #     a_k < 0  =>  x_k >= ceil ((b - rest_min) / a_k)
-    #
-    # which only ever removes values no feasible point can take: the returned
-    # set is unchanged, and the suite checks that against brute force.  Sweeps
-    # run to a fixpoint, capped, because one tightening can enable the next.
-    # An empty interval means the slice holds no integer point and the scan is
-    # skipped entirely -- the cheapest case of all.
-    lo = [0] * m
-    hi = list(free_bounds)
-    for _ in range(_PROPAGATION_SWEEPS):
-        changed = False
-        for coeffs, rhs in int_rows:
-            nz = [k for k in range(m) if coeffs[k]]
-            if not nz:
-                continue
-            contributions = [min(coeffs[k] * lo[k], coeffs[k] * hi[k])
-                             for k in range(m)]
-            total = sum(contributions)
-            for k in nz:
-                rest = total - contributions[k]
-                slack = rhs - rest
-                a = coeffs[k]
-                if a > 0:
-                    bound = slack // a                      # floor, a > 0
-                    if bound < hi[k]:
-                        hi[k] = bound
-                        changed = True
-                else:
-                    # ceil(slack / a) for a < 0, written on positive ints:
-                    # with q = -a > 0 that is ceil(-slack / q) = -(slack // q)
-                    bound = -(slack // (-a))
-                    if bound > lo[k]:
-                        lo[k] = bound
-                        changed = True
-            if any(lo[k] > hi[k] for k in nz):
-                return []                    # no integer point on this slice
-        if not changed:
-            break
-    if any(lo[k] > hi[k] for k in range(m)):
-        return []
-
-    # Lift the integrality of the eliminated variables out of the leaf.
-    #
-    # A node-count by depth, on one n=10 instance, read:
-    #
-    #     depth 6: 76,295    depth 7: 82,333    depth 8 (leaf): 30
-    #
-    # The tree grew to eighty thousand nodes and the last level destroyed all
-    # but thirty of them.  What destroyed them was not a row -- the rows were
-    # already satisfied -- but the condition checked only at the leaf: that
-    # each eliminated variable
-    #
-    #     x_col = M[i][n] - sum_j M[i][j] x_j
-    #
-    # comes out an INTEGER.  That is a congruence, and a congruence can be
-    # tested long before its last term is known.
-    #
-    # Scale row i by L_i, the lcm of its denominators, so every coefficient is
-    # integral; the requirement becomes
-    #
-    #     target_i - sum_j c_ij x_j  ==  0   (mod L_i) .
-    #
-    # With variables 0..t assigned, whatever the rest contribute is a multiple
-    # of g = gcd(L_i, c_i,t+1, ..., c_i,m-1) -- every term is -- so
-    #
-    #     (target_i - partial_i)  ==  0   (mod g)
-    #
-    # is NECESSARY, and it can be checked the moment variable t is fixed.  At
-    # t = m-1 the tail is empty, g is L_i, and the test is exactly the leaf
-    # check: this strictly generalises it rather than approximating it.  No
-    # assignment that could complete to an integer point is ever refused, which
-    # is what the brute-force comparisons in the suite verify.
-    cong = []                       # (coefficients, target, tail gcds) per row
-    for i in range(len(pivots)):
-        scale = 1
-        entries = [M[i][j] for j in free] + [M[i][n]]
-        for value in entries:
-            scale = scale * value.denominator // gcd(scale, value.denominator)
-        coeffs_i = [int(M[i][j] * scale) for j in free]
-        target_i = int(M[i][n] * scale)
-        tail = [0] * (m + 1)
-        tail[m] = scale
-        for k in range(m - 1, -1, -1):
-            tail[k] = gcd(tail[k + 1], coeffs_i[k])
-        cong.append((coeffs_i, target_i, tail))
-
     suffix = []
     for coeffs, _ in int_rows:
         tail = [0] * (m + 1)
         for k in range(m - 1, -1, -1):
-            tail[k] = tail[k + 1] + min(coeffs[k] * lo[k], coeffs[k] * hi[k])
+            step = coeffs[k] * free_bounds[k]
+            tail[k] = tail[k + 1] + (step if step < 0 else 0)
         suffix.append(tail)
 
     points: List[tuple] = []
     partial = [0] * len(int_rows)
-    cong_partial = [0] * len(cong)
-    assignment = list(lo)
+    assignment = [0] * m
     rows = list(enumerate(int_rows))
-    cong_rows = list(enumerate(cong))
-
-    last = m - 1
-
-    def residue_window(t: int):
-        """At the last free variable, the values a congruence still permits.
-
-        Testing the congruence one value at a time is the wrong use of it.  It
-        says that
-            a x  ==  target - partial   (mod L) ,
-        which with g = gcd(a, L) is solvable only when g divides the right-hand
-        side, and then pins x to a single residue class modulo L/g.  So the
-        deepest loop need not walk its interval at all: it can step through one
-        class, which is L/g times shorter.
-
-        Returns ``(start, step)`` for the tightest row, or ``None`` when some
-        row makes the remaining variable impossible -- in which case the whole
-        subtree is empty and the caller skips it.
-        """
-        best = (lo[t], 1)
-        for i, (coeffs_i, target_i, tail) in cong_rows:
-            a, L = coeffs_i[t], tail[m]
-            want = (target_i - cong_partial[i]) % L
-            if a == 0:
-                if want:
-                    return None               # nothing left can fix this row
-                continue
-            g = gcd(a, L)
-            if want % g:
-                return None
-            modulus = L // g
-            if modulus <= best[1]:
-                continue
-            inverse = pow(a // g, -1, modulus)
-            x0 = (want // g) * inverse % modulus
-            start = lo[t] + (x0 - lo[t]) % modulus
-            best = (start, modulus)
-        return best
 
     def descend(t: int) -> None:
         if t == m:
@@ -464,44 +311,18 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
                 points.append(tuple(int(c) for c in x))
             return
         suffix_t = t + 1
-        if t == last:
-            window = residue_window(t)
-            if window is None:
-                return
-            start, step = window
-        else:
-            start, step = lo[t], 1
-        for value in range(start, hi[t] + 1, step):
-            ok, saved, monotone = True, partial[:], False
+        for value in range(free_bounds[t] + 1):
+            ok, saved = True, partial[:]
             for k, (coeffs, rhs) in rows:
-                a = coeffs[t]
-                partial[k] += a * value
+                partial[k] += coeffs[t] * value
                 if partial[k] + suffix[k][suffix_t] > rhs:
                     ok = False
-                    # ``partial[k]`` is a * value plus a constant, and values
-                    # are tried in increasing order, so with a > 0 this row is
-                    # violated for every larger value as well.  Stopping here
-                    # skips only assignments that provably violate it; with
-                    # a <= 0 the row can recover and the loop must go on.
-                    monotone = a > 0
                     break
             if ok:
-                saved_cong = cong_partial[:]
-                for i, (coeffs_i, target_i, tail) in cong_rows:
-                    cong_partial[i] += coeffs_i[t] * value
-                    g = tail[suffix_t]
-                    if g and (target_i - cong_partial[i]) % g:
-                        ok = False
-                        break
-                if ok:
-                    assignment[t] = value
-                    descend(t + 1)
-                cong_partial[:] = saved_cong
+                assignment[t] = value
+                descend(t + 1)
             partial[:] = saved
-            if monotone:
-                break
-        assignment[t] = lo[t]
-        return
+        assignment[t] = 0
 
     descend(0)
     return points

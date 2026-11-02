@@ -848,6 +848,83 @@ the campaign family is comfortable.  ``$n \leqslant 16$'' is therefore
 shorthand for a measurement on one family; the quantities that govern the
 range are $|F|$ and $n-p$, as the wall sweep found, and not $n$.
 
+\subsection{Three additions to the search that measured as a wash}
+\label{sec:congruence}
+
+The arithmetic change of Section~\ref{sec:whosewall} moved the wall a little.
+The natural next question is whether the \emph{algorithm} has anything left to
+give, and a node count by depth said exactly where to look.  On one $n=10$
+instance with eight free variables:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+depth & $6$ & $7$ & $8$ (leaf) \\
+\midrule
+nodes & $76{,}295$ & $82{,}333$ & $\mathbf{30}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Eighty thousand nodes, and the last level destroyed all but thirty of them.
+What destroyed them was not a constraint row --- those were satisfied --- but
+the condition tested only at the leaf: that each eliminated variable
+$x_{\mathrm{col}} = M_{i,n} - \sum_j M_{i,j} x_j$ comes out an \emph{integer}.
+That is a congruence, and a congruence does not have to wait for its last
+term.  Scaling row $i$ by the lcm $L_i$ of its denominators gives
+\[
+  \mathrm{target}_i - \sum_j c_{ij} x_j \;\equiv\; 0 \pmod{L_i} ,
+\]
+and three things follow.  With variables $0..t$ fixed, whatever the rest
+contribute is a multiple of $g = \gcd(L_i, c_{i,t+1}, \dots, c_{i,m-1})$, so
+$(\mathrm{target}_i - \mathrm{partial}_i) \equiv 0 \pmod{g}$ is testable at
+once --- and at $t = m-1$ it \emph{is} the leaf check, so this generalises it
+rather than approximating it.  At the last free variable the congruence should
+be solved rather than sampled: $a x \equiv w \pmod{L}$ pins $x$ to one residue
+class of modulus $L/\gcd(a,L)$, so the deepest loop steps through that class
+instead of walking its interval.  And since values are tried in increasing
+order, a row with a positive coefficient violated at one value is violated at
+every larger one, so the loop can break.
+
+\paragraph{All three are sound, and all three together are worth nothing.}
+Nodes fell from $195{,}640$ to $139{,}458$, a real $29\%$.  Time, on the same
+sixteen instances as Section~\ref{sec:whosewall}:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+complete both ways & $11$ of $16$ \\
+\quad median speed-up & $\mathbf{1.01\times}$ \\
+\quad range & $0.69\times$ to $1.13\times$ \\
+\midrule
+crossed censored $\to$ complete & $0$ \\
+$|\E|$ or box count changed & $0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The per-node bookkeeping cost exactly what the saved nodes bought.  The
+pattern is legible: the additions lose on the smallest instances
+($0.69\times$, $0.81\times$, $0.85\times$), where the per-slice setup is not
+repaid, and win slightly from $n=8$ up ($1.08$ to $1.13\times$) where the
+tree is large enough.  Neither end is worth the hundred and ninety lines, so
+\textbf{the change was reverted} and is recorded here instead.
+
+An interval propagation over the free variables' boxes was tried in the same
+pass and is the clearest loss of the four: $198{,}614$ nodes became
+$195{,}640$.  \texttt{variable\_bounds} already returns boxes tight enough
+that there was nothing left to propagate.
+
+\paragraph{What the attempt is worth anyway.}  It locates the cost precisely.
+The leaf condition is selective at about $2700 : 1$, the rows prune everything
+else, and the nodes that remain are cheap individually and numerous ---
+which is the signature of a search whose ceiling is per-node constant factor,
+not pruning power.  That points at the simplex pivot and a fraction-free
+tableau, the lever named in Section~\ref{sec:whosewall}, and away from
+further cleverness in the scan.
+
 \section{A wall met four times}
 
 Four separate changes remove between a fifth and a quarter of the sub-problems
@@ -1081,7 +1158,7 @@ breaking it once.
 
 \begin{table}[h]
 \centering
-\caption{The twenty-two things tried, with what each was worth.}
+\caption{The twenty-five things tried, with what each was worth.}
 \begin{tabular}{lll}
 \toprule
 attempt & verdict & effect \\
@@ -1108,12 +1185,15 @@ one-program completeness certificate  & \textbf{loss} & $4.5\times$ slower, soun
 sizing the walk to the instance       & \textbf{win}  & $1.00 \to 1.53\times$ at $n=12$ \\
 a walk that restarts until it stops   & \textbf{loss} & more coverage, less speed \\
 the hybrid on fractional criteria     & \textbf{win}  & $1.39\times$, better than linear \\
+clearing denominators in the scan     & \textbf{win}  & $1.18\times$ median, $2$ instances uncensored \\
+congruence pruning, three forms       & \textbf{loss} & $29\%$ fewer nodes, $1.01\times$ in time \\
+interval propagation on the boxes     & \textbf{loss} & $198{,}614 \to 195{,}640$ nodes \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent
-Nine are losses and one is a tie.  They are reported at the same length as the
+Eleven are losses and one is a tie.  They are reported at the same length as the
 wins because they carry the same information: a change pays only where the
 method has a mechanism it can feed, that mechanism is cheaper to identify than
 the change is to build and measure, and two ideas feeding the same mechanism

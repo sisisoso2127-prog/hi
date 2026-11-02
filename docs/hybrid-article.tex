@@ -1855,6 +1855,41 @@ that catches empty boxes is catching the cheapest work in the search.  The only
 change reported here that goes round this wall is Section~\ref{sec:elim},
 which attacks an \emph{exponent} rather than a count.
 
+\subsection{Three additions to the slice search that measured as a wash}
+
+The arithmetic change above moved the wall a little; the question left was
+whether the \emph{algorithm} had more to give.  A node count by depth, on one
+$n=10$ instance with eight free variables, said where to look: $76{,}295$ nodes
+at depth $6$, $82{,}333$ at depth $7$, and \textbf{$30$} at the leaf.  Eighty
+thousand nodes destroyed by the last level --- and what destroyed them was not
+a row but the condition tested only there, that each eliminated variable comes
+out an \emph{integer}.  That is a congruence
+$\mathrm{target}_i \equiv \sum_j c_{ij}x_j \pmod{L_i}$ after scaling row $i$ by
+the lcm of its denominators, and a congruence need not wait for its last term:
+with variables $0..t$ fixed the rest contribute a multiple of
+$g = \gcd(L_i, c_{i,t+1},\dots,c_{i,m-1})$, so the residue can be tested at
+once, and at $t = m-1$ that test \emph{is} the leaf check.  Two cheaper
+companions went in with it: solving the congruence for the last variable
+instead of sampling it, which pins that variable to one residue class, and
+breaking the value loop at the first violation of a row with a positive
+coefficient, which is monotone in the value.
+
+All three are sound --- each is a necessary condition, so no assignment that
+could complete to an integer point is refused --- and all three together are
+worth nothing.  Nodes fell $195{,}640 \to 139{,}458$, a real $29\%$; time over
+the same sixteen instances gave a median $\mathbf{1.01\times}$, range
+$0.69\times$ to $1.13\times$, with no instance crossing from censored to
+complete.  The per-node bookkeeping cost exactly what the saved nodes bought.
+The change was reverted; an interval propagation tried in the same pass was
+worse still ($198{,}614 \to 195{,}640$ nodes), because \texttt{variable\_bounds}
+already returns tight boxes.
+
+The attempt earns its place by locating the cost.  The leaf condition is
+selective at about $2700 : 1$, the rows prune everything else, and what remains
+is many cheap nodes --- the signature of a search bounded by per-node constant
+factor rather than by pruning power.  That points at the simplex pivot and a
+fraction-free tableau, and away from further cleverness in the scan.
+
 \subsection{A single-program completeness certificate}
 \label{sec:certificate}
 
