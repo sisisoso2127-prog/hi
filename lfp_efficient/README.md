@@ -780,3 +780,4 @@ from elsewhere.
 | `generated.py` | the Pareto walk that seeds the enumeration, and the probe order that makes it pay |
 | `over.py` | queries over an explicit `E(P_D)`: **any** computable decision function, or several at once |
 | `levelsets.py` | how far the slice reaches: the characterisation, its two widenings, and branch builders for criteria outside the ratio class |
+| `decision_space.py` | the **comparison baseline**: all of `E(P_D)` in decision space, with the single-row efficient cut four papers attribute to Chergui & Moulai (2008). Pays an efficiency test per integer point met; `complete.py` pays none |

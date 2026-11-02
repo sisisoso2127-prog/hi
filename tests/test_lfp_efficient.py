@@ -36,6 +36,7 @@ from lfp_efficient.efficiency import (assert_bounded,
                                       _e_lower_bound)
 from lfp_efficient.rational import F, fmt
 from lfp_efficient.criterion_space import _rows_for, looks_empty, split
+from lfp_efficient.decision_space import enumerate_by_cuts
 from lfp_efficient.complete import box_shortfall, variable_bounds
 from lfp_efficient.over import (maximize_over_efficient_set,
                                 nondominated_over_efficient_set)
@@ -2930,6 +2931,102 @@ def test_linear_plus_linear_fractional_falls_outside_the_reachable_class():
             assert (u2 - u1) * (v3 - v1) == (u3 - u1) * (v2 - v1), "ratio bent"
     return ("linear-plus-linear-fractional has conic level sets (three "
             "non-collinear points on one level); the pure ratio does not")
+
+def test_decision_space_cut_enumeration_agrees_with_brute_force():
+    """The efficient-cut route returns exactly ``E(P_D)``, on three instances.
+
+    :mod:`lfp_efficient.decision_space` is the comparison baseline this project
+    lacked: a decision-space method that produces the *whole* efficient set, so
+    that the slice route can be measured against a route with the same
+    deliverable rather than only against the optimisation run it replaces.
+
+    It is built from the cut four papers state identically and attribute to
+    Chergui and Moulai (2008), not from that paper, which could not be reached.
+    So it is checked rather than trusted: against brute force on linear
+    criteria, on fractional ones, and on three criteria at once.
+
+    A first version of the module kept ONE global region and cut each point
+    away from it.  The first instance below caught that: the cut's validity is
+    stated about the region of the node, so a cut earned in one branch is not
+    valid in another, and the global version returned an empty set where the
+    answer has six points.
+    """
+    cases = [
+        (Model(2).add([1, -2], LE, 0).add([1, 4], LE, 12).add([1, 0], LE, 4),
+         [FractionalObjective([1, -2], [0, 0], 0, 1),
+          FractionalObjective([-1, 4], [0, 0], 0, 1)], [4, 4]),
+        (Model(2).add([1, 1], LE, 6).add([1, -1], LE, 2),
+         [FractionalObjective([1, 0], [0, 1], 1, 2),
+          FractionalObjective([0, 1], [1, 0], 1, 3)], [6, 6]),
+        (Model(3).add([1, 1, 0], LE, 6).add([1, -1, 0], LE, 2)
+                 .add([0, 0, 1], LE, 3),
+         [FractionalObjective([1, 0, 0], [0, 1, 0], 1, 2),
+          FractionalObjective([0, 1, 0], [1, 0, 0], 1, 3),
+          FractionalObjective([0, 0, 1], [0, 0, 0], 0, 1)], [6, 6, 3]),
+    ]
+    sizes, tests_paid = [], []
+    for model, criteria, bounds in cases:
+        problem = MOILFP(model, criteria)
+        reference = sorted(tuple(x) for x in
+                           enumerate_efficient_set(problem, bounds=bounds).efficient)
+        run = enumerate_by_cuts(problem, time_budget=120)
+        assert run.complete, run.stopped
+        assert sorted(run.efficient) == reference, (sorted(run.efficient), reference)
+        sizes.append(len(reference))
+        tests_paid.append(run.tests)
+    return (f"|E| = {sizes}, matched brute force; "
+            f"efficiency tests paid {tests_paid} against 0 for the slice route")
+
+
+def test_the_cut_route_pays_efficiency_tests_the_slice_route_does_not():
+    """The mechanism difference, as a count rather than as prose.
+
+    Both routes return the same ``E(P_D)``.  The decision-space route reaches
+    it by testing integer points for efficiency one at a time; the slice route
+    reaches it by the slice theorem, which makes the test unnecessary on every
+    point of every slice.  That is the claim this project actually makes about
+    the complete set -- the deliverable itself dates from 2008 -- so it is
+    pinned here as a number, on an instance where both finish.
+    """
+    model = (Model(3).add([1, 1, 0], LE, 6).add([1, -1, 0], LE, 2)
+             .add([0, 0, 1], LE, 3))
+    problem = MOILFP(model, [
+        FractionalObjective([1, 0, 0], [0, 1, 0], 1, 2),
+        FractionalObjective([0, 1, 0], [1, 0, 0], 1, 3),
+        FractionalObjective([0, 0, 1], [0, 0, 0], 0, 1)])
+
+    by_cuts = enumerate_by_cuts(problem, time_budget=120)
+    by_slices = complete_efficient_set(problem, time_budget=120)
+    assert by_cuts.complete and by_slices.complete
+
+    assert (sorted(by_cuts.efficient)
+            == sorted(tuple(x) for x in by_slices.points))
+    assert by_cuts.tests > 0, "the baseline is supposed to pay tests"
+    return (f"same {len(by_cuts.efficient)} points; "
+            f"{by_cuts.tests} efficiency tests by cuts, 0 by slices")
+
+
+def test_the_cut_route_is_independent_of_the_node_objective():
+    """Which criterion drives the nodes changes the order, not the answer.
+
+    The papers drive each node with their own decision function; this module
+    defaults to ``Z_1`` and lets a caller pass another.  If the result depended
+    on that choice the baseline would be measuring the choice, so the
+    independence is checked rather than assumed.
+    """
+    model = Model(2).add([1, 1], LE, 6).add([1, -1], LE, 2)
+    criteria = [FractionalObjective([1, 0], [0, 1], 1, 2),
+                FractionalObjective([0, 1], [1, 0], 1, 3)]
+    problem = MOILFP(model, criteria)
+
+    runs = [enumerate_by_cuts(problem, objective=obj, time_budget=120)
+            for obj in (None, criteria[1], FractionalObjective([1, 1], [0, 0], 0, 1))]
+    sets = [sorted(r.efficient) for r in runs]
+    assert all(r.complete for r in runs)
+    assert sets[0] == sets[1] == sets[2], sets
+    return (f"3 node objectives, same {len(sets[0])} points, "
+            f"nodes {[r.nodes for r in runs]}")
+
 
 def test_neighbouring_class_is_out_of_reach_by_rank_not_by_being_a_conic():
     """Why the linear-plus-linear-fractional class is out of reach, stated right.

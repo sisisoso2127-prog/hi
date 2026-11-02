@@ -54,6 +54,7 @@ from .generated import (GeneratedSeeds, generate_seeds,
                         pareto_seeds, probe_order)
 from .complete import (CompleteSet, assert_box_contains, box_shortfall,
                        complete_efficient_set, variable_bounds)
+from .decision_space import CutEnumeration, enumerate_by_cuts
 from .levelsets import (abs_ratio_branches, generalized_slice_points,
                         level_set_branches_fractional)
 from .over import (NondominatedOverEfficientSet, OverEfficientSet,
@@ -93,6 +94,7 @@ __all__ = [
     "hybrid_complete_set", "pareto_front", "pareto_seeds",
     "probe_order",
     "complete_efficient_set", "CompleteSet", "variable_bounds",
+    "enumerate_by_cuts", "CutEnumeration",
     "box_shortfall", "assert_box_contains",
     "maximize_over_efficient_set", "nondominated_over_efficient_set",
     "generalized_slice_points", "abs_ratio_branches",
