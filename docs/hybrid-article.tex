@@ -415,24 +415,74 @@ says so in advance}; on that subfamily the level sets do become unions of
 hyperplanes and the machinery of the polyhedral widening of Section~\ref{sec:map} reaches
 them.
 
-\paragraph{What this does and does not settle about priority.}
+\paragraph{What this settles about priority, now that the paper has been
+read.}
 It is tempting to conclude that the two works address disjoint classes.
 They do not, and the containment runs the wrong way for comfort: setting
 $c = 0$ makes $Z$ a pure ratio, so \textbf{the
 linear-plus-linear-fractional class \emph{contains} MOILFP as its $c = 0$
-case}.  What Proposition~\ref{prop:neighbour} establishes is that the
-\emph{generic} members of their class are out of reach here --- a statement
-about this method, provable from their problem statement alone and needing
-no reading of their algorithm.  What it leaves open is the only question
-that bears on Section~\ref{sec:complete}: \emph{restricted to $c = 0$, does
-their method produce the whole of $\E$?}  If it does, the complete-set
-result here is not new; if it produces one optimum, or a subset, it is.
+case}.  Proposition~\ref{prop:neighbour} establishes only that the
+\emph{generic} members of their class are out of reach \emph{here} --- a
+statement about this method, provable from their problem statement alone.
+The question it left open was whether their method, restricted to $c = 0$,
+produces the whole of $\E$.  That paper has since been read, and so has the
+line of work behind it.  The answer is in two parts, and the second is the
+one that matters.
 
-That question cannot be answered from a title, a characterisation or an
-index.  It needs the paper, which could not be reached from the environment
-this work was prepared in.  It is recorded here as the one open item
-bearing on novelty, stated precisely enough to be settled in a few minutes
-by anyone holding the offprint.
+\textbf{Their mechanism is not this one.}  Cherfaoui and
+Moula\"i~\cite{cherfaoui2021} work in decision space: the region is
+$X_l = \{x : Ax \leqslant b,\ x \geqslant 0\}$ narrowed by the single-row
+efficient cut $\sum_{j \in H_l} x_j \geqslant 1$, with branch-and-bound
+around it, and their cuts are justified by the fact that inefficiency in an
+auxiliary MOILFP implies inefficiency in their problem.  There is no slice
+and no criterion-space region anywhere in it, and the paper carries an
+illustrative example rather than a computational study.  So the slice
+argument of Section~\ref{sec:complete} is not their argument.
+
+\textbf{But the deliverable is thirteen years old, and that must be said
+plainly.}  Every paper in this line cites Chergui and
+Moula\"i~\cite{cherguimoulai2008}, and one of them states its content
+without ambiguity: authors generally avoid generating the whole efficient
+set, \emph{however Chergui and Moula\"i (2008) used a branch-and-cut
+procedure to generate the whole efficient set} --- of a MOILFP, which is
+exactly the class treated here.  \textbf{Producing all of $\E$ for a MOILFP
+is therefore not new, and is not claimed as new.}  What Section~\ref{sec:complete}
+offers is a different route to it: the whole of $\E$ assembled from the
+non-dominated front by slices, with \emph{no efficiency test paid on any
+slice point} (Corollary~\ref{cor:union}) and with slice equations that stay
+linear even for fractional criteria, at a measured cost of under one
+doubling of the optimisation run.
+
+\paragraph{So the contribution has to be stated as the route and what the
+route buys, not as the deliverable.}
+Restated against what the literature holds:
+
+\begin{itemize}
+\item \textbf{not claimed}: generating $\E$ for a MOILFP --- Chergui and
+      Moula\"i did that in 2008, in decision space;
+\item \textbf{not claimed}: the linearisation of the ratio in the efficiency
+      test --- standard in this school, as Chaiblaine
+      et al.~\cite{chaiblaine2020} show;
+\item \textbf{claimed}: the slice route, which removes the efficiency test
+      from every point of $\E$ rather than paying it;
+\item \textbf{claimed}: the characterisation of
+      Section~\ref{sec:map} --- nothing resembling it appears in the six
+      papers of this line that were read;
+\item \textbf{claimed}: the admissible decision class of
+      Section~\ref{sec:admissible}, which is what the explicit $\E$ buys and
+      is a statement about which problems can be posed at all;
+\item \textbf{claimed}: the measured comparison and the two walls of
+      Section~\ref{sec:walls}.
+\end{itemize}
+
+\noindent
+One comparison is now obviously missing and is named rather than hidden:
+this work never measures its complete-set route against Chergui and
+Moula\"i's, because that method was not implemented here.  The figures in
+Section~\ref{sec:complete} say what $\E$ costs \emph{relative to the
+optimisation run of the method this one replaces}, which is a different and
+weaker statement.  Making that comparison is the first thing a continuation
+should do.
 
 \subsection{Several decision functions at once}
 
@@ -1950,18 +2000,18 @@ Moula\"i~\cite{moulai2021}, and the method this implementation
 follows~\cite{younsiabbaci2025} --- and all of them search decision space
 with branch and bound or cutting planes.
 
-\paragraph{All five have now been read in full, and the claim survives
+\paragraph{All six have now been read in full, and the claim survives
 intact.}
 Not one of them works in criterion space.  In every case the unexplored
 region is $X_l$, a subset of $X$ carried as \emph{constraints on $x$};
 branching is on $x_r \leqslant \lfloor x_r^* \rfloor$ and
 $x_r \geqslant \lceil x_r^* \rceil$; and the cuts are linear inequalities in
-$x$.  This is now a reading of five algorithms rather than of five abstracts.
+$x$.  This is now a reading of six algorithms rather than of six abstracts.
 
 \begin{table}[h]
 \centering
 \caption{The fractional line, read rather than indexed.  The region is
-$X_l \subseteq \R^n$ in all five.}
+$X_l \subseteq \R^n$ in all six.}
 \label{tab:read}
 \small
 \begin{tabular}{llcc}
@@ -1973,6 +2023,7 @@ Drici et al.~\cite{drici2018}            & $\sum_{j \in H_l} x_j \geqslant 1$ & 
 Oua\"il \& Chergui~\cite{ouail2019}      & $\sum_{j \in \Delta_l} x_j \geqslant 1$ & no & no \\
 Chaiblaine et al.~\cite{chaiblaine2020}  & two such rows                      & no & no \\
 Moula\"i \& Mekhilef~\cite{moulai2021}   & $\sum_{j} x_j \geqslant 1$         & no & no \\
+Cherfaoui \& Moula\"i~\cite{cherfaoui2021} & $\sum_{j \in H_l} x_j \geqslant 1$ & no & \textbf{yes} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1980,7 +2031,7 @@ Moula\"i \& Mekhilef~\cite{moulai2021}   & $\sum_{j} x_j \geqslant 1$         & 
 \paragraph{The cost model, corrected.}
 An earlier draft of this paper wrote that a decision-space cut costs $p$
 binaries and $p+1$ big-$M$ rows, of the family.  Table~\ref{tab:read} shows
-that is true of \emph{one} of the five.  The other four cut with a single
+that is true of \emph{one} of the six.  The other five cut with a single
 row over the improving nonbasic directions of the current tableau, which
 they attribute to Chergui and Moula\"i~\cite{cherguimoulai2008}: no binaries
 and no big-$M$ anywhere.  The method reimplemented here uses the
@@ -2028,13 +2079,16 @@ front enumeration to get cheaper, which Section~\ref{sec:walls} identifies
 as one of the two binding quantities.
 
 \textbf{This is a statement about what we did and did not find, not a claim of
-novelty}, and one limit is worth naming.  The five papers above have been
-read in full; the base method~\cite{younsiabbaci2025} and
-Cherfaoui and Moula\"i~\cite{cherfaoui2021} have not, and the second is the
-one that bears on Section~\ref{sec:complete}.  Reading the five confirmed
-the family claim and refuted a cost model this work had stated about the
-family, which is a fair estimate of what the remaining two could still
-change.  And one paper bears directly on the complete-set
+novelty}, and one limit is worth naming.  Six papers of this line have now
+been read in full --- the five above and Cherfaoui and
+Moula\"i~\cite{cherfaoui2021}.  Reading them confirmed the family claim,
+refuted a cost model this work had stated about the family, narrowed the
+$e_k$ claim to its integer scaling, and \textbf{withdrew the complete-set
+result as a novelty}: Chergui and Moula\"i~\cite{cherguimoulai2008}
+generated the whole efficient set of a MOILFP in 2008, so
+Section~\ref{sec:complete} offers a route and not a first.  Only the base
+method~\cite{younsiabbaci2025} remains unread, and what it could change is
+the cost model of Section~\ref{sec:cost} rather than any claim of priority.  And one paper bears directly on the complete-set
 result of Section~\ref{sec:complete} and must be read before it is called
 new: Cherfaoui and Moula\"i~\cite{cherfaoui2021}, whose relation to this work
 is argued from its problem class in

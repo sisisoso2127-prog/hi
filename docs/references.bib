@@ -29,12 +29,20 @@
 
 % ===== CRITICAL: read these two before any claim of novelty =================
 
-% Generates the efficient set for a neighbouring problem class.  If its
-% mechanism is slice-based, the complete-set result here is not new.
+% READ IN FULL (19 pages).  The question it was flagged for is answered:
+%   its mechanism is NOT slice-based.  Decision space -- X_l narrowed by the
+%   single-row efficient cut sum_{j in H_l} x_j >= 1 with branch-and-bound
+%   around it, the cuts justified by "inefficiency in an auxiliary MOILFP
+%   implies inefficiency in our problem".  Section 5 is an illustrative
+%   example; there is no computational study.
 %
-% PROVENANCE: record agrees across Google Scholar, RePEc, and the LaROMaD
-%   (USTHB) activity listing of the authors' own laboratory.  Not read at
-%   the publisher.
+%   But reading it led to the finding that matters more, which is in
+%   cherguimoulai2008: generating the WHOLE efficient set of a MOILFP was
+%   done in 2008, so the complete-set deliverable here is not new and is no
+%   longer claimed as new.  See the priority paragraph in hybrid-article.
+%
+% PROVENANCE: record read off the offprint; it also agrees with Google
+%   Scholar, RePEc and the LaROMaD (USTHB) listing.  Issue S.I.: MOPGP 2017.
 @article{cherfaoui2021,
   author  = {Cherfaoui, Yasmine and Moula{\"\i}, Mustapha},
   title   = {Generating the efficient set of multiobjective integer linear
@@ -283,9 +291,16 @@
 }
 
 
-% PROVENANCE: the cited record is identical in four of the five papers read
-%   (Drici et al., Ouail & Chergui, Chaiblaine et al., Moulai & Mekhilef),
-%   which all attribute the single-row efficient cut to it.  Open access.
+% THE KEY PRECEDENT, and it is not the one this work went looking for.
+%   All six papers read cite it, and one states its content without
+%   ambiguity: "authors avoid trying to generate the whole efficient set.
+%   However, Chergui and Moulai (2008) used a branch-and-cut procedure to
+%   generate the whole efficient set" -- of a MOILFP, the class treated
+%   here.  So producing all of E(P_D) for a MOILFP is thirteen years old.
+%   Five of the six also attribute their single-row efficient cut to it.
+%   Open access; not read in full, which it should be.
+%
+% PROVENANCE: the cited record is identical in five of the six papers read.
 @article{cherguimoulai2008,
   author  = {Chergui, Mohamed El-Amine and Moula{\"\i}, Mustapha},
   title   = {An exact method for a discrete multiobjective linear fractional

@@ -491,8 +491,20 @@ is an algebraic condition of positive codimension — measured on uniform intege
 data in `[-3,3]`: 2.20% of criteria at `n=2`, 0.10% at `n=3`, 0.08% at `n=4`.
 "A conic is not a finite union of affine subspaces", which an earlier draft of
 this README asserted, is false. Note also that `c = 0` gives a pure ratio, so
-that class *contains* MOILFP rather than being disjoint from it; what stays open
-is whether their method, restricted to `c = 0`, produces all of `E(P_D)`.
+that class *contains* MOILFP rather than being disjoint from it.
+
+**That paper has since been read, and so has the line behind it.** Its
+mechanism is not this one — decision space, `X_l` narrowed by the single-row
+cut `sum_{j in H_l} x_j >= 1` with branch-and-bound around it, and an
+illustrative example rather than a computational study. But the *deliverable*
+is thirteen years old: **Chergui & Moulaï (2008) generated the whole efficient
+set of a MOILFP by branch-and-cut**, and every paper in this line cites them.
+So **producing all of `E(P_D)` for a MOILFP is not new and is not claimed as
+new here.** What this work offers is a different route to it — `E(P_D)`
+assembled from the non-dominated front by slices, with *no efficiency test paid
+on any slice point* — plus what that route buys: the admissible decision class.
+The comparison this leaves missing, and does not hide, is this route against
+Chergui & Moulaï's, which was not implemented here.
 
 
 The reachable side collapses: those four differ only in their *decision*

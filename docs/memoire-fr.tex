@@ -158,18 +158,18 @@ Cherfaoui pour deux fonctions fractionnaires~\cite{chaiblaine2020}, Mekhilef
 et Moulaï pour un objectif quadratique~\cite{moulai2021}, ainsi que la
 méthode dont cette mise en {\oe}uvre est issue~\cite{younsiabbaci2025}.
 
-\paragraph{Les cinq ont été lues intégralement, et la famille tient.}
-Aucune des cinq ne travaille dans l'espace des critères~: dans chacune, la
+\paragraph{Les six ont été lues intégralement, et la famille tient.}
+Aucune des six ne travaille dans l'espace des critères~: dans chacune, la
 région non explorée est $X_l$, partie de $X$ portée par des
 \emph{contraintes sur $x$}, le branchement se fait sur
 $x_r \leqslant \lfloor x_r^* \rfloor$ et $x_r \geqslant \lceil x_r^* \rceil$,
 et les coupes sont des inégalités linéaires en $x$.  C'est désormais une
-lecture de cinq algorithmes et non de cinq résumés.
+lecture de six algorithmes et non de six résumés.
 
 \begin{table}[h]
 \centering
 \caption{La ligne fractionnaire, lue et non indexée.  La région est
-$X_l \subseteq \mathbb{R}^n$ dans les cinq.}
+$X_l \subseteq \mathbb{R}^n$ dans les six.}
 \label{tab:lues}
 \small
 \begin{tabular}{llcc}
@@ -181,6 +181,7 @@ Drici et al.~\cite{drici2018}            & $\sum_{j \in H_l} x_j \geqslant 1$ & 
 Oua\"il \& Chergui~\cite{ouail2019}      & $\sum_{j \in \Delta_l} x_j \geqslant 1$ & non & non \\
 Chaiblaine et al.~\cite{chaiblaine2020}  & deux lignes de ce type             & non & non \\
 Moula\"i \& Mekhilef~\cite{moulai2021}   & $\sum_{j} x_j \geqslant 1$         & non & non \\
+Cherfaoui \& Moula\"i~\cite{cherfaoui2021} & $\sum_{j \in H_l} x_j \geqslant 1$ & non & \textbf{oui} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -191,7 +192,7 @@ La coupe de Sylva--Crema~\cite{sylvacrema} supprime
 $\{x : \Z(x) \leqslant \Z(\tilde x)\}$ ; comme il s'agit d'une disjonction,
 elle s'exprime par $p$ variables binaires et $p+1$ contraintes de type
 grand-$M$.  C'est la coupe de la méthode reprise ici --- et celle de Mahdi
-et Chaabane, \emph{une} des cinq.  \textbf{Les quatre autres} coupent par la
+et Chaabane, \emph{une} des six.  \textbf{Les cinq autres} coupent par la
 ligne unique
 \[
   \sum_{j \in H_l} x_j \;\geqslant\; 1 ,
@@ -254,6 +255,7 @@ famille comme actuellement la plus efficace --- \textbf{mais pour un critère de
 décision \emph{linéaire}}.
 
 \paragraph{Une classe voisine, à lire avant toute revendication.}
+\label{sec:voisine}
 Cherfaoui et Moulaï~\cite{cherfaoui2021} engendrent l'ensemble efficace de
 programmes en nombres entiers \emph{linéaires plus linéaires fractionnaires},
 dont les critères sont une \emph{somme} $c^{\top}x + (p^{\top}x+\alpha) /
@@ -275,13 +277,54 @@ et $0{,}08\%$ en $n=4$.
 \textbf{Mais les deux classes ne sont pas disjointes}, et l'inclusion va dans
 le sens inconfortable~: poser $c = 0$ redonne un rapport pur, donc la classe
 «~linéaire plus linéaire fractionnaire~» \textbf{contient} la nôtre.  Ce qui
-est établi, c'est que les membres \emph{génériques} de leur classe sont hors
-de portée d'ici --- énoncé sur notre méthode, démontrable à partir du seul
-énoncé de leur problème.  Ce qui reste ouvert est la seule question qui pèse
-sur le chapitre~\ref{ch:contrib}~: \emph{restreinte à $c = 0$, leur méthode
-produit-elle tout $\E$~?}  Si oui, le résultat d'ensemble complet n'est pas
-nouveau~; si elle renvoie un optimum ou une partie, il l'est.  Cela exige
-l'article, qui n'a pas pu être consulté.
+est établi, c'est seulement que les membres \emph{génériques} de leur classe
+sont hors de portée d'ici.
+
+\paragraph{L'article a depuis été lu, et la réponse est en deux temps.}
+\textbf{Leur mécanisme n'est pas le nôtre}~: Cherfaoui et
+Moula\"i~\cite{cherfaoui2021} travaillent dans l'espace des décisions, avec
+la coupe à ligne unique $\sum_{j \in H_l} x_j \geqslant 1$ et un
+branchement autour d'elle, leurs coupes étant justifiées par le fait que
+l'inefficacité dans un MOILFP auxiliaire entraîne l'inefficacité dans leur
+problème.  Aucune tranche, aucune région dans l'espace des critères~; et
+l'article porte un exemple illustratif, non une étude expérimentale.
+
+\textbf{Mais le livrable a treize ans, et il faut le dire.}  Toute cette
+ligne cite Chergui et Moula\"i~\cite{cherguimoulai2008}, et l'un de ces
+articles en énonce le contenu sans ambiguïté~: les auteurs évitent en
+général d'engendrer tout l'ensemble efficace, \emph{or Chergui et Moula\"i
+(2008) ont utilisé une procédure de branch-and-cut pour engendrer tout
+l'ensemble efficace} --- d'un MOILFP, précisément la classe traitée ici.
+\textbf{Produire tout $\E$ pour un MOILFP n'est donc pas nouveau, et n'est
+pas revendiqué comme tel.}  Ce que le chapitre~\ref{ch:contrib} propose est
+une \emph{autre voie} vers ce livrable~: $\E$ assemblé à partir du front
+non dominé par tranches, \textbf{sans aucun test d'efficacité sur les points
+de tranche}, avec des équations de tranche qui restent linéaires même pour
+des critères fractionnaires, à un coût mesuré inférieur à un doublement.
+
+\paragraph{La contribution se formule donc comme la voie et ce qu'elle
+achète, non comme le livrable.}
+\begin{itemize}[itemsep=3pt]
+\item \textbf{non revendiqué}~: engendrer $\E$ pour un MOILFP --- fait en
+      2008, dans l'espace des décisions~;
+\item \textbf{non revendiqué}~: la linéarisation du rapport dans le test
+      d'efficacité --- standard dans cette école~;
+\item \textbf{revendiqué}~: la voie par tranches, qui \emph{supprime} le
+      test d'efficacité au lieu de le payer~;
+\item \textbf{revendiqué}~: la caractérisation de la
+      section~\ref{sec:admissible}, dont rien d'approchant n'apparaît dans
+      les six articles lus~;
+\item \textbf{revendiqué}~: la classe de décision admissible, qui est ce que
+      l'explicitation de $\E$ achète~;
+\item \textbf{revendiqué}~: la mesure et les deux murs du
+      chapitre~\ref{ch:resultats}.
+\end{itemize}
+
+\noindent
+Une comparaison manque désormais de façon évidente, et elle est nommée
+plutôt que tue~: ce travail ne mesure jamais sa voie par tranches contre
+celle de Chergui et Moula\"i, faute de l'avoir implémentée.  C'est la
+première chose qu'une suite devrait faire.
 
 \section{Positionnement de ce travail}
 
@@ -300,18 +343,26 @@ qui la rendent \emph{exacte} plutôt qu'approchée, constitue l'apport de ce
 mémoire~:
 
 \begin{itemize}[itemsep=3pt]
-\item la forme $e_k$ à valeurs entières (section~\ref{sec:ek}), qui remplace
-      l'estimation d'un pas minimal par un seuil exact~;
-\item les résultats de tranche du chapitre~\ref{ch:contrib}, qui donnent
-      l'ensemble efficace complet~;
+\item la \emph{mise à l'échelle entière} de la forme $e_k$
+      (section~\ref{sec:ek}), qui remplace l'estimation d'un pas minimal par
+      le seuil exact $e_k \geqslant 1$ --- la linéarisation elle-même étant
+      standard dans cette école~;
+\item la \emph{voie} par tranches du chapitre~\ref{ch:contrib}, qui donne
+      l'ensemble efficace complet \textbf{sans aucun test d'efficacité sur
+      les points de tranche} --- le livrable, lui, existe depuis 2008
+      (section~\ref{sec:voisine})~;
+\item la caractérisation de la portée, dont rien d'approchant n'apparaît dans
+      les six articles lus~;
 \item la classe de fonctions de décision admissibles que cet ensemble explicite
       ouvre (section~\ref{sec:admissible}).
 \end{itemize}
 
 \begin{remarque}
-Cette section indique ce qui a été trouvé et ce qui ne l'a pas été~; elle ne
-constitue pas une revendication de nouveauté.  Une revue bibliographique
-complète, incluant la lecture intégrale des sources, reste à mener.
+Cette section indique ce qui a été trouvé et ce qui ne l'a pas été.  Six
+articles de cette ligne ont été lus intégralement, et cette lecture a
+\emph{retiré} une revendication plutôt que d'en ajouter~: engendrer tout
+$\E$ pour un MOILFP n'est pas nouveau.  Seule la méthode reprise
+ici~\cite{younsiabbaci2025} n'a pas été lue.
 \end{remarque}
 
 \chapter{La méthode dans l'espace des critères}

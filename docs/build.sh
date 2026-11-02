@@ -13,14 +13,13 @@ MD="--pdf-engine=lualatex -V geometry:margin=2.3cm -V fontsize=10pt \
     -V mainfont=DejaVuSerif -V monofont=DejaVuSansMono"
 
 # LaTeX, pdflatex: twice for cross-references.
-for f in results worked-examples algorithm-walkthrough theory \
-         hybrid-methods-note; do
+for f in results worked-examples algorithm-walkthrough theory; do
   echo "== $f"; $PDFLATEX $f.tex >/dev/null; $PDFLATEX $f.tex >/dev/null
 done
 
 # These two carry a bibliography: latex, bibtex, then latex twice more so the
 # \cite labels and the page numbers both settle.
-for f in hybrid-article memoire-fr; do
+for f in hybrid-article memoire-fr hybrid-methods-note; do
   echo "== $f"
   $PDFLATEX $f.tex >/dev/null
   bibtex $f >/dev/null

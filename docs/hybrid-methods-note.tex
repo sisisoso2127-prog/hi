@@ -32,7 +32,8 @@ over the integer efficient set:\\
 \begin{abstract}
 Optimizing a linear fractional function $\Phi$ over the efficient set of a
 multi-objective integer program is usually done by repeatedly truncating the
-\emph{decision} space with Sylva--Crema cuts. Each cut states a disjunction, so
+\emph{decision} space with Sylva--Crema cuts~\cite{sylvacrema}. Each cut
+states a disjunction, so
 it costs $p$ binary variables and $p+1$ big-$M$ rows, and the sub-problem
 solved at every iteration is strictly larger than the one before it. We first
 move the unexplored part of the problem into \emph{criterion} space, as a list
@@ -63,7 +64,8 @@ Pruning the open list the moment its best bound cannot beat the incumbent
 removes a quarter of the sub-problems and no measurable time; stacked on the
 metaheuristic seed it removes 4\% rather than 25\%, because the two feed the
 same bound comparison and are substitutes rather than complements. And not
-re-deriving a theorem of Ecker and Kouada once per inefficient box removes
+re-deriving a theorem of Ecker and Kouada~\cite{eckerkouada} once per
+inefficient box removes
 $6\%$ of the branch \& bound nodes at an identical box count. Both are reported
 in work rather than in seconds, because both effects are smaller than this
 machine's noise floor and no number of repeats changes that.  A third, warm
@@ -393,7 +395,10 @@ ties included, since the argument never assumes $y^{*}$ unique.
 \end{proof}
 
 \noindent
-The proposition is due to Ecker and Kouada; what is measured here is the cost
+The proposition is due to Ecker and Kouada~\cite{eckerkouada}, the
+one-program test to Isermann~\cite{isermann1974} (Benson's
+variant~\cite{benson1978} is the one Oua\"il and Chergui use); what is
+measured here is the cost
 of not using it. With \emph{fractional} criteria it is false, and the proof
 says where: the $k$-th term of the objective carries a factor $D_k(y)$ that
 varies from point to point, the objective stops being monotone in $\Z$, and a
@@ -1991,18 +1996,36 @@ linear-plus-linear-fractional criteria, and the characterisation says so in
 advance; on that subfamily the level sets do become unions of hyperplanes
 and the polyhedral widening reaches them.
 
-\paragraph{What this does and does not settle about priority.}
+\paragraph{What this settles about priority, now that the paper has been
+read.}
 It does not make the two classes disjoint, and the containment runs the
 wrong way for comfort: setting $c = 0$ makes $Z$ a pure ratio, so the
 linear-plus-linear-fractional class \textbf{contains} MOILFP as its $c = 0$
-case.  What is established is that the \emph{generic} members of their class
-are out of reach here --- a statement about this method, provable from their
-problem statement alone and needing no reading of their algorithm.  What
-stays open is the only question bearing on the complete-set result:
-\emph{restricted to $c = 0$, does their method produce the whole of $\E$?}
-If it does, that result is not new; if it returns one optimum or a subset,
-it is.  That needs the paper, which could not be reached from the
-environment this work was prepared in.
+case.  What the rank condition establishes is only that the \emph{generic}
+members of their class are out of reach here.  The question it left open ---
+restricted to $c = 0$, does their method produce the whole of $\E$? --- has
+since been answered by reading the paper and the line behind it.
+
+\textbf{Their mechanism is not this one.}  Cherfaoui and
+Moula\"i~\cite{cherfaoui2021} work in decision space: $X_l$ narrowed by the
+single-row efficient cut $\sum_{j \in H_l} x_j \geqslant 1$ with
+branch-and-bound around it, the cuts justified by the fact that inefficiency
+in an auxiliary MOILFP implies inefficiency in their problem.  No slice, no
+criterion-space region, and an illustrative example rather than a
+computational study.
+
+\textbf{But the deliverable is thirteen years old.}  Every paper in this
+line cites Chergui and Moula\"i~\cite{cherguimoulai2008}, and one states its
+content plainly: authors generally avoid generating the whole efficient set,
+\emph{however Chergui and Moula\"i (2008) used a branch-and-cut procedure to
+generate the whole efficient set} --- of a MOILFP, the class treated here.
+\textbf{Producing all of $\E$ for a MOILFP is not new and is not claimed as
+new.}  What this work offers is a different route: $\E$ assembled from the
+non-dominated front by slices, with no efficiency test paid on any slice
+point, at a measured cost of under one doubling.  The comparison that is now
+obviously missing --- this route against Chergui and Moula\"i's --- was not
+made, because that method was not implemented here.  It is named rather than
+hidden.
 
 \subsection{Several decision functions at once}
 
@@ -2738,38 +2761,40 @@ Optimising a linear fractional function over the integer efficient set has a
 sustained literature, largely from Moula\"i and collaborators:
 
 \begin{itemize}\itemsep2pt
-\item Drici, Ouail and Moula\"i, \emph{Optimizing a linear fractional function
-      over the integer efficient set}, Annals of Operations Research (2018) ---
-      branch-and-cut with continuous linear fractional programming.
-\item \emph{A linear fractional optimization over an integer efficient set},
-      RAIRO-Operations Research (2015) --- iteratively added constraints
-      cutting away unwanted points.
-\item Ouail and Chergui, \emph{Hyperbolic optimization over the integer
-      efficient set of MOILFP}, arXiv:1907.02036 --- branch and bound.
-\item Chaiblaine, Moula\"i and Cherfaoui, \emph{An exact method for optimizing
-      two linear fractional functions over the efficient set of a MOILFP},
-      arXiv:2003.05364 --- branch and bound with cutting planes.
-\item \emph{Quadratic optimization over a discrete Pareto set of a
-      multi-objective linear fractional program}, Optimization \textbf{70}(7)
-      (2021).
-\item Younsi-Abbaci and Moula\"i (2021--2023) --- stochastic and
-      interval-coefficient variants under chance constraints.
+\item Drici, Oua\"il and Moula\"i~\cite{drici2018} --- branch-and-cut with
+      continuous linear fractional programming.
+\item Mahdi and Chaabane~\cite{mahdi2015} --- iteratively added constraints
+      cutting away unwanted points; the one of the six that cuts with the
+      Sylva--Crema disjunction and its binaries.
+\item Oua\"il and Chergui~\cite{ouail2019} --- branch and bound.
+\item Chaiblaine, Moula\"i and Cherfaoui~\cite{chaiblaine2020} --- branch and
+      bound with cutting planes, two decision functions at once.
+\item Moula\"i and Mekhilef~\cite{moulai2021} --- a quadratic decision
+      function.
+\item Cherfaoui and Moula\"i~\cite{cherfaoui2021} --- generating the whole
+      efficient set of the linear-plus-linear-fractional class.
+\item The method this work reimplements~\cite{younsiabbaci2025}, and its
+      stochastic and interval-coefficient variants.
 \end{itemize}
 
 \noindent
-Every one of these searches \emph{decision} space. That part of the earlier
-claim holds.
+All six of the first were read in full, and every one of them searches
+\emph{decision} space. That part of the earlier claim holds.  Four of the six
+cut with the single row $\sum_{j \in H_l} x_j \geqslant 1$ of Chergui and
+Moula\"i~\cite{cherguimoulai2008} rather than with a disjunction, which is
+where the earlier cost model over-reached.
 
 \paragraph{But criterion-space decomposition is not new, and that bounds the
 claim here.}
-Boland, Charkhgard and Savelsbergh, \emph{A new method for optimizing a linear
-function over the efficient set of a multiobjective integer program}, European
-Journal of Operational Research (2017), works in the full-dimensional criterion
+Boland, Charkhgard and Savelsbergh~\cite{boland2017} work in the
+full-dimensional criterion
 space and decomposes it at each iteration after locating an unknown
 non-dominated point. Structurally that is the method of
 Section~\ref{sec:box} with a \emph{linear} secondary objective. The same group's
-balanced box, boxed line and triangle splitting methods are the bi-objective
-precursors. \textbf{So the box decomposition itself is prior art and is not
+balanced box~\cite{balancedbox} and triangle
+splitting~\cite{trianglesplitting} methods are the bi-objective
+precursors, and enumerating the whole non-dominated set is its own
+subject~\cite{ozlen2009,lokman2013}. \textbf{So the box decomposition itself is prior art and is not
 claimed here}; what this note adds to it is the fractional secondary objective,
 which is not a cosmetic change for the reason in
 Remark~\ref{rem:notZ} --- $\Phi$ is a function of $x$ and not of $\Z(x)$ --- and
@@ -2913,5 +2938,20 @@ $93 + 10 + 3 + 6 = 112$.
 Every comparison in this note is reproduced by scripts in the repository, run
 on every commit by continuous integration, which assert that each seeded run
 returns the same proved optimum as the unseeded one.
+
+\section*{References}
+\addcontentsline{toc}{section}{References}
+
+\noindent
+\textbf{Provenance.}  Six papers of the fractional line were read in full
+(Mahdi and Chaabane, Drici et al., Oua\"il and Chergui, Chaiblaine et al.,
+Moula\"i and Mekhilef, Cherfaoui and Moula\"i).  Every other field was taken
+from bibliographic indexes and written only where two independent indexes
+agree, since the publishers could not be reached from the environment this
+note was prepared in.  One entry is marked \textsc{unresolved}: the method
+this work reimplements.
+
+\bibliographystyle{plain}
+\bibliography{references}
 
 \end{document}

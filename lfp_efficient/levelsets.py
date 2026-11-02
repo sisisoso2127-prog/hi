@@ -134,13 +134,22 @@ So on all but a vanishing subfamily this package **does not reach**
 linear-plus-linear-fractional criteria, and the characterisation says so in
 advance rather than leaving it to be discovered.
 
-**What this does not settle.**  The two classes are *not* disjoint, and the
-containment runs the uncomfortable way: ``c = 0`` gives a pure ratio, so the
-linear-plus-linear-fractional class **contains** MOILFP.  What is proved is
-that the *generic* members of their class are out of reach here -- a
-statement about this package, from their problem statement alone.  What
-stays open is the one question bearing on the complete-set result:
-restricted to ``c = 0``, does their method produce the whole of ``E(P_D)``?
+**What this settles about priority.**  The two classes are *not* disjoint,
+and the containment runs the uncomfortable way: ``c = 0`` gives a pure
+ratio, so the linear-plus-linear-fractional class **contains** MOILFP.  What
+the rank condition proves is only that the *generic* members of their class
+are out of reach here.
+
+The paper has since been read.  Its mechanism is **not** this one: decision
+space, ``X_l`` narrowed by the single-row cut ``sum_{j in H_l} x_j >= 1``
+with branch-and-bound around it.  But the *deliverable* is not new:
+Chergui and Moulai (2008) generated the whole efficient set of a MOILFP by
+branch-and-cut, thirteen years earlier, and every paper in this line cites
+them.  **Producing all of E(P_D) for a MOILFP is therefore not claimed as
+new here.**  What this package offers is a different route to it -- E(P_D)
+assembled from the non-dominated front by slices, with no efficiency test
+paid on any slice point -- and what that route buys, which is the
+admissible decision class of :mod:`lfp_efficient.over`.
 
 The premise is the problem class as that title states it; the inference from
 there is the algebra above.  Confirming it still needs the paper itself, which

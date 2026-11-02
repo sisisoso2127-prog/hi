@@ -1,0 +1,102 @@
+\begin{thebibliography}{10}
+
+\bibitem{benson1978}
+Harold~P. Benson.
+\newblock Existence of efficient solutions for vector maximization problems.
+\newblock {\em Journal of Optimization Theory and Applications},
+  26(4):569--580, 1978.
+
+\bibitem{balancedbox}
+Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
+\newblock A criterion space search algorithm for biobjective integer
+  programming: The balanced box method.
+\newblock {\em INFORMS Journal on Computing}, 27(4):735--754, 2015.
+
+\bibitem{trianglesplitting}
+Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
+\newblock A criterion space search algorithm for biobjective mixed integer
+  programming: The triangle splitting method.
+\newblock {\em INFORMS Journal on Computing}, 27(4):597--618, 2015.
+
+\bibitem{boland2017}
+Natashia Boland, Hadi Charkhgard, and Martin Savelsbergh.
+\newblock A new method for optimizing a linear function over the efficient set
+  of a multiobjective integer program.
+\newblock {\em European Journal of Operational Research}, 260(3):904--919,
+  2017.
+
+\bibitem{chaiblaine2020}
+Yacine Chaiblaine, Mustapha Moula{\"\i}, and Yasmine Cherfaoui.
+\newblock An exact method for optimizing two linear fractional functions over
+  the efficient set of a multiobjective integer linear fractional program.
+\newblock arXiv:2003.05364 [math.OC], 2020.
+
+\bibitem{cherfaoui2021}
+Yasmine Cherfaoui and Mustapha Moula{\"\i}.
+\newblock Generating the efficient set of multiobjective integer linear plus
+  linear fractional programming problems.
+\newblock {\em Annals of Operations Research}, 296(1):735--753, 2021.
+
+\bibitem{cherguimoulai2008}
+Mohamed El-Amine Chergui and Mustapha Moula{\"\i}.
+\newblock An exact method for a discrete multiobjective linear fractional
+  optimization.
+\newblock {\em Journal of Applied Mathematics and Decision Sciences},
+  2008:760191, 2008.
+
+\bibitem{drici2018}
+Wassila Drici, Fatma~Zohra Oua{\"\i}l, and Mustapha Moula{\"\i}.
+\newblock Optimizing a linear fractional function over the integer efficient
+  set.
+\newblock {\em Annals of Operations Research}, 267(1):135--151, 2018.
+
+\bibitem{eckerkouada}
+J.~G. Ecker and I.~A. Kouada.
+\newblock Finding efficient points for linear multiple objective programs.
+\newblock {\em Mathematical Programming}, 8(1):375--377, 1975.
+
+\bibitem{isermann1974}
+Heinz Isermann.
+\newblock Proper efficiency and the linear vector maximization problem.
+\newblock {\em Operations Research}, 22(1):189--191, 1974.
+
+\bibitem{lokman2013}
+Banu Lokman and Murat K{\"o}ksalan.
+\newblock Finding all nondominated points of multi-objective integer programs.
+\newblock {\em Journal of Global Optimization}, 57(2):347--365, 2013.
+
+\bibitem{mahdi2015}
+Sara Mahdi and Djamal Chaabane.
+\newblock A linear fractional optimization over an integer efficient set.
+\newblock {\em RAIRO-Operations Research}, 49(2):265--278, 2015.
+
+\bibitem{moulai2021}
+Mustapha Moula{\"\i} and Amal Mekhilef.
+\newblock Quadratic optimization over a discrete {P}areto set of a
+  multi-objective linear fractional program.
+\newblock {\em Optimization}, 70(7):1425--1442, 2021.
+
+\bibitem{ouail2019}
+Fatma~Zohra Oua{\"\i}l and Mohamed El-Amine Chergui.
+\newblock Hyperbolic optimization over the integer efficient set of {MOILFP}.
+\newblock arXiv:1907.02036 [math.OC], 2019.
+
+\bibitem{ozlen2009}
+Melih {\"O}zlen and Meral Azizo{\u{g}}lu.
+\newblock Multi-objective integer programming: A general approach for
+  generating all non-dominated solutions.
+\newblock {\em European Journal of Operational Research}, 199(1):25--35, 2009.
+
+\bibitem{sylvacrema}
+John Sylva and Alejandro Crema.
+\newblock A method for finding the set of non-dominated vectors for multiple
+  objective integer linear programs.
+\newblock {\em European Journal of Operational Research}, 158(1):46--55, 2004.
+
+\bibitem{younsiabbaci2025}
+Leila Younsi-Abbaci.
+\newblock Optimizing a linear fractional function over an integer efficient
+  set.
+\newblock {\em Reliability: Theory \& Applications}, 2025.
+
+\end{thebibliography}
