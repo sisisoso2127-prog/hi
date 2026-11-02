@@ -475,14 +475,48 @@ Restated against what the literature holds:
       Section~\ref{sec:walls}.
 \end{itemize}
 
+\paragraph{And the comparison that claim needs has now been made.}
+Naming the gap was not enough, so the baseline was built:
+\texttt{decision\_space.py} enumerates $\E$ in decision space with the
+single-row efficient cut
+\[
+  H_l = \{\, j \in N_l : \exists k,\ \gamma^k_j > 0 \,\}
+        \ \cup\
+        \{\, j \in N_l : \gamma^k_j = 0 \ \text{for every } k \,\} ,
+  \qquad \sum_{j \in H_l} x_j \geqslant 1 ,
+\]
+taken from the text of the four papers above, which write it identically and
+all attribute it to Chergui and Moula\"i.  It is not a reimplementation of
+their paper --- unreachable from here, so its node objective is unknown and
+each node is driven by $\Z_1$, with the suite checking that three different
+drivers return the same set.  Thirty instances, $n = 5$ to $10$, $25$\,s to
+each side:
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & slice route & cut route \\
+\midrule
+sets agree, uncensored instances  & \multicolumn{2}{c}{$20$ of $20$} \\
+median time ratio per instance    & $1\times$ & $2.99\times$ \ $[1.52,\ 11.90]$ \\
+\textbf{efficiency tests, median} & $\mathbf{0}$ & $119$ \ (max $1342$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \noindent
-One comparison is now obviously missing and is named rather than hidden:
-this work never measures its complete-set route against Chergui and
-Moula\"i's, because that method was not implemented here.  The figures in
-Section~\ref{sec:complete} say what $\E$ costs \emph{relative to the
-optimisation run of the method this one replaces}, which is a different and
-weaker statement.  Making that comparison is the first thing a continuation
-should do.
+The seconds are the weak half: their interquartile range is $1.52$ to
+$11.90$, which is what a $\pm 30\%$ noise floor does to a quantity that also
+tracks $|F|$ and $|\E|$.  The censoring, however, falls on one side only ---
+six of ten censored instances were the cut route hitting its budget while the
+slice route finished, none the reverse --- so $2.99\times$ is a lower bound.
+
+The column that does not move is the one the claim rests on.  The slice route
+pays \textbf{no} efficiency test on any instance, by
+Corollary~\ref{cor:union} and not by tuning; the cut route pays one per
+integer point it meets.  Since the set itself has been obtainable since 2008,
+that count \emph{is} the contribution, and it is identical on every run and
+every machine.
 
 \subsection{Several decision functions at once}
 

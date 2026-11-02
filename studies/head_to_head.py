@@ -118,21 +118,55 @@ def run(configs, seeds, budget):
                 say(f"    !! left={left}\n    !! right={right}")
 
     usable = [r for r in records if r["same"] and not r["censored"]]
+    censored = [r for r in records if r["censored"]]
+    # A censored run returns a SUBSET, so its set differing from the other
+    # side's is arithmetic, not a bug.  Counting those together with real
+    # disagreements -- as a first version of this summary did -- invents a
+    # defect out of the budget.  Only an uncensored difference is a bug.
+    real_bugs = [r for r in records if not r["same"] and not r["censored"]]
+
     say("")
-    say(f"instances run      : {len(records)}")
-    say(f"censored           : {sum(1 for r in records if r['censored'])}")
-    say(f"disagreements      : {sum(1 for r in records if not r['same'])}"
+    say(f"instances run                 : {len(records)}")
+    say(f"censored (a subset, excluded) : {len(censored)}")
+    say(f"disagreements among UNCENSORED: {len(real_bugs)}"
         "   (any at all is a bug)")
+    if censored:
+        cut_only = sum(1 for r in censored
+                       if r["cut_seconds"] >= budget * 0.99
+                       and r["slice_seconds"] < budget * 0.99)
+        slice_only = sum(1 for r in censored
+                         if r["slice_seconds"] >= budget * 0.99
+                         and r["cut_seconds"] < budget * 0.99)
+        both = len(censored) - cut_only - slice_only
+        say(f"  censoring by side           : cut route {cut_only}, "
+            f"slice route {slice_only}, both {both}")
+        say("  -> censoring that falls on one side only makes the ratio below "
+            "a LOWER bound on the gap")
     if usable:
-        say(f"usable             : {len(usable)}")
-        say(f"median time ratio  : "
-            f"{median([r['cut_seconds'] / r['slice_seconds'] for r in usable]):.2f}x"
-            "   (cut route / slice route)")
-        say(f"median |E|         : {median([r['size'] for r in usable])}")
-        say(f"median efficiency tests  cut route: "
-            f"{median([r['cut_tests'] for r in usable])}   slice route: 0")
-        say(f"total efficiency tests   cut route: "
-            f"{sum(r['cut_tests'] for r in usable)}   slice route: 0")
+        # Wall-clock below the machine's resolution cannot carry a ratio: an
+        # instance finishing in 0.00s yields 0.00x, which is noise and not a
+        # measurement.  Such rows are dropped from the ratio and counted.
+        FLOOR = 0.05
+        timed = [r for r in usable
+                 if r["slice_seconds"] >= FLOOR and r["cut_seconds"] >= FLOOR]
+        dropped = len(usable) - len(timed)
+        say(f"usable                        : {len(usable)}")
+        say(f"median |E|                    : {median([r['size'] for r in usable])}"
+            f"   (max {max(r['size'] for r in usable)})")
+        if timed:
+            ratios = [r["cut_seconds"] / r["slice_seconds"] for r in timed]
+            say(f"median time ratio             : {median(ratios):.2f}x   "
+                f"(cut route / slice route; {len(timed)} instances above the "
+                f"{FLOOR}s floor, {dropped} below it and dropped)")
+            say(f"  range                       : {min(ratios):.2f}x "
+                f"to {max(ratios):.2f}x")
+        say(f"EFFICIENCY TESTS  cut route   : median "
+            f"{median([r['cut_tests'] for r in usable])}, "
+            f"max {max(r['cut_tests'] for r in usable)}, "
+            f"total {sum(r['cut_tests'] for r in usable)}")
+        say(f"EFFICIENCY TESTS  slice route : "
+            f"{sum(r['slice_tests'] for r in usable)}   "
+            "(zero by the slice theorem, not by tuning)")
     return records
 
 

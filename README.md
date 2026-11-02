@@ -503,8 +503,26 @@ So **producing all of `E(P_D)` for a MOILFP is not new and is not claimed as
 new here.** What this work offers is a different route to it — `E(P_D)`
 assembled from the non-dominated front by slices, with *no efficiency test paid
 on any slice point* — plus what that route buys: the admissible decision class.
-The comparison this leaves missing, and does not hide, is this route against
-Chergui & Moulaï's, which was not implemented here.
+**And that comparison has now been made.** `lfp_efficient/decision_space.py`
+enumerates `E(P_D)` in decision space with the single-row efficient cut, built
+from the text of four papers that write it identically and all attribute it to
+Chergui & Moulaï — not a reimplementation of their paper, which is unreachable
+from here. Thirty instances, `n = 5` to `10`, 25 s per side:
+
+| | slice route | cut route |
+|---|---|---|
+| sets agree (uncensored) | 20 of 20 | 20 of 20 |
+| median time ratio | 1× | **2.99×**  `[1.52, 11.90]` |
+| **efficiency tests, median** | **0** | **119** (max 1342) |
+
+The seconds are the weak half — that interquartile range is a ±30% noise floor
+acting on a quantity that also tracks `|F|` and `|E|`. But the censoring falls
+on one side only (six of ten censored instances were the cut route hitting its
+budget while slices finished, none the reverse), so 2.99× is a **lower bound**.
+The column that does not move is the claim: the slice route pays **no**
+efficiency test, by the slice theorem and not by tuning, where the cut route
+pays one per integer point met. Since the set itself has been obtainable since
+2008, that count *is* the contribution.
 
 
 The reachable side collapses: those four differ only in their *decision*

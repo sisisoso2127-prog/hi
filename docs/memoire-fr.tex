@@ -320,11 +320,42 @@ achète, non comme le livrable.}
       chapitre~\ref{ch:resultats}.
 \end{itemize}
 
+\paragraph{Et cette comparaison a été faite.}
+La nommer ne suffisait pas~: le point de comparaison a été construit.
+\texttt{decision\_space.py} énumère $\E$ dans l'espace des décisions avec la
+coupe à ligne unique $\sum_{j \in H_l} x_j \geqslant 1$, prise du texte des
+quatre articles ci-dessus, qui l'écrivent à l'identique et l'attribuent tous
+à Chergui et Moula\"i.  Ce n'est pas une réimplémentation de leur article ---
+inaccessible d'ici, donc la fonction qui pilote chaque n{\oe}ud y est inconnue
+et c'est $\Z_1$ qui la remplace, la suite vérifiant que trois pilotes
+différents rendent le même ensemble.  Trente instances, $n = 5$ à $10$,
+$25$\,s par côté~:
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & voie par tranches & voie par coupes \\
+\midrule
+ensembles identiques (non censurées) & \multicolumn{2}{c}{$20$ sur $20$} \\
+rapport de temps médian              & $1\times$ & $2{,}99\times$ \ $[1{,}52;\ 11{,}90]$ \\
+\textbf{tests d'efficacité, médiane} & $\mathbf{0}$ & $119$ \ (max $1342$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \noindent
-Une comparaison manque désormais de façon évidente, et elle est nommée
-plutôt que tue~: ce travail ne mesure jamais sa voie par tranches contre
-celle de Chergui et Moula\"i, faute de l'avoir implémentée.  C'est la
-première chose qu'une suite devrait faire.
+Les secondes sont la moitié faible~: leur intervalle interquartile va de
+$1{,}52$ à $11{,}90$.  Mais la censure ne tombe que d'un côté --- six des dix
+instances censurées sont la voie par coupes atteignant son budget alors que
+les tranches avaient fini, aucune l'inverse --- donc $2{,}99\times$ est une
+\emph{borne inférieure}.
+
+La colonne qui ne bouge pas est celle sur laquelle repose la revendication~:
+la voie par tranches ne paie \textbf{aucun} test d'efficacité, par le
+théorème de tranche et non par réglage, là où la voie par coupes en paie un par
+point entier rencontré.  Le livrable étant disponible depuis 2008, c'est ce
+compte qui \emph{est} la contribution --- et il est identique sur toute
+machine.
 
 \section{Positionnement de ce travail}
 
