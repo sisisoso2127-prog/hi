@@ -62,6 +62,7 @@ inside a slice and the slice really does hold many points; the count is then
 large because the answer is, not because the method is wasteful.
 """
 from dataclasses import dataclass, field
+from math import gcd
 from fractions import Fraction
 from time import monotonic
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -265,16 +266,36 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
 
     m = len(free)
     free_bounds = [bounds[j] for j in free]
+
+    # Clear the denominators, once, before the scan.
+    #
+    # The elimination above leaves every row rational, and the scan then spent
+    # its whole life in ``Fraction``: a profile at n=10 put 76% of the run in
+    # ``fractions.py``, with 8.6 million Fraction constructions for 67 boxes --
+    # the arithmetic, not the search, was the cost.  Multiplying a ``a'x <= b``
+    # row by a positive integer leaves it the same constraint, so scaling each
+    # row by the lcm of its denominators makes the hot loop run on Python
+    # ``int``: exact as before, with none of the boxing.  Nothing about which
+    # points are returned changes, which is what the suite checks.
+    int_rows = []
+    for coeffs, rhs in le_rows:
+        scale = 1
+        for value in (*coeffs, rhs):
+            scale = scale * value.denominator // gcd(scale, value.denominator)
+        int_rows.append(([int(c * scale) for c in coeffs], int(rhs * scale)))
+
     suffix = []
-    for coeffs, _ in le_rows:
-        tail = [F(0)] * (m + 1)
+    for coeffs, _ in int_rows:
+        tail = [0] * (m + 1)
         for k in range(m - 1, -1, -1):
-            tail[k] = tail[k + 1] + min(F(0), coeffs[k] * free_bounds[k])
+            step = coeffs[k] * free_bounds[k]
+            tail[k] = tail[k + 1] + (step if step < 0 else 0)
         suffix.append(tail)
 
     points: List[tuple] = []
-    partial = [F(0)] * len(le_rows)
+    partial = [0] * len(int_rows)
     assignment = [0] * m
+    rows = list(enumerate(int_rows))
 
     def descend(t: int) -> None:
         if t == m:
@@ -289,11 +310,12 @@ def points_satisfying(problem: MOILFP, bounds: Sequence[int],
             if all(c.holds(x) for c in others):
                 points.append(tuple(int(c) for c in x))
             return
+        suffix_t = t + 1
         for value in range(free_bounds[t] + 1):
             ok, saved = True, partial[:]
-            for k, (coeffs, rhs) in enumerate(le_rows):
+            for k, (coeffs, rhs) in rows:
                 partial[k] += coeffs[t] * value
-                if partial[k] + suffix[k][t + 1] > rhs:
+                if partial[k] + suffix[k][suffix_t] > rhs:
                     ok = False
                     break
             if ok:
