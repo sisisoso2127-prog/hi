@@ -41,20 +41,30 @@ affines de dénominateur strictement positif sur $\Dset$.  Ce mémoire traite
 deux questions portant sur l'ensemble efficace $\E$~: le \emph{produire en
 entier}, et y maximiser un critère de décision linéaire fractionnaire $\Phi$.
 
-Les méthodes existantes pour la seconde question travaillent dans l'espace des
-\emph{décisions}, en tronquant $\Dset$ par des coupes de Sylva--Crema.  Chaque
-coupe étant une disjonction, elle coûte $p$ variables binaires et $p+1$
-contraintes de type grand-$M$~: chaque sous-problème est strictement plus gros
-que le précédent.  Nous conservons la partie inexplorée dans l'espace des
+Les méthodes existantes pour les deux questions travaillent dans l'espace des
+\emph{décisions}, ce que confirment six articles de cette littérature lus
+intégralement.  La méthode reprise ici tronque $\Dset$ par des coupes de
+Sylva--Crema~: chaque coupe étant une disjonction, elle coûte $p$ variables
+binaires et $p+1$ contraintes de type grand-$M$, et chaque sous-problème est
+strictement plus gros que le précédent.  Cinq des six coupent au contraire par
+une \emph{ligne unique} et ne paient pas cette croissance~; le modèle de coût
+ci-dessous vaut pour la première et non pour l'espace des décisions en
+général.  Nous conservons la partie inexplorée dans l'espace des
 \emph{critères}, sous forme d'une liste de boîtes~: la troncature devient une
 soustraction de boîtes, chaque sous-problème est $\Dset$ augmenté de quelques
 contraintes linéaires ordinaires, et \textbf{le modèle ne grossit jamais}.
 
-Quatre contributions en découlent.  D'abord une caractérisation qui rend
-l'ensemble efficace complet accessible~: \textbf{si $v$ est non dominé, alors
-tout $x \in \Dset$ tel que $\Z(x) = v$ est efficace}, de sorte que $\E$ est
-exactement la réunion des tranches du front et qu'\emph{aucun test d'efficacité
-n'est payé sur un point de tranche}.  Ensuite, une tranche est $\Dset$ augmenté
+Quatre contributions en découlent.  D'abord une caractérisation qui donne une
+\emph{autre voie} vers l'ensemble efficace complet --- le livrable lui-même est
+disponible depuis que Chergui et Moula\"i l'ont engendré par branch-and-cut en
+2008, et aucune antériorité n'est revendiquée pour lui~: \textbf{si $v$ est non
+dominé, alors tout $x \in \Dset$ tel que $\Z(x) = v$ est efficace}, de sorte
+que $\E$ est exactement la réunion des tranches du front et qu'\emph{aucun test
+d'efficacité n'est payé sur un point de tranche}.  Mesurée contre une
+énumération en espace des décisions construite sur la coupe que ces articles
+partagent, sur trente instances où les deux rendent le même $\E$~:
+\textbf{zéro} test d'efficacité contre une médiane de $119$ et un maximum de
+$1342$.  Ensuite, une tranche est $\Dset$ augmenté
 de $p$ équations \emph{linéaires}, y compris pour des critères fractionnaires~;
 résoudre ces équations élimine $r$ variables avant toute énumération et vaut un
 facteur médian de $49$.  Ensuite une hybridation qui paie~: une recherche

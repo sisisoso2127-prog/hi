@@ -6,6 +6,14 @@ Pure-Python, dependency-free, exact-arithmetic implementation of
 > efficient set*, **Reliability: Theory & Applications**, No 4 (40), Vol. 11,
 > March 2025.
 
+⚠️ **That citation does not resolve.** RT&A's own archive puts Vol. 20 in 2025,
+while Vol. 11 is roughly a decade earlier, and no bibliographic index returns
+the paper under this title in that journal. Three things to check against the
+offprint: a different volume/year, a different venue, or a conference version
+(the title appears on the ICAAM 2024 programme). Everything below is an
+implementation of the method as stated to us; the citation needs fixing before
+it is quoted anywhere.
+
 ## The problem
 
 Given the multi-objective integer linear program

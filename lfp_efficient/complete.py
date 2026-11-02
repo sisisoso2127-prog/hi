@@ -39,6 +39,17 @@ equalities like any other row, and they are the tightest rows in the system.
 
 What this does and does not claim
 ---------------------------------
+**The deliverable is not new.**  Chergui and Moulai (2008) generated the whole
+efficient set of a MOILFP by branch-and-cut, and every paper in this
+literature cites them; this module claims no priority for producing ``E(P_D)``.
+What it offers is a different *route* -- the set assembled from the front by
+slices rather than reached point by point -- and the difference is a count
+rather than an adjective.  :mod:`lfp_efficient.decision_space` implements the
+other route with the efficient cut those papers share, and on thirty instances
+where both return the same ``E(P_D)``: **zero** efficiency tests here against a
+median of 119 and a maximum of 1342 there.  That count is deterministic; the
+median 2.99x in seconds is not, and its censoring falls only on the other side.
+
 ``complete`` is ``True`` only when the front proved itself complete *and* no
 point budget was hit.  It is then the whole of ``E(P_D)``, proved, and the
 test suite checks it against exhaustive enumeration.

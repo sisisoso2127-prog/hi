@@ -12,6 +12,10 @@ Reference implementation of
 
 generalised to criteria that are themselves ratios (MOILFP).
 
+⚠️ **That citation does not resolve** — RT&A's archive puts Vol. 20 in 2025 and
+no index returns the paper under this title there. See
+`docs/references.bib`, which marks it UNRESOLVED and lists what to check.
+
 ## The problem
 
 ```
@@ -243,6 +247,10 @@ is *less* than one might expect: enumerating the entire front costs only twice
 what finding the single best point costs.
 
 ## The last gap: the complete efficient set, not just the front
+
+*(A route to it, not a first: Chergui & Moulaï generated `E(P_D)` for a MOILFP
+by branch-and-cut in 2008. What is measured below is the route — zero
+efficiency tests against a median of 119 for the decision-space one.)*
 
 `enumerate_front` proves its **vector** list complete, and says in the same
 breath that the **point** list is not — one point is kept per slice. That was

@@ -23,18 +23,29 @@ strictly positive denominator on $\Dset$.  We address two questions about the
 efficient set $\E$: producing \emph{all} of it, and maximising a further linear
 fractional criterion $\Phi$ over it.
 
-Existing methods for the second question work in \emph{decision} space,
-truncating $\Dset$ with Sylva--Crema cuts.  Each cut is a disjunction and
-costs $p$ binary variables and $p+1$ big-$M$ rows, so every sub-problem is
-strictly larger than the last.  We keep the unexplored part of the problem in
-\emph{criterion} space instead, as a list of boxes: truncation becomes a box
-subtraction, every sub-problem is $\Dset$ plus a handful of ordinary linear
-rows, and the model never grows.
+Existing methods for both questions work in \emph{decision} space, which six
+papers of that literature, read in full, confirm.  The method improved on here
+truncates $\Dset$ with Sylva--Crema cuts, where each cut is a disjunction
+costing $p$ binary variables and $p+1$ big-$M$ rows, so every sub-problem is
+strictly larger than the last; five of the six cut instead with a single row
+over the improving directions and pay no such growth, and the cost model below
+is stated against the first of those two and not against decision space at
+large.  We keep the unexplored part of the problem in \emph{criterion} space
+instead, as a list of boxes: truncation becomes a box subtraction, every
+sub-problem is $\Dset$ plus a handful of ordinary linear rows, and the model
+never grows.
 
-Four results follow.  First, a characterisation that makes the complete
-efficient set cheap: \textbf{if $v$ is non-dominated then every $x \in \Dset$
-with $\Z(x) = v$ is efficient}, so $\E$ is exactly the union of the slices of
-the non-dominated set and \emph{no efficiency test is paid on any slice point}.
+Four results follow.  First, a characterisation that gives a different
+\emph{route} to the complete efficient set --- the set itself has been
+obtainable since Chergui and Moula\"i generated it by branch-and-cut in 2008,
+and no priority is claimed for it: \textbf{if $v$ is non-dominated then every
+$x \in \Dset$ with $\Z(x) = v$ is efficient}, so $\E$ is exactly the union of
+the slices of the non-dominated set and \emph{no efficiency test is paid on
+any slice point}.  Measured against a decision-space enumeration built from
+the efficient cut those papers share, on thirty instances where both return
+the same $\E$: \textbf{zero} efficiency tests against a median of $119$ and a
+maximum of $1342$, at a median $2.99\times$ in time whose censoring falls
+only on the other side.
 Second, a slice is $\Dset$ plus $p$ \emph{linear} equations, for fractional
 criteria as much as for linear ones; solving those equations eliminates $r$
 variables before enumeration begins and is worth a median $49\times$ over
