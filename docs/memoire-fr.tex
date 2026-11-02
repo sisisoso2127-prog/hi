@@ -250,6 +250,57 @@ et renvoient un optimum, là où la méthode d'ici renvoie tout $\E$ et avec
 lui n'importe quelle fonction de décision calculable.  En résumé~: un
 livrable plus grand, à un $n$ plus petit.
 
+\paragraph{Mais ce domaine est celui de l'\emph{implémentation}, et c'est
+mesuré.}
+Un profil d'une exécution au mur ($n = 10$, $p = 2$) se répartit en $76\%$
+dans \texttt{fractions.Fraction} de Python, $4{,}8\%$ dans les pivots du
+simplexe et $19\%$ ailleurs --- avec $8{,}6$ millions de constructions de
+\texttt{Fraction} pour \textbf{$67$ boîtes}.  La recherche a à peine
+travaillé~; c'est l'arithmétique qui a dépensé l'horloge.  Le plafond mesuré
+est donc celui d'une implémentation sans dépendance en rationnels exacts,
+face à des concurrents qui résolvent par CPLEX en virgule flottante, et non
+un mur combinatoire.
+
+C'est testable, et cela a été testé.  Multiplier une ligne
+$a^{\top}x \leqslant b$ par un entier positif ne change pas la contrainte~:
+chaque ligne de tranche est désormais mise à l'échelle une fois par le ppcm
+de ses dénominateurs et le balayage tourne sur des entiers Python --- un
+changement de \emph{représentation}, même arithmétique, même exactitude.
+Seize configurations, les mêmes instances dans les deux versions, budget
+$40$\,s~:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+complètes dans les deux versions                 & $9$ sur $16$ \\
+\quad accélération médiane                       & $\mathbf{1{,}18\times}$ \\
+\quad étendue                                    & $0{,}71\times$ à $4{,}38\times$ \\
+\midrule
+\textbf{passées de censurée à complète}          & $\mathbf{2}$ \\
+régressions inverses                             & $0$ \\
+\midrule
+instances où $|\E|$ ou le nombre de boîtes change & $\mathbf{0}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Les deux passages~: $n{=}12$, $p{=}2$ (censurée à $44$\,s, complète en
+$14$\,s) et $n{=}10$, $p{=}3$ (censurée, complète en $37$\,s avec
+$|\E| = 89$).  Des $|\E|$ et des comptes de boîtes identiques sur les neuf
+instances comparables sont la vérification que rien d'algorithmique n'a
+bougé.
+
+Deux conclusions honnêtes.  \textbf{Le mur a bougé}, donc $n \leqslant 16$
+décrit cette implémentation et la limite algorithmique reste inconnue.  Mais
+il a \emph{peu} bougé~: une médiane de $1{,}18\times$ achète des fractions de
+$n$, et le gain se concentre sur les instances à grandes tranches.  La
+distance de $16$ à $120$ ne tient pas à un réglage arithmétique.  Les $74\%$
+restants sont passés dans le pivot du simplexe, où le levier serait un
+tableau sans fractions (Bareiss) --- une réécriture du composant sur lequel
+repose toute revendication d'exactitude ici, nommée comme étape suivante et
+non tentée.
+
 \paragraph{L'espace des critères.}
 La région non explorée est maintenue dans l'espace des valeurs des critères,
 sous forme de régions géométriques.  Boland, Charkhgard et

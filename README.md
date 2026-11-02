@@ -1109,6 +1109,50 @@ error, looked like a working optimisation, and returned the **empty set on 179
 of 185 slices** — silently dropping efficient points. Only the comparison
 against the un-eliminated scan caught it, which is what that comparison is for.
 
+## Whose wall is it: the method's or the arithmetic's
+
+The published methods report `n = 40` to `120`; this one reports `n <= 16`.
+Part of that is the deliverable — they return one optimum and visit a handful
+of efficient points, this returns all of `E(P_D)`. The rest was measured.
+
+A profile at the wall (`n = 10`, `p = 2`) splits **76% into Python's
+`fractions.Fraction`**, 4.8% into simplex pivots, 19% elsewhere — with 8.6
+million Fraction constructions for **67 boxes**. The search barely worked; the
+arithmetic spent the clock. (The profiler inflates both sides ~5×; the same
+instance runs in 9.65 s unprofiled. The shares are the point, not the seconds.)
+
+So it was tested. Multiplying `a'x <= b` by a positive integer leaves the same
+constraint, so each slice row is now scaled once by the lcm of its denominators
+and the scan runs on Python `int` — a change of *representation*, same
+arithmetic, same exactness. Sixteen configurations, same instances both ways,
+40 s budget:
+
+| | |
+|---|---|
+| complete under both versions | 9 of 16 |
+| median speed-up | **1.18×**  (0.71× to 4.38×) |
+| **crossed censored → complete** | **2** |
+| regressed the other way | 0 |
+| instances where `\|E\|` or box count changed | **0** |
+
+The crossings are `n=12, p=2` (censored at 44 s, now complete in 14 s) and
+`n=10, p=3` (censored, now complete in 37 s with `|E| = 89`). Identical `|E|`
+and box counts on all nine comparable instances is the check that nothing
+algorithmic moved.
+
+**So the wall moved** — `n <= 16` is this implementation's ceiling, not the
+method's, and the algorithmic limit is unknown. **But it moved by little**: a
+median 1.18× is fractions of an `n`, concentrated on instances with large
+slices. The distance from 16 to 120 is not an arithmetic tweak. The remaining
+74% is now in the simplex pivot, where the lever is a fraction-free (Bareiss)
+tableau — a rewrite of the component every exactness claim here rests on, named
+as the next step rather than attempted.
+
+One caveat the probe exposed: a denser instance family censored all three seeds
+at `n = 12, p = 3` under 60 s, where the campaign family is comfortable. So
+`n <= 16` is shorthand for one family; what governs the range is `|F|` and
+`n - p`, not `n`.
+
 ## A wall met four times
 
 Four separate changes remove a fifth to a quarter of the sub-problems and buy

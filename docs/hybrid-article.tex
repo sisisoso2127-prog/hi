@@ -1748,6 +1748,69 @@ effect dominates, and the front is reached first at every one of them, so the
 range above is set by $n$ in practice even though the mechanism behind it is
 the two quantities $|F|$ and $n-p$.
 
+
+\paragraph{But that range belongs to the \emph{implementation}, and the
+evidence says so.}
+A reader is entitled to ask why the published methods of
+Section~\ref{sec:prior} report $n = 40$ to $120$ while this one reports
+$n \leqslant 16$.  Part of the answer is the deliverable, which is larger
+here.  The rest was measured rather than conceded.
+
+A profile of one run at the wall ($n = 10$, $p = 2$) splits as
+$76\%$ in Python's \texttt{fractions.Fraction}, $4.8\%$ in simplex pivots and
+$19\%$ in everything else --- with $8.6$ million Fraction constructions for
+\textbf{$67$ boxes}.  The search barely worked; the arithmetic spent the clock.
+So the ceiling measured above is the ceiling of a dependency-free
+implementation in exact rationals, against competitors running floating-point
+CPLEX, and it is not a combinatorial wall.
+
+That is testable, and it was tested.  Multiplying an $a^{\top}x \leqslant b$
+row by a positive integer leaves it the same constraint, so each slice row is
+now scaled once by the lcm of its denominators and the scan runs on Python
+\texttt{int} --- a change of \emph{representation}, with the same arithmetic
+and the same exactness.  Sixteen configurations, the same instances through
+both versions, $40$\,s budget:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+complete under both versions & $9$ of $16$ \\
+\quad median speed-up & $\mathbf{1.18\times}$ \\
+\quad range & $0.71\times$ to $4.38\times$ \\
+\midrule
+\textbf{crossed from censored to complete} & $\mathbf{2}$ \\
+regressed the other way & $0$ \\
+\midrule
+instances where $|\E|$ or the box count changed & $\mathbf{0}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The two that crossed are $n{=}12$, $p{=}2$ (censored at $44$\,s before, complete
+in $14$\,s after) and $n{=}10$, $p{=}3$ (censored before, complete in $37$\,s
+with $|\E| = 89$).  That $|\E|$ and the box count are identical on all nine
+comparable instances is the check that nothing algorithmic moved.
+
+Two honest deductions.  First, \textbf{the wall moved}, so the range reported
+above is a property of this implementation and the algorithmic limit remains
+unknown.  Second, it moved \emph{by little}: a median $1.18\times$ buys
+fractions of an $n$, not an order of magnitude, and the gain is concentrated on
+the instances with large slices ($1.70\times$, $1.71\times$, $4.38\times$ at
+$n = 8$--$10$) because that is where the scan dominates.  Closing a gap from
+$16$ to $120$ is not an arithmetic tweak away.
+
+The remaining $74\%$ has moved into the simplex pivot, where the lever is a
+fraction-free (Bareiss) tableau.  That is a rewrite of the component every
+exactness claim in this work rests on, and it is named as the next step rather
+than attempted here.
+
+\paragraph{And the range depends on the family, not on $n$ alone.}
+A probe on a denser instance family censored all three seeds at $n = 12$,
+$p = 3$ under a $60$\,s budget, where the campaign family is comfortable.  So
+``$n \leqslant 16$'' is shorthand for a measurement on one family, and the two
+quantities that actually govern it are the $|F|$ and $n - p$ identified above.
+
 \section{Negative results, and a wall}
 \label{sec:wall}
 

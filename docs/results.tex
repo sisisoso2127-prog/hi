@@ -773,6 +773,81 @@ without error, looked like a working optimisation, and returned the
 \emph{empty} set on 179 of 185 slices --- silently dropping efficient points.
 Only the comparison against the un-eliminated scan caught it.
 
+\section{Whose wall is it: the method's or the arithmetic's}
+\label{sec:whosewall}
+
+The published methods of this literature report $n = 40$ to $120$; this one
+reports $n \leqslant 16$.  Part of that is the deliverable, which is larger
+here --- they return one optimum and visit a handful of efficient points,
+this returns all of $\E$.  The rest was measured.
+
+\paragraph{The profile.}  One run at the wall, $n = 10$, $p = 2$, under
+\texttt{cProfile}:
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & seconds & share \\
+\midrule
+Python \texttt{fractions.Fraction}  & $35.10$ & $76.0\%$ \\
+simplex pivots and pricing          & $2.23$  & $4.8\%$ \\
+everything else                     & $8.83$  & $19.1\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+$8.6$ million Fraction constructions, for \textbf{$67$ boxes}.  The search
+barely worked.  (The profiler inflates both sides roughly fivefold: the same
+instance runs in $9.65$\,s unprofiled.  The shares are what this table is for,
+not the seconds.)
+
+\paragraph{The test.}  Multiplying $a^{\top}x \leqslant b$ by a positive
+integer leaves it the same constraint, so each slice row is scaled once by the
+lcm of its denominators and the scan runs on Python \texttt{int}: a change of
+representation, same arithmetic, same exactness.  Sixteen configurations, the
+same instances through both versions, $40$\,s budget.
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+complete under both versions                    & $9$ of $16$ \\
+\quad median speed-up                           & $\mathbf{1.18\times}$ \\
+\quad range                                     & $0.71\times$ to $4.38\times$ \\
+\midrule
+\textbf{crossed from censored to complete}      & $\mathbf{2}$ \\
+regressed the other way                         & $0$ \\
+\midrule
+instances where $|\E|$ or the box count changed & $\mathbf{0}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The two crossings: $n{=}12$, $p{=}2$ (censored at $44$\,s, now complete in
+$14$\,s) and $n{=}10$, $p{=}3$ (censored, now complete in $37$\,s with
+$|\E| = 89$ where the censored run had $31$).  Identical $|\E|$ and identical
+box counts on all nine comparable instances is the check that nothing
+algorithmic moved.
+
+\paragraph{What follows, and what does not.}
+\textbf{The wall moved}, so $n \leqslant 16$ describes this implementation ---
+pure Python, exact rationals, no solver --- and the algorithmic limit is
+unknown.  But it moved \emph{by little}.  A median $1.18\times$ is fractions of
+an $n$, and the gain sits on instances with large slices ($1.70\times$,
+$1.71\times$, $4.38\times$ at $n = 8$--$10$), which is where the scan
+dominates.  The distance from $16$ to $120$ is not an arithmetic tweak.
+
+The remaining $74\%$ is now in the simplex pivot, where the lever is a
+fraction-free (Bareiss) tableau --- a rewrite of the component every exactness
+claim here rests on, named as the next step rather than attempted.
+
+\paragraph{One more caveat the probe exposed.}  A denser instance family
+censored all three seeds at $n = 12$, $p = 3$ under a $60$\,s budget, where
+the campaign family is comfortable.  ``$n \leqslant 16$'' is therefore
+shorthand for a measurement on one family; the quantities that govern the
+range are $|F|$ and $n-p$, as the wall sweep found, and not $n$.
+
 \section{A wall met four times}
 
 Four separate changes remove between a fifth and a quarter of the sub-problems
