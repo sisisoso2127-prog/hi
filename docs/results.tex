@@ -905,25 +905,60 @@ $|\E|$ or box count changed & $0$ \\
 \end{center}
 
 \noindent
-The per-node bookkeeping cost exactly what the saved nodes bought.  The
-pattern is legible: the additions lose on the smallest instances
-($0.69\times$, $0.81\times$, $0.85\times$), where the per-slice setup is not
-repaid, and win slightly from $n=8$ up ($1.08$ to $1.13\times$) where the
-tree is large enough.  Neither end is worth the hundred and ninety lines, so
-\textbf{the change was reverted} and is recorded here instead.
+Neither end is worth the hundred and ninety lines, so \textbf{the change was
+reverted} and is recorded here instead.
+
+\paragraph{Why it lost --- and the first answer given here was wrong.}
+This section originally said the per-node bookkeeping cost what the saved
+nodes bought.  That was an inference, not a measurement, and measuring it
+says something else.  The slice scan is \emph{not where the run lives}:
+
+\begin{table}[h]
+\centering
+\caption{Where the clock actually goes.  Cumulative share of one complete-set
+run; the \textsc{self} rows are self time, so the simplex's own code is small
+while the arithmetic it calls is not.}
+\label{tab:split}
+\begin{tabular}{lrrrr}
+\toprule
+ & $n{=}8$, $p{=}2$ & $n{=}10$, $p{=}2$ & $n{=}12$, $p{=}2$ & $n{=}6$, $p{=}3$ \\
+\midrule
+front enumeration        & $\mathbf{89.7\%}$ & $\mathbf{62.9\%}$ & $\mathbf{69.6\%}$ & $\mathbf{99.2\%}$ \\
+slice scan               & $1.9\%$  & $9.7\%$  & $24.5\%$ & $0.1\%$ \\
+\midrule
+\textsc{self} simplex code & $9.8\%$ & $9.2\%$ & $7.5\%$ & $10.4\%$ \\
+\textsc{self} \texttt{Fraction} & $74.9\%$ & $69.4\%$ & $58.5\%$ & $76.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+The scan the additions improved is between $0.1\%$ and $24.5\%$ of the run.
+A $29\%$ improvement confined to it is therefore capped at under one per cent
+to about seven per cent overall --- which is the order of what was measured.
+\textbf{The component was the wrong one}, and no amount of cleverness inside
+the scan could have paid.  The bookkeeping may have cost something too; the
+decomposition above makes that question irrelevant.
+
+Two further things fall out of Table~\ref{tab:split}, and they are worth more
+than the attempt that produced it.  The \emph{front} is where the clock goes,
+at every size measured, which quantifies the two-wall picture: the front is not merely the first wall met, it is
+most of the cost before any wall is met.  And the front is
+\texttt{Fraction}-bound: the simplex's own code is under $11\%$ throughout,
+while the exact arithmetic it performs is $58$--$76\%$ of the whole run.  So
+the one lever with real leverage is a fraction-free tableau in the simplex, and
+the reason is now measured rather than guessed.
 
 An interval propagation over the free variables' boxes was tried in the same
 pass and is the clearest loss of the four: $198{,}614$ nodes became
 $195{,}640$.  \texttt{variable\_bounds} already returns boxes tight enough
 that there was nothing left to propagate.
 
-\paragraph{What the attempt is worth anyway.}  It locates the cost precisely.
-The leaf condition is selective at about $2700 : 1$, the rows prune everything
-else, and the nodes that remain are cheap individually and numerous ---
-which is the signature of a search whose ceiling is per-node constant factor,
-not pruning power.  That points at the simplex pivot and a fraction-free
-tableau, the lever named in Section~\ref{sec:whosewall}, and away from
-further cleverness in the scan.
+\paragraph{The lesson, stated as a rule.}  Profile the whole before
+optimising a part.  The node count by depth was a good diagnosis of the
+\emph{scan} and a useless guide to the \emph{run}, and the difference cost a
+day.  The attempt is kept in this ledger because the decomposition it forced
+--- Table~\ref{tab:split} --- is the most useful measurement in this section.
 
 \section{A wall met four times}
 

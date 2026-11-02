@@ -1148,6 +1148,23 @@ slices. The distance from 16 to 120 is not an arithmetic tweak. The remaining
 tableau — a rewrite of the component every exactness claim here rests on, named
 as the next step rather than attempted.
 
+**And a decomposition that says why.** Congruence pruning was then added to the
+slice scan: it cut nodes 195,640 → 139,458, a real 29%, and bought **1.01×** in
+time. Measuring instead of guessing says the component was simply the wrong one:
+
+| share of one complete-set run | `n=8,p=2` | `n=10,p=2` | `n=12,p=2` | `n=6,p=3` |
+|---|---|---|---|---|
+| front enumeration | **89.7%** | **62.9%** | **69.6%** | **99.2%** |
+| slice scan | 1.9% | 9.7% | 24.5% | 0.1% |
+| *self* simplex code | 9.8% | 9.2% | 7.5% | 10.4% |
+| *self* `Fraction` | 74.9% | 69.4% | 58.5% | 76.3% |
+
+A 29% gain inside a component worth 0.1–24.5% is capped at under 1% to ~7%
+overall, which is what was measured. The front is where the clock goes at every
+size, and the front is `Fraction`-bound — the simplex's own code stays under
+11%. So the single lever is the fraction-free tableau, and the rule the attempt
+bought is: profile the whole before optimising a part.
+
 One caveat the probe exposed: a denser instance family censored all three seeds
 at `n = 12, p = 3` under 60 s, where the campaign family is comfortable. So
 `n <= 16` is shorthand for one family; what governs the range is `|F|` and

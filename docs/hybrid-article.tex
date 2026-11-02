@@ -1879,16 +1879,43 @@ could complete to an integer point is refused --- and all three together are
 worth nothing.  Nodes fell $195{,}640 \to 139{,}458$, a real $29\%$; time over
 the same sixteen instances gave a median $\mathbf{1.01\times}$, range
 $0.69\times$ to $1.13\times$, with no instance crossing from censored to
-complete.  The per-node bookkeeping cost exactly what the saved nodes bought.
-The change was reverted; an interval propagation tried in the same pass was
-worse still ($198{,}614 \to 195{,}640$ nodes), because \texttt{variable\_bounds}
-already returns tight boxes.
+complete.  The change was reverted; an interval propagation tried in the same
+pass was worse still ($198{,}614 \to 195{,}640$ nodes), because
+\texttt{variable\_bounds} already returns tight boxes.
 
-The attempt earns its place by locating the cost.  The leaf condition is
-selective at about $2700 : 1$, the rows prune everything else, and what remains
-is many cheap nodes --- the signature of a search bounded by per-node constant
-factor rather than by pruning power.  That points at the simplex pivot and a
-fraction-free tableau, and away from further cleverness in the scan.
+\paragraph{Why it lost, measured rather than assumed.}
+The first answer given here was that the per-node bookkeeping cost what the
+saved nodes bought.  Measuring says something else: \textbf{the slice scan is
+not where the run lives}.
+
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+ & $n{=}8$, $p{=}2$ & $n{=}10$, $p{=}2$ & $n{=}12$, $p{=}2$ & $n{=}6$, $p{=}3$ \\
+\midrule
+front enumeration               & $\mathbf{89.7\%}$ & $\mathbf{62.9\%}$ & $\mathbf{69.6\%}$ & $\mathbf{99.2\%}$ \\
+slice scan                      & $1.9\%$ & $9.7\%$ & $24.5\%$ & $0.1\%$ \\
+\midrule
+\textsc{self} simplex code      & $9.8\%$ & $9.2\%$ & $7.5\%$ & $10.4\%$ \\
+\textsc{self} \texttt{Fraction} & $74.9\%$ & $69.4\%$ & $58.5\%$ & $76.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The scan these additions improved is $0.1\%$ to $24.5\%$ of the run, so a
+$29\%$ improvement inside it is capped at under one to about seven per cent
+overall --- the order of what was measured.  \textbf{The component was the
+wrong one}, and nothing done inside the scan could have paid.
+
+Two things fall out of that table which are worth more than the attempt.  The
+front is where the clock goes at every size measured, which quantifies the
+two-wall picture of Section~\ref{sec:walls}: the front is not merely the first
+wall met, it is most of the cost before any wall is met.  And the front is
+\texttt{Fraction}-bound --- the simplex's own code stays under $11\%$ while the
+exact arithmetic it performs is $58$--$76\%$ of the whole run.  So the one lever
+with real leverage is a fraction-free tableau, and the reason is now measured.
+The rule the attempt bought: profile the whole before optimising a part.
 
 \subsection{A single-program completeness certificate}
 \label{sec:certificate}
