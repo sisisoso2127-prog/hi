@@ -11,6 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from time import monotonic
 from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            add_dominance_cut, alternative_optima_columns,
                            clean_tableau_at, edge_direction, max_step_in,
@@ -31,7 +32,7 @@ from lfp_efficient import (FractionalObjective, LE, MOILFP, MOILP, Model,
                            augmented_tchebychev_efficient, ideal_point,
                            tchebychev_incumbent, efficient_dominator,
                            repair_to_efficient)
-from lfp_efficient.efficiency import (assert_bounded,
+from lfp_efficient.efficiency import (BudgetExhausted, assert_bounded,
                                       assert_denominators_positive,
                                       _e_lower_bound)
 from lfp_efficient.rational import F, fmt
@@ -2931,6 +2932,52 @@ def test_linear_plus_linear_fractional_falls_outside_the_reachable_class():
             assert (u2 - u1) * (v3 - v1) == (u3 - u1) * (v2 - v1), "ratio bent"
     return ("linear-plus-linear-fractional has conic level sets (three "
             "non-collinear points on one level); the pure ratio does not")
+
+def test_a_time_budget_reaches_inside_the_efficiency_test():
+    """The budget has to bind where the time is, not only between the boxes.
+
+    A probe at ``n = 30`` sat for ten minutes under a twenty-five second
+    budget.  The box loop was passing its deadline to each box's branch and
+    bound and then calling :func:`test_efficiency` -- the dearest single
+    operation in the method -- with no deadline at all.  Runs that reported
+    "stopped at the budget" had overshot it, some of them fourfold, and the
+    censoring statistics were quietly wrong because of it.
+
+    Two properties, both checked without timing anything, so this cannot
+    flake:
+
+    1. an already-expired deadline makes the test **raise** rather than
+       answer.  It decides a yes/no question about a point, and an
+       interrupted search decides neither: "efficient" would be a lie and
+       "not efficient" a different one;
+    2. the optimiser catches that and returns an unproved incumbent, exactly
+       as it does when a box's own search is interrupted -- it does not
+       propagate the exception and does not claim optimality.
+    """
+    model = Model(2).add([1, 1], LE, 6).add([1, -1], LE, 2)
+    problem = MOILFP(model, [FractionalObjective([1, 0], [0, 1], 1, 2),
+                             FractionalObjective([0, 1], [1, 0], 1, 3)])
+    phi = FractionalObjective([2, 1], [1, 1], 0, 3)
+
+    expired = monotonic() - 1.0
+    raised = False
+    try:
+        test_efficiency(problem, [F(0), F(0)], deadline=expired)
+    except BudgetExhausted:
+        raised = True
+    assert raised, "an expired deadline must not produce a verdict"
+
+    # and with time to spare the very same call still answers
+    fresh = test_efficiency(problem, [F(0), F(0)], deadline=monotonic() + 120)
+    assert fresh.psi is not None
+
+    # the optimiser degrades instead of raising, and never claims a proof
+    out = optimize_in_criterion_space(problem, phi, time_budget=1e-9)
+    assert out.proved_optimal is False, "a spent budget cannot prove optimality"
+
+    return ("expired deadline raises instead of guessing; the optimiser "
+            "returns an unproved incumbent")
+
 
 def test_decision_space_cut_enumeration_agrees_with_brute_force():
     """The efficient-cut route returns exactly ``E(P_D)``, on three instances.

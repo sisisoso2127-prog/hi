@@ -175,7 +175,9 @@ from time import monotonic
 from typing import List, Optional, Sequence, Tuple
 
 from .algorithm import IterationLog, Solution
-from .efficiency import (assert_bounded, assert_denominators_positive,best_with_same_criterion, efficient_dominator,
+from .efficiency import (BudgetExhausted, assert_bounded,
+                         assert_denominators_positive,
+                         best_with_same_criterion, efficient_dominator,
                          test_efficiency)
 from .milp import (CUTOFF, INTERRUPTED, denominator_stays_positive,
                    solve_fractional_milp)
@@ -553,7 +555,22 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
                 print(log)
             continue
 
-        test = test_efficiency(problem, x_b)
+        try:
+            test = test_efficiency(problem, x_b, deadline=deadline)
+        except BudgetExhausted:
+            # The budget used to stop at the boxes and not inside them, so a
+            # run could overshoot it severalfold in here -- this is the
+            # dearest single operation in the method.  Treated exactly like an
+            # interrupted branch & bound: hand back the incumbent and the
+            # bound the unexplored work still guarantees, and say it is not
+            # proved.
+            box.bound = result.objective
+            push(box)
+            log.note = ("time budget spent inside the efficiency test: "
+                        "stopping with the bound the open boxes guarantee.")
+            if verbose:
+                print(log)
+            return finish(OPTIMAL if x_opt is not None else "infeasible", False)
         log.psi = test.psi
         if test.efficient:
             # x_b maximises Phi over the whole box, and the points sharing its

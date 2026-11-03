@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import List, Optional, Sequence
 
-from .milp import (MilpResult, solve_fractional_milp, solve_linear_milp,
+from .milp import (INTERRUPTED, MilpResult, solve_fractional_milp, solve_linear_milp,
                    solve_milp)
 from .model import EQ, GE, LE, MOILFP, Model
 from .rational import F, ZERO, dot
@@ -45,8 +45,29 @@ class EfficiencyTest:
     witness: Optional[List[Fraction]] = None
 
 
+class BudgetExhausted(Exception):
+    """A time budget ran out *inside* the efficiency test.
+
+    The test answers a yes/no question about a point, and an interrupted
+    search answers neither.  Returning "efficient" would be a lie and
+    returning "not efficient" would be a different one, so the budget is
+    reported by raising instead.  A caller that owns the budget --
+    :func:`~lfp_efficient.criterion_space.optimize_in_criterion_space` is the
+    one that does -- catches this and returns its incumbent with the bound its
+    unexplored work still guarantees, exactly as it does when a box's own
+    branch & bound is interrupted.
+
+    Why this exists: the budget used to stop at the boxes and not inside them.
+    A probe at n=30 sat for ten minutes under a twenty-five second budget,
+    because the dearest operation in the method -- this one -- was never told
+    about the deadline.  Runs that reported "stopped at the budget" had in
+    fact overshot it, some of them fourfold.
+    """
+
+
 def test_efficiency(problem: MOILFP, x_star: Sequence[Fraction],
-                    region: Optional[Model] = None) -> EfficiencyTest:
+                    region: Optional[Model] = None,
+                    deadline: Optional[float] = None) -> EfficiencyTest:
     """Exact efficiency test, in a single integer linear program::
 
         theta(x*) = max  sum_k e_k(x ; x*)
@@ -90,7 +111,10 @@ def test_efficiency(problem: MOILFP, x_star: Sequence[Fraction],
         objective = [a + b for a, b in zip(objective, row)]
         constant += const
 
-    res = solve_milp(base, objective)
+    res = solve_milp(base, objective, deadline=deadline)
+    if res.status == INTERRUPTED:
+        raise BudgetExhausted(
+            "the time budget ran out inside the efficiency test")
     if res.status != OPTIMAL:
         # x* itself is feasible for the test, so this cannot happen unless x*
         # is outside D.
@@ -103,7 +127,8 @@ def test_efficiency(problem: MOILFP, x_star: Sequence[Fraction],
 
 
 def repair_to_efficient(problem: MOILFP, x: Sequence[Fraction],
-                        max_steps: int = 1000) -> List[Fraction]:
+                        max_steps: int = 1000,
+                        deadline: Optional[float] = None) -> List[Fraction]:
     """Follow the dominance chain from *x* until an efficient point is reached.
 
     Each step replaces the current point by one that dominates it, so the
@@ -118,7 +143,7 @@ def repair_to_efficient(problem: MOILFP, x: Sequence[Fraction],
     """
     current = list(x)
     for _ in range(max_steps):
-        outcome = test_efficiency(problem, current)
+        outcome = test_efficiency(problem, current, deadline=deadline)
         if outcome.efficient:
             return current
         current = outcome.witness
