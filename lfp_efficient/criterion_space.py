@@ -537,7 +537,7 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
             centre = max(known, key=lambda a: tuple(problem.Z(a)))
             log.efficient_point = centre
             q = best_with_same_criterion(problem.model, problem, centre, phi,
-                                         cutoff=phi_opt,
+                                         cutoff=phi_opt, deadline=deadline,
                                          denominator_positive=positive_denominator)
             if q.feasible:
                 log.best_same_criterion, log.phi_same_criterion = q.x, q.objective
@@ -582,14 +582,28 @@ def optimize_in_criterion_space(problem: MOILFP, phi: FractionalObjective,
                 explored.append(x_b)
             log.efficient_point = x_b
         else:
-            centre = efficient_dominator(problem, test)
+            try:
+                centre = efficient_dominator(problem, test, deadline=deadline)
+            except BudgetExhausted:
+                # The repair walk is a chain of efficiency tests, up to a
+                # thousand of them, and each is a full integer program.  It
+                # was the second place the budget did not reach.
+                box.bound = result.objective
+                push(box)
+                log.note = ("time budget spent repairing a dominated point: "
+                            "stopping with the bound the open boxes "
+                            "guarantee.")
+                if verbose:
+                    print(log)
+                return finish(OPTIMAL if x_opt is not None else "infeasible",
+                              False)
             if centre not in explored:
                 explored.append(centre)
             log.efficient_point = centre
             # the slice { Z = Z(centre) } is entirely efficient and about to be
             # removed from this box, so its best Phi is banked first
             q = best_with_same_criterion(problem.model, problem, centre, phi,
-                                         cutoff=phi_opt,
+                                         cutoff=phi_opt, deadline=deadline,
                                          denominator_positive=positive_denominator)
             if q.feasible:
                 log.best_same_criterion, log.phi_same_criterion = q.x, q.objective

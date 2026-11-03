@@ -151,7 +151,8 @@ def repair_to_efficient(problem: MOILFP, x: Sequence[Fraction],
 
 
 def efficient_dominator(problem: MOILFP,
-                       outcome: "EfficiencyTest") -> List[Fraction]:
+                       outcome: "EfficiencyTest",
+                       deadline: Optional[float] = None) -> List[Fraction]:
     """An **efficient** point dominating the one *outcome* has just rejected.
 
     Every caller of :func:`test_efficiency` that gets ``theta > 0`` needs this:
@@ -192,7 +193,7 @@ def efficient_dominator(problem: MOILFP,
     """
     if has_linear_criteria(problem):
         return list(outcome.witness)
-    return repair_to_efficient(problem, outcome.witness)
+    return repair_to_efficient(problem, outcome.witness, deadline=deadline)
 
 
 # --------------------------------------------------------------------------
@@ -359,7 +360,8 @@ add_sylva_crema_cut = add_dominance_cut
 def best_with_same_criterion(region: Model, problem: MOILFP,
                              x_tilde: Sequence[Fraction], phi,
                              cutoff=None,
-                             denominator_positive: bool = False) -> MilpResult:
+                             denominator_positive: bool = False,
+                             deadline: Optional[float] = None) -> MilpResult:
     """``Q(x~) = max { Phi(x) : x in D, Z(x) = Z(x~) }``.
 
     The slice is cut out by ``e_k(x ; x~) = 0`` for every ``k`` -- linear rows,
@@ -384,7 +386,7 @@ def best_with_same_criterion(region: Model, problem: MOILFP,
         coeffs, const = problem.e_row(k, x_tilde)
         row = list(coeffs) + [ZERO] * (sub.n - len(coeffs))
         sub.add(row, EQ, -const)
-    res = solve_fractional_milp(sub, phi, cutoff=cutoff,
+    res = solve_fractional_milp(sub, phi, cutoff=cutoff, deadline=deadline,
                                 denominator_positive=denominator_positive)
     if res.feasible:
         res.x = res.x[:problem.n]
